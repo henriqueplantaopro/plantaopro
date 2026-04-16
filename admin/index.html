@@ -233,17 +233,40 @@ tr:hover td{background:var(--bg3);}
 
   <!-- CHECK-INS -->
   <div id="tab-checkins" class="section">
-    <div class="page-title">Check-ins</div>
-    <div class="page-sub">Registros de presença dos médicos</div>
-    <div class="card">
-      <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;">
-        <div class="form-group" style="flex:1;min-width:150px;"><label>Projeto</label><select id="ci-proj" onchange="carregarCheckins()"><option value="">Todos</option></select></div>
-        <div class="form-group" style="flex:1;min-width:150px;"><label>Médico</label><select id="ci-med" onchange="carregarCheckins()"><option value="">Todos</option></select></div>
-        <div class="form-group"><label>De</label><input type="date" id="ci-d1" onchange="carregarCheckins()"></div>
-        <div class="form-group"><label>Até</label><input type="date" id="ci-d2" onchange="carregarCheckins()"></div>
-      </div>
+    <div class="page-title">Controle de Presença</div>
+    <div class="page-sub">Plantões escalados × check-ins realizados</div>
+
+    <!-- SUB-ABAS -->
+    <div style="display:flex;gap:6px;margin-bottom:16px;">
+      <button class="btn btn-primary" id="ci-tab-presenca" onclick="switchCiTab('presenca')">📋 Presença do dia</button>
+      <button class="btn btn-ghost" id="ci-tab-historico" onclick="switchCiTab('historico')">🕐 Histórico de check-ins</button>
     </div>
-    <div class="card"><div class="card-title">Registros de check-in</div><div id="checkins-lista"><div class="empty">Carregando...</div></div></div>
+
+    <!-- ABA PRESENÇA -->
+    <div id="ci-presenca">
+      <div class="card">
+        <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;">
+          <div class="form-group" style="flex:1;min-width:150px;"><label>Projeto</label><select id="ci-proj-p" onchange="carregarPresenca()"><option value="">Todos os projetos</option></select></div>
+          <div class="form-group"><label>Data</label><input type="date" id="ci-data-p" onchange="carregarPresenca()"></div>
+          <button class="btn btn-ghost btn-sm" onclick="document.getElementById('ci-data-p').value=hoje_str();carregarPresenca()">Hoje</button>
+        </div>
+      </div>
+      <div id="presenca-resumo" style="display:none;margin-bottom:12px;"></div>
+      <div class="card"><div class="card-title">Plantões escalados</div><div id="presenca-lista"><div class="empty">Selecione uma data para ver os plantões</div></div></div>
+    </div>
+
+    <!-- ABA HISTÓRICO -->
+    <div id="ci-historico" style="display:none;">
+      <div class="card">
+        <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;">
+          <div class="form-group" style="flex:1;min-width:150px;"><label>Projeto</label><select id="ci-proj" onchange="carregarCheckins()"><option value="">Todos</option></select></div>
+          <div class="form-group" style="flex:1;min-width:150px;"><label>Médico</label><select id="ci-med" onchange="carregarCheckins()"><option value="">Todos</option></select></div>
+          <div class="form-group"><label>De</label><input type="date" id="ci-d1" onchange="carregarCheckins()"></div>
+          <div class="form-group"><label>Até</label><input type="date" id="ci-d2" onchange="carregarCheckins()"></div>
+        </div>
+      </div>
+      <div class="card"><div class="card-title">Registros de check-in</div><div id="checkins-lista"><div class="empty">Carregando...</div></div></div>
+    </div>
   </div>
 
   <!-- RELATÓRIOS -->
@@ -524,6 +547,13 @@ function popCiSelects() {
   sp.innerHTML = '<option value="">Todos</option>' + projetos.map(p=>`<option value="${p.id}">${p.nome}</option>`).join('');
   sm.innerHTML = '<option value="">Todos</option>' + [...medicos].sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR')).map(m=>`<option value="${m.id}">${m.nome}</option>`).join('');
 }
+function popCiProjPresenca() {
+  const sp = document.getElementById('ci-proj-p');
+  if(!sp) return;
+  const v = sp.value;
+  sp.innerHTML = '<option value="">Todos os projetos</option>' + projetos.map(p=>`<option value="${p.id}">${p.nome}</option>`).join('');
+  sp.value = v;
+}
 function popRelSelects() {
   const rp = document.getElementById('rp'), rm = document.getElementById('rm');
   if(!rp||!rm) return;
@@ -587,6 +617,139 @@ async function delLancamento(id) {
 }
 
 // ── CHECK-INS ─────────────────────────────────────────
+function hoje_str() { return new Date().toISOString().slice(0,10); }
+
+function switchCiTab(tab) {
+  document.getElementById('ci-presenca').style.display = tab==='presenca' ? 'block' : 'none';
+  document.getElementById('ci-historico').style.display = tab==='historico' ? 'block' : 'none';
+  document.getElementById('ci-tab-presenca').className = 'btn ' + (tab==='presenca' ? 'btn-primary' : 'btn-ghost');
+  document.getElementById('ci-tab-historico').className = 'btn ' + (tab==='historico' ? 'btn-primary' : 'btn-ghost');
+  if (tab==='historico') carregarCheckins();
+  if (tab==='presenca') carregarPresenca();
+}
+
+// ── PRESENÇA DO DIA ───────────────────────────────────
+async function carregarPresenca() {
+  const data = document.getElementById('ci-data-p').value || hoje_str();
+  const pid  = document.getElementById('ci-proj-p').value;
+
+  // Busca lançamentos do dia
+  let pathLanc = `/rest/v1/lancamentos?data=eq.${data}&select=*,medicos(id,nome,crm),projetos(id,nome)&order=hora_ini`;
+  if (pid) pathLanc += `&projeto_id=eq.${pid}`;
+  const lancDia = await sb(pathLanc) || [];
+
+  // Busca check-ins do dia
+  const checkinsDia = await sb(
+    `/rest/v1/checkins?feito_em=gte.${data}T00:00:00&feito_em=lte.${data}T23:59:59&aprovado=eq.true&select=*&order=feito_em`
+  ) || [];
+
+  const el = document.getElementById('presenca-lista');
+  const resumoEl = document.getElementById('presenca-resumo');
+
+  if (!lancDia.length) {
+    el.innerHTML = '<div class="empty">Nenhum plantão escalado para esta data.</div>';
+    resumoEl.style.display = 'none';
+    return;
+  }
+
+  // Para cada lançamento, verifica se tem check-in do médico no mesmo dia/projeto
+  const agora = new Date();
+  let totalPresente = 0, totalAusente = 0, totalAtrasado = 0, totalPendente = 0;
+
+  const linhas = lancDia.map(l => {
+    const medId   = l.medicos?.id;
+    const projId  = l.projeto_id;
+    const nomeMed = l.medicos?.nome || '—';
+    const crmMed  = l.medicos?.crm  || '';
+    const nomePrj = l.projetos?.nome || '—';
+
+    // Horário de início do plantão
+    const [hIni, mIni] = (l.hora_ini||'00:00').split(':').map(Number);
+    const inicioPlan = new Date(`${data}T${String(hIni).padStart(2,'0')}:${String(mIni).padStart(2,'0')}:00`);
+    const limite15   = new Date(inicioPlan.getTime() + 15 * 60000);
+
+    // Busca check-in do médico neste projeto neste dia
+    const ci = checkinsDia.find(c => c.medico_id === medId && c.projeto_id === projId);
+
+    let statusHtml, statusClass;
+
+    if (ci) {
+      const horaCi    = new Date(ci.feito_em);
+      const horaFmt   = horaCi.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'});
+      const atrasado  = horaCi > limite15;
+      const diffMin   = Math.round((horaCi - inicioPlan) / 60000);
+      const diffTxt   = diffMin >= 0 ? `+${diffMin}min` : `${diffMin}min`;
+
+      if (atrasado) {
+        totalAtrasado++;
+        statusHtml = `<span style="color:var(--amber);font-weight:600;">⚠️ Check-in às ${horaFmt} (${diffTxt} do início)</span>`;
+        statusClass = 'amber';
+      } else {
+        totalPresente++;
+        statusHtml = `<span style="color:var(--green);font-weight:600;">✅ Presente às ${horaFmt} (${diffTxt})</span>`;
+        statusClass = 'green';
+      }
+    } else {
+      // Plantão já deveria ter começado?
+      if (agora > limite15) {
+        totalAusente++;
+        statusHtml = `<span style="color:var(--red);font-weight:600;">❌ Ausente — sem check-in</span>`;
+        statusClass = 'red';
+      } else {
+        totalPendente++;
+        const faltaMin = Math.round((inicioPlan - agora) / 60000);
+        const faltaTxt = faltaMin > 0 ? `em ${faltaMin}min` : 'agora';
+        statusHtml = `<span style="color:var(--text3);">⏳ Plantão inicia ${faltaTxt}</span>`;
+        statusClass = 'gray';
+      }
+    }
+
+    const turno  = l.tipo?.includes('Noturno') ? 'Noturno' : l.tipo?.includes('24') ? '24h' : 'Diurno';
+    const badge  = turno==='Noturno' ? 'badge-purple' : turno==='24h' ? 'badge-amber' : 'badge-green';
+    const bgRow  = statusClass==='red' ? 'background:#fff8f8;' : statusClass==='amber' ? 'background:#fffbf0;' : '';
+
+    return `<tr style="${bgRow}">
+      <td>
+        <strong>${nomeMed}</strong><br>
+        <span style="font-size:11px;color:var(--text3);font-family:monospace;">${crmMed}</span>
+      </td>
+      <td>${nomePrj}${l.setor ? '<br><span style="font-size:11px;color:var(--text3);">'+l.setor+'</span>' : ''}</td>
+      <td style="font-family:monospace;">${(l.hora_ini||'').slice(0,5)} – ${(l.hora_fim||'').slice(0,5)}</td>
+      <td><span class="badge ${badge}">${turno}</span></td>
+      <td style="font-family:monospace;">${l.horas}h</td>
+      <td>${statusHtml}</td>
+    </tr>`;
+  }).join('');
+
+  // Resumo
+  const total = lancDia.length;
+  resumoEl.style.display = 'grid';
+  resumoEl.style.gridTemplateColumns = 'repeat(4,minmax(0,1fr))';
+  resumoEl.style.gap = '10px';
+  resumoEl.innerHTML = `
+    <div class="metric" style="border-left:3px solid var(--green);">
+      <div class="metric-label">✅ Presentes</div>
+      <div class="metric-val" style="color:var(--green);">${totalPresente}</div>
+    </div>
+    <div class="metric" style="border-left:3px solid var(--amber);">
+      <div class="metric-label">⚠️ Atrasados (+15min)</div>
+      <div class="metric-val" style="color:var(--amber);">${totalAtrasado}</div>
+    </div>
+    <div class="metric" style="border-left:3px solid var(--red);">
+      <div class="metric-label">❌ Ausentes</div>
+      <div class="metric-val" style="color:var(--red);">${totalAusente}</div>
+    </div>
+    <div class="metric" style="border-left:3px solid var(--text3);">
+      <div class="metric-label">⏳ Aguardando</div>
+      <div class="metric-val" style="color:var(--text3);">${totalPendente}</div>
+    </div>`;
+
+  el.innerHTML = `<table><thead><tr>
+    <th>Médico / CRM</th><th>Projeto / Setor</th><th>Horário</th><th>Turno</th><th>Horas</th><th>Status check-in</th>
+  </tr></thead><tbody>${linhas}</tbody></table>`;
+}
+
+// ── HISTÓRICO DE CHECK-INS ────────────────────────────
 async function carregarCheckins() {
   const pid=document.getElementById('ci-proj')?.value, mid=document.getElementById('ci-med')?.value;
   const d1=document.getElementById('ci-d1')?.value, d2=document.getElementById('ci-d2')?.value;
@@ -731,7 +894,7 @@ function showTab(id,el){
   document.getElementById('tab-'+id).classList.add('active');
   el.classList.add('active');
   if(id==='lancamentos') popLancSelects();
-  if(id==='checkins'){ popCiSelects(); carregarCheckins(); }
+  if(id==='checkins'){ popCiSelects(); popCiProjPresenca(); document.getElementById('ci-data-p').value=hoje_str(); carregarPresenca(); }
   if(id==='relatorios') popRelSelects();
 }
 function toast(msg,err){
