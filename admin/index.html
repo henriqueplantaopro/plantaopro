@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PlantãoPro — Admin</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#f8f7f4;--bg2:#ffffff;--bg3:#f0ede8;
+  --text:#1a1a1a;--text2:#555;--text3:#999;
+  --border:#e0dbd2;--border2:#c8c2b8;
+  --blue:#1a5fad;--blue-bg:#e8f0fb;--blue-light:#f0f5ff;
+  --green:#2d7a3a;--green-bg:#e8f5eb;
+  --amber:#8a5500;--amber-bg:#fdf3e0;
+  --red:#b03030;--red-bg:#fdf0f0;
+  --purple:#5040a0;--purple-bg:#f0eeff;
+  --radius:8px;--radius-lg:12px;
+}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);font-size:14px;}
+
+/* LOGIN */
+#tela-login{position:fixed;inset:0;background:var(--blue);display:flex;align-items:center;justify-content:center;z-index:999;}
+.login-box{background:#fff;border-radius:16px;padding:32px;width:100%;max-width:380px;box-shadow:0 8px 32px rgba(0,0,0,0.2);}
+.login-logo{text-align:center;font-size:40px;margin-bottom:8px;}
+.login-title{text-align:center;font-size:20px;font-weight:700;margin-bottom:4px;}
+.login-sub{text-align:center;font-size:13px;color:var(--text3);margin-bottom:24px;}
+.login-field{margin-bottom:14px;}
+.login-field label{font-size:12px;font-weight:600;color:var(--text2);display:block;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.4px;}
+.login-field input{width:100%;padding:10px 12px;font-size:14px;border:1px solid var(--border);border-radius:var(--radius);outline:none;transition:border-color 0.15s;}
+.login-field input:focus{border-color:var(--blue);}
+.btn-login{width:100%;padding:12px;background:var(--blue);color:#fff;border:none;border-radius:var(--radius);font-size:15px;font-weight:600;cursor:pointer;margin-top:8px;}
+.btn-login:hover{background:#154d8f;}
+.login-erro{color:var(--red);font-size:13px;text-align:center;margin-top:10px;display:none;}
+
+/* LAYOUT */
+.sidebar{position:fixed;left:0;top:0;bottom:0;width:220px;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;z-index:100;}
+.sidebar-header{padding:20px 20px 16px;border-bottom:1px solid var(--border);}
+.sidebar-logo{font-size:15px;font-weight:700;color:var(--text);}
+.sidebar-sub{font-size:11px;color:var(--text3);margin-top:2px;}
+.sidebar-nav{flex:1;padding:12px 0;overflow-y:auto;}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 20px;font-size:13px;color:var(--text2);cursor:pointer;border-left:3px solid transparent;user-select:none;transition:all 0.15s;}
+.nav-item:hover{background:var(--bg3);color:var(--text);}
+.nav-item.active{background:var(--blue-light);color:var(--blue);border-left-color:var(--blue);font-weight:600;}
+.sidebar-footer{padding:14px 20px;border-top:1px solid var(--border);font-size:12px;color:var(--text3);}
+.btn-logout{background:none;border:none;color:var(--red);font-size:12px;cursor:pointer;padding:0;margin-top:4px;}
+.main{margin-left:220px;min-height:100vh;padding:28px 32px;}
+.section{display:none;}.section.active{display:block;}
+.page-title{font-size:20px;font-weight:700;margin-bottom:4px;}
+.page-sub{font-size:12px;color:var(--text3);margin-bottom:24px;}
+
+/* CARDS */
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px;margin-bottom:16px;}
+.card-title{font-size:12px;font-weight:700;color:var(--text);margin-bottom:14px;text-transform:uppercase;letter-spacing:0.5px;}
+
+/* MÉTRICAS */
+.metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:20px;}
+.metric{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px;}
+.metric-label{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;}
+.metric-val{font-size:22px;font-weight:700;color:var(--text);}
+
+/* FORMS */
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;}
+.form-row.three{grid-template-columns:1fr 1fr 1fr;}
+.form-row.four{grid-template-columns:1fr 1fr 1fr 1fr;}
+.form-group{display:flex;flex-direction:column;gap:4px;}
+label{font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:0.4px;}
+input,select{padding:8px 10px;font-size:13px;border:1px solid var(--border);border-radius:var(--radius);background:#fff;color:var(--text);outline:none;transition:border-color 0.15s;}
+input:focus,select:focus{border-color:var(--blue);}
+
+/* BOTÕES */
+.btn{padding:7px 16px;font-size:13px;font-weight:600;border-radius:var(--radius);cursor:pointer;font-family:inherit;transition:all 0.15s;border:1px solid transparent;display:inline-flex;align-items:center;gap:6px;}
+.btn-primary{background:var(--blue);color:#fff;}.btn-primary:hover{background:#154d8f;}
+.btn-success{background:var(--green);color:#fff;}.btn-success:hover{background:#236130;}
+.btn-ghost{background:transparent;color:var(--text2);border-color:var(--border);}.btn-ghost:hover{background:var(--bg3);}
+.btn-danger{background:transparent;color:var(--red);border-color:#e8b8b8;font-size:12px;padding:4px 10px;}
+.btn-sm{padding:4px 10px;font-size:12px;}
+.btn-link{background:var(--blue-bg);color:var(--blue);border-color:var(--blue-bg);font-size:12px;padding:4px 10px;}
+
+/* TABELAS */
+table{width:100%;border-collapse:collapse;font-size:13px;}
+th{text-align:left;font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.5px;padding:8px 10px;border-bottom:1px solid var(--border);}
+td{padding:10px;border-bottom:1px solid var(--border);color:var(--text);vertical-align:middle;}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:var(--bg3);}
+
+/* BADGES */
+.badge{display:inline-block;font-size:11px;font-weight:600;padding:2px 8px;border-radius:99px;}
+.badge-green{background:var(--green-bg);color:var(--green);}
+.badge-blue{background:var(--blue-bg);color:var(--blue);}
+.badge-amber{background:var(--amber-bg);color:var(--amber);}
+.badge-red{background:var(--red-bg);color:var(--red);}
+.badge-purple{background:var(--purple-bg);color:var(--purple);}
+
+/* TOAST */
+#toast{position:fixed;bottom:24px;right:24px;padding:12px 18px;border-radius:var(--radius);font-size:13px;font-weight:600;display:none;z-index:9999;box-shadow:0 4px 12px rgba(0,0,0,0.15);}
+.empty{text-align:center;padding:2.5rem;color:var(--text3);font-size:13px;}
+
+/* LINK DO MÉDICO */
+.link-box{background:var(--blue-light);border:1px solid #c0d4f0;border-radius:var(--radius);padding:10px 12px;font-size:12px;font-family:monospace;word-break:break-all;color:var(--blue);margin-top:6px;}
+
+/* CHECKINS */
+.checkin-ok{color:var(--green);font-weight:600;}
+.checkin-fail{color:var(--red);}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:1000;display:none;align-items:center;justify-content:center;}
+.modal-overlay.open{display:flex;}
+.modal{background:#fff;border-radius:var(--radius-lg);padding:24px;width:100%;max-width:600px;box-shadow:0 8px 32px rgba(0,0,0,0.18);max-height:90vh;overflow-y:auto;}
+.modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;}
+.modal-title{font-size:16px;font-weight:700;}
+.modal-close{background:none;border:none;font-size:20px;cursor:pointer;color:var(--text3);}
+.modal-footer{display:flex;gap:8px;justify-content:flex-end;margin-top:20px;padding-top:16px;border-top:1px solid var(--border);}
+</style>
+</head>
+<body>
+
+<!-- TELA LOGIN -->
+<div id="tela-login">
+  <div class="login-box">
+    <div class="login-logo">🏥</div>
+    <div class="login-title">PlantãoPro</div>
+    <div class="login-sub">Painel Administrativo</div>
+    <div class="login-field"><label>E-mail</label><input id="l-email" type="email" placeholder="admin@email.com" value="admin@plantaoplus.com"></div>
+    <div class="login-field"><label>Senha</label><input id="l-senha" type="password" placeholder="••••••••" value="admin123"></div>
+    <button class="btn-login" onclick="fazerLogin()">Entrar</button>
+    <div class="login-erro" id="login-erro">E-mail ou senha incorretos</div>
+  </div>
+</div>
+
+<!-- SIDEBAR -->
+<div class="sidebar" id="sidebar" style="display:none;">
+  <div class="sidebar-header">
+    <div class="sidebar-logo">🏥 PlantãoPro</div>
+    <div class="sidebar-sub">Painel Admin</div>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-item active" onclick="showTab('dashboard',this)">📊 Dashboard</div>
+    <div class="nav-item" onclick="showTab('medicos',this)">👨‍⚕️ Médicos</div>
+    <div class="nav-item" onclick="showTab('projetos',this)">📁 Projetos</div>
+    <div class="nav-item" onclick="showTab('lancamentos',this)">📋 Lançamentos</div>
+    <div class="nav-item" onclick="showTab('checkins',this)">📍 Check-ins</div>
+    <div class="nav-item" onclick="showTab('relatorios',this)">📈 Relatórios</div>
+  </nav>
+  <div class="sidebar-footer">
+    <div id="admin-nome" style="font-weight:600;"></div>
+    <button class="btn-logout" onclick="fazerLogout()">Sair</button>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main" id="main" style="display:none;">
+
+  <!-- DASHBOARD -->
+  <div id="tab-dashboard" class="section active">
+    <div class="page-title">Dashboard</div>
+    <div class="page-sub">Visão geral em tempo real</div>
+    <div class="metrics">
+      <div class="metric"><div class="metric-label">Médicos ativos</div><div class="metric-val" id="d-medicos">—</div></div>
+      <div class="metric"><div class="metric-label">Plantões este mês</div><div class="metric-val" id="d-plantoes">—</div></div>
+      <div class="metric"><div class="metric-label">Check-ins hoje</div><div class="metric-val" id="d-checkins">—</div></div>
+      <div class="metric"><div class="metric-label">Total honorários mês</div><div class="metric-val" id="d-total">—</div></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+      <div class="card"><div class="card-title">Últimos lançamentos</div><div id="d-lanc-tab"><div class="empty">Carregando...</div></div></div>
+      <div class="card"><div class="card-title">Check-ins recentes</div><div id="d-ci-tab"><div class="empty">Carregando...</div></div></div>
+    </div>
+  </div>
+
+  <!-- MÉDICOS -->
+  <div id="tab-medicos" class="section">
+    <div class="page-title">Médicos</div>
+    <div class="page-sub">Cadastro e links de acesso ao app</div>
+    <div class="card">
+      <div class="card-title">Novo médico</div>
+      <div class="form-row"><div class="form-group"><label>Nome completo</label><input id="mn" type="text" placeholder="Dr. João Silva"></div><div class="form-group"><label>CRM</label><input id="mc" type="text" placeholder="CRM/RJ 000001"></div></div>
+      <div class="form-row four">
+        <div class="form-group"><label>Especialidade</label><input id="me" type="text" placeholder="Clínica Geral"></div>
+        <div class="form-group"><label>Valor/hora (R$)</label><input id="mv" type="number" placeholder="150"></div>
+        <div class="form-group"><label>Tipo</label><select id="mt"><option>Plantonista</option><option>Diarista</option><option>Coordenador</option><option>Residente</option></select></div>
+        <div class="form-group"><label>CPF</label><input id="mcpf" type="text" placeholder="000.000.000-00"></div>
+      </div>
+      <div class="form-row"><div class="form-group"><label>E-mail</label><input id="memail" type="email" placeholder="medico@hospital.com"></div><div class="form-group"><label>Telefone</label><input id="mtel" type="text" placeholder="(21) 99999-9999"></div></div>
+      <button class="btn btn-primary" onclick="addMedico()">+ Adicionar médico</button>
+    </div>
+    <div class="card"><div class="card-title">Médicos cadastrados</div><div id="medicos-lista"><div class="empty">Carregando...</div></div></div>
+  </div>
+
+  <!-- PROJETOS -->
+  <div id="tab-projetos" class="section">
+    <div class="page-title">Projetos</div>
+    <div class="page-sub">Unidades e coordenadas GPS para check-in</div>
+    <div class="card">
+      <div class="card-title">Novo projeto</div>
+      <div class="form-row"><div class="form-group"><label>Nome do projeto</label><input id="pn" type="text" placeholder="UPA Centro"></div><div class="form-group"><label>Código TOTVS (CC)</label><input id="pc" type="text" placeholder="CC-001"></div></div>
+      <div class="form-row"><div class="form-group"><label>Contratante</label><input id="pco" type="text" placeholder="Secretaria Municipal de Saúde"></div><div class="form-group"><label>Status</label><select id="ps"><option>Ativo</option><option>Encerrado</option><option>Em negociação</option></select></div></div>
+      <div class="form-row four">
+        <div class="form-group"><label>Latitude GPS</label><input id="plat" type="text" placeholder="-22.9068"></div>
+        <div class="form-group"><label>Longitude GPS</label><input id="plon" type="text" placeholder="-43.1729"></div>
+        <div class="form-group"><label>Raio check-in (m)</label><input id="praio" type="number" value="100" placeholder="100"></div>
+        <div class="form-group"><label>Contrato</label><input id="pnc" type="text" placeholder="CTR-2024-001"></div>
+      </div>
+      <div style="font-size:12px;color:var(--text3);margin-bottom:10px;">💡 Para pegar as coordenadas: abra o Google Maps, clique com botão direito no hospital e copie a latitude e longitude.</div>
+      <button class="btn btn-primary" onclick="addProjeto()">+ Adicionar projeto</button>
+    </div>
+    <div class="card"><div class="card-title">Projetos cadastrados</div><div id="projetos-lista"><div class="empty">Carregando...</div></div></div>
+  </div>
+
+  <!-- LANÇAMENTOS -->
+  <div id="tab-lancamentos" class="section">
+    <div class="page-title">Lançamentos</div>
+    <div class="page-sub">Registro de plantões</div>
+    <div class="card">
+      <div class="card-title">Novo lançamento</div>
+      <div class="form-row"><div class="form-group"><label>Médico</label><select id="lm"><option value="">Selecione...</option></select></div><div class="form-group"><label>Projeto</label><select id="lp"><option value="">Selecione...</option></select></div></div>
+      <div class="form-row four">
+        <div class="form-group"><label>Data</label><input id="ld" type="date"></div>
+        <div class="form-group"><label>Início</label><input id="li" type="time" value="07:00"></div>
+        <div class="form-group"><label>Fim</label><input id="lf" type="time" value="19:00"></div>
+        <div class="form-group"><label>Tipo</label><select id="lt"><option>Diurno 12h</option><option>Noturno 12h</option><option>24h</option><option>Sobreaviso</option><option>Personalizado</option></select></div>
+      </div>
+      <div class="form-row four">
+        <div class="form-group"><label>Valor total (R$)</label><input id="lval" type="text" placeholder="1.800,00" oninput="updatePreviewLanc()"></div>
+        <div class="form-group"><label>Setor</label><input id="lsetor" type="text" placeholder="Emergência"></div>
+        <div class="form-group"><label>Observações</label><input id="lo" type="text" placeholder="Opcional"></div>
+        <div class="form-group"><label>Código TOTVS</label><input id="lcode" type="text" placeholder="PLANT-MED"></div>
+      </div>
+      <div id="l-preview" style="font-size:13px;color:var(--text2);padding:8px 12px;background:var(--bg3);border-radius:var(--radius);margin-bottom:10px;display:none;"></div>
+      <button class="btn btn-primary" onclick="addLancamento()">+ Registrar plantão</button>
+    </div>
+    <div class="card"><div class="card-title">Plantões registrados</div><div id="lanc-lista"><div class="empty">Carregando...</div></div></div>
+  </div>
+
+  <!-- CHECK-INS -->
+  <div id="tab-checkins" class="section">
+    <div class="page-title">Check-ins</div>
+    <div class="page-sub">Registros de presença dos médicos</div>
+    <div class="card">
+      <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;">
+        <div class="form-group" style="flex:1;min-width:150px;"><label>Projeto</label><select id="ci-proj" onchange="carregarCheckins()"><option value="">Todos</option></select></div>
+        <div class="form-group" style="flex:1;min-width:150px;"><label>Médico</label><select id="ci-med" onchange="carregarCheckins()"><option value="">Todos</option></select></div>
+        <div class="form-group"><label>De</label><input type="date" id="ci-d1" onchange="carregarCheckins()"></div>
+        <div class="form-group"><label>Até</label><input type="date" id="ci-d2" onchange="carregarCheckins()"></div>
+      </div>
+    </div>
+    <div class="card"><div class="card-title">Registros de check-in</div><div id="checkins-lista"><div class="empty">Carregando...</div></div></div>
+  </div>
+
+  <!-- RELATÓRIOS -->
+  <div id="tab-relatorios" class="section">
+    <div class="page-title">Relatórios</div>
+    <div class="page-sub">Exportação agrupada por projeto</div>
+    <div class="card">
+      <div class="form-row four">
+        <div class="form-group"><label>Projeto</label><select id="rp"><option value="">Todos</option></select></div>
+        <div class="form-group"><label>Médico</label><select id="rm"><option value="">Todos</option></select></div>
+        <div class="form-group"><label>De</label><input type="date" id="rd1"></div>
+        <div class="form-group"><label>Até</label><input type="date" id="rd2"></div>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:8px;">
+        <button class="btn btn-success" onclick="exportarXLSX()">⬇ Excel</button>
+        <button class="btn btn-primary" onclick="exportarPDF()">⬇ PDF</button>
+        <button class="btn btn-ghost" onclick="gerarRelatorio()">Visualizar</button>
+      </div>
+    </div>
+    <div id="rel-resultado"></div>
+  </div>
+
+</div><!-- /main -->
+
+<!-- MODAL LINK MÉDICO -->
+<div class="modal-overlay" id="modal-link" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title">Link de acesso — App do médico</div><button class="modal-close" onclick="document.getElementById('modal-link').classList.remove('open')">✕</button></div>
+    <p style="font-size:13px;color:var(--text2);margin-bottom:12px;">Envie este link por WhatsApp para o médico. Ele abre o app direto no celular, sem precisar de senha.</p>
+    <div class="link-box" id="link-medico"></div>
+    <div style="margin-top:12px;display:flex;gap:8px;">
+      <button class="btn btn-primary" onclick="copiarLink()">📋 Copiar link</button>
+      <button class="btn btn-success" onclick="abrirWhatsapp()">📱 Enviar WhatsApp</button>
+    </div>
+    <div class="modal-footer"><button class="btn btn-ghost" onclick="document.getElementById('modal-link').classList.remove('open')">Fechar</button></div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+// ── CONFIG ─────────────────────────────────────────────
+const SUPABASE_URL = 'https://hqtnnadzwtfyfkunwfcy.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhxdG5uYWR6d3RmeWZrdW53ZmN5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYzMTM1MzcsImV4cCI6MjA5MTg4OTUzN30.j2qpn6JJZQ5QcB5j0eWtNV1EfqEz7DfTE-tQbW_WEGw';
+const BASE_URL = window.location.origin; // URL do site após o deploy
+
+// ── ESTADO ─────────────────────────────────────────────
+let adminLogado = null;
+let medicos = [], projetos = [], lancamentos = [];
+let linkMedicoAtual = '';
+
+// ── SUPABASE ───────────────────────────────────────────
+async function sb(path, options = {}) {
+  const res = await fetch(SUPABASE_URL + path, {
+    headers: {
+      'apikey': SUPABASE_KEY,
+      'Authorization': 'Bearer ' + SUPABASE_KEY,
+      'Content-Type': 'application/json',
+      'Prefer': 'return=representation',
+      ...options.headers
+    },
+    ...options
+  });
+  if (!res.ok) { const e = await res.text(); console.error(e); return null; }
+  try { return await res.json(); } catch { return null; }
+}
+
+// ── LOGIN ──────────────────────────────────────────────
+async function fazerLogin() {
+  const email = document.getElementById('l-email').value.trim();
+  const senha = document.getElementById('l-senha').value;
+  if (!email || !senha) return;
+
+  // Busca admin pelo email (em produção use bcrypt — simplificado aqui)
+  const admins = await sb(`/rest/v1/admins?email=eq.${encodeURIComponent(email)}&select=*`);
+  if (!admins || !admins.length) { document.getElementById('login-erro').style.display = 'block'; return; }
+
+  // Verificação simples de senha (para produção, use Supabase Auth)
+  const admin = admins[0];
+  // Aceita a senha padrão admin123 ou qualquer senha cadastrada
+  if (senha !== 'admin123' && senha !== admin.senha_hash) {
+    document.getElementById('login-erro').style.display = 'block'; return;
+  }
+
+  adminLogado = admin;
+  document.getElementById('tela-login').style.display = 'none';
+  document.getElementById('sidebar').style.display = 'flex';
+  document.getElementById('main').style.display = 'block';
+  document.getElementById('admin-nome').textContent = admin.nome;
+  await carregarTudo();
+}
+
+function fazerLogout() {
+  adminLogado = null;
+  document.getElementById('tela-login').style.display = 'flex';
+  document.getElementById('sidebar').style.display = 'none';
+  document.getElementById('main').style.display = 'none';
+}
+
+document.getElementById('l-senha').addEventListener('keydown', e => { if(e.key==='Enter') fazerLogin(); });
+
+// ── CARREGAR DADOS ─────────────────────────────────────
+async function carregarTudo() {
+  await Promise.all([carregarMedicos(), carregarProjetos()]);
+  await carregarLancamentos();
+  carregarDashboard();
+  carregarCheckins();
+  popRelSelects();
+}
+
+async function carregarMedicos() {
+  const data = await sb('/rest/v1/medicos?select=*&order=nome');
+  medicos = data || [];
+  renderMedicos();
+  popLancSelects();
+}
+
+async function carregarProjetos() {
+  const data = await sb('/rest/v1/projetos?select=*&order=nome');
+  projetos = data || [];
+  renderProjetos();
+  popLancSelects();
+  popCiSelects();
+}
+
+async function carregarLancamentos() {
+  const data = await sb('/rest/v1/lancamentos?select=*,medicos(nome,crm),projetos(nome)&order=data.desc&limit=200');
+  lancamentos = (data || []).map(l => ({
+    ...l,
+    medico: l.medicos?.nome || '',
+    crm: l.medicos?.crm || '',
+    projeto: l.projetos?.nome || '',
+  }));
+  renderLancamentos();
+}
+
+// ── DASHBOARD ─────────────────────────────────────────
+async function carregarDashboard() {
+  const hoje = new Date();
+  const d1 = new Date(hoje.getFullYear(), hoje.getMonth(), 1).toISOString().slice(0,10);
+  const d2 = new Date(hoje.getFullYear(), hoje.getMonth()+1, 0).toISOString().slice(0,10);
+  const hj = hoje.toISOString().slice(0,10);
+
+  document.getElementById('d-medicos').textContent = medicos.filter(m=>m.ativo).length;
+
+  const lanMes = lancamentos.filter(l => l.data >= d1 && l.data <= d2);
+  document.getElementById('d-plantoes').textContent = lanMes.length;
+  document.getElementById('d-total').textContent = fBRL(lanMes.reduce((s,l)=>s+(l.honorario||0),0));
+
+  const cis = await sb(`/rest/v1/checkins?feito_em=gte.${hj}T00:00:00&select=*,medicos(nome),projetos(nome)&order=feito_em.desc&limit=10`);
+  document.getElementById('d-checkins').textContent = (cis||[]).length;
+
+  // Últimos lançamentos
+  const dt = document.getElementById('d-lanc-tab');
+  dt.innerHTML = lancamentos.length ? '<table><thead><tr><th>Data</th><th>Médico</th><th>Projeto</th><th>Honorários</th></tr></thead><tbody>' +
+    lancamentos.slice(0,6).map(l=>`<tr><td>${fDate(l.data)}</td><td>${l.medico}</td><td>${l.projeto}</td><td style="color:var(--green);font-weight:600;">${fBRL(l.honorario)}</td></tr>`).join('') +
+    '</tbody></table>' : '<div class="empty">Nenhum lançamento</div>';
+
+  // Check-ins recentes
+  const dc = document.getElementById('d-ci-tab');
+  dc.innerHTML = (cis||[]).length ? '<table><thead><tr><th>Médico</th><th>Local</th><th>Hora</th><th>Status</th></tr></thead><tbody>' +
+    (cis||[]).map(c=>`<tr>
+      <td>${c.medicos?.nome||''}</td>
+      <td>${c.projetos?.nome||''}</td>
+      <td>${new Date(c.feito_em).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}</td>
+      <td>${c.aprovado?'<span class="checkin-ok">✅ Aprovado</span>':'<span class="checkin-fail">❌ Fora do raio</span>'}</td>
+    </tr>`).join('') + '</tbody></table>' : '<div class="empty">Nenhum check-in hoje</div>';
+}
+
+// ── MÉDICOS ───────────────────────────────────────────
+function renderMedicos() {
+  const el = document.getElementById('medicos-lista');
+  if (!medicos.length) { el.innerHTML = '<div class="empty">Nenhum médico cadastrado.</div>'; return; }
+  el.innerHTML = '<table><thead><tr><th>Nome</th><th>CRM</th><th>Especialidade</th><th>Tipo</th><th>Valor/h</th><th>App</th><th></th></tr></thead><tbody>' +
+    medicos.map(m => `<tr>
+      <td><strong>${m.nome}</strong></td><td style="font-family:monospace;">${m.crm}</td>
+      <td>${m.especialidade||'—'}</td>
+      <td><span class="badge badge-blue">${m.tipo}</span></td>
+      <td style="font-family:monospace;">${fBRL(m.valor_hora||0)}</td>
+      <td><button class="btn btn-link" onclick="verLinkMedico('${m.token_acesso}','${m.nome}','${m.telefone||''}')">📱 Link</button></td>
+      <td><button class="btn btn-danger" onclick="delMedico('${m.id}')">Remover</button></td>
+    </tr>`).join('') + '</tbody></table>';
+}
+
+async function addMedico() {
+  const nome = document.getElementById('mn').value.trim();
+  const crm  = document.getElementById('mc').value.trim();
+  if (!nome||!crm) { toast('Nome e CRM são obrigatórios', true); return; }
+  const payload = { nome, crm,
+    especialidade: document.getElementById('me').value.trim(),
+    valor_hora: parseFloat(document.getElementById('mv').value)||0,
+    tipo: document.getElementById('mt').value,
+    cpf: document.getElementById('mcpf').value.trim(),
+    email: document.getElementById('memail').value.trim(),
+    telefone: document.getElementById('mtel').value.trim(),
+    ativo: true
+  };
+  const res = await sb('/rest/v1/medicos', { method:'POST', body: JSON.stringify(payload) });
+  if (res) { toast('Médico cadastrado!'); ['mn','mc','me','mv','mcpf','memail','mtel'].forEach(id=>document.getElementById(id).value=''); await carregarMedicos(); }
+  else toast('Erro ao cadastrar médico', true);
+}
+
+async function delMedico(id) {
+  if (!confirm('Remover médico?')) return;
+  await sb(`/rest/v1/medicos?id=eq.${id}`, { method:'DELETE' });
+  await carregarMedicos();
+}
+
+function verLinkMedico(token, nome, tel) {
+  const link = `${BASE_URL}/medico/?token=${token}`;
+  linkMedicoAtual = { link, nome, tel };
+  document.getElementById('link-medico').textContent = link;
+  document.getElementById('modal-link').classList.add('open');
+}
+
+function copiarLink() {
+  navigator.clipboard.writeText(linkMedicoAtual.link);
+  toast('Link copiado!');
+}
+
+function abrirWhatsapp() {
+  const msg = encodeURIComponent(`Olá Dr(a). ${linkMedicoAtual.nome}! 👋\n\nAcesse seu app de plantões pelo link abaixo:\n${linkMedicoAtual.link}\n\nSalve na tela inicial do seu celular para acessar mais fácil! 📱`);
+  const tel = linkMedicoAtual.tel.replace(/\D/g,'');
+  const url = tel ? `https://wa.me/55${tel}?text=${msg}` : `https://wa.me/?text=${msg}`;
+  window.open(url, '_blank');
+}
+
+// ── PROJETOS ──────────────────────────────────────────
+function renderProjetos() {
+  const el = document.getElementById('projetos-lista');
+  if (!projetos.length) { el.innerHTML = '<div class="empty">Nenhum projeto cadastrado.</div>'; return; }
+  el.innerHTML = '<table><thead><tr><th>Projeto</th><th>Cód. CC</th><th>Contratante</th><th>GPS</th><th>Raio</th><th>Status</th><th></th></tr></thead><tbody>' +
+    projetos.map(p => `<tr>
+      <td><strong>${p.nome}</strong></td>
+      <td style="font-family:monospace;">${p.codigo_cc||'—'}</td>
+      <td>${p.contratante||'—'}</td>
+      <td style="font-size:11px;font-family:monospace;">${p.latitude&&p.longitude?p.latitude+', '+p.longitude:'<span style="color:var(--amber);">⚠ Não configurado</span>'}</td>
+      <td>${p.raio_checkin||100}m</td>
+      <td><span class="badge badge-${p.status==='Ativo'?'green':p.status==='Encerrado'?'red':'amber'}">${p.status}</span></td>
+      <td><button class="btn btn-danger" onclick="delProjeto('${p.id}')">Remover</button></td>
+    </tr>`).join('') + '</tbody></table>';
+}
+
+async function addProjeto() {
+  const nome = document.getElementById('pn').value.trim();
+  if (!nome) { toast('Nome obrigatório', true); return; }
+  const payload = { nome,
+    codigo_cc: document.getElementById('pc').value.trim(),
+    contratante: document.getElementById('pco').value.trim(),
+    status: document.getElementById('ps').value,
+    latitude: parseFloat(document.getElementById('plat').value)||null,
+    longitude: parseFloat(document.getElementById('plon').value)||null,
+    raio_checkin: parseInt(document.getElementById('praio').value)||100,
+    contrato: document.getElementById('pnc').value.trim()
+  };
+  const res = await sb('/rest/v1/projetos', { method:'POST', body: JSON.stringify(payload) });
+  if (res) { toast('Projeto cadastrado!'); ['pn','pc','pco','plat','plon','pnc'].forEach(id=>document.getElementById(id).value=''); await carregarProjetos(); }
+  else toast('Erro ao cadastrar projeto', true);
+}
+
+async function delProjeto(id) {
+  if (!confirm('Remover projeto?')) return;
+  await sb(`/rest/v1/projetos?id=eq.${id}`, { method:'DELETE' });
+  await carregarProjetos();
+}
+
+// ── SELECTS ───────────────────────────────────────────
+function popLancSelects() {
+  const sm = document.getElementById('lm'), sp = document.getElementById('lp');
+  if(!sm||!sp) return;
+  sm.innerHTML = '<option value="">Selecione...</option>' + [...medicos].sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR')).map(m=>`<option value="${m.id}">${m.nome}</option>`).join('');
+  sp.innerHTML = '<option value="">Selecione...</option>' + [...projetos].sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR')).map(p=>`<option value="${p.id}">${p.nome}</option>`).join('');
+}
+function popCiSelects() {
+  const sp = document.getElementById('ci-proj'), sm = document.getElementById('ci-med');
+  if(!sp||!sm) return;
+  sp.innerHTML = '<option value="">Todos</option>' + projetos.map(p=>`<option value="${p.id}">${p.nome}</option>`).join('');
+  sm.innerHTML = '<option value="">Todos</option>' + [...medicos].sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR')).map(m=>`<option value="${m.id}">${m.nome}</option>`).join('');
+}
+function popRelSelects() {
+  const rp = document.getElementById('rp'), rm = document.getElementById('rm');
+  if(!rp||!rm) return;
+  rp.innerHTML = '<option value="">Todos</option>' + projetos.map(p=>`<option value="${p.id}">${p.nome}</option>`).join('');
+  rm.innerHTML = '<option value="">Todos</option>' + [...medicos].sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR')).map(m=>`<option value="${m.id}">${m.nome}</option>`).join('');
+}
+
+// ── LANÇAMENTOS ───────────────────────────────────────
+function parseBRL(str) { return parseFloat((str||'').replace(/\./g,'').replace(',','.'))||0; }
+function calcH(i,f) { const[hi,mi]=i.split(':').map(Number),[hf,mf]=f.split(':').map(Number);let d=(hf*60+mf)-(hi*60+mi);if(d<0)d+=1440;return Math.round(d/60*10)/10; }
+
+document.addEventListener('change', e => { if(['lm','li','lf'].includes(e.target.id)) updatePreviewLanc(); });
+function updatePreviewLanc() {
+  const i=document.getElementById('li').value, f=document.getElementById('lf').value;
+  const mid=document.getElementById('lm').value;
+  const prev=document.getElementById('l-preview');
+  if(!i||!f){ prev.style.display='none'; return; }
+  const h=calcH(i,f);
+  const total=parseBRL(document.getElementById('lval').value);
+  const valorH=h>0&&total>0?Math.round(total/h*100)/100:0;
+  prev.style.display='block';
+  prev.innerHTML=`Duração: <strong>${h}h</strong>${total>0?' &nbsp;·&nbsp; Total: <strong>'+fBRL(total)+'</strong> &nbsp;·&nbsp; Valor/h: '+fBRL(valorH):''}`;
+  // Se médico selecionado e sem valor digitado, sugere valor
+  if(mid&&!document.getElementById('lval').value){
+    const med=medicos.find(m=>m.id===mid);
+    if(med&&med.valor_hora) document.getElementById('lval').value=formatBRLInput(Math.round(h*med.valor_hora*100)/100);
+  }
+}
+
+async function addLancamento() {
+  const mid=document.getElementById('lm').value, pid=document.getElementById('lp').value;
+  const data=document.getElementById('ld').value, ini=document.getElementById('li').value, fim=document.getElementById('lf').value;
+  if(!mid||!pid||!data||!ini||!fim){ toast('Preencha todos os campos obrigatórios', true); return; }
+  const horas=calcH(ini,fim);
+  const honorario=parseBRL(document.getElementById('lval').value);
+  const valorH=horas>0&&honorario>0?Math.round(honorario/horas*100)/100:0;
+  const payload={ medico_id:mid, projeto_id:pid, data, hora_ini:ini, hora_fim:fim, horas, tipo:document.getElementById('lt').value, setor:document.getElementById('lsetor').value.trim(), honorario, valor_hora:valorH, obs:document.getElementById('lo').value.trim(), codigo_totvs:document.getElementById('lcode').value.trim() };
+  const res=await sb('/rest/v1/lancamentos',{method:'POST',body:JSON.stringify(payload)});
+  if(res){ toast('Plantão registrado!'); ['ld','lval','lsetor','lo','lcode'].forEach(id=>document.getElementById(id).value=''); document.getElementById('l-preview').style.display='none'; await carregarLancamentos(); carregarDashboard(); }
+  else toast('Erro ao registrar', true);
+}
+
+function renderLancamentos() {
+  const el=document.getElementById('lanc-lista');
+  if(!lancamentos.length){ el.innerHTML='<div class="empty">Nenhum lançamento registrado.</div>'; return; }
+  el.innerHTML='<table><thead><tr><th>Data</th><th>Médico</th><th>Projeto</th><th>Setor</th><th>Tipo</th><th>Horas</th><th>Honorários</th><th></th></tr></thead><tbody>'+
+    lancamentos.map(l=>`<tr>
+      <td style="font-family:monospace;">${fDate(l.data)}</td><td>${l.medico}</td><td>${l.projeto}</td>
+      <td>${l.setor||'—'}</td>
+      <td><span class="badge badge-${l.tipo?.includes('Noturno')?'purple':l.tipo?.includes('24')?'amber':'green'}">${l.tipo||''}</span></td>
+      <td style="font-family:monospace;">${l.horas}h</td>
+      <td style="font-family:monospace;color:var(--green);font-weight:600;">${fBRL(l.honorario)}</td>
+      <td><button class="btn btn-danger" onclick="delLancamento('${l.id}')">Remover</button></td>
+    </tr>`).join('')+'</tbody></table>';
+}
+
+async function delLancamento(id) {
+  if(!confirm('Remover lançamento?')) return;
+  await sb(`/rest/v1/lancamentos?id=eq.${id}`,{method:'DELETE'});
+  await carregarLancamentos();
+}
+
+// ── CHECK-INS ─────────────────────────────────────────
+async function carregarCheckins() {
+  const pid=document.getElementById('ci-proj')?.value, mid=document.getElementById('ci-med')?.value;
+  const d1=document.getElementById('ci-d1')?.value, d2=document.getElementById('ci-d2')?.value;
+  let path='/rest/v1/checkins?select=*,medicos(nome),projetos(nome)&order=feito_em.desc&limit=100';
+  if(pid) path+=`&projeto_id=eq.${pid}`;
+  if(mid) path+=`&medico_id=eq.${mid}`;
+  if(d1) path+=`&feito_em=gte.${d1}T00:00:00`;
+  if(d2) path+=`&feito_em=lte.${d2}T23:59:59`;
+  const data=await sb(path);
+  const el=document.getElementById('checkins-lista');
+  if(!data||!data.length){ el.innerHTML='<div class="empty">Nenhum check-in encontrado.</div>'; return; }
+  el.innerHTML='<table><thead><tr><th>Data/Hora</th><th>Médico</th><th>Projeto</th><th>Distância</th><th>Status</th></tr></thead><tbody>'+
+    data.map(c=>`<tr>
+      <td style="font-family:monospace;">${new Date(c.feito_em).toLocaleString('pt-BR')}</td>
+      <td>${c.medicos?.nome||'—'}</td><td>${c.projetos?.nome||'—'}</td>
+      <td style="font-family:monospace;">${c.distancia_metros}m</td>
+      <td>${c.aprovado?'<span class="checkin-ok">✅ Aprovado</span>':'<span class="checkin-fail">❌ Fora do raio</span>'}</td>
+    </tr>`).join('')+'</tbody></table>';
+}
+
+// ── RELATÓRIOS ────────────────────────────────────────
+function getDadosRel() {
+  const pid=document.getElementById('rp').value, mid=document.getElementById('rm').value;
+  const d1=document.getElementById('rd1').value, d2=document.getElementById('rd2').value;
+  let dados=[...lancamentos];
+  if(pid) dados=dados.filter(l=>l.projeto_id===pid);
+  if(mid) dados=dados.filter(l=>l.medico_id===mid);
+  if(d1) dados=dados.filter(l=>l.data>=d1);
+  if(d2) dados=dados.filter(l=>l.data<=d2);
+  return dados;
+}
+
+function agruparRel(dados) {
+  const porProjeto={};
+  dados.forEach(l=>{
+    const proj=l.projeto||'Sem projeto';
+    if(!porProjeto[proj]) porProjeto[proj]={grupos:{}};
+    const turno=l.tipo?.includes('Noturno')?'Noturno':l.tipo?.includes('24')?'24h':'Diurno';
+    const chave=`${l.medico}||${l.crm}||${l.horas}||${turno}||${l.setor||''}`;
+    if(!porProjeto[proj].grupos[chave]) porProjeto[proj].grupos[chave]={medico:l.medico,crm:l.crm,horas:l.horas,turno,setor:l.setor||'',qtd:0,total:0};
+    porProjeto[proj].grupos[chave].qtd++;
+    porProjeto[proj].grupos[chave].total+=l.honorario||0;
+  });
+  return porProjeto;
+}
+
+function gerarRelatorio() {
+  const dados=getDadosRel();
+  const el=document.getElementById('rel-resultado');
+  if(!dados.length){ el.innerHTML='<div class="card"><div class="empty">Nenhum dado.</div></div>'; return; }
+  const porProjeto=agruparRel(dados);
+  let html='';
+  Object.entries(porProjeto).sort((a,b)=>a[0].localeCompare(b[0],'pt-BR')).forEach(([proj,pd])=>{
+    const grupos=Object.values(pd.grupos).sort((a,b)=>a.medico.localeCompare(b.medico,'pt-BR'));
+    const projTotal=grupos.reduce((s,g)=>s+g.total,0);
+    const projQtd=grupos.reduce((s,g)=>s+g.qtd,0);
+    html+=`<div class="card" style="margin-bottom:12px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+        <div class="card-title" style="margin-bottom:0;">📁 ${proj}</div>
+        <div style="font-size:12px;color:var(--text2);">${projQtd} plantão(ões) · <span style="font-weight:700;color:var(--green);">${fBRL(projTotal)}</span></div>
+      </div>
+      <table><thead><tr><th>Médico / CRM</th><th>Horas/plantão</th><th>Turno</th><th>Setor</th><th style="text-align:center;">Qtd</th><th>Total</th></tr></thead><tbody>
+        ${grupos.map(g=>`<tr>
+          <td>${g.medico}<br><span style="font-size:11px;color:var(--text3);font-family:monospace;">${g.crm}</span></td>
+          <td style="font-family:monospace;">${g.horas}h</td>
+          <td><span class="badge badge-${g.turno==='Noturno'?'purple':g.turno==='24h'?'amber':'green'}">${g.turno}</span></td>
+          <td>${g.setor||'—'}</td>
+          <td style="text-align:center;">${g.qtd}</td>
+          <td style="font-family:monospace;font-weight:700;color:var(--green);">${fBRL(Math.round(g.total*100)/100)}</td>
+        </tr>`).join('')}
+        <tr style="border-top:2px solid var(--border2);"><td colspan="4" style="font-weight:700;">Total do projeto</td><td style="text-align:center;font-weight:700;">${projQtd}</td><td style="font-weight:700;color:var(--green);">${fBRL(projTotal)}</td></tr>
+      </tbody></table></div>`;
+  });
+  el.innerHTML=html;
+}
+
+function exportarXLSX() {
+  const dados=getDadosRel();
+  if(!dados.length){ toast('Nenhum dado no período', true); return; }
+  const porProjeto=agruparRel(dados);
+  const wb=XLSX.utils.book_new();
+  const rows=[['PROJETO','MÉDICO','CRM','HORAS/PLANTÃO','TURNO','SETOR','QTD_PLANTÕES','TOTAL_HONORÁRIOS']];
+  Object.entries(porProjeto).sort((a,b)=>a[0].localeCompare(b[0],'pt-BR')).forEach(([proj,pd])=>{
+    const grupos=Object.values(pd.grupos).sort((a,b)=>a.medico.localeCompare(b.medico,'pt-BR'));
+    grupos.forEach(g=>rows.push([proj,g.medico,g.crm,g.horas+'h',g.turno,g.setor||'',g.qtd,Math.round(g.total*100)/100]));
+    const t=grupos.reduce((s,g)=>s+g.total,0),q=grupos.reduce((s,g)=>s+g.qtd,0);
+    rows.push(['TOTAL — '+proj.toUpperCase(),'','','','','',q,Math.round(t*100)/100]);
+    rows.push([]);
+  });
+  const ws=XLSX.utils.aoa_to_sheet(rows);
+  ws['!cols']=[{wch:28},{wch:28},{wch:18},{wch:14},{wch:10},{wch:18},{wch:14},{wch:18}];
+  XLSX.utils.book_append_sheet(wb,ws,'Relatório Agrupado');
+  const rowsDet=[['DATA','MÉDICO','CRM','PROJETO','SETOR','TURNO','HORA INI','HORA FIM','HORAS','HONORÁRIOS']];
+  dados.sort((a,b)=>a.projeto.localeCompare(b.projeto)||b.data.localeCompare(a.data)).forEach(l=>{
+    const turno=l.tipo?.includes('Noturno')?'Noturno':l.tipo?.includes('24')?'24h':'Diurno';
+    rowsDet.push([fDate(l.data),l.medico,l.crm,l.projeto,l.setor||'',turno,l.hora_ini,l.hora_fim,l.horas,l.honorario]);
+  });
+  const wsDet=XLSX.utils.aoa_to_sheet(rowsDet);
+  wsDet['!cols']=[{wch:12},{wch:28},{wch:18},{wch:28},{wch:18},{wch:10},{wch:8},{wch:8},{wch:7},{wch:14}];
+  XLSX.utils.book_append_sheet(wb,wsDet,'Lançamentos Detalhados');
+  XLSX.writeFile(wb,'relatorio_'+new Date().toISOString().slice(0,10)+'.xlsx');
+  toast('Excel exportado!');
+}
+
+function exportarPDF() {
+  const dados=getDadosRel();
+  if(!dados.length){ toast('Nenhum dado no período', true); return; }
+  const porProjeto=agruparRel(dados);
+  const d1=document.getElementById('rd1').value, d2=document.getElementById('rd2').value;
+  const periodo=d1&&d2?fDate(d1)+' a '+fDate(d2):'Todos os períodos';
+  const tR=dados.reduce((s,l)=>s+(l.honorario||0),0);
+  const blocos=Object.entries(porProjeto).sort((a,b)=>a[0].localeCompare(b[0],'pt-BR')).map(([proj,pd])=>{
+    const grupos=Object.values(pd.grupos).sort((a,b)=>a.medico.localeCompare(b.medico,'pt-BR'));
+    const projTotal=grupos.reduce((s,g)=>s+g.total,0), projQtd=grupos.reduce((s,g)=>s+g.qtd,0);
+    return `<div class="proj-block">
+      <div class="proj-header"><span class="proj-nome">📁 ${proj.toUpperCase()}</span><span class="proj-meta">${projQtd} plantão(ões) · <strong>${fBRL(projTotal)}</strong></span></div>
+      <table><thead><tr><th>Médico / CRM</th><th>Horas/plantão</th><th>Turno</th><th>Setor</th><th>Qtd</th><th>Total</th></tr></thead>
+      <tbody>${grupos.map(g=>`<tr><td><strong>${g.medico}</strong><br><span style="font-size:9px;color:#999;">${g.crm}</span></td><td>${g.horas}h</td><td><span class="badge badge-${g.turno==='Noturno'?'p':g.turno==='24h'?'a':'g'}">${g.turno}</span></td><td>${g.setor||'—'}</td><td style="text-align:center;">${g.qtd}</td><td style="text-align:right;color:#2d7a3a;font-weight:700;">${fBRL(Math.round(g.total*100)/100)}</td></tr>`).join('')}</tbody>
+      <tfoot><tr><td colspan="4"><strong>Total do projeto</strong></td><td style="text-align:center;"><strong>${projQtd}</strong></td><td style="text-align:right;color:#2d7a3a;font-weight:700;"><strong>${fBRL(projTotal)}</strong></td></tr></tfoot>
+      </table></div>`;
+  }).join('');
+  const html=`<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>Relatório</title>
+  <style>*{box-sizing:border-box;margin:0;padding:0;}body{font-family:Arial,sans-serif;font-size:11px;padding:24px;}h1{font-size:16px;font-weight:700;margin-bottom:3px;}.sub{font-size:10px;color:#777;margin-bottom:16px;}.summary{background:#f5f5f5;padding:10px 14px;border-radius:6px;margin-bottom:18px;font-size:12px;}.proj-block{margin-bottom:18px;page-break-inside:avoid;}.proj-header{display:flex;justify-content:space-between;background:#fdf6e3;border-left:4px solid #e6a817;padding:8px 12px;border-radius:4px 4px 0 0;}.proj-nome{font-size:12px;font-weight:700;}.proj-meta{font-size:11px;color:#555;}table{width:100%;border-collapse:collapse;}th{background:#1a5fad;color:#fff;font-size:9px;padding:5px 8px;text-align:left;}td{padding:6px 8px;border-bottom:0.5px solid #e0e0e0;font-size:10px;}tfoot td{border-top:2px solid #ccc;background:#f5f5f5;font-weight:700;}tr:nth-child(even) td{background:#fafafa;}.badge{display:inline-block;padding:1px 6px;border-radius:10px;font-size:9px;font-weight:700;}.badge-g{background:#e8f5eb;color:#2d7a3a;}.badge-p{background:#f0eeff;color:#5040a0;}.badge-a{background:#fdf3e0;color:#8a5500;}.footer{margin-top:18px;font-size:9px;color:#aaa;border-top:0.5px solid #e0e0e0;padding-top:8px;text-align:right;}@page{margin:1.5cm;}</style>
+  </head><body>
+  <h1>Relatório de Produção Médica</h1>
+  <div class="sub">Período: ${periodo} · Gerado em: ${new Date().toLocaleString('pt-BR')}</div>
+  <div class="summary">Total geral: <strong>${fBRL(tR)}</strong> · ${dados.length} lançamento(s) · ${new Set(dados.map(l=>l.medico_id)).size} médico(s)</div>
+  ${blocos}
+  <div class="footer">PlantãoPro · ${new Date().toLocaleString('pt-BR')}</div>
+  </body></html>`;
+  const win=window.open('','_blank');
+  if(win){win.document.write(html);win.document.close();setTimeout(()=>{win.focus();win.print();},500);toast('PDF aberto!');}
+}
+
+// ── HELPERS ───────────────────────────────────────────
+function fBRL(v){return 'R$ '+Number(v||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});}
+function fDate(s){return s?s.split('-').reverse().join('/'):''}
+function formatBRLInput(v){return v.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});}
+function showTab(id,el){
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('tab-'+id).classList.add('active');
+  el.classList.add('active');
+  if(id==='lancamentos') popLancSelects();
+  if(id==='checkins'){ popCiSelects(); carregarCheckins(); }
+  if(id==='relatorios') popRelSelects();
+}
+function toast(msg,err){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.style.background=err?'#b03030':'#2d7a3a';t.style.color='#fff';
+  t.style.display='block';setTimeout(()=>t.style.display='none',2800);
+}
+
+// Inicia com Enter no login
+document.getElementById('l-email').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('l-senha').focus();});
+</script>
+</body>
+</html>
