@@ -111,6 +111,46 @@ tr:hover td{background:var(--bg3);}
 .modal-title{font-size:16px;font-weight:700;}
 .modal-close{background:none;border:none;font-size:20px;cursor:pointer;color:var(--text3);}
 .modal-footer{display:flex;gap:8px;justify-content:flex-end;margin-top:20px;padding-top:16px;border-top:1px solid var(--border);}
+
+  /* Calendário */
+  .cal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+  .cal-title{font-size:15px;font-weight:600;color:var(--text);}
+  .cal-legend{display:flex;gap:8px;align-items:center;font-size:11px;color:var(--text3);}
+  .cal-legend span{display:inline-flex;align-items:center;gap:4px;}
+  .cal-legend-dot{width:8px;height:8px;border-radius:2px;flex-shrink:0;}
+  .cal-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px;}
+  .cal-dow{font-size:11px;font-weight:600;color:var(--text3);text-align:center;padding:4px 0;text-transform:uppercase;letter-spacing:0.5px;}
+  .cal-day{min-height:72px;border:1px solid var(--border);border-radius:var(--radius);padding:4px;background:var(--bg2);overflow:hidden;}
+  .cal-day.empty{background:transparent;border-color:transparent;}
+  .cal-day.today{border-color:var(--blue);background:var(--blue-light);}
+  .cal-day.has-events{cursor:pointer;}
+  .cal-day.has-events:hover{background:var(--bg3);}
+  .cal-day-num{font-size:12px;font-weight:600;color:var(--text3);margin-bottom:3px;}
+  .cal-day.today .cal-day-num{color:var(--blue);}
+  .cal-event{font-size:10px;padding:1px 5px;border-radius:3px;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:500;}
+  .cal-event.diurno{background:var(--green-bg);color:var(--green);}
+  .cal-event.noturno{background:var(--purple-bg);color:var(--purple);}
+  .cal-event.h24{background:var(--amber-bg);color:var(--amber);}
+  .cal-event.other{background:var(--blue-bg);color:var(--blue);}
+  /* Upload */
+  .upload-zone{border:2px dashed var(--border2);border-radius:var(--radius-lg);padding:2rem;text-align:center;cursor:pointer;transition:all 0.2s;}
+  .upload-zone:hover{border-color:var(--blue);background:var(--blue-light);}
+  /* Layout opts */
+  .layout-opts{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;}
+  .layout-opt{border:1px solid var(--border);border-radius:var(--radius);padding:12px;cursor:pointer;transition:all 0.15s;}
+  .layout-opt:hover{border-color:var(--border2);background:var(--bg3);}
+  .layout-opt.selected{border-color:var(--blue);background:var(--blue-light);}
+  .layout-opt-title{font-size:13px;font-weight:600;color:var(--text);}
+  .layout-opt-desc{font-size:11px;color:var(--text3);margin-top:2px;}
+  .export-btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;}
+  .btn-amber{background:var(--amber);color:#fff;border-color:var(--amber);}
+  .btn-amber:hover{background:#6e4400;}
+  /* Preview box */
+  .preview-box{background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:10px 12px;font-size:12px;color:var(--text2);margin:10px 0;display:none;}
+  .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+  hr{border:none;border-top:1px solid var(--border);margin:14px 0;}
+  .mono{font-family:'Courier New',monospace;}
+
 </style>
 </head>
 <body>
@@ -141,6 +181,9 @@ tr:hover td{background:var(--bg3);}
     <div class="nav-item" onclick="showTab('lancamentos',this)">📋 Lançamentos</div>
     <div class="nav-item" onclick="showTab('checkins',this)">📍 Check-ins</div>
     <div class="nav-item" onclick="showTab('relatorios',this)">📈 Relatórios</div>
+    <div class="nav-item" onclick="showTab('calendario',this)">📅 Calendário</div>
+    <div class="nav-item" onclick="showTab('importar',this)">📥 Importar CSV</div>
+    <div class="nav-item" onclick="showTab('exportar',this)">📤 Exportar TOTVS</div>
   </nav>
   <div class="sidebar-footer">
     <div id="admin-nome" style="font-weight:600;"></div>
@@ -287,6 +330,112 @@ tr:hover td{background:var(--bg3);}
       </div>
     </div>
     <div id="rel-resultado"></div>
+  </div>
+
+
+  <!-- CALENDÁRIO -->
+  <div id="tab-calendario" class="section">
+    <div class="page-title">Calendário</div>
+    <div class="page-sub">Visualização de escala por projeto e médico</div>
+    <div class="card">
+      <div style="display:flex;gap:10px;align-items:flex-end;margin-bottom:16px;flex-wrap:wrap;">
+        <div class="form-group" style="flex:1;min-width:180px;"><label>Filtrar por projeto</label><select id="cal-proj" onchange="renderCal()"><option value="">Todos os projetos</option></select></div>
+        <div class="form-group" style="flex:1;min-width:180px;"><label>Filtrar por médico</label><select id="cal-med" onchange="renderCal()"><option value="">Todos os médicos</option></select></div>
+        <button class="btn btn-ghost btn-sm" onclick="limparFiltrosCal()">Limpar filtros</button>
+      </div>
+      <div class="cal-header">
+        <div style="display:flex;align-items:center;gap:12px;">
+          <button class="btn btn-ghost btn-sm" onclick="navCal(-1)">‹ Anterior</button>
+          <div class="cal-title" id="cal-label"></div>
+          <button class="btn btn-ghost btn-sm" onclick="navCal(1)">Próximo ›</button>
+        </div>
+        <div class="cal-legend">
+          <span><span class="cal-legend-dot" style="background:#e8f5eb;"></span>Diurno</span>
+          <span><span class="cal-legend-dot" style="background:#f0eeff;"></span>Noturno</span>
+          <span><span class="cal-legend-dot" style="background:#fdf3e0;"></span>24h</span>
+        </div>
+      </div>
+      <div id="cal-filtro-badge" style="font-size:12px;color:var(--blue);margin-bottom:8px;display:none;"></div>
+      <div class="cal-grid">
+        <div class="cal-dow">Dom</div><div class="cal-dow">Seg</div><div class="cal-dow">Ter</div>
+        <div class="cal-dow">Qua</div><div class="cal-dow">Qui</div><div class="cal-dow">Sex</div><div class="cal-dow">Sáb</div>
+      </div>
+      <div class="cal-grid" id="cal-grid" style="margin-top:4px;"></div>
+    </div>
+    <div class="card" id="cal-detail" style="display:none;">
+      <div class="card-title" id="cal-detail-title"></div>
+      <div id="cal-detail-body"></div>
+    </div>
+  </div>
+
+  <!-- IMPORTAR -->
+  <div id="tab-importar" class="section">
+    <div class="page-title">Importar CSV</div>
+    <div class="page-sub">Carga em lote de médicos e projetos</div>
+    <div style="display:flex;gap:6px;margin-bottom:16px;">
+      <button class="btn btn-primary" id="imp-tab-med" onclick="switchImpTab('med')">Médicos</button>
+      <button class="btn btn-ghost" id="imp-tab-proj" onclick="switchImpTab('proj')">Projetos</button>
+    </div>
+    <div id="imp-med">
+      <div class="card">
+        <div class="card-title">Importar médicos</div>
+        <p style="font-size:13px;color:var(--text2);margin-bottom:14px;">Colunas: <code>nome · crm · especialidade · valor_hora · tipo · cpf</code><br><span style="font-size:12px;color:var(--text3);">Obrigatórias: nome, crm</span></p>
+        <div class="upload-zone" onclick="document.getElementById('file-upload-med').click()">
+          <input type="file" id="file-upload-med" accept=".csv" onchange="handleUploadMed(this)" style="display:none;">
+          <div style="font-size:28px;margin-bottom:8px;">📂</div>
+          <div style="font-size:14px;font-weight:600;color:var(--text);">Clique para selecionar CSV de médicos</div>
+          <div style="font-size:12px;color:var(--text3);margin-top:4px;">Separador ; ou , · UTF-8 ou ANSI</div>
+        </div>
+        <div id="import-preview-med" style="margin-top:14px;"></div>
+      </div>
+    </div>
+    <div id="imp-proj" style="display:none;">
+      <div class="card">
+        <div class="card-title">Importar projetos</div>
+        <p style="font-size:13px;color:var(--text2);margin-bottom:14px;">Colunas: <code>nome · codigo_cc · contratante · status · cnpj · contrato</code></p>
+        <div class="upload-zone" onclick="document.getElementById('file-upload-proj').click()">
+          <input type="file" id="file-upload-proj" accept=".csv" onchange="handleUploadProj(this)" style="display:none;">
+          <div style="font-size:28px;margin-bottom:8px;">📂</div>
+          <div style="font-size:14px;font-weight:600;color:var(--text);">Clique para selecionar CSV de projetos</div>
+          <div style="font-size:12px;color:var(--text3);margin-top:4px;">Separador ; ou , · UTF-8 ou ANSI</div>
+        </div>
+        <div id="import-preview-proj" style="margin-top:14px;"></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Modelo Excel (duas abas)</div>
+      <p style="font-size:13px;color:var(--text2);margin-bottom:12px;">Baixe o modelo com abas Médicos e Projetos já formatadas.</p>
+      <button class="btn btn-success" onclick="downloadModeloExcel()">⬇ Baixar modelo Excel (.xlsx)</button>
+    </div>
+  </div>
+
+  <!-- EXPORTAR TOTVS -->
+  <div id="tab-exportar" class="section">
+    <div class="page-title">Exportar TOTVS</div>
+    <div class="page-sub">Relatório agrupado em CSV, XLSX ou PDF</div>
+    <div class="card">
+      <div class="card-title">Layout de exportação</div>
+      <div class="layout-opts">
+        <div class="layout-opt selected" id="lay-1" onclick="selectLayout(1)"><div class="layout-opt-title">RH — Folha de pagamento</div><div class="layout-opt-desc">Por CPF e competência</div></div>
+        <div class="layout-opt" id="lay-2" onclick="selectLayout(2)"><div class="layout-opt-title">Financeiro — Contas a pagar</div><div class="layout-opt-desc">Por fornecedor e centro de custo</div></div>
+        <div class="layout-opt" id="lay-3" onclick="selectLayout(3)"><div class="layout-opt-title">Obras — Apontamento de horas</div><div class="layout-opt-desc">Por funcionário e CC</div></div>
+        <div class="layout-opt" id="lay-4" onclick="selectLayout(4)"><div class="layout-opt-title">Personalizado (completo)</div><div class="layout-opt-desc">Todas as colunas disponíveis</div></div>
+      </div>
+      <div id="layout-preview" style="font-size:12px;color:var(--text2);padding:8px 10px;background:var(--bg3);border-radius:var(--radius);margin-bottom:14px;font-family:monospace;"></div>
+      <div class="form-row">
+        <div class="form-group"><label>Período — De</label><input id="ex-d1" type="date"></div>
+        <div class="form-group"><label>Período — Até</label><input id="ex-d2" type="date"></div>
+      </div>
+      <hr>
+      <div style="font-size:12px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px;">Formato de exportação</div>
+      <div class="export-btns">
+        <button class="btn btn-success" onclick="exportarXLSX()">⬇ Excel (XLSX)</button>
+        <button class="btn btn-primary" onclick="exportarCSV()">⬇ CSV</button>
+        <button class="btn btn-amber" onclick="exportarPDF()">⬇ PDF</button>
+        <button class="btn btn-ghost" onclick="previewExport()">Pré-visualizar</button>
+      </div>
+    </div>
+    <div id="export-preview-area"></div>
   </div>
 
 </div><!-- /main -->
@@ -555,10 +704,11 @@ function popCiProjPresenca() {
   sp.value = v;
 }
 function popRelSelects() {
-  const rp = document.getElementById('rp'), rm = document.getElementById('rm');
-  if(!rp||!rm) return;
-  rp.innerHTML = '<option value="">Todos</option>' + projetos.map(p=>`<option value="${p.id}">${p.nome}</option>`).join('');
-  rm.innerHTML = '<option value="">Todos</option>' + [...medicos].sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR')).map(m=>`<option value="${m.id}">${m.nome}</option>`).join('');
+  ['rp','ex-rp'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML='<option value="">Todos</option>'+projetos.map(p=>`<option value="${p.id}">${p.nome}</option>`).join('');});
+  ['rm','ex-rm'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML='<option value="">Todos</option>'+[...medicos].sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR')).map(m=>`<option value="${m.id}">${m.nome}</option>`).join('');});
+  const rp=document.getElementById('rp'),rm=document.getElementById('rm');
+  if(rp)rp.innerHTML='<option value="">Todos</option>'+projetos.map(p=>`<option value="${p.id}">${p.nome}</option>`).join('');
+  if(rm)rm.innerHTML='<option value="">Todos</option>'+[...medicos].sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR')).map(m=>`<option value="${m.id}">${m.nome}</option>`).join('');
 }
 
 // ── LANÇAMENTOS ───────────────────────────────────────
@@ -892,10 +1042,14 @@ function showTab(id,el){
   document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
   document.getElementById('tab-'+id).classList.add('active');
-  el.classList.add('active');
+  if(el) el.classList.add('active');
   if(id==='lancamentos') popLancSelects();
   if(id==='checkins'){ popCiSelects(); popCiProjPresenca(); document.getElementById('ci-data-p').value=hoje_str(); carregarPresenca(); }
-  if(id==='relatorios') popRelSelects();
+  if(id==='relatorios'){ popRelSelects(); }
+  if(id==='calendario'){ popCalSelects(); renderCal(); }
+  if(id==='exportar') renderLayoutPreview();
+  if(id==='importar') switchImpTab('med');
+  if(id==='dashboard') updateDash();
 }
 function toast(msg,err){
   const t=document.getElementById('toast');
@@ -905,6 +1059,442 @@ function toast(msg,err){
 
 // Inicia com Enter no login
 document.getElementById('l-email').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('l-senha').focus();});
+
+// ─── ESTADO EXTRA ───────────────────────────────────────
+let calYear = new Date().getFullYear(), calMonth = new Date().getMonth();
+let selectedLayout = 1;
+const meses = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+const layouts = {
+  1:{nome:'RH — Folha de pagamento',cols:['COMPETENCIA','CPF','NOME','CRM','VERBA','REFERENCIA','VALOR','CENTRO_CUSTO','OBSERVACAO']},
+  2:{nome:'Financeiro — Contas a pagar',cols:['EMISSAO','VENCIMENTO','FORNECEDOR','CPF_CNPJ','VALOR','CENTRO_CUSTO','HISTORICO','CODIGO']},
+  3:{nome:'Obras — Apontamento de horas',cols:['DATA','FUNCIONARIO','CPF','CENTRO_CUSTO','HORAS','TIPO_HORA','VALOR_HORA','TOTAL']},
+  4:{nome:'Personalizado',cols:['DATA','MEDICO','CRM','CPF','PROJETO','CODIGO_CC','TIPO_PLANTAO','HORA_INI','HORA_FIM','HORAS','VALOR_HORA','HONORARIO','OBS']}
+};
+
+// ─── HELPERS EXTRA ──────────────────────────────────────
+function fNum(v) { return (Math.round(v*100)/100).toString().replace('.',','); }
+function sortedMedicos() { return [...medicos].sort((a,b) => a.nome.localeCompare(b.nome,'pt-BR')); }
+function sortedProjetos() { return [...projetos].sort((a,b) => a.nome.localeCompare(b.nome,'pt-BR')); }
+
+// ─── CALENDÁRIO ─────────────────────────────────────────
+function navCal(d) { calMonth+=d; if(calMonth>11){calMonth=0;calYear++;} if(calMonth<0){calMonth=11;calYear--;} renderCal(); }
+
+function popCalSelects() {
+  const sp=document.getElementById('cal-proj'), sm=document.getElementById('cal-med');
+  if(!sp||!sm) return;
+  const selP=sp.value, selM=sm.value;
+  sp.innerHTML='<option value="">Todos os projetos</option>'+sortedProjetos().map(p=>`<option value="${p.id}">${p.nome}</option>`).join('');
+  sm.innerHTML='<option value="">Todos os médicos</option>'+sortedMedicos().map(m=>`<option value="${m.id}">${m.nome}</option>`).join('');
+  sp.value=selP; sm.value=selM;
+}
+
+function limparFiltrosCal() {
+  document.getElementById('cal-proj').value='';
+  document.getElementById('cal-med').value='';
+  renderCal();
+}
+
+function getLancsCal(ds) {
+  const pid=document.getElementById('cal-proj')?.value||'';
+  const mid=document.getElementById('cal-med')?.value||'';
+  // No Supabase, lancamentos já tem medico_id e projeto_id
+  let evts=lancamentos.filter(l=>l.data===ds);
+  if(pid) evts=evts.filter(l=>l.projeto_id===pid);
+  if(mid) evts=evts.filter(l=>l.medico_id===mid);
+  return evts;
+}
+
+function renderCal() {
+  const labelEl=document.getElementById('cal-label');
+  if(!labelEl) return;
+  labelEl.textContent=meses[calMonth]+' '+calYear;
+  const grid=document.getElementById('cal-grid');
+  const primeiro=new Date(calYear,calMonth,1).getDay(), dias=new Date(calYear,calMonth+1,0).getDate();
+  const pid=document.getElementById('cal-proj')?.value||'';
+  const mid=document.getElementById('cal-med')?.value||'';
+  const badge=document.getElementById('cal-filtro-badge');
+  if(badge){
+    const parts=[];
+    if(pid){const p=projetos.find(x=>x.id===pid);if(p)parts.push('Projeto: '+p.nome);}
+    if(mid){const m=medicos.find(x=>x.id===mid);if(m)parts.push('Médico: '+m.nome);}
+    if(parts.length){badge.textContent='● Filtro ativo: '+parts.join(' · ');badge.style.display='block';}
+    else badge.style.display='none';
+  }
+  const hj=new Date();
+  let html='';
+  for(let i=0;i<primeiro;i++) html+='<div class="cal-day empty"></div>';
+  for(let d=1;d<=dias;d++){
+    const ds=`${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const isToday=d===hj.getDate()&&calMonth===hj.getMonth()&&calYear===hj.getFullYear();
+    const evts=getLancsCal(ds);
+    let ev=evts.slice(0,3).map(l=>{
+      const c=l.tipo?.includes('Noturno')?'noturno':l.tipo?.includes('24')?'h24':'diurno';
+      return `<div class="cal-event ${c}" title="${l.medico||''}">${(l.medico||'').split(' ')[0]}</div>`;
+    }).join('');
+    if(evts.length>3) ev+=`<div style="font-size:10px;color:var(--text3);">+${evts.length-3} mais</div>`;
+    html+=`<div class="cal-day${isToday?' today':''}${evts.length?' has-events':''}" onclick="showDayDetailCal('${ds}')"><div class="cal-day-num">${d}</div>${ev}</div>`;
+  }
+  grid.innerHTML=html;
+  if(document.getElementById('cal-detail')) document.getElementById('cal-detail').style.display='none';
+}
+
+function showDayDetailCal(ds) {
+  const pid=document.getElementById('cal-proj')?.value||'';
+  const mid=document.getElementById('cal-med')?.value||'';
+  let evts=lancamentos.filter(l=>l.data===ds);
+  if(pid) evts=evts.filter(l=>l.projeto_id===pid);
+  if(mid) evts=evts.filter(l=>l.medico_id===mid);
+  if(!evts.length) return;
+  const d=document.getElementById('cal-detail');
+  document.getElementById('cal-detail-title').textContent='Plantões em '+fDate(ds);
+  document.getElementById('cal-detail-body').innerHTML='<table><thead><tr><th>Médico</th><th>Projeto</th><th>Setor</th><th>Tipo</th><th>Horário</th><th>Horas</th><th>Honorários</th></tr></thead><tbody>'+
+    evts.map(l=>`<tr><td>${l.medico||''}</td><td>${l.projeto||''}</td><td>${l.setor||'—'}</td><td>${l.tipo||''}</td><td class="mono">${(l.hora_ini||'').slice(0,5)}–${(l.hora_fim||'').slice(0,5)}</td><td class="mono">${l.horas}h</td><td class="mono">${fBRL(l.honorario)}</td></tr>`).join('')+'</tbody></table>';
+  d.style.display='block';
+  d.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+// ─── RELATÓRIO AVANÇADO ─────────────────────────────────
+function filtrarDadosRel() {
+  const pid=document.getElementById('rp').value, mid=document.getElementById('rm').value;
+  const d1=document.getElementById('rd1').value, d2=document.getElementById('rd2').value;
+  let dados=[...lancamentos];
+  if(pid) dados=dados.filter(l=>l.projeto_id===pid);
+  if(mid) dados=dados.filter(l=>l.medico_id===mid);
+  if(d1) dados=dados.filter(l=>l.data>=d1);
+  if(d2) dados=dados.filter(l=>l.data<=d2);
+  return dados;
+}
+
+function gerarRelatorio() {
+  const dados=filtrarDadosRel();
+  const el=document.getElementById('rel-resultado');
+  if(!dados.length){el.innerHTML='<div class="card"><div class="empty">Nenhum dado.</div></div>';return;}
+  const tH=dados.reduce((s,l)=>s+(l.horas||0),0), tR=dados.reduce((s,l)=>s+(l.honorario||0),0);
+  const medicoFiltrado=document.getElementById('rm').value;
+  const nMeds=new Set(dados.map(l=>l.medico_id)).size;
+  let html=`<div class="metrics">
+    <div class="metric"><div class="metric-label">Plantões</div><div class="metric-val">${dados.length}</div></div>
+    <div class="metric"><div class="metric-label">Horas totais</div><div class="metric-val">${Math.round(tH*10)/10}h</div></div>
+    <div class="metric"><div class="metric-label">Total honorários</div><div class="metric-val">${fBRL(tR)}</div></div>
+    <div class="metric"><div class="metric-label">Médicos</div><div class="metric-val">${nMeds}</div></div>
+  </div>`;
+  const porProjeto={};
+  dados.forEach(l=>{
+    const proj=l.projeto||'Sem projeto';
+    if(!porProjeto[proj]) porProjeto[proj]=[];
+    porProjeto[proj].push(l);
+  });
+  Object.entries(porProjeto).sort((a,b)=>a[0].localeCompare(b[0],'pt-BR')).forEach(([proj,lans])=>{
+    const projH=lans.reduce((s,l)=>s+(l.horas||0),0), projR=lans.reduce((s,l)=>s+(l.honorario||0),0), projN=lans.length;
+    const grupos={};
+    lans.forEach(l=>{
+      const turno=l.tipo?.includes('Noturno')?'Noturno':l.tipo?.includes('24')?'24h':'Diurno';
+      const chave=`${l.medico}||${l.horas}||${turno}||${l.setor||''}`;
+      if(!grupos[chave]) grupos[chave]={medico:l.medico,crm:l.crm,horas:l.horas,turno,setor:l.setor||'',qtd:0,total:0};
+      grupos[chave].qtd++; grupos[chave].total+=l.honorario||0;
+    });
+    const linhas=Object.values(grupos).sort((a,b)=>a.medico.localeCompare(b.medico,'pt-BR')).map(g=>{
+      const badge=g.turno==='Noturno'?'badge-purple':g.turno==='24h'?'badge-amber':'badge-green';
+      return `<tr><td>${g.medico}<br><span class="mono" style="font-size:11px;color:var(--text3);">${g.crm||''}</span></td><td class="mono">${g.horas}h</td><td><span class="badge ${badge}">${g.turno}</span></td><td>${g.setor||'—'}</td><td style="text-align:center;">${g.qtd}</td><td class="mono" style="color:var(--green);font-weight:600;">${fBRL(Math.round(g.total*100)/100)}</td></tr>`;
+    }).join('');
+    html+=`<div class="card" style="margin-bottom:16px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+        <div class="card-title" style="margin-bottom:0;">📁 ${proj}</div>
+        <div style="font-size:12px;color:var(--text2);">${projN} plantão(ões) · <span class="mono" style="font-weight:600;">${Math.round(projH*10)/10}h</span> · <span class="mono" style="font-weight:600;color:var(--green);">${fBRL(projR)}</span></div>
+      </div>
+      <table><thead><tr><th>Médico / CRM</th><th>Horas/plantão</th><th>Turno</th><th>Setor</th><th style="text-align:center;">Qtd</th><th>Total</th></tr></thead>
+      <tbody>${linhas}</tbody>
+      <tfoot><tr style="border-top:1.5px solid var(--border2);"><td colspan="4" style="font-size:12px;font-weight:600;color:var(--text2);padding:8px;">Total do projeto</td><td style="text-align:center;font-weight:600;">${projN}</td><td class="mono" style="font-weight:600;color:var(--green);">${fBRL(projR)}</td></tr></tfoot>
+      </table></div>`;
+  });
+  if(medicoFiltrado){
+    const med=medicos.find(m=>m.id===medicoFiltrado);
+    html+=`<div class="card"><div class="card-title">Detalhe individual — ${med?med.nome:''}</div>
+      <table><thead><tr><th>Data</th><th>Projeto</th><th>Setor</th><th>Turno</th><th>Horário</th><th>Horas</th><th>Honorários</th><th>Obs</th></tr></thead><tbody>
+      ${dados.sort((a,b)=>b.data.localeCompare(a.data)).map(l=>{
+        const turno=l.tipo?.includes('Noturno')?'Noturno':l.tipo?.includes('24')?'24h':'Diurno';
+        const badge=turno==='Noturno'?'badge-purple':turno==='24h'?'badge-amber':'badge-green';
+        return `<tr><td class="mono">${fDate(l.data)}</td><td>${l.projeto}</td><td>${l.setor||'—'}</td><td><span class="badge ${badge}">${turno}</span></td><td class="mono">${(l.hora_ini||'').slice(0,5)}–${(l.hora_fim||'').slice(0,5)}</td><td class="mono">${l.horas}h</td><td class="mono">${fBRL(l.honorario)}</td><td style="font-size:12px;color:var(--text2);">${l.obs||''}</td></tr>`;
+      }).join('')}
+      </tbody><tfoot><tr style="border-top:1.5px solid var(--border2);"><td colspan="5" style="font-size:12px;font-weight:600;padding:8px;">Total</td><td class="mono" style="font-weight:600;">${Math.round(tH*10)/10}h</td><td class="mono" style="font-weight:600;color:var(--green);">${fBRL(tR)}</td><td></td></tr></tfoot>
+      </table></div>`;
+  }
+  el.innerHTML=html;
+}
+
+// ─── IMPORTAR CSV ────────────────────────────────────────
+function switchImpTab(tab){
+  document.getElementById('imp-med').style.display=tab==='med'?'block':'none';
+  document.getElementById('imp-proj').style.display=tab==='proj'?'block':'none';
+  document.getElementById('imp-tab-med').className='btn '+(tab==='med'?'btn-primary':'btn-ghost');
+  document.getElementById('imp-tab-proj').className='btn '+(tab==='proj'?'btn-primary':'btn-ghost');
+}
+
+function parseCSV(text){
+  text=text.replace(/^\uFEFF/,'').replace(/\r\n/g,'\n').replace(/\r/g,'\n');
+  const lines=text.split('\n').filter(l=>l.trim());
+  if(!lines.length) return[];
+  const cntSemi=(lines[0].match(/;/g)||[]).length, cntComma=(lines[0].match(/,/g)||[]).length;
+  const sep=cntSemi>=cntComma?';':',';
+  return lines.map(l=>{
+    const fields=[];let cur='',inQ=false;
+    for(let i=0;i<l.length;i++){const ch=l[i];if(ch==='"'){inQ=!inQ;}else if(ch===sep&&!inQ){fields.push(cur.trim());cur='';}else{cur+=ch;}}
+    fields.push(cur.trim());
+    return fields.map(f=>f.replace(/^["']|["']$/g,'').trim());
+  });
+}
+
+function detectEncoding(buffer){
+  const bytes=new Uint8Array(buffer);
+  if(bytes[0]===0xEF&&bytes[1]===0xBB&&bytes[2]===0xBF) return 'UTF-8';
+  try{new TextDecoder('UTF-8',{fatal:true}).decode(buffer);return 'UTF-8';}
+  catch(e){return 'windows-1252';}
+}
+
+function handleUploadMed(input){
+  const file=input.files[0];if(!file) return;
+  const reader=new FileReader();
+  reader.onload=async e=>{
+    const enc=detectEncoding(e.target.result);
+    const text=new TextDecoder(enc).decode(e.target.result);
+    const rows=parseCSV(text);
+    if(rows.length<2){toast('Arquivo inválido',true);return;}
+    const hdr=rows[0].map(h=>h.toLowerCase());
+    const nI=hdr.findIndex(h=>h.includes('nome')),cI=hdr.findIndex(h=>h.includes('crm'));
+    const eI=hdr.findIndex(h=>h.includes('esp')),vI=hdr.findIndex(h=>h.includes('valor'));
+    const tI=hdr.findIndex(h=>h.includes('tipo')),cpfI=hdr.findIndex(h=>h.includes('cpf'));
+    if(nI<0||cI<0){toast('Colunas nome e crm não encontradas',true);return;}
+    const novos=[];
+    for(let i=1;i<rows.length;i++){
+      const c=rows[i];if(!c[nI]) continue;
+      novos.push({nome:c[nI],crm:c[cI]||'',especialidade:eI>=0?c[eI]:'',valor_hora:vI>=0?parseFloat(c[vI].replace(',','.'))||0:0,tipo:tI>=0?c[tI]:'Plantonista',cpf:cpfI>=0?c[cpfI]:'',ativo:true});
+    }
+    const prev=document.getElementById('import-preview-med');
+    prev.innerHTML=`<div class="card"><div class="card-title">Pré-visualização — ${novos.length} médico(s)</div>
+      <table><thead><tr><th>Nome</th><th>CRM</th><th>Especialidade</th><th>Tipo</th><th>Valor/h</th></tr></thead><tbody>
+      ${novos.slice(0,6).map(m=>`<tr><td>${m.nome}</td><td class="mono">${m.crm}</td><td>${m.especialidade||'—'}</td><td>${m.tipo}</td><td class="mono">${fBRL(m.valor_hora)}</td></tr>`).join('')}
+      ${novos.length>6?`<tr><td colspan="5" style="color:var(--text3);font-size:12px;">... e mais ${novos.length-6}</td></tr>`:''}
+      </tbody></table>
+      <div style="margin-top:12px;display:flex;gap:8px;">
+        <button class="btn btn-primary" id="imp-med-btn">Importar ${novos.length} médico(s) para Supabase</button>
+        <button class="btn btn-ghost" onclick="document.getElementById('import-preview-med').innerHTML='';document.getElementById('file-upload-med').value='';">Cancelar</button>
+      </div></div>`;
+    document.getElementById('imp-med-btn').onclick=()=>importarMedicosSupabase(novos);
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+async function importarMedicosSupabase(novos){
+  const existCRMs=medicos.map(m=>m.crm);
+  const filtrados=novos.filter(m=>!existCRMs.includes(m.crm));
+  const dup=novos.length-filtrados.length;
+  let ok=0;
+  for(const m of filtrados){
+    const res=await sb('/rest/v1/medicos',{method:'POST',body:JSON.stringify(m)});
+    if(res) ok++;
+  }
+  toast(`${ok} médico(s) importado(s) para Supabase${dup>0?' · '+dup+' duplicado(s) ignorado(s)':''}`);
+  document.getElementById('import-preview-med').innerHTML='';
+  document.getElementById('file-upload-med').value='';
+  await carregarMedicos();
+}
+
+function handleUploadProj(input){
+  const file=input.files[0];if(!file) return;
+  const reader=new FileReader();
+  reader.onload=async e=>{
+    const enc=detectEncoding(e.target.result);
+    const text=new TextDecoder(enc).decode(e.target.result);
+    const rows=parseCSV(text);
+    if(rows.length<2){toast('Arquivo inválido',true);return;}
+    const hdr=rows[0].map(h=>h.toLowerCase());
+    const nI=hdr.findIndex(h=>h.includes('nome'));
+    const ccI=hdr.findIndex(h=>h.includes('codigo')||h.includes('cc'));
+    const coI=hdr.findIndex(h=>h.includes('contratante'));
+    const stI=hdr.findIndex(h=>h.includes('status'));
+    const cnI=hdr.findIndex(h=>h.includes('cnpj'));
+    const ctI=hdr.findIndex(h=>h.includes('contrato'));
+    if(nI<0){toast('Coluna nome não encontrada',true);return;}
+    const novos=[];
+    for(let i=1;i<rows.length;i++){
+      const c=rows[i];if(!c[nI]) continue;
+      const st=stI>=0?c[stI]:'Ativo';
+      novos.push({nome:c[nI],codigo_cc:ccI>=0?c[ccI]:'',contratante:coI>=0?c[coI]:'',status:['Ativo','Encerrado','Em negociação'].includes(st)?st:'Ativo',cnpj:cnI>=0?c[cnI]:'',contrato:ctI>=0?c[ctI]:''});
+    }
+    const prev=document.getElementById('import-preview-proj');
+    prev.innerHTML=`<div class="card"><div class="card-title">Pré-visualização — ${novos.length} projeto(s)</div>
+      <table><thead><tr><th>Nome</th><th>Cód. CC</th><th>Contratante</th><th>Status</th></tr></thead><tbody>
+      ${novos.slice(0,6).map(p=>`<tr><td>${p.nome}</td><td class="mono">${p.codigo_cc||'—'}</td><td>${p.contratante||'—'}</td><td><span class="badge badge-${p.status==='Ativo'?'green':p.status==='Encerrado'?'red':'amber'}">${p.status}</span></td></tr>`).join('')}
+      ${novos.length>6?`<tr><td colspan="4" style="color:var(--text3);font-size:12px;">... e mais ${novos.length-6}</td></tr>`:''}
+      </tbody></table>
+      <div style="margin-top:12px;display:flex;gap:8px;">
+        <button class="btn btn-primary" id="imp-proj-btn">Importar ${novos.length} projeto(s)</button>
+        <button class="btn btn-ghost" onclick="document.getElementById('import-preview-proj').innerHTML='';document.getElementById('file-upload-proj').value='';">Cancelar</button>
+      </div></div>`;
+    document.getElementById('imp-proj-btn').onclick=()=>importarProjetosSupabase(novos);
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+async function importarProjetosSupabase(novos){
+  const existNomes=projetos.map(p=>p.nome.toLowerCase());
+  const filtrados=novos.filter(p=>!existNomes.includes(p.nome.toLowerCase()));
+  const dup=novos.length-filtrados.length;
+  let ok=0;
+  for(const p of filtrados){
+    const res=await sb('/rest/v1/projetos',{method:'POST',body:JSON.stringify(p)});
+    if(res) ok++;
+  }
+  toast(`${ok} projeto(s) importado(s)${dup>0?' · '+dup+' duplicado(s) ignorado(s)':''}`);
+  document.getElementById('import-preview-proj').innerHTML='';
+  document.getElementById('file-upload-proj').value='';
+  await carregarProjetos();
+}
+
+// ─── MODELO EXCEL ─────────────────────────────────────────
+function downloadModeloExcel(){
+  const wb=XLSX.utils.book_new();
+  const wsMed=XLSX.utils.aoa_to_sheet([['nome','crm','especialidade','valor_hora','tipo','cpf'],['Dr. João Silva','CRM/RJ 000001','Clínica Geral',150,'Plantonista','000.000.000-00'],['Dra. Maria Santos','CRM/RJ 000002','Pediatria',180,'Plantonista','111.111.111-11']]);
+  wsMed['!cols']=[{wch:30},{wch:20},{wch:20},{wch:12},{wch:14},{wch:18}];
+  XLSX.utils.book_append_sheet(wb,wsMed,'Médicos');
+  const wsProj=XLSX.utils.aoa_to_sheet([['nome','codigo_cc','contratante','status','cnpj','contrato'],['UPA Centro','CC-001','Secretaria Municipal de Saúde','Ativo','00.000.000/0001-00','CTR-2024-001'],['Hospital Regional','CC-002','Governo do Estado','Ativo','11.111.111/0001-11','CTR-2024-002']]);
+  wsProj['!cols']=[{wch:30},{wch:12},{wch:35},{wch:16},{wch:22},{wch:18}];
+  XLSX.utils.book_append_sheet(wb,wsProj,'Projetos');
+  const wsInst=XLSX.utils.aoa_to_sheet([['INSTRUÇÕES'],[''],['ABA MÉDICOS — Obrigatórios: nome, crm'],['ABA PROJETOS — Obrigatório: nome'],[''],['Como importar: salve cada aba como CSV e use a aba Importar CSV']]);
+  XLSX.utils.book_append_sheet(wb,wsInst,'Instruções');
+  XLSX.writeFile(wb,'modelo_importacao_plantaoplus.xlsx');
+  toast('Modelo Excel baixado!');
+}
+
+// ─── EXPORTAR TOTVS ─────────────────────────────────────
+function selectLayout(n){
+  selectedLayout=n;[1,2,3,4].forEach(i=>document.getElementById('lay-'+i).classList.remove('selected'));
+  document.getElementById('lay-'+n).classList.add('selected');renderLayoutPreview();
+}
+function renderLayoutPreview(){
+  const el=document.getElementById('layout-preview');
+  if(el) el.textContent=layouts[selectedLayout].cols.join('  ·  ');
+}
+function filtrarDados(){
+  const d1=document.getElementById('ex-d1').value, d2=document.getElementById('ex-d2').value;
+  let d=[...lancamentos];
+  if(d1)d=d.filter(l=>l.data>=d1);if(d2)d=d.filter(l=>l.data<=d2);
+  return d;
+}
+function agruparParaExport(dados){
+  const porProjeto={};
+  dados.forEach(l=>{
+    const proj=l.projeto||'Sem projeto';
+    if(!porProjeto[proj]) porProjeto[proj]={cod:l.projetoCod||'',grupos:{}};
+    const turno=l.tipo?.includes('Noturno')?'Noturno':l.tipo?.includes('24')?'24h':'Diurno';
+    const chave=`${l.medico}||${l.crm||''}||${l.horas}||${turno}||${l.setor||''}`;
+    if(!porProjeto[proj].grupos[chave]) porProjeto[proj].grupos[chave]={medico:l.medico,crm:l.crm||'',cpf:l.cpf||'',horas:l.horas,turno,setor:l.setor||'',qtd:0,total:0};
+    porProjeto[proj].grupos[chave].qtd++;
+    porProjeto[proj].grupos[chave].total+=l.honorario||0;
+  });
+  return porProjeto;
+}
+function buildRowExport(l,n){
+  const comp=(l.data||'').slice(0,7).replace('-','/');
+  const turno=l.tipo?.includes('Noturno')?'Noturno':l.tipo?.includes('24')?'24h':'Diurno';
+  if(n===1)return[comp,l.cpf||'',l.medico,l.crm||'','PLANTAO',l.horas,l.honorario,l.projetoCod||'',l.obs||''];
+  if(n===2)return[fDate(l.data),fDate(l.data),l.medico,l.cpf||'',l.honorario,l.projetoCod||'',l.tipo+' - '+l.projeto,l.code||''];
+  if(n===3)return[fDate(l.data),l.medico,l.cpf||'',l.projetoCod||'',l.horas,'NORMAL',l.valorH||0,l.honorario];
+  return[fDate(l.data),l.medico,l.crm||'',l.cpf||'',l.projeto,l.projetoCod||'',l.tipo,(l.hora_ini||'').slice(0,5),(l.hora_fim||'').slice(0,5),l.horas,l.valorH||0,l.honorario,l.obs||''];
+}
+function exportarXLSX(){
+  const dados=filtrarDados();if(!dados.length){toast('Nenhum dado no período',true);return;}
+  const porProjeto=agruparParaExport(dados);
+  const wb=XLSX.utils.book_new();
+  const rows=[['PROJETO','MÉDICO','CRM','HORAS/PLANTÃO','TURNO','SETOR','QTD_PLANTÕES','TOTAL_HONORÁRIOS']];
+  let totalGeral=0,totalPlantoes=0;
+  Object.entries(porProjeto).sort((a,b)=>a[0].localeCompare(b[0],'pt-BR')).forEach(([proj,pd])=>{
+    const grupos=Object.values(pd.grupos).sort((a,b)=>a.medico.localeCompare(b.medico,'pt-BR'));
+    const projTotal=grupos.reduce((s,g)=>s+g.total,0), projQtd=grupos.reduce((s,g)=>s+g.qtd,0);
+    grupos.forEach(g=>rows.push([proj,g.medico,g.crm,g.horas+'h',g.turno,g.setor||'',g.qtd,Math.round(g.total*100)/100]));
+    rows.push(['TOTAL — '+proj.toUpperCase(),'','','','','',projQtd,Math.round(projTotal*100)/100]);
+    rows.push([]);totalGeral+=projTotal;totalPlantoes+=projQtd;
+  });
+  rows.push(['TOTAL GERAL','','','','','',totalPlantoes,Math.round(totalGeral*100)/100]);
+  const ws=XLSX.utils.aoa_to_sheet(rows);
+  ws['!cols']=[{wch:28},{wch:28},{wch:18},{wch:14},{wch:10},{wch:18},{wch:14},{wch:18}];
+  XLSX.utils.book_append_sheet(wb,ws,'Relatório Agrupado');
+  const rowsDet=[['DATA','MÉDICO','CRM','PROJETO','SETOR','TURNO','HORA INI','HORA FIM','HORAS','HONORÁRIOS']];
+  dados.sort((a,b)=>(a.projeto||'').localeCompare(b.projeto||'')||b.data.localeCompare(a.data)).forEach(l=>{
+    const turno=l.tipo?.includes('Noturno')?'Noturno':l.tipo?.includes('24')?'24h':'Diurno';
+    rowsDet.push([fDate(l.data),l.medico,l.crm||'',l.projeto,l.setor||'',turno,(l.hora_ini||'').slice(0,5),(l.hora_fim||'').slice(0,5),l.horas,l.honorario]);
+  });
+  const wsDet=XLSX.utils.aoa_to_sheet(rowsDet);
+  wsDet['!cols']=[{wch:12},{wch:28},{wch:18},{wch:28},{wch:18},{wch:10},{wch:8},{wch:8},{wch:7},{wch:14}];
+  XLSX.utils.book_append_sheet(wb,wsDet,'Lançamentos Detalhados');
+  XLSX.writeFile(wb,'relatorio_'+new Date().toISOString().slice(0,10)+'.xlsx');
+  toast('XLSX exportado com 2 abas!');
+}
+function exportarCSV(){
+  const dados=filtrarDados();if(!dados.length){toast('Nenhum dado no período',true);return;}
+  const porProjeto=agruparParaExport(dados);
+  const rows=[['PROJETO','MÉDICO','CRM','HORAS/PLANTÃO','TURNO','SETOR','QTD_PLANTÕES','TOTAL_HONORÁRIOS']];
+  Object.entries(porProjeto).sort((a,b)=>a[0].localeCompare(b[0],'pt-BR')).forEach(([proj,pd])=>{
+    Object.values(pd.grupos).sort((a,b)=>a.medico.localeCompare(b.medico,'pt-BR')).forEach(g=>{
+      rows.push([proj,g.medico,g.crm,g.horas+'h',g.turno,g.setor||'',g.qtd,fNum(g.total)]);
+    });
+    const t=Object.values(pd.grupos).reduce((s,g)=>s+g.total,0),q=Object.values(pd.grupos).reduce((s,g)=>s+g.qtd,0);
+    rows.push(['TOTAL — '+proj,'','','','','',q,fNum(t)]);rows.push([]);
+  });
+  const csv=rows.map(r=>r.map(v=>`"${v??''}"`).join(';')).join('\n');
+  const blob=new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8;'});
+  const url=URL.createObjectURL(blob),a=document.createElement('a');
+  a.href=url;a.download='relatorio_'+new Date().toISOString().slice(0,10)+'.csv';a.click();URL.revokeObjectURL(url);
+  toast('CSV exportado!');
+}
+function exportarPDF(){
+  const dados=filtrarDados();if(!dados.length){toast('Nenhum dado no período',true);return;}
+  const porProjeto=agruparParaExport(dados);
+  const d1=document.getElementById('ex-d1').value,d2=document.getElementById('ex-d2').value;
+  const periodo=d1&&d2?fDate(d1)+' a '+fDate(d2):'Todos os períodos';
+  const tR=dados.reduce((s,l)=>s+(l.honorario||0),0);
+  const blocos=Object.entries(porProjeto).sort((a,b)=>a[0].localeCompare(b[0],'pt-BR')).map(([proj,pd])=>{
+    const grupos=Object.values(pd.grupos).sort((a,b)=>a.medico.localeCompare(b.medico,'pt-BR'));
+    const projTotal=grupos.reduce((s,g)=>s+g.total,0),projQtd=grupos.reduce((s,g)=>s+g.qtd,0),projH=grupos.reduce((s,g)=>s+g.horas*g.qtd,0);
+    return `<div class="proj-block"><div class="proj-header"><span class="proj-nome">📁 ${proj.toUpperCase()}</span><span class="proj-meta">${projQtd} plantão(ões) · ${Math.round(projH*10)/10}h · <strong>${fBRL(projTotal)}</strong></span></div>
+      <table><thead><tr><th>Médico / CRM</th><th>Horas/plantão</th><th>Turno</th><th>Setor</th><th>Qtd</th><th>Total</th></tr></thead>
+      <tbody>${grupos.map(g=>`<tr><td><strong>${g.medico}</strong><br><span style="font-size:9px;color:#999;">${g.crm}</span></td><td>${g.horas}h</td><td><span class="badge badge-${g.turno==='Noturno'?'p':g.turno==='24h'?'a':'g'}">${g.turno}</span></td><td>${g.setor||'—'}</td><td style="text-align:center;">${g.qtd}</td><td style="text-align:right;color:#2d7a3a;font-weight:700;">${fBRL(Math.round(g.total*100)/100)}</td></tr>`).join('')}</tbody>
+      <tfoot><tr><td colspan="4"><strong>Total do projeto</strong></td><td style="text-align:center;"><strong>${projQtd}</strong></td><td style="text-align:right;color:#2d7a3a;font-weight:700;"><strong>${fBRL(projTotal)}</strong></td></tr></tfoot>
+      </table></div>`;
+  }).join('');
+  const html=`<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>Relatório PlantãoPro</title>
+  <style>*{box-sizing:border-box;margin:0;padding:0;}body{font-family:Arial,sans-serif;font-size:11px;padding:24px;}h1{font-size:16px;font-weight:700;margin-bottom:3px;}.sub{font-size:10px;color:#777;margin-bottom:16px;}.summary{background:#f5f5f5;padding:10px 14px;border-radius:6px;margin-bottom:18px;font-size:12px;}.proj-block{margin-bottom:18px;page-break-inside:avoid;}.proj-header{display:flex;justify-content:space-between;background:#fdf6e3;border-left:4px solid #e6a817;padding:8px 12px;border-radius:4px 4px 0 0;}.proj-nome{font-size:12px;font-weight:700;}.proj-meta{font-size:11px;color:#555;}table{width:100%;border-collapse:collapse;}th{background:#1a5fad;color:#fff;font-size:9px;padding:5px 8px;text-align:left;}td{padding:6px 8px;border-bottom:0.5px solid #e0e0e0;font-size:10px;}tfoot td{border-top:2px solid #ccc;background:#f5f5f5;font-weight:700;}.badge{display:inline-block;padding:1px 6px;border-radius:10px;font-size:9px;font-weight:700;}.badge-g{background:#e8f5eb;color:#2d7a3a;}.badge-p{background:#f0eeff;color:#5040a0;}.badge-a{background:#fdf3e0;color:#8a5500;}.footer{margin-top:18px;font-size:9px;color:#aaa;border-top:0.5px solid #e0e0e0;padding-top:8px;text-align:right;}@page{margin:1.5cm;}</style>
+  </head><body>
+  <h1>Relatório de Produção Médica — PlantãoPro</h1>
+  <div class="sub">Período: ${periodo} · Gerado em: ${new Date().toLocaleString('pt-BR')}</div>
+  <div class="summary">Total geral: <strong>${fBRL(tR)}</strong> · ${dados.length} lançamento(s)</div>
+  ${blocos}
+  <div class="footer">PlantãoPro · ${new Date().toLocaleString('pt-BR')}</div>
+  </body></html>`;
+  const win=window.open('','_blank');
+  if(win){win.document.write(html);win.document.close();setTimeout(()=>{win.focus();win.print();},500);toast('PDF aberto!');}
+}
+function previewExport(){
+  const dados=filtrarDados(), el=document.getElementById('export-preview-area');
+  if(!dados.length){el.innerHTML='<div class="card"><div class="empty">Nenhum dado no período.</div></div>';return;}
+  const porProjeto=agruparParaExport(dados);
+  let html='';
+  Object.entries(porProjeto).sort((a,b)=>a[0].localeCompare(b[0],'pt-BR')).forEach(([proj,pd])=>{
+    const grupos=Object.values(pd.grupos).sort((a,b)=>a.medico.localeCompare(b.medico,'pt-BR'));
+    const projTotal=grupos.reduce((s,g)=>s+g.total,0),projQtd=grupos.reduce((s,g)=>s+g.qtd,0);
+    html+=`<div class="card" style="margin-bottom:12px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+        <div class="card-title" style="margin-bottom:0;">📁 ${proj}</div>
+        <div style="font-size:12px;color:var(--text2);">${projQtd} plantão(ões) · <span class="mono" style="color:var(--green);font-weight:600;">${fBRL(projTotal)}</span></div>
+      </div>
+      <table><thead><tr><th>Médico / CRM</th><th>Horas/plantão</th><th>Turno</th><th>Setor</th><th style="text-align:center;">Qtd</th><th>Total</th></tr></thead><tbody>
+        ${grupos.map(g=>`<tr><td>${g.medico}<br><span class="mono" style="font-size:11px;color:var(--text3);">${g.crm}</span></td><td class="mono">${g.horas}h</td><td><span class="badge badge-${g.turno==='Noturno'?'purple':g.turno==='24h'?'amber':'green'}">${g.turno}</span></td><td>${g.setor||'—'}</td><td class="mono" style="text-align:center;">${g.qtd}</td><td class="mono" style="color:var(--green);font-weight:600;">${fBRL(Math.round(g.total*100)/100)}</td></tr>`).join('')}
+        <tr style="border-top:1.5px solid var(--border2);"><td colspan="4" style="font-size:12px;font-weight:600;color:var(--text2);">Total do projeto</td><td class="mono" style="text-align:center;font-weight:600;">${projQtd}</td><td class="mono" style="color:var(--green);font-weight:600;">${fBRL(projTotal)}</td></tr>
+      </tbody></table></div>`;
+  });
+  el.innerHTML=html;
+}
+
 </script>
 </body>
 </html>
