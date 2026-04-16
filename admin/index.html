@@ -166,6 +166,17 @@ tr:hover td{background:var(--bg3);}
   .sel-all-row{display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--bg3);border-bottom:1px solid var(--border);font-size:12px;color:var(--text2);font-weight:500;}
   .busca-medico{width:100%;padding:8px 10px;font-size:13px;border:1px solid var(--border);border-radius:var(--radius);margin-bottom:10px;background:#fff;color:var(--text);}
   .busca-medico:focus{border-color:var(--blue);outline:none;}
+  /* Agenda por médico */
+  .mini-cal-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:3px;margin-top:8px;}
+  .mini-cal-dow{font-size:10px;font-weight:600;color:var(--text3);text-align:center;padding:3px 0;text-transform:uppercase;}
+  .mini-cal-day{aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;border-radius:6px;cursor:pointer;border:1px solid transparent;color:var(--text2);transition:all 0.1s;user-select:none;}
+  .mini-cal-day:hover:not(.vazio):not(.passado){border-color:var(--blue);color:var(--blue);}
+  .mini-cal-day.selecionado{background:var(--blue);color:#fff!important;border-color:var(--blue);}
+  .mini-cal-day.hoje{border-color:var(--blue);color:var(--blue);font-weight:700;}
+  .mini-cal-day.vazio{cursor:default;}
+  .mini-cal-day.passado{opacity:0.35;cursor:default;}
+  .dia-selecionado-chip{display:inline-flex;align-items:center;gap:4px;background:var(--blue-light);color:var(--blue);border:1px solid #a0c4f0;border-radius:99px;padding:3px 10px;font-size:12px;font-weight:500;margin:3px;}
+  .dia-selecionado-chip button{background:none;border:none;cursor:pointer;color:var(--blue);font-size:14px;line-height:1;padding:0 0 0 2px;}
 
 </style>
 </head>
@@ -196,6 +207,7 @@ tr:hover td{background:var(--bg3);}
     <div class="nav-item" onclick="showTab('projetos',this)">📁 Projetos</div>
     <div class="nav-item" onclick="showTab('lancamentos',this)">📋 Lançamentos</div>
     <div class="nav-item" onclick="showTab('lote',this)">⚡ Lançamento em lote</div>
+    <div class="nav-item" onclick="showTab('lotemed',this)">📆 Agenda por médico</div>
     <div class="nav-item" onclick="showTab('checkins',this)">📍 Check-ins</div>
     <div class="nav-item" onclick="showTab('relatorios',this)">📈 Relatórios</div>
     <div class="nav-item" onclick="showTab('calendario',this)">📅 Calendário</div>
@@ -254,13 +266,25 @@ tr:hover td{background:var(--bg3);}
       <div class="card-title">Novo projeto</div>
       <div class="form-row"><div class="form-group"><label>Nome do projeto</label><input id="pn" type="text" placeholder="UPA Centro"></div><div class="form-group"><label>Código TOTVS (CC)</label><input id="pc" type="text" placeholder="CC-001"></div></div>
       <div class="form-row"><div class="form-group"><label>Contratante</label><input id="pco" type="text" placeholder="Secretaria Municipal de Saúde"></div><div class="form-group"><label>Status</label><select id="ps"><option>Ativo</option><option>Encerrado</option><option>Em negociação</option></select></div></div>
+      <!-- Remuneração padrão -->
+      <div style="border-top:1px solid var(--border);margin:10px 0 12px;padding-top:12px;">
+        <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;color:var(--text2);margin-bottom:10px;">Remuneração padrão</div>
+        <div class="form-row four">
+          <div class="form-group"><label>Valor plantão 12h (R$)</label><input id="pval12" type="text" placeholder="1.800,00"></div>
+          <div class="form-group"><label>Valor plantão 24h (R$)</label><input id="pval24" type="text" placeholder="3.600,00"></div>
+          <div class="form-group"><label>Valor noturno 12h (R$)</label><input id="pvaln" type="text" placeholder="1.800,00"></div>
+          <div class="form-group"><label>Valor sobreaviso (R$)</label><input id="pvalsob" type="text" placeholder="900,00"></div>
+        </div>
+        <div style="font-size:12px;color:var(--text3);">💡 Esses valores serão sugeridos automaticamente ao lançar plantões neste projeto.</div>
+      </div>
+      <!-- GPS -->
       <div class="form-row four">
         <div class="form-group"><label>Latitude GPS</label><input id="plat" type="text" placeholder="-22.9068"></div>
         <div class="form-group"><label>Longitude GPS</label><input id="plon" type="text" placeholder="-43.1729"></div>
         <div class="form-group"><label>Raio check-in (m)</label><input id="praio" type="number" value="100" placeholder="100"></div>
         <div class="form-group"><label>Contrato</label><input id="pnc" type="text" placeholder="CTR-2024-001"></div>
       </div>
-      <div style="font-size:12px;color:var(--text3);margin-bottom:10px;">💡 Para pegar as coordenadas: abra o Google Maps, clique com botão direito no hospital e copie a latitude e longitude.</div>
+      <div style="font-size:12px;color:var(--text3);margin-bottom:10px;">💡 GPS: abra o Google Maps, clique com botão direito no hospital e copie as coordenadas.</div>
       <button class="btn btn-primary" onclick="addProjeto()">+ Adicionar projeto</button>
     </div>
     <div class="card"><div class="card-title">Projetos cadastrados</div><div id="projetos-lista"><div class="empty">Carregando...</div></div></div>
@@ -316,7 +340,8 @@ tr:hover td{background:var(--bg3);}
       <div class="form-row">
         <div class="form-group">
           <label>Valor por médico (R$) <span id="lote-duracao-label" style="font-weight:400;color:var(--text3);"></span></label>
-          <input id="lote-valor" type="text" placeholder="1.800,00" oninput="atualizarResumoLote()">
+          <input id="lote-valor" type="text" placeholder="1.800,00" oninput="atualizarResumoLote();document.getElementById('lote-valor-badge').style.display='none';">
+          <span id="lote-valor-badge" style="display:none;font-size:11px;color:var(--green);margin-top:3px;">✓ Valor padrão do projeto</span>
         </div>
         <div class="form-group"><label>Observações</label><input id="lote-obs" type="text" placeholder="Opcional"></div>
       </div>
@@ -511,6 +536,78 @@ tr:hover td{background:var(--bg3);}
       <div class="card-title">Modelos Excel</div>
       <p style="font-size:13px;color:var(--text2);margin-bottom:12px;">Baixe o modelo com abas Médicos, Projetos e <strong>Lançamentos</strong> já formatadas.</p>
       <button class="btn btn-success" onclick="downloadModeloExcel()">⬇ Baixar modelo Excel (.xlsx)</button>
+    </div>
+  </div>
+
+  <!-- AGENDA POR MÉDICO -->
+  <div id="tab-lotemed" class="section">
+    <div class="page-title">Agenda por médico</div>
+    <div class="page-sub">Selecione os dias do mês para um profissional e registre em lote</div>
+
+    <!-- Passo 1: Médico e configurações -->
+    <div class="card">
+      <div class="card-title">1. Selecionar médico e configurar plantão</div>
+      <div class="form-row">
+        <div class="form-group"><label>Médico</label><select id="agd-med" onchange="preencherValorPadraoAgenda()"><option value="">Selecione...</option></select></div>
+        <div class="form-group"><label>Projeto</label><select id="agd-proj" onchange="preencherValorPadraoAgenda()"><option value="">Selecione...</option></select></div>
+      </div>
+      <div class="form-row four">
+        <div class="form-group"><label>Início</label><input id="agd-ini" type="time" value="07:00" oninput="atualizarDuracaoAgenda()"></div>
+        <div class="form-group"><label>Fim</label><input id="agd-fim" type="time" value="19:00" oninput="atualizarDuracaoAgenda()"></div>
+        <div class="form-group"><label>Tipo</label>
+          <select id="agd-tipo" onchange="preencherValorPadraoAgenda()">
+            <option>Diurno 12h</option><option>Noturno 12h</option><option>24h</option><option>Sobreaviso</option><option>Personalizado</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Valor por plantão (R$) <span id="agd-dur-label" style="font-weight:400;color:var(--text3);"></span></label>
+          <input id="agd-valor" type="text" placeholder="1.800,00" oninput="atualizarResumoAgenda()">
+          <span id="agd-valor-badge" style="display:none;font-size:11px;color:var(--green);margin-top:3px;">✓ Valor padrão do projeto</span>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Setor</label><input id="agd-setor" type="text" placeholder="Ex: Emergência, UTI"></div>
+        <div class="form-group"><label>Observações</label><input id="agd-obs" type="text" placeholder="Opcional"></div>
+      </div>
+    </div>
+
+    <!-- Passo 2: Mini-calendário -->
+    <div class="card">
+      <div class="card-title">2. Selecionar dias do plantão</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <button class="btn btn-ghost btn-sm" onclick="navAgdCal(-1)">‹</button>
+          <span id="agd-cal-label" style="font-size:15px;font-weight:600;"></span>
+          <button class="btn btn-ghost btn-sm" onclick="navAgdCal(1)">›</button>
+        </div>
+        <button class="btn btn-ghost btn-sm" onclick="limparDiasAgenda()">Limpar seleção</button>
+      </div>
+      <div class="mini-cal-grid">
+        <div class="mini-cal-dow">Dom</div><div class="mini-cal-dow">Seg</div><div class="mini-cal-dow">Ter</div>
+        <div class="mini-cal-dow">Qua</div><div class="mini-cal-dow">Qui</div><div class="mini-cal-dow">Sex</div><div class="mini-cal-dow">Sáb</div>
+      </div>
+      <div class="mini-cal-grid" id="agd-cal-grid"></div>
+
+      <!-- Dias selecionados -->
+      <div style="margin-top:14px;border-top:1px solid var(--border);padding-top:12px;">
+        <div style="font-size:12px;font-weight:600;color:var(--text2);margin-bottom:8px;">Dias selecionados: <span id="agd-qtd-dias" style="color:var(--blue);">0</span></div>
+        <div id="agd-chips"></div>
+      </div>
+    </div>
+
+    <!-- Resumo e confirmação -->
+    <div class="card" id="agd-preview-card" style="display:none;">
+      <div class="card-title">3. Confirmar lançamentos</div>
+      <div id="agd-preview-tabela"></div>
+      <div style="display:flex;gap:8px;margin-top:14px;align-items:center;">
+        <button class="btn btn-primary" id="agd-confirmar-btn" onclick="confirmarAgenda()">✓ Confirmar e registrar</button>
+        <button class="btn btn-ghost" onclick="limparAgenda()">Cancelar</button>
+        <span id="agd-total-label" style="font-size:13px;color:var(--text2);margin-left:auto;"></span>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:8px;">
+      <button class="btn btn-success" onclick="gerarPreviewAgenda()">Gerar pré-visualização →</button>
     </div>
   </div>
 
@@ -753,18 +850,29 @@ function abrirWhatsapp() {
 function renderProjetos() {
   const el = document.getElementById('projetos-lista');
   if (!projetos.length) { el.innerHTML = '<div class="empty">Nenhum projeto cadastrado.</div>'; return; }
-  el.innerHTML = '<table><thead><tr><th>Projeto</th><th>Cód. CC</th><th>Contratante</th><th>GPS</th><th>Raio</th><th>Status</th><th></th></tr></thead><tbody>' +
-    projetos.map(p => `<tr>
-      <td><strong>${p.nome}</strong></td>
-      <td style="font-family:monospace;">${p.codigo_cc||'—'}</td>
-      <td>${p.contratante||'—'}</td>
-      <td style="font-size:11px;font-family:monospace;">${p.latitude&&p.longitude?p.latitude+', '+p.longitude:'<span style="color:var(--amber);">⚠ Não configurado</span>'}</td>
-      <td>${p.raio_checkin||100}m</td>
-      <td><span class="badge badge-${p.status==='Ativo'?'green':p.status==='Encerrado'?'red':'amber'}">${p.status}</span></td>
-      <td><button class="btn btn-danger" onclick="delProjeto('${p.id}')">Remover</button></td>
-    </tr>`).join('') + '</tbody></table>';
+  el.innerHTML = '<table><thead><tr><th>Projeto</th><th>Cód. CC</th><th>Contratante</th><th>Remuneração padrão</th><th>GPS</th><th>Status</th><th></th></tr></thead><tbody>' +
+    projetos.map(p => {
+      const rem = [];
+      if(p.valor_padrao_12h) rem.push(`Diurno: ${fBRL(p.valor_padrao_12h)}`);
+      if(p.valor_padrao_noturno) rem.push(`Noturno: ${fBRL(p.valor_padrao_noturno)}`);
+      if(p.valor_padrao_24h) rem.push(`24h: ${fBRL(p.valor_padrao_24h)}`);
+      if(p.valor_padrao_sobreaviso) rem.push(`Sob.: ${fBRL(p.valor_padrao_sobreaviso)}`);
+      return `<tr>
+        <td><strong>${p.nome}</strong></td>
+        <td style="font-family:monospace;">${p.codigo_cc||'—'}</td>
+        <td>${p.contratante||'—'}</td>
+        <td style="font-size:12px;color:var(--green);">${rem.length?rem.join('<br>'):'<span style="color:var(--text3);">Não configurada</span>'}</td>
+        <td style="font-size:11px;font-family:monospace;">${p.latitude&&p.longitude?'✅ OK':'<span style="color:var(--amber);">⚠ Sem GPS</span>'}</td>
+        <td><span class="badge badge-${p.status==='Ativo'?'green':p.status==='Encerrado'?'red':'amber'}">${p.status}</span></td>
+        <td><button class="btn btn-danger" onclick="delProjeto('${p.id}')">Remover</button></td>
+      </tr>`;
+    }).join('') + '</tbody></table>';
 }
 
+function parseBRLField(id) {
+  const v = document.getElementById(id)?.value||'';
+  return parseFloat(v.replace(/\./g,'').replace(',','.'))||null;
+}
 async function addProjeto() {
   const nome = document.getElementById('pn').value.trim();
   if (!nome) { toast('Nome obrigatório', true); return; }
@@ -775,10 +883,18 @@ async function addProjeto() {
     latitude: parseFloat(document.getElementById('plat').value)||null,
     longitude: parseFloat(document.getElementById('plon').value)||null,
     raio_checkin: parseInt(document.getElementById('praio').value)||100,
-    contrato: document.getElementById('pnc').value.trim()
+    contrato: document.getElementById('pnc').value.trim(),
+    valor_padrao_12h: parseBRLField('pval12'),
+    valor_padrao_24h: parseBRLField('pval24'),
+    valor_padrao_noturno: parseBRLField('pvaln'),
+    valor_padrao_sobreaviso: parseBRLField('pvalsob')
   };
   const res = await sb('/rest/v1/projetos', { method:'POST', body: JSON.stringify(payload) });
-  if (res) { toast('Projeto cadastrado!'); ['pn','pc','pco','plat','plon','pnc'].forEach(id=>document.getElementById(id).value=''); await carregarProjetos(); }
+  if (res) {
+    toast('Projeto cadastrado!');
+    ['pn','pc','pco','plat','plon','pnc','pval12','pval24','pvaln','pvalsob'].forEach(id=>document.getElementById(id).value='');
+    await carregarProjetos();
+  }
   else toast('Erro ao cadastrar projeto', true);
 }
 
@@ -1155,6 +1271,7 @@ function showTab(id,el){
   if(id==='exportar') renderLayoutPreview();
   if(id==='importar') switchImpTab('med');
   if(id==='lote'){ initLote(); }
+  if(id==='lotemed'){ initAgenda(); }
   if(id==='dashboard') updateDash();
 }
 function toast(msg,err){
@@ -1163,22 +1280,280 @@ function toast(msg,err){
   t.style.display='block';setTimeout(()=>t.style.display='none',2800);
 }
 
+
+// ─── AGENDA POR MÉDICO ──────────────────────────────────
+let agdCalYear = new Date().getFullYear();
+let agdCalMonth = new Date().getMonth();
+let agdDiasSelecionados = new Set(); // Set de strings "YYYY-MM-DD"
+
+function initAgenda() {
+  // Popular selects
+  const sm = document.getElementById('agd-med');
+  const sp = document.getElementById('agd-proj');
+  if (sm) sm.innerHTML = '<option value="">Selecione...</option>' + sortedMedicos().map(m=>`<option value="${m.id}">${m.nome}</option>`).join('');
+  if (sp) {
+    sp.innerHTML = '<option value="">Selecione...</option>' + sortedProjetos().map(p=>`<option value="${p.id}">${p.nome}</option>`).join('');
+    sp.addEventListener('change', preencherValorPadraoAgenda);
+  }
+  if (sm) sm.addEventListener('change', preencherValorPadraoAgenda);
+  const tp = document.getElementById('agd-tipo');
+  if (tp) tp.addEventListener('change', preencherValorPadraoAgenda);
+  agdCalYear = new Date().getFullYear();
+  agdCalMonth = new Date().getMonth();
+  agdDiasSelecionados = new Set();
+  renderAgdCal();
+  atualizarDuracaoAgenda();
+}
+
+function preencherValorPadraoAgenda() {
+  const projId = document.getElementById('agd-proj')?.value;
+  const tipo   = document.getElementById('agd-tipo')?.value || '';
+  const campo  = document.getElementById('agd-valor');
+  const badge  = document.getElementById('agd-valor-badge');
+  if (!campo || !projId) return;
+  const proj = projetos.find(p => p.id === projId);
+  if (!proj) return;
+  let val = null;
+  if (tipo.includes('24'))           val = proj.valor_padrao_24h;
+  else if (tipo.includes('Noturno')) val = proj.valor_padrao_noturno;
+  else if (tipo.includes('Sobre'))   val = proj.valor_padrao_sobreaviso;
+  else                               val = proj.valor_padrao_12h;
+  if (val) {
+    campo.value = val.toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2});
+    if (badge) { badge.textContent = '✓ Valor padrão do projeto'; badge.style.display='inline'; }
+    atualizarResumoAgenda();
+  } else {
+    if (badge) badge.style.display='none';
+  }
+}
+
+function atualizarDuracaoAgenda() {
+  const ini = document.getElementById('agd-ini')?.value || '07:00';
+  const fim = document.getElementById('agd-fim')?.value || '19:00';
+  const [hi,mi] = ini.split(':').map(Number), [hf,mf] = fim.split(':').map(Number);
+  let diff = (hf*60+mf)-(hi*60+mi); if(diff<0) diff+=1440;
+  const h = Math.round(diff/60*10)/10;
+  const el = document.getElementById('agd-dur-label');
+  if (el) el.textContent = `· ${h}h`;
+  atualizarResumoAgenda();
+}
+
+function atualizarResumoAgenda() {
+  // Atualiza contador e total
+  const qtd = agdDiasSelecionados.size;
+  const valor = parseBRL(document.getElementById('agd-valor')?.value||'');
+  document.getElementById('agd-qtd-dias').textContent = qtd;
+  // Chips dos dias selecionados
+  renderChips();
+}
+
+function renderChips() {
+  const el = document.getElementById('agd-chips');
+  if (!el) return;
+  const dias = [...agdDiasSelecionados].sort();
+  el.innerHTML = dias.map(d => {
+    const [y,m,dd] = d.split('-');
+    const dt = new Date(parseInt(y), parseInt(m)-1, parseInt(dd));
+    const fmt = dt.toLocaleDateString('pt-BR', {weekday:'short', day:'2-digit', month:'short'});
+    return `<span class="dia-selecionado-chip">${fmt}<button onclick="removerDiaAgenda('${d}')">×</button></span>`;
+  }).join('');
+}
+
+function removerDiaAgenda(ds) {
+  agdDiasSelecionados.delete(ds);
+  renderAgdCal();
+  atualizarResumoAgenda();
+}
+
+function limparDiasAgenda() {
+  agdDiasSelecionados.clear();
+  renderAgdCal();
+  atualizarResumoAgenda();
+}
+
+function navAgdCal(d) {
+  agdCalMonth += d;
+  if (agdCalMonth > 11) { agdCalMonth = 0; agdCalYear++; }
+  if (agdCalMonth < 0)  { agdCalMonth = 11; agdCalYear--; }
+  renderAgdCal();
+}
+
+function renderAgdCal() {
+  const label = document.getElementById('agd-cal-label');
+  if (label) label.textContent = meses[agdCalMonth] + ' ' + agdCalYear;
+  const grid = document.getElementById('agd-cal-grid');
+  if (!grid) return;
+  const hj = new Date();
+  const primeiro = new Date(agdCalYear, agdCalMonth, 1).getDay();
+  const dias = new Date(agdCalYear, agdCalMonth+1, 0).getDate();
+  let html = '';
+  for (let i=0; i<primeiro; i++) html += '<div class="mini-cal-day vazio"></div>';
+  for (let d=1; d<=dias; d++) {
+    const ds = `${agdCalYear}-${String(agdCalMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const dtDia = new Date(agdCalYear, agdCalMonth, d);
+    const isHoje   = d===hj.getDate() && agdCalMonth===hj.getMonth() && agdCalYear===hj.getFullYear();
+    const isSel    = agdDiasSelecionados.has(ds);
+    const isPast   = dtDia < new Date(hj.getFullYear(), hj.getMonth(), hj.getDate());
+    let cls = 'mini-cal-day';
+    if (isSel)   cls += ' selecionado';
+    else if (isHoje)  cls += ' hoje';
+    else if (isPast)  cls += ' passado';
+    const onclick = isPast ? '' : `onclick="toggleDiaAgenda('${ds}')"`;
+    html += `<div class="${cls}" ${onclick}>${d}</div>`;
+  }
+  grid.innerHTML = html;
+}
+
+function toggleDiaAgenda(ds) {
+  if (agdDiasSelecionados.has(ds)) agdDiasSelecionados.delete(ds);
+  else agdDiasSelecionados.add(ds);
+  renderAgdCal();
+  atualizarResumoAgenda();
+}
+
+function gerarPreviewAgenda() {
+  const medId  = document.getElementById('agd-med')?.value;
+  const projId = document.getElementById('agd-proj')?.value;
+  const ini    = document.getElementById('agd-ini')?.value;
+  const fim    = document.getElementById('agd-fim')?.value;
+  const tipo   = document.getElementById('agd-tipo')?.value;
+  const setor  = document.getElementById('agd-setor')?.value.trim();
+  const obs    = document.getElementById('agd-obs')?.value.trim();
+  const valor  = parseBRL(document.getElementById('agd-valor')?.value||'');
+
+  if (!medId)  { toast('Selecione um médico', true); return; }
+  if (!projId) { toast('Selecione um projeto', true); return; }
+  if (!agdDiasSelecionados.size) { toast('Selecione ao menos um dia', true); return; }
+  if (!ini||!fim) { toast('Informe horário', true); return; }
+
+  const med  = medicos.find(m => m.id === medId);
+  const proj = projetos.find(p => p.id === projId);
+  const [hi,mi] = ini.split(':').map(Number), [hf,mf] = fim.split(':').map(Number);
+  let diff = (hf*60+mf)-(hi*60+mi); if(diff<0) diff+=1440;
+  const horas = Math.round(diff/60*10)/10;
+  const hon   = valor || Math.round(horas*(med?.valor_hora||0)*100)/100;
+  const dias  = [...agdDiasSelecionados].sort();
+  const totalGeral = dias.length * hon;
+  const turno = tipo.includes('Noturno')?'purple':tipo.includes('24')?'amber':'green';
+
+  const tabela = document.getElementById('agd-preview-tabela');
+  tabela.innerHTML = `
+    <div style="display:flex;gap:16px;font-size:13px;margin-bottom:14px;flex-wrap:wrap;">
+      <span>👨‍⚕️ <strong>${med?.nome||''}</strong></span>
+      <span>📁 <strong>${proj?.nome||''}</strong></span>
+      <span>🕐 <strong>${ini}–${fim} (${horas}h)</strong></span>
+      ${setor?`<span>🏥 <strong>${setor}</strong></span>`:''}
+    </div>
+    <table><thead><tr><th>Data</th><th>Dia da semana</th><th>Tipo</th><th>Horas</th><th>Honorários</th></tr></thead>
+    <tbody>${dias.map(d => {
+      const dt = new Date(d+'T12:00:00');
+      const dw = dt.toLocaleDateString('pt-BR',{weekday:'long'});
+      return `<tr>
+        <td class="mono">${fDate(d)}</td>
+        <td style="text-transform:capitalize;">${dw}</td>
+        <td><span class="badge badge-${turno}">${tipo}</span></td>
+        <td class="mono">${horas}h</td>
+        <td class="mono" style="color:var(--green);font-weight:600;">${fBRL(hon)}</td>
+      </tr>`;
+    }).join('')}</tbody>
+    <tfoot><tr style="border-top:2px solid var(--border2);">
+      <td colspan="3" style="font-weight:600;padding:8px;">Total (${dias.length} plantões)</td>
+      <td class="mono" style="font-weight:600;">${Math.round(horas*dias.length*10)/10}h</td>
+      <td class="mono" style="font-weight:600;color:var(--green);">${fBRL(totalGeral)}</td>
+    </tr></tfoot></table>`;
+
+  document.getElementById('agd-total-label').textContent = `${dias.length} plantão(ões) · Total: ${fBRL(totalGeral)}`;
+  document.getElementById('agd-preview-card').style.display = 'block';
+  document.getElementById('agd-preview-card').scrollIntoView({behavior:'smooth',block:'nearest'});
+
+  window._agdData = { medId, projId, med:med?.nome, proj:proj?.nome, ini, fim, horas, tipo, setor, obs, valor:hon, dias };
+}
+
+async function confirmarAgenda() {
+  const d = window._agdData;
+  if (!d) return;
+  const btn = document.getElementById('agd-confirmar-btn');
+  btn.disabled = true; btn.textContent = 'Registrando...';
+
+  const payload = d.dias.map(data => ({
+    medico_id: d.medId, projeto_id: d.projId,
+    data, hora_ini: d.ini, hora_fim: d.fim,
+    horas: d.horas, tipo: d.tipo, setor: d.setor,
+    honorario: d.valor,
+    valor_hora: d.horas > 0 ? Math.round(d.valor/d.horas*100)/100 : 0,
+    obs: d.obs, codigo_totvs: ''
+  }));
+
+  const res = await sb('/rest/v1/lancamentos', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+    headers: {'Prefer':'return=minimal'}
+  });
+
+  if (res !== null) {
+    toast(`✅ ${payload.length} plantão(ões) registrado(s) para ${d.med}!`);
+    limparAgenda();
+    await carregarLancamentos();
+    carregarDashboard();
+  } else {
+    toast('Erro ao registrar', true);
+    btn.disabled = false;
+    btn.textContent = '✓ Confirmar e registrar';
+  }
+}
+
+function limparAgenda() {
+  agdDiasSelecionados.clear();
+  renderAgdCal();
+  atualizarResumoAgenda();
+  document.getElementById('agd-preview-card').style.display = 'none';
+  window._agdData = null;
+  const btn = document.getElementById('agd-confirmar-btn');
+  if (btn) { btn.disabled=false; btn.textContent='✓ Confirmar e registrar'; }
+}
+
 // Inicia com Enter no login
 document.getElementById('l-email').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('l-senha').focus();});
 
 // ─── LANÇAMENTO EM LOTE ─────────────────────────────────
 function initLote() {
-  // Popular select de projeto
   const sp = document.getElementById('lote-proj');
   if (sp) {
     sp.innerHTML = '<option value="">Selecione...</option>' +
       sortedProjetos().map(p=>`<option value="${p.id}">${p.nome}</option>`).join('');
+    sp.addEventListener('change', preencherValorPadraoLote);
   }
-  // Data padrão: hoje
   const dl = document.getElementById('lote-data');
   if (dl && !dl.value) dl.value = new Date().toISOString().slice(0,10);
+  // Preencher valor ao mudar tipo
+  const tp = document.getElementById('lote-tipo');
+  if (tp) tp.addEventListener('change', preencherValorPadraoLote);
   renderMedicosLote();
   atualizarDuracaoLote();
+}
+
+function preencherValorPadraoLote() {
+  const projId = document.getElementById('lote-proj')?.value;
+  const tipo   = document.getElementById('lote-tipo')?.value || '';
+  const campo  = document.getElementById('lote-valor');
+  if (!campo || !projId) return;
+  const proj = projetos.find(p => p.id === projId);
+  if (!proj) return;
+  let val = null;
+  if (tipo.includes('24'))           val = proj.valor_padrao_24h;
+  else if (tipo.includes('Noturno')) val = proj.valor_padrao_noturno;
+  else if (tipo.includes('Sobre'))   val = proj.valor_padrao_sobreaviso;
+  else                               val = proj.valor_padrao_12h;
+  if (val) {
+    campo.value = val.toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2});
+    atualizarResumoLote();
+    // Badge informativo
+    const badge = document.getElementById('lote-valor-badge');
+    if (badge) { badge.textContent = '✓ Valor padrão do projeto'; badge.style.display='inline'; }
+  } else {
+    const badge = document.getElementById('lote-valor-badge');
+    if (badge) badge.style.display='none';
+  }
 }
 
 function renderMedicosLote(filtro='') {
