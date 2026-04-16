@@ -371,11 +371,14 @@ tr:hover td{background:var(--bg3);}
   <!-- IMPORTAR -->
   <div id="tab-importar" class="section">
     <div class="page-title">Importar CSV</div>
-    <div class="page-sub">Carga em lote de médicos e projetos</div>
+    <div class="page-sub">Carga em lote de médicos, projetos e lançamentos</div>
     <div style="display:flex;gap:6px;margin-bottom:16px;">
       <button class="btn btn-primary" id="imp-tab-med" onclick="switchImpTab('med')">Médicos</button>
       <button class="btn btn-ghost" id="imp-tab-proj" onclick="switchImpTab('proj')">Projetos</button>
+      <button class="btn btn-ghost" id="imp-tab-lanc" onclick="switchImpTab('lanc')">Lançamentos</button>
     </div>
+
+    <!-- MÉDICOS -->
     <div id="imp-med">
       <div class="card">
         <div class="card-title">Importar médicos</div>
@@ -389,6 +392,8 @@ tr:hover td{background:var(--bg3);}
         <div id="import-preview-med" style="margin-top:14px;"></div>
       </div>
     </div>
+
+    <!-- PROJETOS -->
     <div id="imp-proj" style="display:none;">
       <div class="card">
         <div class="card-title">Importar projetos</div>
@@ -402,9 +407,27 @@ tr:hover td{background:var(--bg3);}
         <div id="import-preview-proj" style="margin-top:14px;"></div>
       </div>
     </div>
+
+    <!-- LANÇAMENTOS -->
+    <div id="imp-lanc" style="display:none;">
+      <div class="card">
+        <div class="card-title">Importar lançamentos em massa</div>
+        <p style="font-size:13px;color:var(--text2);margin-bottom:6px;">Colunas obrigatórias: <code>medico · projeto · data · hora_ini · hora_fim · valor_total</code></p>
+        <p style="font-size:12px;color:var(--text3);margin-bottom:14px;">Opcionais: <code>tipo · setor · obs · codigo_totvs</code> — O médico e projeto são identificados pelo <strong>nome</strong> (deve estar cadastrado no sistema)</p>
+        <div class="upload-zone" onclick="document.getElementById('file-upload-lanc').click()">
+          <input type="file" id="file-upload-lanc" accept=".csv" onchange="handleUploadLanc(this)" style="display:none;">
+          <div style="font-size:28px;margin-bottom:8px;">📂</div>
+          <div style="font-size:14px;font-weight:600;color:var(--text);">Clique para selecionar CSV de lançamentos</div>
+          <div style="font-size:12px;color:var(--text3);margin-top:4px;">Separador ; ou , · UTF-8 ou ANSI</div>
+        </div>
+        <div id="import-preview-lanc" style="margin-top:14px;"></div>
+      </div>
+    </div>
+
+    <!-- MODELO -->
     <div class="card">
-      <div class="card-title">Modelo Excel (duas abas)</div>
-      <p style="font-size:13px;color:var(--text2);margin-bottom:12px;">Baixe o modelo com abas Médicos e Projetos já formatadas.</p>
+      <div class="card-title">Modelos Excel</div>
+      <p style="font-size:13px;color:var(--text2);margin-bottom:12px;">Baixe o modelo com abas Médicos, Projetos e <strong>Lançamentos</strong> já formatadas.</p>
       <button class="btn btn-success" onclick="downloadModeloExcel()">⬇ Baixar modelo Excel (.xlsx)</button>
     </div>
   </div>
@@ -1224,10 +1247,12 @@ function gerarRelatorio() {
 
 // ─── IMPORTAR CSV ────────────────────────────────────────
 function switchImpTab(tab){
-  document.getElementById('imp-med').style.display=tab==='med'?'block':'none';
-  document.getElementById('imp-proj').style.display=tab==='proj'?'block':'none';
-  document.getElementById('imp-tab-med').className='btn '+(tab==='med'?'btn-primary':'btn-ghost');
-  document.getElementById('imp-tab-proj').className='btn '+(tab==='proj'?'btn-primary':'btn-ghost');
+  ['med','proj','lanc'].forEach(t=>{
+    const el=document.getElementById('imp-'+t);
+    if(el) el.style.display=t===tab?'block':'none';
+    const btn=document.getElementById('imp-tab-'+t);
+    if(btn) btn.className='btn '+(t===tab?'btn-primary':'btn-ghost');
+  });
 }
 
 function parseCSV(text){
@@ -1351,6 +1376,144 @@ async function importarProjetosSupabase(novos){
   await carregarProjetos();
 }
 
+// ─── IMPORTAR LANÇAMENTOS ────────────────────────────────
+function handleUploadLanc(input){
+  const file=input.files[0]; if(!file) return;
+  const reader=new FileReader();
+  reader.onload=async e=>{
+    const enc=detectEncoding(e.target.result);
+    const text=new TextDecoder(enc).decode(e.target.result);
+    const rows=parseCSV(text);
+    if(rows.length<2){toast('Arquivo inválido',true);return;}
+    const hdr=rows[0].map(h=>h.toLowerCase().trim());
+
+    // Mapear colunas
+    const mI=hdr.findIndex(h=>h.includes('medico')||h.includes('médico'));
+    const pI=hdr.findIndex(h=>h.includes('projeto'));
+    const dI=hdr.findIndex(h=>h.includes('data'));
+    const iniI=hdr.findIndex(h=>h.includes('hora_ini')||h.includes('inicio')||h.includes('início'));
+    const fimI=hdr.findIndex(h=>h.includes('hora_fim')||h.includes('fim'));
+    const valI=hdr.findIndex(h=>h.includes('valor'));
+    const tipI=hdr.findIndex(h=>h.includes('tipo'));
+    const setI=hdr.findIndex(h=>h.includes('setor'));
+    const obsI=hdr.findIndex(h=>h.includes('obs'));
+    const codI=hdr.findIndex(h=>h.includes('totvs')||h.includes('codigo'));
+
+    if(mI<0||pI<0||dI<0||iniI<0||fimI<0){
+      toast('Colunas obrigatórias não encontradas: medico, projeto, data, hora_ini, hora_fim',true);return;
+    }
+
+    const novos=[], erros=[];
+    for(let i=1;i<rows.length;i++){
+      const c=rows[i]; if(!c[mI]&&!c[dI]) continue;
+      const nomeMed=(c[mI]||'').trim();
+      const nomeProj=(c[pI]||'').trim();
+
+      // Buscar médico pelo nome (case insensitive)
+      const med=medicos.find(m=>m.nome.toLowerCase()===nomeMed.toLowerCase());
+      const proj=projetos.find(p=>p.nome.toLowerCase()===nomeProj.toLowerCase());
+
+      if(!med){ erros.push(`Linha ${i+1}: médico "${nomeMed}" não encontrado`); continue; }
+      if(!proj){ erros.push(`Linha ${i+1}: projeto "${nomeProj}" não encontrado`); continue; }
+
+      // Normalizar data (aceita dd/mm/aaaa ou aaaa-mm-dd)
+      let data=c[dI]||'';
+      if(data.includes('/')) {
+        const p=data.split('/');
+        if(p.length===3) data=p[2].length===4?`${p[2]}-${p[1].padStart(2,'0')}-${p[0].padStart(2,'0')}`:data;
+      }
+
+      const ini=(c[iniI]||'07:00').slice(0,5);
+      const fim=(c[fimI]||'19:00').slice(0,5);
+      const [hi,mi]=ini.split(':').map(Number),[hf,mf]=fim.split(':').map(Number);
+      let diffMin=(hf*60+mf)-(hi*60+mi);if(diffMin<0)diffMin+=1440;
+      const horas=Math.round(diffMin/60*10)/10;
+
+      const valorStr=(c[valI]||'').replace(/\./g,'').replace(',','.');
+      const honorario=parseFloat(valorStr)||Math.round(horas*(med.valor_hora||0)*100)/100;
+      const valorH=horas>0&&honorario>0?Math.round(honorario/horas*100)/100:(med.valor_hora||0);
+
+      const tipo=tipI>=0&&c[tipI]?c[tipI]:'Diurno 12h';
+
+      novos.push({
+        medico_id:med.id, projeto_id:proj.id,
+        medico:med.nome, crm:med.crm, projeto:proj.nome, projetoCod:proj.codigo_cc||'',
+        data, hora_ini:ini, hora_fim:fim, horas, tipo,
+        setor:setI>=0?c[setI]||'':'',
+        honorario, valor_hora:valorH,
+        obs:obsI>=0?c[obsI]||'':'',
+        codigo_totvs:codI>=0?c[codI]||'':''
+      });
+    }
+
+    const prev=document.getElementById('import-preview-lanc');
+    let html=`<div class="card">
+      <div class="card-title">Pré-visualização — ${novos.length} lançamento(s)</div>`;
+
+    if(erros.length){
+      html+=`<div style="background:var(--red-bg);border:1px solid #e8b8b8;border-radius:var(--radius);padding:10px 12px;margin-bottom:12px;">
+        <div style="font-size:12px;font-weight:600;color:var(--red);margin-bottom:6px;">⚠️ ${erros.length} linha(s) com erro (serão ignoradas):</div>
+        ${erros.slice(0,5).map(e=>`<div style="font-size:11px;color:var(--red);">${e}</div>`).join('')}
+        ${erros.length>5?`<div style="font-size:11px;color:var(--red);">... e mais ${erros.length-5} erros</div>`:''}
+      </div>`;
+    }
+
+    if(novos.length){
+      const tTotal=novos.reduce((s,l)=>s+(l.honorario||0),0);
+      html+=`<div style="display:flex;gap:16px;font-size:13px;color:var(--text2);margin-bottom:12px;">
+        <span>Plantões: <strong>${novos.length}</strong></span>
+        <span>Total honorários: <strong style="color:var(--green);">${fBRL(tTotal)}</strong></span>
+      </div>
+      <div style="overflow-x:auto;">
+      <table><thead><tr><th>Data</th><th>Médico</th><th>Projeto</th><th>Setor</th><th>Tipo</th><th>Horário</th><th>Horas</th><th>Honorários</th></tr></thead><tbody>
+        ${novos.slice(0,10).map(l=>`<tr>
+          <td class="mono">${fDate(l.data)}</td>
+          <td>${l.medico}</td><td>${l.projeto}</td><td>${l.setor||'—'}</td>
+          <td><span class="badge badge-${l.tipo.includes('Noturno')?'purple':l.tipo.includes('24')?'amber':'green'}">${l.tipo}</span></td>
+          <td class="mono">${l.hora_ini}–${l.hora_fim}</td>
+          <td class="mono">${l.horas}h</td>
+          <td class="mono" style="color:var(--green);font-weight:600;">${fBRL(l.honorario)}</td>
+        </tr>`).join('')}
+        ${novos.length>10?`<tr><td colspan="8" style="color:var(--text3);font-size:12px;text-align:center;">... e mais ${novos.length-10} lançamentos</td></tr>`:''}
+      </tbody></table></div>
+      <div style="margin-top:14px;display:flex;gap:8px;align-items:center;">
+        <button class="btn btn-primary" id="imp-lanc-btn">✓ Confirmar e importar ${novos.length} lançamento(s)</button>
+        <button class="btn btn-ghost" onclick="document.getElementById('import-preview-lanc').innerHTML='';document.getElementById('file-upload-lanc').value='';">Cancelar</button>
+      </div>`;
+    } else {
+      html+=`<div class="empty">Nenhum lançamento válido encontrado.</div>`;
+    }
+
+    html+='</div>';
+    prev.innerHTML=html;
+    if(novos.length) document.getElementById('imp-lanc-btn').onclick=()=>importarLancamentosSupabase(novos);
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+async function importarLancamentosSupabase(novos){
+  const btn=document.getElementById('imp-lanc-btn');
+  if(btn){btn.disabled=true;btn.textContent='Importando...';}
+  let ok=0, erros=0;
+  // Envia em lotes de 10 para não sobrecarregar
+  for(let i=0;i<novos.length;i+=10){
+    const lote=novos.slice(i,i+10).map(l=>({
+      medico_id:l.medico_id, projeto_id:l.projeto_id,
+      data:l.data, hora_ini:l.hora_ini, hora_fim:l.hora_fim,
+      horas:l.horas, tipo:l.tipo, setor:l.setor,
+      honorario:l.honorario, valor_hora:l.valor_hora,
+      obs:l.obs, codigo_totvs:l.codigo_totvs
+    }));
+    const res=await sb('/rest/v1/lancamentos',{method:'POST',body:JSON.stringify(lote),headers:{'Prefer':'return=minimal'}});
+    if(res!==null) ok+=lote.length; else erros+=lote.length;
+  }
+  toast(`${ok} lançamento(s) importado(s)!${erros>0?' · '+erros+' com erro':''}`);
+  document.getElementById('import-preview-lanc').innerHTML='';
+  document.getElementById('file-upload-lanc').value='';
+  await carregarLancamentos();
+  carregarDashboard();
+}
+
 // ─── MODELO EXCEL ─────────────────────────────────────────
 function downloadModeloExcel(){
   const wb=XLSX.utils.book_new();
@@ -1362,6 +1525,37 @@ function downloadModeloExcel(){
   XLSX.utils.book_append_sheet(wb,wsProj,'Projetos');
   const wsInst=XLSX.utils.aoa_to_sheet([['INSTRUÇÕES'],[''],['ABA MÉDICOS — Obrigatórios: nome, crm'],['ABA PROJETOS — Obrigatório: nome'],[''],['Como importar: salve cada aba como CSV e use a aba Importar CSV']]);
   XLSX.utils.book_append_sheet(wb,wsInst,'Instruções');
+  // Aba Lançamentos
+  const wsLanc=XLSX.utils.aoa_to_sheet([
+    ['medico','projeto','data','hora_ini','hora_fim','valor_total','tipo','setor','obs','codigo_totvs'],
+    ['Dr. João Silva','UPA Centro','15/04/2026','07:00','19:00',1800,'Diurno 12h','Emergência','','PLANT-MED'],
+    ['Dra. Maria Santos','Hospital Regional','15/04/2026','19:00','07:00',1800,'Noturno 12h','UTI','',''],
+    ['Dr. Carlos Lima','UPA Centro','16/04/2026','07:00','07:00',3600,'24h','Clínica Médica','Plantão duplo',''],
+  ]);
+  wsLanc['!cols']=[{wch:28},{wch:25},{wch:14},{wch:10},{wch:10},{wch:14},{wch:14},{wch:18},{wch:20},{wch:14}];
+  XLSX.utils.book_append_sheet(wb,wsLanc,'Lançamentos');
+
+  // Aba instruções lançamentos
+  const wsInstL=XLSX.utils.aoa_to_sheet([
+    ['INSTRUÇÕES — LANÇAMENTOS'],[''],
+    ['Campo','Obrigatório','Formato / Valores aceitos'],
+    ['medico','SIM','Nome exato do médico cadastrado no sistema'],
+    ['projeto','SIM','Nome exato do projeto cadastrado no sistema'],
+    ['data','SIM','DD/MM/AAAA ou AAAA-MM-DD'],
+    ['hora_ini','SIM','HH:MM (ex: 07:00)'],
+    ['hora_fim','SIM','HH:MM (ex: 19:00)'],
+    ['valor_total','SIM','Valor em reais (ex: 1800 ou 1.800,00)'],
+    ['tipo','não','Diurno 12h · Noturno 12h · 24h · Sobreaviso · Personalizado'],
+    ['setor','não','Texto livre (ex: Emergência, UTI)'],
+    ['obs','não','Texto livre'],
+    ['codigo_totvs','não','Código do lançamento no TOTVS'],
+    [''],
+    ['ATENÇÃO: O nome do médico e do projeto deve ser idêntico ao cadastrado no sistema.'],
+    ['Se não encontrar, o lançamento será ignorado e aparecerá como erro na pré-visualização.'],
+  ]);
+  wsInstL['!cols']=[{wch:18},{wch:12},{wch:55}];
+  XLSX.utils.book_append_sheet(wb,wsInstL,'Instruções Lançamentos');
+
   XLSX.writeFile(wb,'modelo_importacao_plantaoplus.xlsx');
   toast('Modelo Excel baixado!');
 }
