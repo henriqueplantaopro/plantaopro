@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="PlantãoPlus">
+<meta name="theme-color" content="#1a5fad">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>PlantãoPlus — Médico</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+  :root{
+    --blue:#1a5fad;--blue-dark:#0f3d7a;--blue-light:#e8f0fb;
+    --green:#2d7a3a;--green-light:#e8f5eb;
+    --red:#b03030;--red-light:#fdf0f0;
+    --amber:#8a5500;--amber-light:#fdf3e0;
+    --gray:#f5f5f5;--border:#e0e0e0;
+    --text:#1a1a1a;--text2:#555;--text3:#999;
+    --radius:12px;--radius-sm:8px;
+  }
+  html,body{height:100%;background:#f0f4f8;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;}
+
+  /* TELA DE CARREGAMENTO */
+  #splash{position:fixed;inset:0;background:var(--blue);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:999;transition:opacity 0.4s;}
+  #splash.hide{opacity:0;pointer-events:none;}
+  .splash-logo{font-size:48px;margin-bottom:12px;}
+  .splash-title{color:#fff;font-size:22px;font-weight:700;letter-spacing:-0.5px;}
+  .splash-sub{color:rgba(255,255,255,0.7);font-size:14px;margin-top:4px;}
+
+  /* HEADER */
+  .header{background:var(--blue);color:#fff;padding:16px 20px 12px;position:sticky;top:0;z-index:10;}
+  .header-top{display:flex;align-items:center;justify-content:space-between;}
+  .header-nome{font-size:16px;font-weight:600;}
+  .header-crm{font-size:12px;opacity:0.75;margin-top:2px;}
+  .header-avatar{width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;}
+
+  /* ABAS */
+  .tabs{display:flex;background:#fff;border-bottom:1px solid var(--border);position:sticky;top:73px;z-index:9;}
+  .tab{flex:1;padding:12px 4px;text-align:center;font-size:12px;font-weight:500;color:var(--text3);border-bottom:2px solid transparent;cursor:pointer;transition:all 0.15s;}
+  .tab.active{color:var(--blue);border-bottom-color:var(--blue);}
+  .tab-icon{font-size:18px;display:block;margin-bottom:2px;}
+
+  /* CONTEÚDO */
+  .content{padding:16px;max-width:480px;margin:0 auto;padding-bottom:32px;}
+  .page{display:none;}.page.active{display:block;}
+
+  /* CARDS */
+  .card{background:#fff;border-radius:var(--radius);padding:16px;margin-bottom:12px;box-shadow:0 1px 4px rgba(0,0,0,0.08);}
+  .card-title{font-size:13px;font-weight:600;color:var(--text);margin-bottom:12px;text-transform:uppercase;letter-spacing:0.5px;}
+
+  /* CHECKIN */
+  .checkin-status{text-align:center;padding:24px 16px;}
+  .checkin-icon{font-size:64px;margin-bottom:12px;display:block;}
+  .checkin-title{font-size:18px;font-weight:700;color:var(--text);margin-bottom:6px;}
+  .checkin-sub{font-size:14px;color:var(--text2);line-height:1.5;}
+  .checkin-dist{font-size:13px;margin-top:8px;padding:6px 14px;border-radius:99px;display:inline-block;}
+  .dist-ok{background:var(--green-light);color:var(--green);}
+  .dist-far{background:var(--red-light);color:var(--red);}
+  .dist-loading{background:var(--gray);color:var(--text3);}
+
+  /* BOTÃO CHECKIN */
+  .btn-checkin{width:100%;padding:18px;font-size:16px;font-weight:700;border-radius:var(--radius);border:none;cursor:pointer;transition:all 0.2s;margin-top:16px;letter-spacing:0.3px;}
+  .btn-checkin.ok{background:var(--green);color:#fff;}
+  .btn-checkin.ok:active{transform:scale(0.97);background:#236130;}
+  .btn-checkin.far{background:var(--border);color:var(--text3);cursor:not-allowed;}
+  .btn-checkin.loading{background:var(--blue);color:#fff;opacity:0.7;cursor:wait;}
+
+  /* SELETOR DE PROJETO */
+  .proj-select{width:100%;padding:10px 12px;font-size:14px;border:1px solid var(--border);border-radius:var(--radius-sm);background:#fff;color:var(--text);margin-bottom:12px;-webkit-appearance:none;appearance:none;}
+
+  /* HISTÓRICO DE CHECK-INS */
+  .checkin-item{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border);}
+  .checkin-item:last-child{border-bottom:none;}
+  .checkin-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+  .dot-ok{background:var(--green);}
+  .dot-fail{background:var(--red);}
+  .checkin-info{flex:1;}
+  .checkin-info-proj{font-size:13px;font-weight:500;color:var(--text);}
+  .checkin-info-meta{font-size:11px;color:var(--text3);margin-top:2px;}
+  .checkin-info-dist{font-size:11px;padding:2px 8px;border-radius:99px;margin-top:3px;display:inline-block;}
+
+  /* PLANTÕES */
+  .plantao-card{background:#fff;border-radius:var(--radius);margin-bottom:10px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.08);}
+  .plantao-header{padding:12px 16px;display:flex;align-items:center;justify-content:space-between;}
+  .plantao-data{font-size:13px;font-weight:700;color:var(--blue);}
+  .plantao-proj{font-size:12px;color:var(--text2);margin-top:1px;}
+  .badge{display:inline-block;font-size:10px;font-weight:600;padding:3px 8px;border-radius:99px;}
+  .badge-green{background:var(--green-light);color:var(--green);}
+  .badge-purple{background:#f0eeff;color:#5040a0;}
+  .badge-amber{background:var(--amber-light);color:var(--amber);}
+  .plantao-body{padding:8px 16px 14px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;border-top:1px solid var(--gray);}
+  .plantao-info-label{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.3px;}
+  .plantao-info-val{font-size:13px;font-weight:600;color:var(--text);margin-top:2px;}
+
+  /* HISTÓRICO DE PLANTÕES */
+  .plantao-valor{text-align:right;}
+  .plantao-valor-val{font-size:15px;font-weight:700;color:var(--green);}
+
+  /* EMPTY */
+  .empty{text-align:center;padding:40px 20px;color:var(--text3);font-size:14px;}
+  .empty-icon{font-size:40px;margin-bottom:8px;}
+
+  /* TOAST */
+  #toast-med{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#333;color:#fff;padding:10px 18px;border-radius:99px;font-size:13px;display:none;z-index:999;white-space:nowrap;box-shadow:0 4px 12px rgba(0,0,0,0.2);}
+
+  /* SPINNER */
+  .spinner{width:20px;height:20px;border:2px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:spin 0.8s linear infinite;display:inline-block;vertical-align:middle;margin-right:8px;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+
+  /* PULL TO REFRESH hint */
+  .refresh-hint{text-align:center;font-size:11px;color:var(--text3);padding:8px;margin-bottom:4px;}
+</style>
+</head>
+<body>
+
+<!-- SPLASH -->
+<div id="splash">
+  <div class="splash-logo">🏥</div>
+  <div class="splash-title">PlantãoPlus</div>
+  <div class="splash-sub">Carregando...</div>
+</div>
+
+<!-- HEADER -->
+<div class="header" id="header" style="display:none;">
+  <div class="header-top">
+    <div>
+      <div class="header-nome" id="hdr-nome">Carregando...</div>
+      <div class="header-crm" id="hdr-crm"></div>
+    </div>
+    <div class="header-avatar" id="hdr-avatar">?</div>
+  </div>
+</div>
+
+<!-- ABAS -->
+<div class="tabs" id="tabs" style="display:none;">
+  <div class="tab active" onclick="showPage('checkin',this)">
+    <span class="tab-icon">📍</span>Check-in
+  </div>
+  <div class="tab" onclick="showPage('plantoes',this)">
+    <span class="tab-icon">📅</span>Plantões
+  </div>
+  <div class="tab" onclick="showPage('historico',this)">
+    <span class="tab-icon">📊</span>Histórico
+  </div>
+</div>
+
+<!-- CONTEÚDO -->
+<div class="content" id="main-content" style="display:none;">
+
+  <!-- CHECK-IN -->
+  <div id="page-checkin" class="page active">
+    <div class="card">
+      <div class="card-title">Selecionar local</div>
+      <select class="proj-select" id="sel-projeto">
+        <option value="">Carregando projetos...</option>
+      </select>
+    </div>
+
+    <div class="card">
+      <div class="checkin-status">
+        <span class="checkin-icon" id="ci-icon">📍</span>
+        <div class="checkin-title" id="ci-title">Verificando localização...</div>
+        <div class="checkin-sub" id="ci-sub">Aguarde enquanto obtemos sua posição</div>
+        <div class="checkin-dist dist-loading" id="ci-dist" style="display:none;"></div>
+      </div>
+      <button class="btn-checkin loading" id="btn-ci" disabled onclick="fazerCheckin()">
+        <span class="spinner"></span> Verificando...
+      </button>
+    </div>
+
+    <div class="card" id="card-checkins-hoje">
+      <div class="card-title">Check-ins de hoje</div>
+      <div id="checkins-hoje-lista"><div class="empty"><div class="empty-icon">✅</div>Nenhum check-in hoje</div></div>
+    </div>
+  </div>
+
+  <!-- PLANTÕES -->
+  <div id="page-plantoes" class="page">
+    <div class="refresh-hint">Seus próximos plantões escalados</div>
+    <div id="plantoes-lista"><div class="empty"><div class="empty-icon">📅</div>Nenhum plantão escalado</div></div>
+  </div>
+
+  <!-- HISTÓRICO -->
+  <div id="page-historico" class="page">
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <div>
+          <div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:0.4px;">Total do mês</div>
+          <div style="font-size:24px;font-weight:700;color:var(--green);margin-top:2px;" id="hist-total">R$ 0,00</div>
+        </div>
+        <div style="text-align:right;">
+          <div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:0.4px;">Plantões</div>
+          <div style="font-size:24px;font-weight:700;color:var(--text);margin-top:2px;" id="hist-qtd">0</div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Plantões realizados</div>
+      <div id="historico-lista"><div class="empty"><div class="empty-icon">📊</div>Nenhum registro</div></div>
+    </div>
+  </div>
+
+</div><!-- /content -->
+
+<!-- TELA DE ERRO -->
+<div id="tela-erro" style="display:none;text-align:center;padding:60px 24px;">
+  <div style="font-size:48px;margin-bottom:12px;">🔒</div>
+  <div style="font-size:18px;font-weight:700;margin-bottom:8px;">Link inválido</div>
+  <div style="font-size:14px;color:#666;line-height:1.6;">Este link de acesso não é válido ou expirou.<br>Solicite um novo link ao administrador.</div>
+</div>
+
+<div id="toast-med"></div>
+
+<script>
+// ── CONFIG ────────────────────────────────────────────────
+const SUPABASE_URL = 'https://hqtnnadzwtfyfkunwfcy.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhxdG5uYWR6d3RmeWZrdW53ZmN5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYzMTM1MzcsImV4cCI6MjA5MTg4OTUzN30.j2qpn6JJZQ5QcB5j0eWtNV1EfqEz7DfTE-tQbW_WEGw';
+const RAIO_CHECKIN = 100; // metros
+
+// ── ESTADO ───────────────────────────────────────────────
+let medico = null;
+let projetos = [];
+let posAtual = null;
+let watchId = null;
+
+// ── INIT ─────────────────────────────────────────────────
+async function init() {
+  // Pega token da URL: ?token=XXXX
+  const params = new URLSearchParams(window.location.search);
+  const token = params.get('token');
+
+  if (!token) { mostrarErro(); return; }
+
+  // Busca médico pelo token
+  const med = await supabaseFetch(`/rest/v1/medicos?token_acesso=eq.${token}&select=*`);
+  if (!med || !med.length) { mostrarErro(); return; }
+  medico = med[0];
+
+  // Preenche header
+  document.getElementById('hdr-nome').textContent = medico.nome;
+  document.getElementById('hdr-crm').textContent = medico.crm;
+  document.getElementById('hdr-avatar').textContent = medico.nome.split(' ').slice(0,2).map(n=>n[0]).join('');
+
+  // Carrega projetos
+  await carregarProjetos();
+
+  // Mostra UI
+  document.getElementById('splash').classList.add('hide');
+  document.getElementById('header').style.display = 'block';
+  document.getElementById('tabs').style.display = 'flex';
+  document.getElementById('main-content').style.display = 'block';
+
+  // Inicia GPS
+  iniciarGPS();
+  carregarPlantoes();
+  carregarHistorico();
+  carregarCheckinsHoje();
+}
+
+function mostrarErro() {
+  document.getElementById('splash').classList.add('hide');
+  document.getElementById('tela-erro').style.display = 'block';
+}
+
+// ── SUPABASE FETCH ────────────────────────────────────────
+async function supabaseFetch(path, options = {}) {
+  try {
+    const res = await fetch(SUPABASE_URL + path, {
+      headers: {
+        'apikey': SUPABASE_KEY,
+        'Authorization': 'Bearer ' + SUPABASE_KEY,
+        'Content-Type': 'application/json',
+        'Prefer': 'return=representation',
+        ...options.headers
+      },
+      ...options
+    });
+    if (!res.ok) return null;
+    const ct = res.headers.get('content-type');
+    if (ct && ct.includes('json')) return res.json();
+    return null;
+  } catch(e) { console.error(e); return null; }
+}
+
+// ── PROJETOS ─────────────────────────────────────────────
+async function carregarProjetos() {
+  const data = await supabaseFetch('/rest/v1/projetos?status=eq.Ativo&select=*&order=nome');
+  projetos = data || [];
+  const sel = document.getElementById('sel-projeto');
+  sel.innerHTML = '<option value="">Selecione o local do plantão...</option>' +
+    projetos.map(p => `<option value="${p.id}">${p.nome}</option>`).join('');
+  sel.addEventListener('change', atualizarStatusCheckin);
+}
+
+// ── GPS ───────────────────────────────────────────────────
+function iniciarGPS() {
+  if (!navigator.geolocation) {
+    setCheckinUI('erro', '❌', 'GPS não disponível', 'Seu navegador não suporta geolocalização.');
+    return;
+  }
+  watchId = navigator.geolocation.watchPosition(
+    pos => {
+      posAtual = pos.coords;
+      atualizarStatusCheckin();
+    },
+    err => {
+      setCheckinUI('erro', '📵', 'Sem acesso à localização', 'Por favor, permita o acesso à localização nas configurações do seu celular.');
+    },
+    { enableHighAccuracy: true, timeout: 15000, maximumAge: 5000 }
+  );
+}
+
+function calcularDistancia(lat1, lon1, lat2, lon2) {
+  const R = 6371000;
+  const dLat = (lat2-lat1) * Math.PI/180;
+  const dLon = (lon2-lon1) * Math.PI/180;
+  const a = Math.sin(dLat/2)*Math.sin(dLat/2) +
+    Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)*Math.sin(dLon/2);
+  return Math.round(R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)));
+}
+
+function atualizarStatusCheckin() {
+  const projId = document.getElementById('sel-projeto').value;
+  const proj = projetos.find(p => p.id === projId);
+
+  if (!proj) {
+    setCheckinUI('idle', '📍', 'Selecione o local', 'Escolha o hospital ou unidade onde está.');
+    return;
+  }
+  if (!posAtual) {
+    setCheckinUI('loading', '🔄', 'Obtendo localização...', 'Aguarde enquanto o GPS localiza você.');
+    return;
+  }
+  if (!proj.latitude || !proj.longitude) {
+    setCheckinUI('ok', '✅', 'Localização do projeto não configurada', 'Peça ao administrador para configurar as coordenadas do projeto.');
+    return;
+  }
+
+  const dist = calcularDistancia(posAtual.latitude, posAtual.longitude, proj.latitude, proj.longitude);
+  const raio = proj.raio_checkin || RAIO_CHECKIN;
+  const dentro = dist <= raio;
+
+  if (dentro) {
+    setCheckinUI('ok', '✅', 'Você está no local!', `Check-in disponível para ${proj.nome}`, dist, true);
+  } else {
+    setCheckinUI('far', '📍', 'Você está fora do raio', `Aproxime-se do hospital para fazer o check-in`, dist, false);
+  }
+}
+
+function setCheckinUI(estado, icon, title, sub, dist, podeCheckin) {
+  document.getElementById('ci-icon').textContent = icon;
+  document.getElementById('ci-title').textContent = title;
+  document.getElementById('ci-sub').textContent = sub;
+  const distEl = document.getElementById('ci-dist');
+  const btn = document.getElementById('btn-ci');
+  if (dist !== undefined) {
+    distEl.style.display = 'inline-block';
+    const raio = parseInt(document.getElementById('sel-projeto').value ?
+      (projetos.find(p=>p.id===document.getElementById('sel-projeto').value)||{}).raio_checkin||100 : 100);
+    distEl.textContent = dist + 'm do hospital (raio: ' + raio + 'm)';
+    distEl.className = 'checkin-dist ' + (podeCheckin ? 'dist-ok' : 'dist-far');
+  } else { distEl.style.display = 'none'; }
+  if (estado === 'ok') {
+    btn.className = 'btn-checkin ok'; btn.disabled = false;
+    btn.innerHTML = '✅ Fazer Check-in';
+  } else if (estado === 'far') {
+    btn.className = 'btn-checkin far'; btn.disabled = true;
+    btn.innerHTML = '📍 Fora do raio permitido';
+  } else if (estado === 'loading') {
+    btn.className = 'btn-checkin loading'; btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span> Verificando...';
+  } else {
+    btn.className = 'btn-checkin far'; btn.disabled = true;
+    btn.innerHTML = '📍 Selecione o local';
+  }
+}
+
+// ── CHECK-IN ─────────────────────────────────────────────
+async function fazerCheckin() {
+  const projId = document.getElementById('sel-projeto').value;
+  const proj = projetos.find(p => p.id === projId);
+  if (!proj || !posAtual || !medico) return;
+
+  const btn = document.getElementById('btn-ci');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Registrando...';
+
+  const dist = proj.latitude ? calcularDistancia(posAtual.latitude, posAtual.longitude, proj.latitude, proj.longitude) : 0;
+  const aprovado = !proj.latitude || dist <= (proj.raio_checkin || RAIO_CHECKIN);
+
+  const payload = {
+    medico_id: medico.id,
+    projeto_id: projId,
+    latitude: posAtual.latitude,
+    longitude: posAtual.longitude,
+    distancia_metros: dist,
+    aprovado,
+    tipo: 'entrada'
+  };
+
+  const res = await supabaseFetch('/rest/v1/checkins', {
+    method: 'POST',
+    body: JSON.stringify(payload)
+  });
+
+  if (res) {
+    toast('✅ Check-in registrado com sucesso!');
+    carregarCheckinsHoje();
+  } else {
+    toast('❌ Erro ao registrar. Tente novamente.');
+  }
+
+  // Reativa botão após 3s
+  setTimeout(() => atualizarStatusCheckin(), 3000);
+}
+
+// ── PLANTÕES ─────────────────────────────────────────────
+async function carregarPlantoes() {
+  const hoje = new Date().toISOString().slice(0,10);
+  const data = await supabaseFetch(
+    `/rest/v1/lancamentos?medico_id=eq.${medico.id}&data=gte.${hoje}&select=*,projetos(nome)&order=data.asc&limit=20`
+  );
+  const el = document.getElementById('plantoes-lista');
+  if (!data || !data.length) { el.innerHTML = '<div class="empty"><div class="empty-icon">📅</div>Nenhum plantão escalado</div>'; return; }
+
+  el.innerHTML = data.map(l => {
+    const turno = l.tipo && l.tipo.includes('Noturno') ? 'Noturno' : l.tipo && l.tipo.includes('24') ? '24h' : 'Diurno';
+    const badge = turno==='Noturno'?'badge-purple':turno==='24h'?'badge-amber':'badge-green';
+    const proj = l.projetos ? l.projetos.nome : '';
+    const d = new Date(l.data+'T12:00:00');
+    const dataFmt = d.toLocaleDateString('pt-BR', {weekday:'short', day:'2-digit', month:'short'});
+    return `<div class="plantao-card">
+      <div class="plantao-header">
+        <div>
+          <div class="plantao-data">${dataFmt}</div>
+          <div class="plantao-proj">${proj}${l.setor?' · '+l.setor:''}</div>
+        </div>
+        <span class="badge ${badge}">${turno}</span>
+      </div>
+      <div class="plantao-body">
+        <div><div class="plantao-info-label">Horário</div><div class="plantao-info-val">${l.hora_ini?.slice(0,5)}–${l.hora_fim?.slice(0,5)}</div></div>
+        <div><div class="plantao-info-label">Horas</div><div class="plantao-info-val">${l.horas}h</div></div>
+        <div class="plantao-valor"><div class="plantao-info-label">Honorários</div><div class="plantao-valor-val">${fBRL(l.honorario)}</div></div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── HISTÓRICO ────────────────────────────────────────────
+async function carregarHistorico() {
+  const hoje = new Date();
+  const d1 = new Date(hoje.getFullYear(), hoje.getMonth(), 1).toISOString().slice(0,10);
+  const d2 = new Date(hoje.getFullYear(), hoje.getMonth()+1, 0).toISOString().slice(0,10);
+
+  const data = await supabaseFetch(
+    `/rest/v1/lancamentos?medico_id=eq.${medico.id}&data=gte.${d1}&data=lte.${d2}&select=*,projetos(nome)&order=data.desc`
+  );
+
+  const total = (data||[]).reduce((s,l)=>s+(l.honorario||0),0);
+  document.getElementById('hist-total').textContent = fBRL(total);
+  document.getElementById('hist-qtd').textContent = (data||[]).length;
+
+  const el = document.getElementById('historico-lista');
+  if (!data || !data.length) { el.innerHTML = '<div class="empty"><div class="empty-icon">📊</div>Nenhum plantão este mês</div>'; return; }
+
+  el.innerHTML = data.map(l => {
+    const turno = l.tipo && l.tipo.includes('Noturno') ? 'Noturno' : l.tipo && l.tipo.includes('24') ? '24h' : 'Diurno';
+    const badge = turno==='Noturno'?'badge-purple':turno==='24h'?'badge-amber':'badge-green';
+    const proj = l.projetos ? l.projetos.nome : '';
+    const d = new Date(l.data+'T12:00:00');
+    return `<div class="checkin-item">
+      <div>
+        <div style="font-size:13px;font-weight:600;color:var(--blue);">${d.toLocaleDateString('pt-BR',{day:'2-digit',month:'short'})}</div>
+        <span class="badge ${badge}" style="margin-top:3px;">${turno}</span>
+      </div>
+      <div class="checkin-info">
+        <div class="checkin-info-proj">${proj}</div>
+        <div class="checkin-info-meta">${l.hora_ini?.slice(0,5)}–${l.hora_fim?.slice(0,5)} · ${l.horas}h${l.setor?' · '+l.setor:''}</div>
+      </div>
+      <div style="text-align:right;font-size:13px;font-weight:700;color:var(--green);">${fBRL(l.honorario)}</div>
+    </div>`;
+  }).join('');
+}
+
+// ── CHECK-INS DE HOJE ────────────────────────────────────
+async function carregarCheckinsHoje() {
+  const hoje = new Date().toISOString().slice(0,10);
+  const data = await supabaseFetch(
+    `/rest/v1/checkins?medico_id=eq.${medico.id}&feito_em=gte.${hoje}T00:00:00&select=*,projetos(nome)&order=feito_em.desc`
+  );
+  const el = document.getElementById('checkins-hoje-lista');
+  if (!data || !data.length) { el.innerHTML = '<div class="empty"><div class="empty-icon">✅</div>Nenhum check-in hoje</div>'; return; }
+
+  el.innerHTML = data.map(c => {
+    const hora = new Date(c.feito_em).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+    const proj = c.projetos ? c.projetos.nome : '';
+    return `<div class="checkin-item">
+      <div class="checkin-dot ${c.aprovado?'dot-ok':'dot-fail'}"></div>
+      <div class="checkin-info">
+        <div class="checkin-info-proj">${proj}</div>
+        <div class="checkin-info-meta">${hora} · ${c.aprovado?'Aprovado':'Fora do raio'}</div>
+        <span class="checkin-info-dist ${c.aprovado?'dist-ok':'dist-far'}">${c.distancia_metros}m</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── HELPERS ───────────────────────────────────────────────
+function showPage(id, el) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  el.classList.add('active');
+}
+
+function fBRL(v) { return 'R$ ' + Number(v||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+
+function toast(msg) {
+  const t = document.getElementById('toast-med');
+  t.textContent = msg; t.style.display = 'block';
+  setTimeout(()=>t.style.display='none', 3000);
+}
+
+// ── START ─────────────────────────────────────────────────
+window.addEventListener('load', init);
+</script>
+</body>
+</html>
