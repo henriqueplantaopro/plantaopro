@@ -1,0 +1,26 @@
+{
+  "name": "PlantãoPlus",
+  "short_name": "PlantãoPlus",
+  "description": "App de check-in e gestão de plantões médicos",
+  "start_url": "/medico/",
+  "display": "standalone",
+  "background_color": "#1a5fad",
+  "theme_color": "#1a5fad",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["medical", "productivity"],
+  "lang": "pt-BR"
+}
