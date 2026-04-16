@@ -962,9 +962,27 @@ async function addLancamento() {
   const honorario=parseBRL(document.getElementById('lval').value);
   const valorH=horas>0&&honorario>0?Math.round(honorario/horas*100)/100:0;
   const payload={ medico_id:mid, projeto_id:pid, data, hora_ini:ini, hora_fim:fim, horas, tipo:document.getElementById('lt').value, setor:document.getElementById('lsetor').value.trim(), honorario, valor_hora:valorH, obs:document.getElementById('lo').value.trim(), codigo_totvs:document.getElementById('lcode').value.trim() };
-  const res=await sb('/rest/v1/lancamentos',{method:'POST',body:JSON.stringify(payload)});
-  if(res){ toast('Plantão registrado!'); ['ld','lval','lsetor','lo','lcode'].forEach(id=>document.getElementById(id).value=''); document.getElementById('l-preview').style.display='none'; await carregarLancamentos(); carregarDashboard(); }
-  else toast('Erro ao registrar', true);
+  try {
+    const res2 = await fetch(SUPABASE_URL + '/rest/v1/lancamentos', {
+      method: 'POST',
+      headers: {
+        'apikey': SUPABASE_KEY,
+        'Authorization': 'Bearer ' + SUPABASE_KEY,
+        'Content-Type': 'application/json',
+        'Prefer': 'return=minimal'
+      },
+      body: JSON.stringify(payload)
+    });
+    if (res2.ok) {
+      toast('Plantão registrado!');
+      ['ld','lval','lsetor','lo','lcode'].forEach(id=>document.getElementById(id).value='');
+      document.getElementById('l-preview').style.display='none';
+      await carregarLancamentos(); carregarDashboard();
+    } else {
+      const err = await res2.text(); console.error(err);
+      toast('Erro ao registrar: '+err.slice(0,80), true);
+    }
+  } catch(e) { toast('Erro ao registrar', true); }
 }
 
 function renderLancamentos() {
@@ -1475,28 +1493,49 @@ async function confirmarAgenda() {
   const btn = document.getElementById('agd-confirmar-btn');
   btn.disabled = true; btn.textContent = 'Registrando...';
 
-  const payload = d.dias.map(data => ({
-    medico_id: d.medId, projeto_id: d.projId,
-    data, hora_ini: d.ini, hora_fim: d.fim,
-    horas: d.horas, tipo: d.tipo, setor: d.setor,
-    honorario: d.valor,
-    valor_hora: d.horas > 0 ? Math.round(d.valor/d.horas*100)/100 : 0,
-    obs: d.obs, codigo_totvs: ''
-  }));
+  let ok = 0, erros = 0;
+  for (const data of d.dias) {
+    const reg = {
+      medico_id: d.medId,
+      projeto_id: d.projId,
+      data,
+      hora_ini: d.ini,
+      hora_fim: d.fim,
+      horas: d.horas,
+      tipo: d.tipo,
+      setor: d.setor || null,
+      honorario: d.valor,
+      valor_hora: d.horas > 0 ? Math.round(d.valor/d.horas*100)/100 : 0,
+      obs: d.obs || null,
+      codigo_totvs: null
+    };
+    try {
+      const res = await fetch(SUPABASE_URL + '/rest/v1/lancamentos', {
+        method: 'POST',
+        headers: {
+          'apikey': SUPABASE_KEY,
+          'Authorization': 'Bearer ' + SUPABASE_KEY,
+          'Content-Type': 'application/json',
+          'Prefer': 'return=minimal'
+        },
+        body: JSON.stringify(reg)
+      });
+      if (res.ok) ok++;
+      else {
+        const err = await res.text();
+        console.error('Erro lançamento:', err);
+        erros++;
+      }
+    } catch(e) { console.error(e); erros++; }
+  }
 
-  const res = await sb('/rest/v1/lancamentos', {
-    method: 'POST',
-    body: JSON.stringify(payload),
-    headers: {'Prefer':'return=minimal'}
-  });
-
-  if (res !== null) {
-    toast(`✅ ${payload.length} plantão(ões) registrado(s) para ${d.med}!`);
+  if (ok > 0) {
+    toast(`✅ ${ok} plantão(ões) registrado(s) para ${d.med}!${erros>0?' · '+erros+' com erro':''}`);
     limparAgenda();
     await carregarLancamentos();
     carregarDashboard();
   } else {
-    toast('Erro ao registrar', true);
+    toast('Erro ao registrar. Verifique o console (F12).', true);
     btn.disabled = false;
     btn.textContent = '✓ Confirmar e registrar';
   }
@@ -1710,34 +1749,50 @@ async function confirmarLote() {
   const btn = document.getElementById('lote-confirmar-btn');
   btn.disabled = true; btn.textContent = 'Registrando...';
 
-  const payload = d.selecionados.map(m => ({
-    medico_id: m.id,
-    projeto_id: d.projId,
-    data: d.data,
-    hora_ini: d.ini,
-    hora_fim: d.fim,
-    horas: d.horas,
-    tipo: d.tipo,
-    setor: d.setor,
-    honorario: d.valor || Math.round(d.horas*(m.valor_hora||0)*100)/100,
-    valor_hora: d.horas>0 ? Math.round((d.valor||0)/d.horas*100)/100 : (m.valor_hora||0),
-    obs: d.obs,
-    codigo_totvs: ''
-  }));
+  let ok = 0, erros = 0;
+  for (const m of d.selecionados) {
+    const hon = d.valor || Math.round(d.horas*(m.valor_hora||0)*100)/100;
+    const reg = {
+      medico_id: m.id,
+      projeto_id: d.projId,
+      data: d.data,
+      hora_ini: d.ini,
+      hora_fim: d.fim,
+      horas: d.horas,
+      tipo: d.tipo,
+      setor: d.setor || null,
+      honorario: hon,
+      valor_hora: d.horas>0 ? Math.round(hon/d.horas*100)/100 : (m.valor_hora||0),
+      obs: d.obs || null,
+      codigo_totvs: null
+    };
+    try {
+      const res = await fetch(SUPABASE_URL + '/rest/v1/lancamentos', {
+        method: 'POST',
+        headers: {
+          'apikey': SUPABASE_KEY,
+          'Authorization': 'Bearer ' + SUPABASE_KEY,
+          'Content-Type': 'application/json',
+          'Prefer': 'return=minimal'
+        },
+        body: JSON.stringify(reg)
+      });
+      if (res.ok) ok++;
+      else {
+        const err = await res.text();
+        console.error('Erro lançamento:', err);
+        erros++;
+      }
+    } catch(e) { console.error(e); erros++; }
+  }
 
-  const res = await sb('/rest/v1/lancamentos', {
-    method: 'POST',
-    body: JSON.stringify(payload),
-    headers: {'Prefer':'return=minimal'}
-  });
-
-  if (res !== null) {
-    toast(`✅ ${payload.length} lançamento(s) registrado(s) com sucesso!`);
+  if (ok > 0) {
+    toast(`✅ ${ok} lançamento(s) registrado(s)!${erros>0?' · '+erros+' com erro':''}`);
     limparLote();
     await carregarLancamentos();
     carregarDashboard();
   } else {
-    toast('Erro ao registrar lançamentos', true);
+    toast('Erro ao registrar. Verifique o console (F12).', true);
     btn.disabled = false;
     btn.textContent = '✓ Confirmar e registrar';
   }
