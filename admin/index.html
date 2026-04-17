@@ -733,7 +733,7 @@ tr:hover td{background:var(--bg3);}
 </div>
 
 <!-- MODAL LANÇAMENTO RÁPIDO — Escala Semanal -->
-<div class="modal-rapido-overlay" id="modal-rapido" onclick="if(event.target===this)fecharModalRapido()">
+<div class="modal-rapido-overlay" id="modal-rapido" onclick="if(event.target===this)fecharModalRapido()" onmousedown="event.stopPropagation()">
   <div class="modal-rapido">
     <div class="modal-rapido-header">
       <div>
@@ -756,18 +756,35 @@ tr:hover td{background:var(--bg3);}
           <option value="">Selecione...</option>
         </select>
       </div>
-      <div class="form-row" style="margin-bottom:10px;">
-        <div class="form-group"><label>Início</label><input id="mr-ini" type="time" value="07:00" oninput="atualizarPreviewRapido()"></div>
-        <div class="form-group"><label>Fim</label><input id="mr-fim" type="time" value="19:00" oninput="atualizarPreviewRapido()"></div>
+      <!-- Tipo de plantão — determina duração automaticamente -->
+      <div class="form-group" style="margin-bottom:10px;">
+        <label>Tipo de plantão</label>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:6px;" id="mr-tipo-grid">
+          <button type="button" class="mr-tipo-btn active" data-tipo="Diurno 12h" data-horas="12" onclick="selecionarTipoRapido(this)">☀️ Diurno 12h</button>
+          <button type="button" class="mr-tipo-btn" data-tipo="Noturno 12h" data-horas="12" onclick="selecionarTipoRapido(this)">🌙 Noturno 12h</button>
+          <button type="button" class="mr-tipo-btn" data-tipo="24h" data-horas="24" onclick="selecionarTipoRapido(this)">🔄 Plantão 24h</button>
+          <button type="button" class="mr-tipo-btn" data-tipo="Personalizado" data-horas="0" onclick="selecionarTipoRapido(this)">✏️ Personalizado</button>
+        </div>
+        <input type="hidden" id="mr-tipo" value="Diurno 12h">
+      </div>
+      <!-- Personalizado: campo de horas -->
+      <div class="form-group" id="mr-horas-custom-row" style="display:none;margin-bottom:10px;">
+        <label>Duração (horas)</label>
+        <input id="mr-horas-custom" type="number" min="1" max="48" placeholder="Ex: 6" oninput="atualizarPreviewRapido()" style="max-width:120px;">
       </div>
       <div class="form-row" style="margin-bottom:10px;">
         <div class="form-group">
-          <label>Tipo</label>
-          <select id="mr-tipo" onchange="atualizarValorRapido();atualizarPreviewRapido()">
-            <option>Diurno 12h</option><option>Noturno 12h</option><option>24h</option><option>Sobreaviso</option><option>Personalizado</option>
-          </select>
+          <label>Horário de início</label>
+          <input id="mr-ini" type="time" value="07:00" oninput="atualizarPreviewRapido()">
         </div>
-        <div class="form-group"><label>Setor</label><input id="mr-setor" type="text" placeholder="Emergência, UTI..."></div>
+        <div class="form-group">
+          <label>Setor</label>
+          <input id="mr-setor" type="text" placeholder="Emergência, UTI...">
+        </div>
+      </div>
+      <!-- Preview calculado -->
+      <div id="mr-horario-calc" style="background:var(--blue-light);border:1px solid #a0c4f0;border-radius:var(--radius);padding:8px 12px;font-size:12px;color:var(--blue);margin-bottom:10px;display:none;">
+        <span id="mr-horario-calc-txt"></span>
       </div>
       <div class="form-group" style="margin-bottom:10px;">
         <label>Valor total (R$) <span id="mr-dur-label" style="font-weight:400;color:var(--text3);font-size:11px;"></span></label>
@@ -1451,7 +1468,7 @@ function showTab(id,el){
   if(id==='lancamentos') popLancSelects();
   if(id==='checkins'){ popCiSelects(); popCiProjPresenca(); document.getElementById('ci-data-p').value=hoje_str(); carregarPresenca(); }
   if(id==='relatorios'){ popRelSelects(); }
-  if(id==='calendario'){ popCalSelects(); switchCalTab('mensal'); }
+  if(id==='calendario'){ popCalSelects(); switchCalTab(_calTabAtiva||'mensal'); }
   if(id==='exportar'){ renderLayoutPreview(); popExportSelects(); }
   if(id==='importar') switchImpTab('med');
   if(id==='lote'){ initLote(); }
@@ -1719,7 +1736,9 @@ function limparAgenda() {
 
 
 // ─── CALENDÁRIO — SUB-ABAS ──────────────────────────────
+let _calTabAtiva = 'mensal';
 function switchCalTab(tab) {
+  _calTabAtiva = tab;
   document.getElementById('cal-mensal').style.display  = tab==='mensal'  ? 'block' : 'none';
   document.getElementById('cal-semanal').style.display = tab==='semanal' ? 'block' : 'none';
   document.getElementById('cal-tab-mensal').className  = 'btn ' + (tab==='mensal'  ? 'btn-primary' : 'btn-ghost');
@@ -1728,8 +1747,7 @@ function switchCalTab(tab) {
   if (tab==='mensal')  renderCal();
 }
 function renderCalAtual() {
-  const tab = document.getElementById('cal-semanal').style.display==='none' ? 'mensal' : 'semanal';
-  if (tab==='mensal') renderCal(); else renderSemana();
+  if (_calTabAtiva==='semanal') renderSemana(); else renderCal();
 }
 
 // ─── ESCALA SEMANAL ──────────────────────────────────────
@@ -1832,14 +1850,20 @@ function abrirLancamentoRapido(ds, projId) {
   // Limpar campos
   document.getElementById('mr-med').value = '';
   document.getElementById('mr-ini').value = '07:00';
-  document.getElementById('mr-fim').value = '19:00';
   document.getElementById('mr-tipo').value = 'Diurno 12h';
+  // Resetar botões de tipo
+  document.querySelectorAll('.mr-tipo-btn').forEach(b=>b.classList.remove('active'));
+  const diurnoBtn = document.querySelector('.mr-tipo-btn[data-tipo="Diurno 12h"]');
+  if (diurnoBtn) diurnoBtn.classList.add('active');
+  const customRow = document.getElementById('mr-horas-custom-row');
+  if (customRow) customRow.style.display='none';
   document.getElementById('mr-setor').value = '';
   document.getElementById('mr-valor').value = '';
   document.getElementById('mr-obs').value = '';
-  document.getElementById('mr-preview').style.display = 'none';
-  document.getElementById('mr-sucesso').style.display = 'none';
-  document.getElementById('mr-valor-badge').style.display = 'none';
+  const prev = document.getElementById('mr-preview'); if(prev) prev.style.display='none';
+  const calc = document.getElementById('mr-horario-calc'); if(calc) calc.style.display='none';
+  const suc = document.getElementById('mr-sucesso'); if(suc) suc.style.display='none';
+  const badge = document.getElementById('mr-valor-badge'); if(badge) badge.style.display='none';
 
   // Preencher valor padrão se projeto já selecionado
   if (projId) atualizarValorRapido();
@@ -1850,6 +1874,42 @@ function abrirLancamentoRapido(ds, projId) {
 
 function fecharModalRapido() {
   document.getElementById('modal-rapido').classList.remove('open');
+}
+
+function selecionarTipoRapido(btn) {
+  // Atualizar botões visuais
+  document.querySelectorAll('.mr-tipo-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  const tipo = btn.dataset.tipo;
+  document.getElementById('mr-tipo').value = tipo;
+  // Mostrar/esconder campo de horas personalizadas
+  const customRow = document.getElementById('mr-horas-custom-row');
+  if (customRow) customRow.style.display = tipo==='Personalizado' ? 'block' : 'none';
+  // Limpar valor para recalcular pelo padrão do projeto
+  document.getElementById('mr-valor').value = '';
+  document.getElementById('mr-valor-badge').style.display = 'none';
+  atualizarValorRapido();
+  atualizarPreviewRapido();
+}
+
+function getHorasRapido() {
+  const tipo = document.getElementById('mr-tipo').value;
+  if (tipo === 'Personalizado') {
+    return parseFloat(document.getElementById('mr-horas-custom')?.value)||0;
+  }
+  if (tipo.includes('24')) return 24;
+  if (tipo.includes('12')) return 12;
+  if (tipo.includes('Sobre')) return 6;
+  return 12;
+}
+
+function calcFimRapido(ini, horas) {
+  // Calcula horário de fim a partir do início + horas
+  const [h,m] = ini.split(':').map(Number);
+  const totalMin = h*60 + m + horas*60;
+  const fimH = Math.floor(totalMin/60) % 24;
+  const fimM = Math.floor(totalMin%60);
+  return String(fimH).padStart(2,'0') + ':' + String(fimM).padStart(2,'0');
 }
 
 function atualizarValorRapido() {
@@ -1873,22 +1933,30 @@ function atualizarValorRapido() {
 }
 
 function atualizarPreviewRapido() {
-  const ini = document.getElementById('mr-ini').value;
-  const fim = document.getElementById('mr-fim').value;
-  const prev = document.getElementById('mr-preview');
+  const ini   = document.getElementById('mr-ini').value || '07:00';
+  const horas = getHorasRapido();
+  const fim   = calcFimRapido(ini, horas);
   const durEl = document.getElementById('mr-dur-label');
-  if (!ini||!fim) { prev.style.display='none'; return; }
-  const [hi,mi]=ini.split(':').map(Number),[hf,mf]=fim.split(':').map(Number);
-  let diff=(hf*60+mf)-(hi*60+mi); if(diff<0)diff+=1440;
-  const h=Math.round(diff/60*10)/10;
-  if (durEl) durEl.textContent = `· ${h}h`;
-  const total = parseBRL(document.getElementById('mr-valor').value);
-  const valorH = h>0&&total>0 ? Math.round(total/h*100)/100 : 0;
-  prev.style.display = 'block';
-  if (total>0) {
-    prev.innerHTML = `Duração: <strong>${h}h</strong> &nbsp;·&nbsp; Total: <strong>${fBRL(total)}</strong> &nbsp;·&nbsp; Valor/h: ${fBRL(valorH)}`;
-  } else {
-    prev.innerHTML = `Duração: <strong>${h}h</strong>`;
+  const calc  = document.getElementById('mr-horario-calc');
+  const calcTxt = document.getElementById('mr-horario-calc-txt');
+  if (durEl) durEl.textContent = horas > 0 ? '· ' + horas + 'h' : '';
+  // Mostrar horário calculado
+  if (calc && calcTxt && horas > 0) {
+    const proximoDia = (() => {
+      const [h,m] = ini.split(':').map(Number);
+      return (h*60+m+horas*60) >= 1440;
+    })();
+    calcTxt.textContent = 'Início: ' + ini + ' · Fim: ' + fim + (proximoDia?' (dia seguinte)':'') + ' · ' + horas + 'h';
+    calc.style.display = 'block';
+  } else if (calc) { calc.style.display = 'none'; }
+  const prev  = document.getElementById('mr-preview');
+  const total = parseBRL(document.getElementById('mr-valor')?.value||'');
+  const valorH = horas>0&&total>0 ? Math.round(total/horas*100)/100 : 0;
+  if (prev) {
+    if (total>0) {
+      prev.style.display='block';
+      prev.innerHTML = 'Total: <strong>' + fBRL(total) + '</strong> &nbsp;·&nbsp; Valor/h: ' + fBRL(valorH);
+    } else { prev.style.display='none'; }
   }
 }
 
@@ -1897,9 +1965,10 @@ async function salvarLancamentoRapido() {
   const ds    = overlay.dataset.ds;
   const medId = document.getElementById('mr-med').value;
   const projId= document.getElementById('mr-proj').value;
-  const ini   = document.getElementById('mr-ini').value;
-  const fim   = document.getElementById('mr-fim').value;
+  const ini   = document.getElementById('mr-ini').value || '07:00';
   const tipo  = document.getElementById('mr-tipo').value;
+  const horas = getHorasRapido();
+  const fim   = calcFimRapido(ini, horas);
   const setor = document.getElementById('mr-setor').value.trim();
   const obs   = document.getElementById('mr-obs').value.trim();
   const valor = parseBRL(document.getElementById('mr-valor').value);
@@ -1909,9 +1978,6 @@ async function salvarLancamentoRapido() {
   if (!ds)     { toast('Data inválida',true); return; }
 
   const med  = medicos.find(m=>m.id===medId);
-  const [hi,mi]=ini.split(':').map(Number),[hf,mf]=fim.split(':').map(Number);
-  let diff=(hf*60+mf)-(hi*60+mi); if(diff<0)diff+=1440;
-  const horas=Math.round(diff/60*10)/10;
   const honorario=valor||Math.round(horas*(med?.valor_hora||0)*100)/100;
   const valorH=horas>0?Math.round(honorario/horas*100)/100:(med?.valor_hora||0);
 
@@ -1925,38 +1991,37 @@ async function salvarLancamentoRapido() {
       body:JSON.stringify({medico_id:medId,projeto_id:projId,data:ds,hora_ini:ini,hora_fim:fim,horas,tipo,setor:setor||null,honorario,valor_hora:valorH,obs:obs||null,codigo_totvs:null})
     });
     if (res.ok) {
-      // Mostrar sucesso SEM fechar o modal — pronto para próximo lançamento
+      // Confirmação visual no modal
       const suc = document.getElementById('mr-sucesso');
-      suc.textContent = `✓ ${med?.nome} registrado(a) — ${fDate(ds)} ${ini}–${fim}`;
-      suc.style.display = 'block';
-      // Limpar só o médico e valor para o próximo lançamento
-      document.getElementById('mr-med').value = '';
-      document.getElementById('mr-valor').value = '';
-      document.getElementById('mr-setor').value = '';
-      document.getElementById('mr-obs').value = '';
-      document.getElementById('mr-preview').style.display = 'none';
-      document.getElementById('mr-valor-badge').style.display = 'none';
-      // Repreencher valor padrão
-      if (projId) atualizarValorRapido();
-      // Atualizar dados em background sem sair do calendário
-      // Recarrega dados sem mudar de tela
-      const dataAtualizada = await sb('/rest/v1/lancamentos?select=*,medicos(nome,crm),projetos(nome)&order=data.desc&limit=200');
-      if (dataAtualizada) {
-        lancamentos = dataAtualizada.map(l => ({
-          ...l,
-          medico: l.medicos?.nome || '',
-          crm: l.medicos?.crm || '',
-          projeto: l.projetos?.nome || '',
-        }));
-      }
-      renderSemana(); // apenas redesenha o calendário, sem mudar de aba
-      setTimeout(()=>{ 
-        const mrMed = document.getElementById('mr-med');
-        if (mrMed) mrMed.focus(); 
-      }, 150);
+      if (suc) { suc.textContent = '✓ ' + (med?.nome||'') + ' registrado(a) — ' + fDate(ds) + ' ' + ini + '–' + fim; suc.style.display='block'; }
+      // Limpar campos para próximo
+      ['mr-med','mr-valor','mr-setor','mr-obs'].forEach(function(id){ var el=document.getElementById(id); if(el) el.value=''; });
+      var prv=document.getElementById('mr-preview'); if(prv) prv.style.display='none';
+      var bdg=document.getElementById('mr-valor-badge'); if(bdg) bdg.style.display='none';
+      if(projId) atualizarValorRapido();
+      // Adicionar o novo lançamento ao array local diretamente (sem fetch)
+      var novoLanc = {
+        id: 'temp_'+Date.now(),
+        medico_id: medId, projeto_id: projId,
+        medico: med?.nome||'', crm: med?.crm||'',
+        projeto: (projetos.find(function(p){return p.id===projId;})||{}).nome||'',
+        data: ds, hora_ini: ini, hora_fim: fim, horas: horas,
+        tipo: tipo, setor: setor||'', honorario: honorario, valor_hora: valorH
+      };
+      lancamentos.unshift(novoLanc);
+      // Redesenhar apenas o grid semanal
+      var semGrid = document.getElementById('sem-grid');
+      if (semGrid) renderSemana();
+      // Foco no select de médico para próximo lançamento
+      setTimeout(function(){ var el=document.getElementById('mr-med'); if(el) el.focus(); }, 100);
+      // Sincronizar com servidor em background após 2s
+      setTimeout(async function(){
+        var d2=await sb('/rest/v1/lancamentos?select=*,medicos(nome,crm),projetos(nome)&order=data.desc&limit=200');
+        if(d2){ lancamentos=d2.map(function(l){ return Object.assign({},l,{medico:l.medicos?.nome||'',crm:l.medicos?.crm||'',projeto:l.projetos?.nome||''}); }); }
+      }, 2000);
     } else {
-      const err = await res.text();
-      toast('Erro ao salvar: '+err.slice(0,60), true);
+      var errTxt = await res.text();
+      toast('Erro ao salvar: ' + errTxt.slice(0,80), true);
     }
   } catch(e) { toast('Erro ao salvar',true); }
   btn.disabled=false; btn.textContent='+ Registrar plantão';
