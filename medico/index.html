@@ -212,6 +212,37 @@
   <div style="font-size:14px;color:#666;line-height:1.6;">Este link de acesso não é válido ou expirou.<br>Solicite um novo link ao administrador.</div>
 </div>
 
+<!-- TELA DE DISPOSITIVO BLOQUEADO -->
+<div id="tela-device" style="display:none;text-align:center;padding:48px 24px;">
+  <div style="font-size:56px;margin-bottom:16px;">📵</div>
+  <div style="font-size:19px;font-weight:700;margin-bottom:10px;color:#1a1a1a;">Acesso negado</div>
+  <div style="font-size:14px;color:#555;line-height:1.7;margin-bottom:24px;">
+    Este app já está vinculado a outro dispositivo.<br>
+    Por segurança, o check-in só pode ser feito<br>
+    pelo celular registrado originalmente.
+  </div>
+  <div style="background:#fff3cd;border:1px solid #ffc107;border-radius:10px;padding:14px 18px;font-size:13px;color:#856404;line-height:1.6;">
+    Se você trocou de celular, solicite ao administrador<br>
+    que redefina o vínculo do seu dispositivo.
+  </div>
+</div>
+
+<!-- TELA DE PRIMEIRO ACESSO -->
+<div id="tela-primeiro-acesso" style="display:none;text-align:center;padding:48px 24px;">
+  <div style="font-size:56px;margin-bottom:16px;">📱</div>
+  <div style="font-size:19px;font-weight:700;margin-bottom:10px;color:#1a1a1a;">Vincular este celular</div>
+  <div style="font-size:14px;color:#555;line-height:1.7;margin-bottom:24px;">
+    Este é o primeiro acesso.<br>
+    Seu celular será vinculado à sua conta para garantir a segurança do check-in.
+  </div>
+  <div style="font-size:13px;color:#888;margin-bottom:28px;">
+    ⚠️ Após vincular, o app só funcionará neste dispositivo.
+  </div>
+  <button onclick="vincularDispositivo()" style="background:#1a5fad;color:#fff;border:none;padding:16px 40px;border-radius:12px;font-size:16px;font-weight:700;cursor:pointer;width:100%;max-width:280px;">
+    ✓ Vincular este celular
+  </button>
+</div>
+
 <div id="toast-med"></div>
 
 <script>
@@ -227,38 +258,104 @@ let posAtual = null;
 let watchId = null;
 
 // ── INIT ─────────────────────────────────────────────────
+// ── DEVICE ID ────────────────────────────────────────────
+function getDeviceId() {
+  // Gera ou recupera um ID único e persistente para este dispositivo
+  let did = localStorage.getItem('plantaopro_device_id');
+  if (!did) {
+    // Gera ID único baseado em dados do navegador + random
+    const nav = navigator.userAgent + navigator.language + screen.width + screen.height + screen.colorDepth;
+    const rand = Math.random().toString(36).substring(2);
+    const time = Date.now().toString(36);
+    did = btoa(nav).substring(0, 16) + '_' + rand + '_' + time;
+    localStorage.setItem('plantaopro_device_id', did);
+  }
+  return did;
+}
+
+async function vincularDispositivo() {
+  const deviceId = getDeviceId();
+  const res = await supabaseFetch(
+    `/rest/v1/medicos?id=eq.${medico.id}`,
+    {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+      body: JSON.stringify({ device_id: deviceId, device_registrado_em: new Date().toISOString() })
+    }
+  );
+  if (res !== null) {
+    // Vínculo feito — salva localmente e abre o app
+    localStorage.setItem('plantaopro_device_vinculado', '1');
+    document.getElementById('tela-primeiro-acesso').style.display = 'none';
+    mostrarApp();
+  } else {
+    alert('Erro ao vincular. Tente novamente.');
+  }
+}
+
 async function init() {
-  // Pega token da URL: ?token=XXXX
+  // Pega token da URL ou localStorage
   const params = new URLSearchParams(window.location.search);
-  const token = params.get('token');
+  let token = params.get('token');
+
+  if (token) {
+    localStorage.setItem('plantaopro_token', token);
+  } else {
+    token = localStorage.getItem('plantaopro_token');
+  }
 
   if (!token) { mostrarErro(); return; }
 
   // Busca médico pelo token
   const med = await supabaseFetch(`/rest/v1/medicos?token_acesso=eq.${token}&select=*`);
-  if (!med || !med.length) { mostrarErro(); return; }
+  if (!med || !med.length) {
+    localStorage.removeItem('plantaopro_token');
+    mostrarErro();
+    return;
+  }
   medico = med[0];
 
+  // ── Verificação de dispositivo ────────────────────────
+  const deviceId = getDeviceId();
+
+  if (!medico.device_id) {
+    // Nenhum dispositivo vinculado ainda — primeiro acesso
+    document.getElementById('splash').classList.add('hide');
+    document.getElementById('tela-primeiro-acesso').style.display = 'block';
+    return; // Aguarda o médico clicar em "Vincular"
+  }
+
+  if (medico.device_id !== deviceId) {
+    // Dispositivo diferente do registrado — bloqueia
+    document.getElementById('splash').classList.add('hide');
+    document.getElementById('tela-device').style.display = 'block';
+    return;
+  }
+
+  // Dispositivo correto — continua normalmente
+  mostrarApp();
+}
+
+function mostrarApp() {
   // Preenche header
   document.getElementById('hdr-nome').textContent = medico.nome;
   document.getElementById('hdr-crm').textContent = medico.crm;
   document.getElementById('hdr-avatar').textContent = medico.nome.split(' ').slice(0,2).map(n=>n[0]).join('');
 
-  // Carrega projetos
-  await carregarProjetos();
-
-  // Mostra UI
-  document.getElementById('splash').classList.add('hide');
-  document.getElementById('header').style.display = 'block';
-  document.getElementById('tabs').style.display = 'flex';
-  document.getElementById('main-content').style.display = 'block';
-
-  // Inicia GPS
-  iniciarGPS();
-  carregarPlantoes();
-  carregarHistorico();
-  carregarCheckinsHoje();
+  // Carrega projetos e mostra UI
+  carregarProjetos().then(() => {
+    document.getElementById('splash').classList.add('hide');
+    document.getElementById('header').style.display = 'block';
+    document.getElementById('tabs').style.display = 'flex';
+    document.getElementById('main-content').style.display = 'block';
+    iniciarGPS();
+    carregarPlantoes();
+    carregarHistorico();
+    carregarCheckinsHoje();
+  });
 }
+
+
 
 function mostrarErro() {
   document.getElementById('splash').classList.add('hide');
