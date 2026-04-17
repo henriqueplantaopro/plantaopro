@@ -274,22 +274,47 @@ function getDeviceId() {
 }
 
 async function vincularDispositivo() {
+  const btn = document.querySelector('#tela-primeiro-acesso button');
+  if (btn) { btn.disabled = true; btn.textContent = 'Vinculando...'; }
+
+  // Verificar se medico está carregado
+  if (!medico || !medico.id) {
+    alert('Sessão expirada. Feche e abra o link novamente.');
+    if (btn) { btn.disabled = false; btn.textContent = '✓ Vincular este celular'; }
+    return;
+  }
+
   const deviceId = getDeviceId();
-  const res = await supabaseFetch(
-    `/rest/v1/medicos?id=eq.${medico.id}`,
-    {
+  const url = SUPABASE_URL + '/rest/v1/medicos?id=eq.' + medico.id;
+
+  try {
+    const res = await fetch(url, {
       method: 'PATCH',
-      headers: { 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
-      body: JSON.stringify({ device_id: deviceId, device_registrado_em: new Date().toISOString() })
+      headers: {
+        'apikey': SUPABASE_KEY,
+        'Authorization': 'Bearer ' + SUPABASE_KEY,
+        'Content-Type': 'application/json',
+        'Prefer': 'return=minimal'
+      },
+      body: JSON.stringify({
+        device_id: deviceId,
+        device_registrado_em: new Date().toISOString()
+      })
+    });
+
+    if (res.ok || res.status === 204) {
+      localStorage.setItem('plantaopro_device_vinculado', '1');
+      document.getElementById('tela-primeiro-acesso').style.display = 'none';
+      mostrarApp();
+    } else {
+      const errTxt = await res.text().catch(()=>'');
+      alert('Erro ' + res.status + ': ' + errTxt.slice(0, 120));
+      if (btn) { btn.disabled = false; btn.textContent = '✓ Vincular este celular'; }
     }
-  );
-  if (res !== null) {
-    // Vínculo feito — salva localmente e abre o app
-    localStorage.setItem('plantaopro_device_vinculado', '1');
-    document.getElementById('tela-primeiro-acesso').style.display = 'none';
-    mostrarApp();
-  } else {
-    alert('Erro ao vincular. Tente novamente.');
+  } catch(e) {
+    // Erro de rede — mostrar detalhes
+    alert('Erro de rede: ' + (e.message || String(e)));
+    if (btn) { btn.disabled = false; btn.textContent = '✓ Vincular este celular'; }
   }
 }
 
@@ -375,10 +400,16 @@ async function supabaseFetch(path, options = {}) {
       },
       ...options
     });
-    if (!res.ok) return null;
+    if (!res.ok) {
+      const err = await res.text();
+      console.error('Supabase erro:', res.status, err);
+      return null;
+    }
+    // 204 No Content = sucesso sem body (PATCH/DELETE com return=minimal)
+    if (res.status === 204) return true;
     const ct = res.headers.get('content-type');
     if (ct && ct.includes('json')) return res.json();
-    return null;
+    return true;
   } catch(e) { console.error(e); return null; }
 }
 
