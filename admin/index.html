@@ -166,6 +166,23 @@ tr:hover td{background:var(--bg3);}
   .sel-all-row{display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--bg3);border-bottom:1px solid var(--border);font-size:12px;color:var(--text2);font-weight:500;}
   .busca-medico{width:100%;padding:8px 10px;font-size:13px;border:1px solid var(--border);border-radius:var(--radius);margin-bottom:10px;background:#fff;color:var(--text);}
   .busca-medico:focus{border-color:var(--blue);outline:none;}
+  /* Escala semanal */
+  .sem-table{width:100%;border-collapse:collapse;min-width:700px;}
+  .sem-th{background:var(--blue);color:#fff;font-size:11px;font-weight:600;padding:8px 6px;text-align:center;position:sticky;top:0;}
+  .sem-th-data{font-size:14px;font-weight:700;display:block;}
+  .sem-th-dow{font-size:10px;opacity:0.8;text-transform:uppercase;letter-spacing:0.5px;}
+  .sem-th.hoje-col{background:#0f3d7a;}
+  .sem-td{vertical-align:top;padding:4px;border:1px solid var(--border);min-width:120px;min-height:80px;}
+  .sem-td.hoje-col{background:var(--blue-light);}
+  .sem-card{background:#fff;border-radius:6px;padding:5px 7px;margin-bottom:4px;border-left:3px solid var(--green);font-size:11px;cursor:pointer;transition:opacity 0.15s;box-shadow:0 1px 3px rgba(0,0,0,0.08);}
+  .sem-card:hover{opacity:0.85;}
+  .sem-card.noturno{border-left-color:var(--purple);}
+  .sem-card.h24{border-left-color:var(--amber);}
+  .sem-card-nome{font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .sem-card-hora{font-size:10px;color:var(--text3);font-family:monospace;}
+  .sem-card-setor{font-size:10px;color:var(--text2);}
+  .sem-add-btn{display:flex;align-items:center;justify-content:center;width:100%;padding:6px;border:1.5px dashed var(--border2);border-radius:6px;background:transparent;cursor:pointer;color:var(--text3);font-size:18px;transition:all 0.15s;margin-top:2px;}
+  .sem-add-btn:hover{border-color:var(--blue);color:var(--blue);background:var(--blue-light);}
   /* Agenda por médico */
   .mini-cal-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:3px;margin-top:8px;}
   .mini-cal-dow{font-size:10px;font-weight:600;color:var(--text3);text-align:center;padding:3px 0;text-transform:uppercase;}
@@ -245,14 +262,22 @@ tr:hover td{background:var(--bg3);}
     <div class="page-sub">Cadastro e links de acesso ao app</div>
     <div class="card">
       <div class="card-title">Novo médico</div>
-      <div class="form-row"><div class="form-group"><label>Nome completo</label><input id="mn" type="text" placeholder="Dr. João Silva"></div><div class="form-group"><label>CRM</label><input id="mc" type="text" placeholder="CRM/RJ 000001"></div></div>
+      <div class="form-row">
+        <div class="form-group"><label>Nome completo</label><input id="mn" type="text" placeholder="Dr. João Silva"></div>
+        <div class="form-group"><label>E-mail</label><input id="memail" type="email" placeholder="medico@hospital.com"></div>
+      </div>
       <div class="form-row four">
+        <div class="form-group"><label>Telefone celular</label><input id="mtel" type="text" placeholder="(21) 99999-9999"></div>
+        <div class="form-group"><label>Data de nascimento</label><input id="mnascimento" type="date"></div>
+        <div class="form-group"><label>CPF</label><input id="mcpf" type="text" placeholder="000.000.000-00"></div>
+        <div class="form-group"><label>Tipo</label><select id="mt"><option>Plantonista</option><option>Diarista</option><option>Coordenador</option><option>Residente</option></select></div>
+      </div>
+      <div class="form-row four">
+        <div class="form-group"><label>CRM</label><input id="mc" type="text" placeholder="CRM/RJ 000001"></div>
+        <div class="form-group"><label>RQE</label><input id="mrqe" type="text" placeholder="RQE 00000"></div>
         <div class="form-group"><label>Especialidade</label><input id="me" type="text" placeholder="Clínica Geral"></div>
         <div class="form-group"><label>Valor/hora (R$)</label><input id="mv" type="number" placeholder="150"></div>
-        <div class="form-group"><label>Tipo</label><select id="mt"><option>Plantonista</option><option>Diarista</option><option>Coordenador</option><option>Residente</option></select></div>
-        <div class="form-group"><label>CPF</label><input id="mcpf" type="text" placeholder="000.000.000-00"></div>
       </div>
-      <div class="form-row"><div class="form-group"><label>E-mail</label><input id="memail" type="email" placeholder="medico@hospital.com"></div><div class="form-group"><label>Telefone</label><input id="mtel" type="text" placeholder="(21) 99999-9999"></div></div>
       <button class="btn btn-primary" onclick="addMedico()">+ Adicionar médico</button>
     </div>
     <div class="card"><div class="card-title">Médicos cadastrados</div><div id="medicos-lista"><div class="empty">Carregando...</div></div></div>
@@ -443,35 +468,67 @@ tr:hover td{background:var(--bg3);}
   <!-- CALENDÁRIO -->
   <div id="tab-calendario" class="section">
     <div class="page-title">Calendário</div>
-    <div class="page-sub">Visualização de escala por projeto e médico</div>
-    <div class="card">
-      <div style="display:flex;gap:10px;align-items:flex-end;margin-bottom:16px;flex-wrap:wrap;">
-        <div class="form-group" style="flex:1;min-width:180px;"><label>Filtrar por projeto</label><select id="cal-proj" onchange="renderCal()"><option value="">Todos os projetos</option></select></div>
-        <div class="form-group" style="flex:1;min-width:180px;"><label>Filtrar por médico</label><select id="cal-med" onchange="renderCal()"><option value="">Todos os médicos</option></select></div>
-        <button class="btn btn-ghost btn-sm" onclick="limparFiltrosCal()">Limpar filtros</button>
-      </div>
-      <div class="cal-header">
-        <div style="display:flex;align-items:center;gap:12px;">
-          <button class="btn btn-ghost btn-sm" onclick="navCal(-1)">‹ Anterior</button>
-          <div class="cal-title" id="cal-label"></div>
-          <button class="btn btn-ghost btn-sm" onclick="navCal(1)">Próximo ›</button>
-        </div>
-        <div class="cal-legend">
-          <span><span class="cal-legend-dot" style="background:#e8f5eb;"></span>Diurno</span>
-          <span><span class="cal-legend-dot" style="background:#f0eeff;"></span>Noturno</span>
-          <span><span class="cal-legend-dot" style="background:#fdf3e0;"></span>24h</span>
-        </div>
-      </div>
-      <div id="cal-filtro-badge" style="font-size:12px;color:var(--blue);margin-bottom:8px;display:none;"></div>
-      <div class="cal-grid">
-        <div class="cal-dow">Dom</div><div class="cal-dow">Seg</div><div class="cal-dow">Ter</div>
-        <div class="cal-dow">Qua</div><div class="cal-dow">Qui</div><div class="cal-dow">Sex</div><div class="cal-dow">Sáb</div>
-      </div>
-      <div class="cal-grid" id="cal-grid" style="margin-top:4px;"></div>
+    <div class="page-sub">Escala mensal e semanal por projeto</div>
+
+    <!-- Sub-abas -->
+    <div style="display:flex;gap:6px;margin-bottom:16px;">
+      <button class="btn btn-primary" id="cal-tab-mensal" onclick="switchCalTab('mensal')">📅 Mensal</button>
+      <button class="btn btn-ghost" id="cal-tab-semanal" onclick="switchCalTab('semanal')">📋 Semanal</button>
     </div>
-    <div class="card" id="cal-detail" style="display:none;">
-      <div class="card-title" id="cal-detail-title"></div>
-      <div id="cal-detail-body"></div>
+
+    <!-- FILTROS compartilhados -->
+    <div class="card" style="padding:12px 16px;margin-bottom:12px;">
+      <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;">
+        <div class="form-group" style="flex:1;min-width:180px;"><label>Projeto</label><select id="cal-proj" onchange="renderCalAtual()"><option value="">Todos os projetos</option></select></div>
+        <div class="form-group" style="flex:1;min-width:180px;"><label>Médico</label><select id="cal-med" onchange="renderCalAtual()"><option value="">Todos os médicos</option></select></div>
+        <button class="btn btn-ghost btn-sm" onclick="limparFiltrosCal()">Limpar</button>
+      </div>
+    </div>
+
+    <!-- VIEW MENSAL -->
+    <div id="cal-mensal">
+      <div class="card">
+        <div class="cal-header">
+          <div style="display:flex;align-items:center;gap:12px;">
+            <button class="btn btn-ghost btn-sm" onclick="navCal(-1)">‹ Anterior</button>
+            <div class="cal-title" id="cal-label"></div>
+            <button class="btn btn-ghost btn-sm" onclick="navCal(1)">Próximo ›</button>
+          </div>
+          <div class="cal-legend">
+            <span><span class="cal-legend-dot" style="background:#e8f5eb;"></span>Diurno</span>
+            <span><span class="cal-legend-dot" style="background:#f0eeff;"></span>Noturno</span>
+            <span><span class="cal-legend-dot" style="background:#fdf3e0;"></span>24h</span>
+          </div>
+        </div>
+        <div id="cal-filtro-badge" style="font-size:12px;color:var(--blue);margin-bottom:8px;display:none;"></div>
+        <div class="cal-grid">
+          <div class="cal-dow">Dom</div><div class="cal-dow">Seg</div><div class="cal-dow">Ter</div>
+          <div class="cal-dow">Qua</div><div class="cal-dow">Qui</div><div class="cal-dow">Sex</div><div class="cal-dow">Sáb</div>
+        </div>
+        <div class="cal-grid" id="cal-grid" style="margin-top:4px;"></div>
+      </div>
+      <div class="card" id="cal-detail" style="display:none;">
+        <div class="card-title" id="cal-detail-title"></div>
+        <div id="cal-detail-body"></div>
+      </div>
+    </div>
+
+    <!-- VIEW SEMANAL -->
+    <div id="cal-semanal" style="display:none;">
+      <div class="card">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <button class="btn btn-ghost btn-sm" onclick="navSemana(-1)">‹ Anterior</button>
+            <div style="font-size:15px;font-weight:600;" id="sem-label"></div>
+            <button class="btn btn-ghost btn-sm" onclick="navSemana(1)">Próxima ›</button>
+            <button class="btn btn-ghost btn-sm" onclick="irSemanaAtual()">Hoje</button>
+          </div>
+          <div style="display:flex;gap:8px;">
+            <button class="btn btn-success" onclick="copiarSemana()" title="Copia todos os plantões desta semana para a próxima">📋 Copiar semana</button>
+          </div>
+        </div>
+        <div id="sem-grid" style="overflow-x:auto;"></div>
+      </div>
     </div>
   </div>
 
@@ -616,6 +673,15 @@ tr:hover td{background:var(--bg3);}
     <div class="page-title">Exportar TOTVS</div>
     <div class="page-sub">Relatório agrupado em CSV, XLSX ou PDF</div>
     <div class="card">
+      <div class="card-title">Filtros</div>
+      <div class="form-row four">
+        <div class="form-group"><label>Projeto</label><select id="ex-proj"><option value="">Todos os projetos</option></select></div>
+        <div class="form-group"><label>Médico</label><select id="ex-med"><option value="">Todos os médicos</option></select></div>
+        <div class="form-group"><label>Período — De</label><input id="ex-d1" type="date"></div>
+        <div class="form-group"><label>Período — Até</label><input id="ex-d2" type="date"></div>
+      </div>
+    </div>
+    <div class="card">
       <div class="card-title">Layout de exportação</div>
       <div class="layout-opts">
         <div class="layout-opt selected" id="lay-1" onclick="selectLayout(1)"><div class="layout-opt-title">RH — Folha de pagamento</div><div class="layout-opt-desc">Por CPF e competência</div></div>
@@ -624,10 +690,6 @@ tr:hover td{background:var(--bg3);}
         <div class="layout-opt" id="lay-4" onclick="selectLayout(4)"><div class="layout-opt-title">Personalizado (completo)</div><div class="layout-opt-desc">Todas as colunas disponíveis</div></div>
       </div>
       <div id="layout-preview" style="font-size:12px;color:var(--text2);padding:8px 10px;background:var(--bg3);border-radius:var(--radius);margin-bottom:14px;font-family:monospace;"></div>
-      <div class="form-row">
-        <div class="form-group"><label>Período — De</label><input id="ex-d1" type="date"></div>
-        <div class="form-group"><label>Período — Até</label><input id="ex-d2" type="date"></div>
-      </div>
       <hr>
       <div style="font-size:12px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px;">Formato de exportação</div>
       <div class="export-btns">
@@ -792,15 +854,30 @@ async function carregarDashboard() {
 function renderMedicos() {
   const el = document.getElementById('medicos-lista');
   if (!medicos.length) { el.innerHTML = '<div class="empty">Nenhum médico cadastrado.</div>'; return; }
-  el.innerHTML = '<table><thead><tr><th>Nome</th><th>CRM</th><th>Especialidade</th><th>Tipo</th><th>Valor/h</th><th>App</th><th></th></tr></thead><tbody>' +
-    medicos.map(m => `<tr>
-      <td><strong>${m.nome}</strong></td><td style="font-family:monospace;">${m.crm}</td>
-      <td>${m.especialidade||'—'}</td>
-      <td><span class="badge badge-blue">${m.tipo}</span></td>
-      <td style="font-family:monospace;">${fBRL(m.valor_hora||0)}</td>
-      <td><button class="btn btn-link" onclick="verLinkMedico('${m.token_acesso}','${m.nome}','${m.telefone||''}')">📱 Link</button></td>
-      <td><button class="btn btn-danger" onclick="delMedico('${m.id}')">Remover</button></td>
-    </tr>`).join('') + '</tbody></table>';
+  el.innerHTML = '<table><thead><tr><th>Nome</th><th>CRM</th><th>Especialidade</th><th>Tipo</th><th>Valor/h</th><th>Dispositivo</th><th>App</th><th></th></tr></thead><tbody>' +
+    medicos.map(m => {
+      const devStatus = m.device_id
+        ? `<span class="badge badge-green">✓ Vinculado</span>`
+        : `<span class="badge badge-amber">Sem vínculo</span>`;
+      const devReset = m.device_id
+        ? `<button class="btn btn-danger" style="margin-top:4px;font-size:11px;" onclick="resetarDispositivo('${m.id}','${m.nome}')">↺ Redefinir</button>`
+        : '';
+      const nasc = m.data_nascimento ? new Date(m.data_nascimento+'T12:00:00').toLocaleDateString('pt-BR') : '—';
+      return `<tr>
+        <td>
+          <strong>${m.nome}</strong><br>
+          <span style="font-size:11px;color:var(--text3);">${m.email||''}</span><br>
+          <span style="font-size:11px;color:var(--text3);">${m.telefone||''}</span>
+        </td>
+        <td style="font-family:monospace;font-size:12px;">${m.crm}<br><span style="color:var(--text3);">${m.rqe||''}</span></td>
+        <td style="font-size:12px;">${m.especialidade||'—'}<br><span style="color:var(--text3);">Nasc: ${nasc}</span></td>
+        <td><span class="badge badge-blue">${m.tipo}</span></td>
+        <td style="font-family:monospace;">${fBRL(m.valor_hora||0)}</td>
+        <td style="font-size:12px;">${devStatus}${devReset?'<br>'+devReset:''}</td>
+        <td><button class="btn btn-link" onclick="verLinkMedico('${m.token_acesso}','${m.nome}','${m.telefone||''}')">📱 Link</button></td>
+        <td><button class="btn btn-danger" onclick="delMedico('${m.id}')">Remover</button></td>
+      </tr>`;
+    }).join('') + '</tbody></table>';
 }
 
 async function addMedico() {
@@ -812,19 +889,39 @@ async function addMedico() {
     valor_hora: parseFloat(document.getElementById('mv').value)||0,
     tipo: document.getElementById('mt').value,
     cpf: document.getElementById('mcpf').value.trim(),
+    rqe: document.getElementById('mrqe').value.trim(),
+    data_nascimento: document.getElementById('mnascimento').value || null,
     email: document.getElementById('memail').value.trim(),
     telefone: document.getElementById('mtel').value.trim(),
     ativo: true
   };
   const res = await sb('/rest/v1/medicos', { method:'POST', body: JSON.stringify(payload) });
-  if (res) { toast('Médico cadastrado!'); ['mn','mc','me','mv','mcpf','memail','mtel'].forEach(id=>document.getElementById(id).value=''); await carregarMedicos(); }
-  else toast('Erro ao cadastrar médico', true);
+  if (res) {
+    toast('Médico cadastrado!');
+    ['mn','mc','me','mv','mcpf','mrqe','memail','mtel','mnascimento'].forEach(id=>document.getElementById(id).value='');
+    await carregarMedicos();
+  } else toast('Erro ao cadastrar médico', true);
 }
 
 async function delMedico(id) {
   if (!confirm('Remover médico?')) return;
   await sb(`/rest/v1/medicos?id=eq.${id}`, { method:'DELETE' });
   await carregarMedicos();
+}
+
+async function resetarDispositivo(id, nome) {
+  if (!confirm(`Redefinir vínculo de dispositivo de ${nome}?\n\nO médico poderá fazer o primeiro acesso em um novo celular.`)) return;
+  const res = await sb(`/rest/v1/medicos?id=eq.${id}`, {
+    method: 'PATCH',
+    headers: {'Content-Type':'application/json','Prefer':'return=minimal'},
+    body: JSON.stringify({ device_id: null, device_registrado_em: null })
+  });
+  if (res !== null) {
+    toast(`Dispositivo de ${nome} redefinido!`);
+    await carregarMedicos();
+  } else {
+    toast('Erro ao redefinir dispositivo', true);
+  }
 }
 
 function verLinkMedico(token, nome, tel) {
@@ -1285,8 +1382,8 @@ function showTab(id,el){
   if(id==='lancamentos') popLancSelects();
   if(id==='checkins'){ popCiSelects(); popCiProjPresenca(); document.getElementById('ci-data-p').value=hoje_str(); carregarPresenca(); }
   if(id==='relatorios'){ popRelSelects(); }
-  if(id==='calendario'){ popCalSelects(); renderCal(); }
-  if(id==='exportar') renderLayoutPreview();
+  if(id==='calendario'){ popCalSelects(); switchCalTab('mensal'); }
+  if(id==='exportar'){ renderLayoutPreview(); popExportSelects(); }
   if(id==='importar') switchImpTab('med');
   if(id==='lote'){ initLote(); }
   if(id==='lotemed'){ initAgenda(); }
@@ -1549,6 +1646,163 @@ function limparAgenda() {
   window._agdData = null;
   const btn = document.getElementById('agd-confirmar-btn');
   if (btn) { btn.disabled=false; btn.textContent='✓ Confirmar e registrar'; }
+}
+
+
+// ─── CALENDÁRIO — SUB-ABAS ──────────────────────────────
+function switchCalTab(tab) {
+  document.getElementById('cal-mensal').style.display  = tab==='mensal'  ? 'block' : 'none';
+  document.getElementById('cal-semanal').style.display = tab==='semanal' ? 'block' : 'none';
+  document.getElementById('cal-tab-mensal').className  = 'btn ' + (tab==='mensal'  ? 'btn-primary' : 'btn-ghost');
+  document.getElementById('cal-tab-semanal').className = 'btn ' + (tab==='semanal' ? 'btn-primary' : 'btn-ghost');
+  if (tab==='semanal') renderSemana();
+  if (tab==='mensal')  renderCal();
+}
+function renderCalAtual() {
+  const tab = document.getElementById('cal-semanal').style.display==='none' ? 'mensal' : 'semanal';
+  if (tab==='mensal') renderCal(); else renderSemana();
+}
+
+// ─── ESCALA SEMANAL ──────────────────────────────────────
+let semOffset = 0; // semanas a partir da semana atual
+
+function getSegundaDaSemana(offset) {
+  const hj = new Date();
+  const dow = hj.getDay(); // 0=dom
+  const seg = new Date(hj);
+  seg.setDate(hj.getDate() - (dow === 0 ? 6 : dow - 1) + offset * 7);
+  seg.setHours(0,0,0,0);
+  return seg;
+}
+
+function navSemana(d) { semOffset += d; renderSemana(); }
+function irSemanaAtual() { semOffset = 0; renderSemana(); }
+
+function renderSemana() {
+  const seg = getSegundaDaSemana(semOffset);
+  const dias = Array.from({length:7}, (_,i) => {
+    const d = new Date(seg); d.setDate(seg.getDate()+i); return d;
+  });
+  const hj = new Date(); hj.setHours(0,0,0,0);
+  const dows = ['Seg','Ter','Qua','Qui','Sex','Sáb','Dom'];
+  const d1str = dias[0].toLocaleDateString('pt-BR',{day:'2-digit',month:'short'});
+  const d7str = dias[6].toLocaleDateString('pt-BR',{day:'2-digit',month:'short',year:'numeric'});
+  document.getElementById('sem-label').textContent = `${d1str} — ${d7str}`;
+
+  const pid = document.getElementById('cal-proj')?.value||'';
+  const mid = document.getElementById('cal-med')?.value||'';
+
+  let html = `<table class="sem-table"><thead><tr>`;
+  dias.forEach((d,i) => {
+    const ds = d.toISOString().slice(0,10);
+    const isHoje = d.getTime()===hj.getTime();
+    html += `<th class="sem-th${isHoje?' hoje-col':''}">
+      <span class="sem-th-dow">${dows[i]}</span>
+      <span class="sem-th-data">${d.getDate()}</span>
+    </th>`;
+  });
+  html += '</tr></thead><tbody><tr>';
+
+  dias.forEach(d => {
+    const ds = d.toISOString().slice(0,10);
+    const isHoje = d.getTime()===hj.getTime();
+    let evts = lancamentos.filter(l=>l.data===ds);
+    if(pid) evts=evts.filter(l=>l.projeto_id===pid);
+    if(mid) evts=evts.filter(l=>l.medico_id===mid);
+
+    html += `<td class="sem-td${isHoje?' hoje-col':''}">`;
+    evts.forEach(l => {
+      const turno = l.tipo?.includes('Noturno')?'noturno':l.tipo?.includes('24')?'h24':'';
+      const proj = projetos.find(p=>p.id===l.projeto_id);
+      html += `<div class="sem-card ${turno}" onclick="verDetalhesSemana('${l.id}')" title="${l.medico||''} · ${l.projeto||''}">
+        <div class="sem-card-nome">${(l.medico||'').split(' ').slice(0,2).join(' ')}</div>
+        <div class="sem-card-hora">${(l.hora_ini||'').slice(0,5)}–${(l.hora_fim||'').slice(0,5)}</div>
+        ${l.setor?`<div class="sem-card-setor">${l.setor}</div>`:''}
+      </div>`;
+    });
+
+    // Botão "+" para adicionar
+    const projFiltrado = pid ? projetos.find(p=>p.id===pid) : null;
+    html += `<button class="sem-add-btn" onclick="abrirLancamentoRapido('${ds}','${pid}')" title="Adicionar plantão em ${d.toLocaleDateString('pt-BR')}">+</button>`;
+    html += '</td>';
+  });
+
+  html += '</tr></tbody></table>';
+  document.getElementById('sem-grid').innerHTML = html;
+}
+
+function verDetalhesSemana(lancId) {
+  const l = lancamentos.find(x=>x.id===lancId||x.id==lancId);
+  if (!l) return;
+  const proj = projetos.find(p=>p.id===l.projeto_id);
+  const info = `Médico: ${l.medico||'—'}\nProjeto: ${l.projeto||'—'}\nSetor: ${l.setor||'—'}\nTipo: ${l.tipo||'—'}\nHorário: ${(l.hora_ini||'').slice(0,5)}–${(l.hora_fim||'').slice(0,5)} (${l.horas}h)\nHonorários: ${fBRL(l.honorario||0)}`;
+  alert(info);
+}
+
+// Modal de lançamento rápido a partir da escala semanal
+function abrirLancamentoRapido(ds, projId) {
+  // Ir para aba lançamentos com data e projeto pré-preenchidos
+  showTab('lancamentos', document.querySelector('.nav-item[onclick*="lancamentos"]'));
+  setTimeout(() => {
+    popLancSelects();
+    document.getElementById('ld').value = ds;
+    if (projId) document.getElementById('lp').value = projId;
+    document.getElementById('ld').scrollIntoView({behavior:'smooth', block:'center'});
+    document.getElementById('lm').focus();
+  }, 200);
+}
+
+// ─── COPIAR SEMANA ───────────────────────────────────────
+async function copiarSemana() {
+  const seg = getSegundaDaSemana(semOffset);
+  const dias = Array.from({length:7}, (_,i) => {
+    const d = new Date(seg); d.setDate(seg.getDate()+i);
+    return d.toISOString().slice(0,10);
+  });
+
+  const pid = document.getElementById('cal-proj')?.value||'';
+  const mid = document.getElementById('cal-med')?.value||'';
+
+  let lancSemana = lancamentos.filter(l => dias.includes(l.data));
+  if(pid) lancSemana = lancSemana.filter(l=>l.projeto_id===pid);
+  if(mid) lancSemana = lancSemana.filter(l=>l.medico_id===mid);
+
+  if (!lancSemana.length) { toast('Nenhum plantão nesta semana para copiar', true); return; }
+
+  const prox = `${lancSemana.length} plantão(ões) para a semana de ${new Date(new Date(seg).setDate(seg.getDate()+7)).toLocaleDateString('pt-BR')}`;
+  if (!confirm(`Copiar ${prox}?\n\nOs plantões serão duplicados na semana seguinte.`)) return;
+
+  let ok = 0, erros = 0;
+  for (const l of lancSemana) {
+    const dataOriginal = new Date(l.data+'T12:00:00');
+    const dataProxima = new Date(dataOriginal);
+    dataProxima.setDate(dataOriginal.getDate() + 7);
+    const novaData = dataProxima.toISOString().slice(0,10);
+
+    // Verificar se já existe lançamento do mesmo médico no mesmo dia/projeto
+    const jaExiste = lancamentos.find(x => x.data===novaData && x.medico_id===l.medico_id && x.projeto_id===l.projeto_id);
+    if (jaExiste) { erros++; continue; }
+
+    const reg = {
+      medico_id: l.medico_id, projeto_id: l.projeto_id,
+      data: novaData, hora_ini: l.hora_ini, hora_fim: l.hora_fim,
+      horas: l.horas, tipo: l.tipo, setor: l.setor||null,
+      honorario: l.honorario, valor_hora: l.valor_hora||0,
+      obs: l.obs||null, codigo_totvs: null
+    };
+    try {
+      const res = await fetch(SUPABASE_URL + '/rest/v1/lancamentos', {
+        method: 'POST',
+        headers: {'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},
+        body: JSON.stringify(reg)
+      });
+      if (res.ok) ok++; else erros++;
+    } catch(e) { erros++; }
+  }
+
+  toast(`✅ ${ok} plantão(ões) copiado(s)!${erros>0?' · '+erros+' já existiam ou com erro':''}`);
+  await carregarLancamentos();
+  renderSemana();
 }
 
 // Inicia com Enter no login
@@ -2299,9 +2553,19 @@ function renderLayoutPreview(){
 }
 function filtrarDados(){
   const d1=document.getElementById('ex-d1').value, d2=document.getElementById('ex-d2').value;
+  const pid=document.getElementById('ex-proj')?.value||'';
+  const mid=document.getElementById('ex-med')?.value||'';
   let d=[...lancamentos];
-  if(d1)d=d.filter(l=>l.data>=d1);if(d2)d=d.filter(l=>l.data<=d2);
+  if(d1)d=d.filter(l=>l.data>=d1);
+  if(d2)d=d.filter(l=>l.data<=d2);
+  if(pid)d=d.filter(l=>l.projeto_id===pid);
+  if(mid)d=d.filter(l=>l.medico_id===mid);
   return d;
+}
+function popExportSelects(){
+  const sp=document.getElementById('ex-proj'), sm=document.getElementById('ex-med');
+  if(sp)sp.innerHTML='<option value="">Todos os projetos</option>'+sortedProjetos().map(p=>`<option value="${p.id}">${p.nome}</option>`).join('');
+  if(sm)sm.innerHTML='<option value="">Todos os médicos</option>'+sortedMedicos().map(m=>`<option value="${m.id}">${m.nome}</option>`).join('');
 }
 function agruparParaExport(dados){
   const porProjeto={};
