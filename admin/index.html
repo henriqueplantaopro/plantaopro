@@ -228,6 +228,11 @@ tr:hover td{background:var(--bg3);}
   .sem-add-btn:hover{border-color:var(--blue);color:var(--blue);background:var(--blue-light);}
   .sem-colar-btn{display:flex;align-items:center;justify-content:center;width:100%;padding:5px 6px;border:1.5px solid var(--amber);border-radius:6px;background:var(--amber-bg);cursor:pointer;color:var(--amber);font-size:11px;font-weight:600;transition:all 0.15s;margin-top:3px;gap:4px;}
   .sem-colar-btn:hover{background:var(--amber);color:#fff;}
+  /* Barra de cópia ativa */
+  #barra-copiado{position:sticky;top:0;z-index:500;background:var(--amber);color:#fff;padding:8px 20px;display:none;align-items:center;justify-content:space-between;font-size:13px;font-weight:500;box-shadow:0 2px 8px rgba(0,0,0,0.15);}
+  #barra-copiado span{display:flex;align-items:center;gap:8px;}
+  #barra-copiado button{background:rgba(255,255,255,0.25);border:none;color:#fff;font-size:13px;font-weight:700;cursor:pointer;padding:4px 12px;border-radius:99px;transition:background 0.15s;}
+  #barra-copiado button:hover{background:rgba(255,255,255,0.4);}
   /* Agenda por médico */
   .mini-cal-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:3px;margin-top:8px;}
   .mini-cal-dow{font-size:10px;font-weight:600;color:var(--text3);text-align:center;padding:3px 0;text-transform:uppercase;}
@@ -302,6 +307,11 @@ tr:hover td{background:var(--bg3);}
 
 <!-- MAIN -->
 <div class="main" id="main" style="display:none;">
+  <!-- Barra de cópia ativa -->
+  <div id="barra-copiado">
+    <span>📋 <span id="barra-copiado-txt">Plantão copiado</span> — clique em 📌 Colar em qualquer dia da semana</span>
+    <button onclick="cancelarCopia()">✕ Cancelar cópia</button>
+  </div>
 
   <!-- DASHBOARD -->
   <div id="tab-dashboard" class="section active">
@@ -2541,6 +2551,21 @@ function atualizarBotoesColar() {
       btn.title = 'Colar: ' + (_lancCopiado.medico||'') + ' · ' + (_lancCopiado.hora_ini||'').slice(0,5) + '–' + (_lancCopiado.hora_fim||'').slice(0,5);
     }
   });
+  // Mostrar/esconder barra de notificação
+  const barra = document.getElementById('barra-copiado');
+  const txt   = document.getElementById('barra-copiado-txt');
+  if (barra) {
+    barra.style.display = _lancCopiado ? 'flex' : 'none';
+    if (_lancCopiado && txt) {
+      txt.textContent = '"' + (_lancCopiado.medico||'') + '" — ' + (_lancCopiado.hora_ini||'').slice(0,5) + '–' + (_lancCopiado.hora_fim||'').slice(0,5) + ' (' + (_lancCopiado.tipo||'') + ')';
+    }
+  }
+}
+
+function cancelarCopia() {
+  _lancCopiado = null;
+  atualizarBotoesColar();
+  toast('Cópia cancelada');
 }
 
 async function colarNoDia(ds, projId) {
