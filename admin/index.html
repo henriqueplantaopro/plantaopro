@@ -235,6 +235,16 @@ tr:hover td{background:var(--bg3);}
   .dia-selecionado-chip{display:inline-flex;align-items:center;gap:4px;background:var(--blue-light);color:var(--blue);border:1px solid #a0c4f0;border-radius:99px;padding:3px 10px;font-size:12px;font-weight:500;margin:3px;}
   .dia-selecionado-chip button{background:none;border:none;cursor:pointer;color:var(--blue);font-size:14px;line-height:1;padding:0 0 0 2px;}
 
+
+  .rel-tipo-btn{padding:9px 8px;border:1.5px solid var(--border);border-radius:var(--radius);background:#fff;font-size:12px;font-weight:500;cursor:pointer;color:var(--text2);transition:all 0.15s;text-align:center;}
+  .rel-tipo-btn:hover{border-color:var(--blue);color:var(--blue);background:var(--blue-light);}
+  .rel-tipo-btn.active{border-color:var(--blue);background:var(--blue);color:#fff;font-weight:600;}
+
+  .mr-med-item{display:flex;align-items:center;gap:8px;padding:7px 10px;cursor:pointer;border-bottom:1px solid var(--border);font-size:13px;transition:background 0.1s;}
+  .mr-med-item:last-child{border-bottom:none;}
+  .mr-med-item:hover{background:var(--bg3);}
+  .mr-med-item.selecionado{background:var(--blue-light);}
+  .mr-med-item input[type=checkbox]{width:15px;height:15px;accent-color:var(--blue);flex-shrink:0;}
 </style>
 </head>
 <body>
@@ -503,8 +513,24 @@ tr:hover td{background:var(--bg3);}
   <!-- RELATÓRIOS -->
   <div id="tab-relatorios" class="section">
     <div class="page-title">Relatórios</div>
-    <div class="page-sub">Exportação agrupada por projeto</div>
-    <div class="card">
+    <div class="page-sub">Selecione o tipo e os filtros desejados</div>
+
+    <!-- Tipo de relatório -->
+    <div class="card" style="margin-bottom:12px;">
+      <div class="card-title">Tipo de relatório</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;" id="rel-tipo-grid">
+        <button type="button" class="rel-tipo-btn active" id="rt-detalhado" onclick="selecionarRelTipo('detalhado',this)">📊 Detalhado por projeto</button>
+        <button type="button" class="rel-tipo-btn" id="rt-resumo" onclick="selecionarRelTipo('resumo',this)">📋 Plantões por projeto</button>
+        <button type="button" class="rel-tipo-btn" id="rt-horas" onclick="selecionarRelTipo('horas',this)">⏱️ Horas por profissional</button>
+        <button type="button" class="rel-tipo-btn" id="rt-faltas" onclick="selecionarRelTipo('faltas',this)">❌ Faltas</button>
+        <button type="button" class="rel-tipo-btn" id="rt-atrasos" onclick="selecionarRelTipo('atrasos',this)">⚠️ Atrasos</button>
+        <button type="button" class="rel-tipo-btn" id="rt-checkins" onclick="selecionarRelTipo('checkins',this)">📍 Check-ins fora da tolerância</button>
+        <button type="button" class="rel-tipo-btn" id="rt-medicos" onclick="selecionarRelTipo('medicos',this)">👨‍⚕️ Médicos cadastrados</button>
+      </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="card" style="margin-bottom:12px;">
       <div class="form-row four">
         <div class="form-group"><label>Projeto</label><select id="rp"><option value="">Todos</option></select></div>
         <div class="form-group"><label>Médico</label><select id="rm"><option value="">Todos</option></select></div>
@@ -512,9 +538,9 @@ tr:hover td{background:var(--bg3);}
         <div class="form-group"><label>Até</label><input type="date" id="rd2"></div>
       </div>
       <div style="display:flex;gap:8px;margin-top:8px;">
-        <button class="btn btn-success" onclick="exportarXLSX()">⬇ Excel</button>
-        <button class="btn btn-primary" onclick="exportarPDF()">⬇ PDF</button>
-        <button class="btn btn-ghost" onclick="gerarRelatorio()">Visualizar</button>
+        <button class="btn btn-primary" onclick="gerarRelatorio()">🔍 Gerar relatório</button>
+        <button class="btn btn-success" onclick="exportarRelXLSX()">⬇ Excel</button>
+        <button class="btn btn-amber" onclick="exportarRelPDF()">⬇ PDF</button>
       </div>
     </div>
     <div id="rel-resultado"></div>
@@ -820,10 +846,9 @@ tr:hover td{background:var(--bg3);}
     <div class="modal-rapido-body">
       <div class="mr-sucesso" id="mr-sucesso"></div>
       <div class="form-group" style="margin-bottom:10px;">
-        <label>Médico</label>
-        <select id="mr-med" onchange="atualizarPreviewRapido()">
-          <option value="">Selecione...</option>
-        </select>
+        <label>Médicos <span id="mr-med-count" style="color:var(--blue);font-weight:600;font-size:11px;"></span></label>
+        <input type="text" id="mr-med-busca" placeholder="🔍 Buscar médico..." oninput="filtrarMedMR()" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:var(--radius);font-size:13px;margin-bottom:6px;">
+        <div id="mr-med-lista" style="max-height:180px;overflow-y:auto;border:1px solid var(--border);border-radius:var(--radius);"></div>
       </div>
       <div class="form-group" style="margin-bottom:10px;">
         <label>Projeto</label>
@@ -1956,11 +1981,53 @@ function verDetalhesSemana(lancId) {
 }
 
 // Modal de lançamento rápido a partir da escala semanal
+function renderMedListaMR(filtro='') {
+  const el = document.getElementById('mr-med-lista');
+  if (!el) return;
+  const lista = sortedMedicos().filter(m => !filtro || m.nome.toLowerCase().includes(filtro.toLowerCase()) || (m.crm||'').toLowerCase().includes(filtro.toLowerCase()));
+  if (!lista.length) { el.innerHTML='<div style="padding:10px;color:var(--text3);font-size:13px;">Nenhum médico encontrado</div>'; return; }
+  el.innerHTML = lista.map(m => `
+    <div class="mr-med-item" id="mrmi-${m.id}" onclick="toggleMedMR('${m.id}')">
+      <input type="checkbox" id="mrchk-${m.id}" value="${m.id}" onclick="event.stopPropagation();toggleMedMR('${m.id}')">
+      <div>
+        <div style="font-weight:500;">${m.nome}</div>
+        <div style="font-size:11px;color:var(--text3);font-family:monospace;">${m.crm||''}</div>
+      </div>
+    </div>`).join('');
+  atualizarCountMR();
+}
+
+function toggleMedMR(id) {
+  const chk = document.getElementById('mrchk-'+id);
+  const row = document.getElementById('mrmi-'+id);
+  if (!chk || !row) return;
+  chk.checked = !chk.checked;
+  row.classList.toggle('selecionado', chk.checked);
+  atualizarCountMR();
+}
+
+function atualizarCountMR() {
+  const sel = document.querySelectorAll('#mr-med-lista input[type=checkbox]:checked');
+  const el = document.getElementById('mr-med-count');
+  if (el) el.textContent = sel.length > 0 ? `(${sel.length} selecionado${sel.length>1?'s':''})` : '';
+}
+
+function filtrarMedMR() {
+  const filtro = document.getElementById('mr-med-busca')?.value || '';
+  renderMedListaMR(filtro);
+}
+
+function getMedsSelecionadosMR() {
+  return [...document.querySelectorAll('#mr-med-lista input[type=checkbox]:checked')]
+    .map(c => medicos.find(m => m.id === c.value || m.id == c.value))
+    .filter(Boolean);
+}
+
 function abrirLancamentoRapido(ds, projId) {
   const overlay = document.getElementById('modal-rapido');
   // Popular selects
-  document.getElementById('mr-med').innerHTML = '<option value="">Selecione...</option>' +
-    sortedMedicos().map(m=>`<option value="${m.id}">${m.nome}</option>`).join('');
+  renderMedListaMR();
+  document.getElementById('mr-med-busca').value = '';
   document.getElementById('mr-proj').innerHTML = '<option value="">Selecione...</option>' +
     sortedProjetos().map(p=>`<option value="${p.id}">${p.nome}</option>`).join('');
 
@@ -1977,7 +2044,11 @@ function abrirLancamentoRapido(ds, projId) {
   overlay.dataset.ds = ds;
 
   // Limpar campos
-  document.getElementById('mr-med').value = '';
+  // Desmarcar todos os médicos
+  document.querySelectorAll('#mr-med-lista input[type=checkbox]').forEach(c=>{c.checked=false;});
+  document.querySelectorAll('.mr-med-item').forEach(r=>r.classList.remove('selecionado'));
+  const busca=document.getElementById('mr-med-busca'); if(busca) busca.value='';
+  atualizarCountMR();
   document.getElementById('mr-ini').value = '07:00';
   document.getElementById('mr-tipo').value = 'Diurno 12h';
   // Resetar botões — estilo inline garante funcionamento
@@ -2144,7 +2215,7 @@ function atualizarPreviewRapido() {
 async function salvarLancamentoRapido() {
   const overlay = document.getElementById('modal-rapido');
   const ds    = overlay.dataset.ds;
-  const medId = document.getElementById('mr-med').value;
+  const medsSel = getMedsSelecionadosMR();
   const projId= document.getElementById('mr-proj').value;
   const ini   = getIniRapido();
   const tipo  = document.getElementById('mr-tipo').value;
@@ -2157,11 +2228,11 @@ async function salvarLancamentoRapido() {
   const obs   = document.getElementById('mr-obs').value.trim();
   const valor = parseBRL(document.getElementById('mr-valor').value);
 
-  if (!medId)  { toast('Selecione um médico',true); return; }
+  if (!medsSel.length) { toast('Selecione ao menos um médico',true); return; }
   if (!projId) { toast('Selecione um projeto',true); return; }
   if (!ds)     { toast('Data inválida',true); return; }
 
-  const med  = medicos.find(m=>m.id===medId);
+  const med = medsSel[0]; // referência para o primeiro
   const honorario=valor||Math.round(horas*(med?.valor_hora||0)*100)/100;
   const valorH=horas>0?Math.round(honorario/horas*100)/100:(med?.valor_hora||0);
 
@@ -2169,15 +2240,27 @@ async function salvarLancamentoRapido() {
   btn.disabled=true; btn.textContent='Salvando...';
 
   try {
-    const res = await fetch(SUPABASE_URL+'/rest/v1/lancamentos',{
-      method:'POST',
-      headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},
-      body:JSON.stringify({medico_id:medId,projeto_id:projId,data:ds,hora_ini:ini,hora_fim:fim,horas,tipo,setor:setor||null,honorario,valor_hora:valorH,obs:obs||null,codigo_totvs:null})
-    });
-    if (res.ok) {
+    let okCount = 0;
+    for (const medAtual of medsSel) {
+      const honAtual = valor || Math.round(horas*(medAtual.valor_hora||0)*100)/100;
+      const vhAtual  = horas>0 ? Math.round(honAtual/horas*100)/100 : (medAtual.valor_hora||0);
+      const res = await fetch(SUPABASE_URL+'/rest/v1/lancamentos',{
+        method:'POST',
+        headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},
+        body:JSON.stringify({medico_id:medAtual.id,projeto_id:projId,data:ds,hora_ini:ini,hora_fim:fim,horas,tipo,setor:setor||null,honorario:honAtual,valor_hora:vhAtual,obs:obs||null,codigo_totvs:null})
+      });
+      if (res.ok) {
+        okCount++;
+        lancamentos.unshift({id:'tmp_'+Date.now()+'_'+okCount,medico_id:medAtual.id,projeto_id:projId,
+          medico:medAtual.nome,crm:medAtual.crm||'',
+          projeto:(projetos.find(p=>p.id===projId)||{}).nome||'',
+          data:ds,hora_ini:ini,hora_fim:fim,horas,tipo,setor:setor||'',honorario:honAtual,valor_hora:vhAtual});
+      }
+    }
+    if (okCount > 0) {
       // Confirmação visual no modal
       const suc = document.getElementById('mr-sucesso');
-      if (suc) { suc.textContent = '✓ ' + (med?.nome||'') + ' registrado(a) — ' + fDate(ds) + ' ' + ini + '–' + fim; suc.style.display='block'; }
+      if (suc) { suc.textContent = '✓ ' + okCount + ' médico(s) registrado(s) — ' + fDate(ds) + ' ' + ini + '–' + fim; suc.style.display='block'; }
       // Limpar campos para próximo
       ['mr-med','mr-valor','mr-setor','mr-obs'].forEach(function(id){ var el=document.getElementById(id); if(el) el.value=''; });
       var prv=document.getElementById('mr-preview'); if(prv) prv.style.display='none';
@@ -2778,12 +2861,47 @@ function filtrarDadosRel() {
   return dados;
 }
 
+let _relTipoAtivo = 'detalhado';
+
+function selecionarRelTipo(tipo, btn) {
+  _relTipoAtivo = tipo;
+  document.querySelectorAll('.rel-tipo-btn').forEach(b=>{
+    b.classList.remove('active');
+    b.style.cssText='';
+  });
+  btn.classList.add('active');
+  document.getElementById('rel-resultado').innerHTML='';
+}
+
+function filtrarDadosRel() {
+  const pid=document.getElementById('rp').value, mid=document.getElementById('rm').value;
+  const d1=document.getElementById('rd1').value, d2=document.getElementById('rd2').value;
+  let dados=[...lancamentos];
+  if(pid) dados=dados.filter(l=>l.projeto_id===pid);
+  if(mid) dados=dados.filter(l=>l.medico_id===mid);
+  if(d1) dados=dados.filter(l=>l.data>=d1);
+  if(d2) dados=dados.filter(l=>l.data<=d2);
+  return dados;
+}
+
 function gerarRelatorio() {
+  const el = document.getElementById('rel-resultado');
+  switch (_relTipoAtivo) {
+    case 'detalhado':  gerarRelDetalhado(el); break;
+    case 'resumo':     gerarRelResumo(el); break;
+    case 'horas':      gerarRelHoras(el); break;
+    case 'faltas':     gerarRelFaltas(el); break;
+    case 'atrasos':    gerarRelAtrasos(el); break;
+    case 'checkins':   gerarRelCheckinsForaTol(el); break;
+    case 'medicos':    gerarRelMedicos(el); break;
+  }
+}
+
+// ── DETALHADO POR PROJETO ─────────────────────────────
+function gerarRelDetalhado(el) {
   const dados=filtrarDadosRel();
-  const el=document.getElementById('rel-resultado');
-  if(!dados.length){el.innerHTML='<div class="card"><div class="empty">Nenhum dado.</div></div>';return;}
+  if(!dados.length){el.innerHTML='<div class="card"><div class="empty">Nenhum dado para os filtros selecionados.</div></div>';return;}
   const tH=dados.reduce((s,l)=>s+(l.horas||0),0), tR=dados.reduce((s,l)=>s+(l.honorario||0),0);
-  const medicoFiltrado=document.getElementById('rm').value;
   const nMeds=new Set(dados.map(l=>l.medico_id)).size;
   let html=`<div class="metrics">
     <div class="metric"><div class="metric-label">Plantões</div><div class="metric-val">${dados.length}</div></div>
@@ -2792,13 +2910,9 @@ function gerarRelatorio() {
     <div class="metric"><div class="metric-label">Médicos</div><div class="metric-val">${nMeds}</div></div>
   </div>`;
   const porProjeto={};
-  dados.forEach(l=>{
-    const proj=l.projeto||'Sem projeto';
-    if(!porProjeto[proj]) porProjeto[proj]=[];
-    porProjeto[proj].push(l);
-  });
+  dados.forEach(l=>{const p=l.projeto||'Sem projeto';if(!porProjeto[p])porProjeto[p]=[];porProjeto[p].push(l);});
   Object.entries(porProjeto).sort((a,b)=>a[0].localeCompare(b[0],'pt-BR')).forEach(([proj,lans])=>{
-    const projH=lans.reduce((s,l)=>s+(l.horas||0),0), projR=lans.reduce((s,l)=>s+(l.honorario||0),0), projN=lans.length;
+    const projH=lans.reduce((s,l)=>s+(l.horas||0),0), projR=lans.reduce((s,l)=>s+(l.honorario||0),0);
     const grupos={};
     lans.forEach(l=>{
       const turno=l.tipo?.includes('Noturno')?'Noturno':l.tipo?.includes('24')?'24h':'Diurno';
@@ -2808,34 +2922,278 @@ function gerarRelatorio() {
     });
     const linhas=Object.values(grupos).sort((a,b)=>a.medico.localeCompare(b.medico,'pt-BR')).map(g=>{
       const badge=g.turno==='Noturno'?'badge-purple':g.turno==='24h'?'badge-amber':'badge-green';
-      return `<tr><td>${g.medico}<br><span class="mono" style="font-size:11px;color:var(--text3);">${g.crm||''}</span></td><td class="mono">${g.horas}h</td><td><span class="badge ${badge}">${g.turno}</span></td><td>${g.setor||'—'}</td><td style="text-align:center;">${g.qtd}</td><td class="mono" style="color:var(--green);font-weight:600;">${fBRL(Math.round(g.total*100)/100)}</td></tr>`;
+      return `<tr><td>${g.medico}<br><span class="mono" style="font-size:11px;color:var(--text3);">${g.crm||''}</span></td>
+        <td class="mono">${g.horas}h</td><td><span class="badge ${badge}">${g.turno}</span></td>
+        <td>${g.setor||'—'}</td><td style="text-align:center;">${g.qtd}</td>
+        <td class="mono" style="color:var(--green);font-weight:600;">${fBRL(Math.round(g.total*100)/100)}</td></tr>`;
     }).join('');
-    html+=`<div class="card" style="margin-bottom:16px;">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+    html+=`<div class="card" style="margin-bottom:12px;">
+      <div style="display:flex;justify-content:space-between;margin-bottom:10px;">
         <div class="card-title" style="margin-bottom:0;">📁 ${proj}</div>
-        <div style="font-size:12px;color:var(--text2);">${projN} plantão(ões) · <span class="mono" style="font-weight:600;">${Math.round(projH*10)/10}h</span> · <span class="mono" style="font-weight:600;color:var(--green);">${fBRL(projR)}</span></div>
+        <div style="font-size:12px;color:var(--text2);">${lans.length} plantão(ões) · ${Math.round(projH*10)/10}h · <span style="color:var(--green);font-weight:600;">${fBRL(projR)}</span></div>
       </div>
-      <table><thead><tr><th>Médico / CRM</th><th>Horas/plantão</th><th>Turno</th><th>Setor</th><th style="text-align:center;">Qtd</th><th>Total</th></tr></thead>
+      <table><thead><tr><th>Médico/CRM</th><th>Hrs/plantão</th><th>Turno</th><th>Setor</th><th style="text-align:center;">Qtd</th><th>Total</th></tr></thead>
       <tbody>${linhas}</tbody>
-      <tfoot><tr style="border-top:1.5px solid var(--border2);"><td colspan="4" style="font-size:12px;font-weight:600;color:var(--text2);padding:8px;">Total do projeto</td><td style="text-align:center;font-weight:600;">${projN}</td><td class="mono" style="font-weight:600;color:var(--green);">${fBRL(projR)}</td></tr></tfoot>
+      <tfoot><tr style="border-top:1.5px solid var(--border2);"><td colspan="4" style="font-weight:600;padding:8px;font-size:12px;">Total</td>
+        <td style="text-align:center;font-weight:600;">${lans.length}</td>
+        <td class="mono" style="color:var(--green);font-weight:600;">${fBRL(projR)}</td></tr></tfoot>
       </table></div>`;
   });
-  if(medicoFiltrado){
-    const med=medicos.find(m=>m.id===medicoFiltrado);
-    html+=`<div class="card"><div class="card-title">Detalhe individual — ${med?med.nome:''}</div>
-      <table><thead><tr><th>Data</th><th>Projeto</th><th>Setor</th><th>Turno</th><th>Horário</th><th>Horas</th><th>Honorários</th><th>Obs</th></tr></thead><tbody>
-      ${dados.sort((a,b)=>b.data.localeCompare(a.data)).map(l=>{
-        const turno=l.tipo?.includes('Noturno')?'Noturno':l.tipo?.includes('24')?'24h':'Diurno';
-        const badge=turno==='Noturno'?'badge-purple':turno==='24h'?'badge-amber':'badge-green';
-        return `<tr><td class="mono">${fDate(l.data)}</td><td>${l.projeto}</td><td>${l.setor||'—'}</td><td><span class="badge ${badge}">${turno}</span></td><td class="mono">${(l.hora_ini||'').slice(0,5)}–${(l.hora_fim||'').slice(0,5)}</td><td class="mono">${l.horas}h</td><td class="mono">${fBRL(l.honorario)}</td><td style="font-size:12px;color:var(--text2);">${l.obs||''}</td></tr>`;
-      }).join('')}
-      </tbody><tfoot><tr style="border-top:1.5px solid var(--border2);"><td colspan="5" style="font-size:12px;font-weight:600;padding:8px;">Total</td><td class="mono" style="font-weight:600;">${Math.round(tH*10)/10}h</td><td class="mono" style="font-weight:600;color:var(--green);">${fBRL(tR)}</td><td></td></tr></tfoot>
-      </table></div>`;
-  }
   el.innerHTML=html;
 }
 
-// ─── IMPORTAR CSV ────────────────────────────────────────
+// ── PLANTÕES POR PROJETO (resumo sem profissional) ────
+function gerarRelResumo(el) {
+  const dados=filtrarDadosRel();
+  if(!dados.length){el.innerHTML='<div class="card"><div class="empty">Nenhum dado.</div></div>';return;}
+  const porProjeto={};
+  dados.forEach(l=>{
+    const proj=l.projeto||'Sem projeto';
+    if(!porProjeto[proj]) porProjeto[proj]={};
+    const turno=l.tipo||'Diurno 12h';
+    const setor=l.setor||'(sem setor)';
+    const chave=`${turno}|||${setor}`;
+    if(!porProjeto[proj][chave]) porProjeto[proj][chave]={tipo:turno,setor,qtd:0,horas:0,total:0};
+    porProjeto[proj][chave].qtd++;
+    porProjeto[proj][chave].horas+=l.horas||0;
+    porProjeto[proj][chave].total+=l.honorario||0;
+  });
+  let html='';
+  Object.entries(porProjeto).sort((a,b)=>a[0].localeCompare(b[0],'pt-BR')).forEach(([proj,grupos])=>{
+    const itens=Object.values(grupos).sort((a,b)=>b.qtd-a.qtd);
+    const totPlant=itens.reduce((s,g)=>s+g.qtd,0);
+    const totHoras=itens.reduce((s,g)=>s+g.horas,0);
+    const totVal=itens.reduce((s,g)=>s+g.total,0);
+    const linhas=itens.map(g=>{
+      const badge=g.tipo.includes('Noturno')?'badge-purple':g.tipo.includes('24')?'badge-amber':g.tipo.includes('Fim de Semana')?'badge-red':'badge-green';
+      return `<tr>
+        <td><span class="badge ${badge}">${g.tipo}</span></td>
+        <td>${g.setor}</td>
+        <td style="text-align:center;font-size:18px;font-weight:700;color:var(--blue);">${g.qtd}</td>
+        <td class="mono">${Math.round(g.horas*10)/10}h</td>
+        <td class="mono" style="color:var(--green);font-weight:600;">${fBRL(g.total)}</td>
+      </tr>`;
+    }).join('');
+    html+=`<div class="card" style="margin-bottom:12px;">
+      <div style="display:flex;justify-content:space-between;margin-bottom:10px;">
+        <div class="card-title" style="margin-bottom:0;">📁 ${proj}</div>
+        <div style="font-size:12px;color:var(--text2);">${totPlant} plantões · ${Math.round(totHoras*10)/10}h · <span style="color:var(--green);font-weight:600;">${fBRL(totVal)}</span></div>
+      </div>
+      <table><thead><tr><th>Tipo de plantão</th><th>Setor</th><th style="text-align:center;">Qtd plantões</th><th>Total horas</th><th>Total honorários</th></tr></thead>
+      <tbody>${linhas}</tbody></table></div>`;
+  });
+  el.innerHTML=html;
+}
+
+// ── HORAS POR PROFISSIONAL ────────────────────────────
+function gerarRelHoras(el) {
+  const dados=filtrarDadosRel();
+  if(!dados.length){el.innerHTML='<div class="card"><div class="empty">Nenhum dado.</div></div>';return;}
+  const porMed={};
+  dados.forEach(l=>{
+    const k=l.medico_id;
+    if(!porMed[k]) porMed[k]={nome:l.medico,crm:l.crm||'',h12:0,h24:0,hCustom:0,hTotal:0,plantoes:0,total:0};
+    const h=l.horas||0;
+    const tipo=l.tipo||'';
+    if(tipo.includes('24')) porMed[k].h24+=h;
+    else if(tipo==='Personalizado'||(!tipo.includes('12')&&!tipo.includes('24'))) porMed[k].hCustom+=h;
+    else porMed[k].h12+=h;
+    porMed[k].hTotal+=h; porMed[k].plantoes++; porMed[k].total+=l.honorario||0;
+  });
+  const tTotal=Object.values(porMed).reduce((s,m)=>s+m.hTotal,0);
+  const tHon=Object.values(porMed).reduce((s,m)=>s+m.total,0);
+  let html=`<div class="metrics">
+    <div class="metric"><div class="metric-label">Profissionais</div><div class="metric-val">${Object.keys(porMed).length}</div></div>
+    <div class="metric"><div class="metric-label">Total horas</div><div class="metric-val">${Math.round(tTotal*10)/10}h</div></div>
+    <div class="metric"><div class="metric-label">Total honorários</div><div class="metric-val">${fBRL(tHon)}</div></div>
+  </div>
+  <div class="card"><table><thead><tr>
+    <th>Profissional</th><th>CRM</th><th style="text-align:center;">Plantões</th>
+    <th style="text-align:center;">Horas 12h</th><th style="text-align:center;">Horas 24h</th><th style="text-align:center;">Horas outros</th>
+    <th style="text-align:center;font-weight:700;">Total horas</th><th>Honorários</th>
+  </tr></thead><tbody>`;
+  Object.values(porMed).sort((a,b)=>b.hTotal-a.hTotal).forEach(m=>{
+    html+=`<tr>
+      <td><strong>${m.nome}</strong></td><td class="mono">${m.crm}</td>
+      <td style="text-align:center;">${m.plantoes}</td>
+      <td style="text-align:center;color:var(--green);">${Math.round(m.h12*10)/10}h</td>
+      <td style="text-align:center;color:var(--amber);">${Math.round(m.h24*10)/10}h</td>
+      <td style="text-align:center;color:var(--text3);">${Math.round(m.hCustom*10)/10}h</td>
+      <td style="text-align:center;font-weight:700;font-size:14px;">${Math.round(m.hTotal*10)/10}h</td>
+      <td class="mono" style="color:var(--green);font-weight:600;">${fBRL(m.total)}</td>
+    </tr>`;
+  });
+  html+='</tbody></table></div>';
+  el.innerHTML=html;
+}
+
+// ── FALTAS ────────────────────────────────────────────
+async function gerarRelFaltas(el) {
+  el.innerHTML='<div class="card"><div class="empty">Carregando check-ins...</div></div>';
+  const d1=document.getElementById('rd1').value, d2=document.getElementById('rd2').value;
+  const pid=document.getElementById('rp').value, mid=document.getElementById('rm').value;
+  // Buscar check-ins aprovados no período
+  let pathCI='/rest/v1/checkins?aprovado=eq.true&select=medico_id,projeto_id,feito_em';
+  if(d1) pathCI+=`&feito_em=gte.${d1}T00:00:00`;
+  if(d2) pathCI+=`&feito_em=lte.${d2}T23:59:59`;
+  const checkins=await sb(pathCI)||[];
+  const ciKeys=new Set(checkins.map(c=>`${c.medico_id}_${c.projeto_id}_${c.feito_em?.slice(0,10)}`));
+  // Lançamentos sem check-in
+  let dados=filtrarDadosRel().filter(l=>{
+    const ds=l.data; const ini=new Date(`${ds}T${l.hora_ini||'00:00'}`);
+    return ini < new Date(); // plantão já aconteceu
+  });
+  const faltas=dados.filter(l=>!ciKeys.has(`${l.medico_id}_${l.projeto_id}_${l.data}`));
+  if(!faltas.length){el.innerHTML='<div class="card"><div style="text-align:center;padding:24px;"><div style="font-size:40px;">✅</div><div style="font-size:14px;color:var(--green);font-weight:600;margin-top:8px;">Nenhuma falta registrada no período!</div></div></div>';return;}
+  let html=`<div class="card"><div style="margin-bottom:10px;font-size:13px;color:var(--red);font-weight:600;">❌ ${faltas.length} falta(s) encontrada(s)</div>
+    <table><thead><tr><th>Médico</th><th>CRM</th><th>Projeto</th><th>Data</th><th>Horário</th><th>Tipo</th><th>Honorários perdidos</th></tr></thead><tbody>`;
+  faltas.sort((a,b)=>b.data.localeCompare(a.data)).forEach(l=>{
+    html+=`<tr>
+      <td><strong>${l.medico||'—'}</strong></td><td class="mono">${l.crm||''}</td>
+      <td>${l.projeto||'—'}</td><td class="mono">${fDate(l.data)}</td>
+      <td class="mono">${(l.hora_ini||'').slice(0,5)}–${(l.hora_fim||'').slice(0,5)}</td>
+      <td>${l.tipo||''}</td>
+      <td class="mono" style="color:var(--red);">${fBRL(l.honorario||0)}</td></tr>`;
+  });
+  const totFalta=faltas.reduce((s,l)=>s+(l.honorario||0),0);
+  html+=`</tbody><tfoot><tr style="border-top:1.5px solid var(--border2);">
+    <td colspan="6" style="font-weight:600;padding:8px;">Total honorários perdidos</td>
+    <td class="mono" style="color:var(--red);font-weight:600;">${fBRL(totFalta)}</td></tr></tfoot>
+  </table></div>`;
+  el.innerHTML=html;
+}
+
+// ── ATRASOS ───────────────────────────────────────────
+async function gerarRelAtrasos(el) {
+  el.innerHTML='<div class="card"><div class="empty">Carregando...</div></div>';
+  const d1=document.getElementById('rd1').value, d2=document.getElementById('rd2').value;
+  let pathCI='/rest/v1/checkins?aprovado=eq.true&select=*,medicos(nome,crm),projetos(nome)';
+  if(d1) pathCI+=`&feito_em=gte.${d1}T00:00:00`;
+  if(d2) pathCI+=`&feito_em=lte.${d2}T23:59:59`;
+  const checkins=await sb(pathCI)||[];
+  const atrasos=[];
+  checkins.forEach(ci=>{
+    const lanc=lancamentos.find(l=>l.medico_id===ci.medico_id&&l.projeto_id===ci.projeto_id&&l.data===ci.feito_em?.slice(0,10));
+    if(!lanc) return;
+    const iniPlan=new Date(`${lanc.data}T${lanc.hora_ini||'00:00'}`);
+    const iniReal=new Date(ci.feito_em);
+    const diffMin=Math.round((iniReal-iniPlan)/60000);
+    if(diffMin>15) atrasos.push({...ci, diffMin, lanc});
+  });
+  if(!atrasos.length){el.innerHTML='<div class="card"><div style="text-align:center;padding:24px;"><div style="font-size:40px;">✅</div><div style="font-size:14px;color:var(--green);font-weight:600;margin-top:8px;">Nenhum atraso acima de 15 minutos!</div></div></div>';return;}
+  let html=`<div class="card"><div style="margin-bottom:10px;font-size:13px;color:var(--amber);font-weight:600;">⚠️ ${atrasos.length} atraso(s) acima de 15 minutos</div>
+    <table><thead><tr><th>Médico</th><th>CRM</th><th>Projeto</th><th>Data</th><th>Início previsto</th><th>Check-in</th><th>Atraso</th></tr></thead><tbody>`;
+  atrasos.sort((a,b)=>b.diffMin-a.diffMin).forEach(a=>{
+    const horaReal=new Date(a.feito_em).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+    html+=`<tr>
+      <td><strong>${a.medicos?.nome||'—'}</strong></td><td class="mono">${a.medicos?.crm||''}</td>
+      <td>${a.projetos?.nome||'—'}</td><td class="mono">${fDate(a.lanc?.data||'')}</td>
+      <td class="mono">${(a.lanc?.hora_ini||'').slice(0,5)}</td><td class="mono">${horaReal}</td>
+      <td style="color:var(--amber);font-weight:700;">+${a.diffMin}min</td></tr>`;
+  });
+  html+='</tbody></table></div>';
+  el.innerHTML=html;
+}
+
+// ── CHECK-INS FORA DA TOLERÂNCIA ─────────────────────
+async function gerarRelCheckinsForaTol(el) {
+  el.innerHTML='<div class="card"><div class="empty">Carregando...</div></div>';
+  const d1=document.getElementById('rd1').value, d2=document.getElementById('rd2').value;
+  let pathCI='/rest/v1/checkins?select=*,medicos(nome,crm),projetos(nome)';
+  if(d1) pathCI+=`&feito_em=gte.${d1}T00:00:00`;
+  if(d2) pathCI+=`&feito_em=lte.${d2}T23:59:59`;
+  const checkins=await sb(pathCI)||[];
+  const fora=[];
+  checkins.forEach(ci=>{
+    const lanc=lancamentos.find(l=>l.medico_id===ci.medico_id&&l.projeto_id===ci.projeto_id&&l.data===ci.feito_em?.slice(0,10));
+    if(!lanc) return;
+    const iniPlan=new Date(`${lanc.data}T${lanc.hora_ini||'00:00'}`);
+    const iniReal=new Date(ci.feito_em);
+    const diffMin=Math.round((iniReal-iniPlan)/60000);
+    const foraRaio=!ci.aprovado;
+    if(diffMin>15||foraRaio) fora.push({...ci, diffMin, foraRaio, lanc});
+  });
+  if(!fora.length){el.innerHTML='<div class="card"><div style="text-align:center;padding:24px;"><div style="font-size:40px;">✅</div><div style="font-size:14px;color:var(--green);font-weight:600;margin-top:8px;">Todos os check-ins dentro da tolerância!</div></div></div>';return;}
+  let html=`<div class="card"><div style="margin-bottom:10px;font-size:13px;font-weight:600;">${fora.length} check-in(s) fora da tolerância</div>
+    <table><thead><tr><th>Médico</th><th>Projeto</th><th>Data</th><th>Hora prevista</th><th>Check-in</th><th>Atraso</th><th>GPS</th><th>Obs</th></tr></thead><tbody>`;
+  fora.sort((a,b)=>new Date(b.feito_em)-new Date(a.feito_em)).forEach(c=>{
+    const horaReal=new Date(c.feito_em).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+    html+=`<tr>
+      <td><strong>${c.medicos?.nome||'—'}</strong><br><span class="mono" style="font-size:10px;">${c.medicos?.crm||''}</span></td>
+      <td>${c.projetos?.nome||'—'}</td><td class="mono">${fDate(c.lanc?.data||'')}</td>
+      <td class="mono">${(c.lanc?.hora_ini||'').slice(0,5)}</td><td class="mono">${horaReal}</td>
+      <td style="color:${c.diffMin>15?'var(--amber)':'var(--green)'};font-weight:600;">${c.diffMin>0?'+'+c.diffMin+'min':'no prazo'}</td>
+      <td>${c.foraRaio?'❌ Fora':'✅ Ok'}</td>
+      <td style="font-size:11px;color:var(--text3);">${c.obs||''}</td></tr>`;
+  });
+  html+='</tbody></table></div>';
+  el.innerHTML=html;
+}
+
+// ── MÉDICOS CADASTRADOS ───────────────────────────────
+function gerarRelMedicos(el) {
+  let lista=[...medicos];
+  const mid=document.getElementById('rm').value;
+  if(mid) lista=lista.filter(m=>m.id===mid);
+  if(!lista.length){el.innerHTML='<div class="card"><div class="empty">Nenhum médico encontrado.</div></div>';return;}
+  let html=`<div class="card">
+    <div style="margin-bottom:10px;font-size:13px;color:var(--text2);">${lista.length} profissional(is) cadastrado(s)</div>
+    <table><thead><tr><th>Nome</th><th>CRM</th><th>RQE</th><th>Especialidade</th><th>Tipo</th><th>Nascimento</th><th>Telefone</th><th>E-mail</th><th>Dispositivo</th></tr></thead><tbody>`;
+  lista.sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR')).forEach(m=>{
+    const nasc=m.data_nascimento?new Date(m.data_nascimento+'T12:00:00').toLocaleDateString('pt-BR'):'—';
+    html+=`<tr>
+      <td><strong>${m.nome}</strong></td><td class="mono">${m.crm||'—'}</td>
+      <td class="mono">${m.rqe||'—'}</td><td>${m.especialidade||'—'}</td>
+      <td><span class="badge badge-blue">${m.tipo||''}</span></td>
+      <td>${nasc}</td><td>${m.telefone||'—'}</td><td>${m.email||'—'}</td>
+      <td>${m.device_id?'<span class="badge badge-green">✓ Vinculado</span>':'<span class="badge badge-amber">Sem vínculo</span>'}</td>
+    </tr>`;
+  });
+  html+='</tbody></table></div>';
+  el.innerHTML=html;
+}
+
+// ── EXPORTAR XLSX/PDF (usa o relatório atual) ─────────
+function exportarRelXLSX() {
+  const tipo=_relTipoAtivo;
+  const dados=filtrarDadosRel();
+  if(!dados.length&&tipo!=='medicos'){toast('Nenhum dado no período',true);return;}
+  const wb=XLSX.utils.book_new();
+  if(tipo==='medicos'){
+    const rows=[['Nome','CRM','RQE','Especialidade','Tipo','Nascimento','Telefone','E-mail']];
+    medicos.sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR')).forEach(m=>{
+      const nasc=m.data_nascimento?new Date(m.data_nascimento+'T12:00:00').toLocaleDateString('pt-BR'):'';
+      rows.push([m.nome,m.crm||'',m.rqe||'',m.especialidade||'',m.tipo||'',nasc,m.telefone||'',m.email||'']);
+    });
+    XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(rows),'Médicos');
+  } else if(tipo==='horas'){
+    const rows=[['Médico','CRM','Plantões','Horas 12h','Horas 24h','Outros','Total horas','Honorários']];
+    const porMed={};
+    dados.forEach(l=>{
+      if(!porMed[l.medico_id]) porMed[l.medico_id]={nome:l.medico,crm:l.crm||'',h12:0,h24:0,hC:0,hT:0,n:0,tot:0};
+      const h=l.horas||0; const t=l.tipo||'';
+      if(t.includes('24')) porMed[l.medico_id].h24+=h;
+      else if(t==='Personalizado') porMed[l.medico_id].hC+=h;
+      else porMed[l.medico_id].h12+=h;
+      porMed[l.medico_id].hT+=h; porMed[l.medico_id].n++; porMed[l.medico_id].tot+=l.honorario||0;
+    });
+    Object.values(porMed).sort((a,b)=>b.hT-a.hT).forEach(m=>rows.push([m.nome,m.crm,m.n,m.h12,m.h24,m.hC,m.hT,m.tot]));
+    XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(rows),'Horas por Profissional');
+  } else {
+    const rows=[['Data','Médico','CRM','Projeto','Setor','Tipo','Início','Fim','Horas','Honorários']];
+    dados.sort((a,b)=>b.data.localeCompare(a.data)).forEach(l=>rows.push([fDate(l.data),l.medico,l.crm||'',l.projeto,l.setor||'',l.tipo||'',(l.hora_ini||'').slice(0,5),(l.hora_fim||'').slice(0,5),l.horas,l.honorario]));
+    XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(rows),'Relatório');
+  }
+  XLSX.writeFile(wb,'relatorio_'+tipo+'_'+new Date().toISOString().slice(0,10)+'.xlsx');
+  toast('XLSX exportado!');
+}
+
+function exportarRelPDF() {
+  gerarRelatorio();
+  setTimeout(()=>window.print(),500);
+}
+
+
 function switchImpTab(tab){
   ['med','proj','lanc'].forEach(t=>{
     const el=document.getElementById('imp-'+t);
