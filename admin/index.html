@@ -1242,6 +1242,7 @@ async function carregarPresenca() {
 
     // Busca check-in do médico neste projeto neste dia
     const ci = checkinsDia.find(c => c.medico_id === medId && c.projeto_id === projId);
+    const confirmado = l.confirmado;
 
     let statusHtml, statusClass;
 
@@ -1271,7 +1272,10 @@ async function carregarPresenca() {
         totalPendente++;
         const faltaMin = Math.round((inicioPlan - agora) / 60000);
         const faltaTxt = faltaMin > 0 ? `em ${faltaMin}min` : 'agora';
-        statusHtml = `<span style="color:var(--text3);">⏳ Plantão inicia ${faltaTxt}</span>`;
+        const confTxt = confirmado
+          ? `<span style="color:var(--green);font-size:11px;"> · ✅ Confirmou presença</span>`
+          : `<span style="color:var(--amber);font-size:11px;"> · ⚠️ Não confirmou</span>`;
+        statusHtml = `<span style="color:var(--text3);">⏳ Plantão inicia ${faltaTxt}</span>${confTxt}`;
         statusClass = 'gray';
       }
     }
