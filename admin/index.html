@@ -1983,9 +1983,8 @@ function renderSemana() {
       </div>`;
     });
 
-    // Botão "+" para adicionar
-    const projFiltrado = pid ? projetos.find(p=>p.id===pid) : null;
-    html += `<button class="sem-add-btn" onclick="abrirLancamentoRapido('${ds}','${pid}')" title="Adicionar plantão">+</button>`;
+    // Botão "+" com opção de colar se houver algo copiado
+    html += `<button class="sem-add-btn" onclick="cliqueCelulaSemana(event,'${ds}','${pid}')" title="Adicionar plantão · Clique para ver opções se tiver copiado">+</button>`;
     html += '</td>';
   });
 
@@ -2527,6 +2526,25 @@ let _lancCopiado   = null; // lançamento copiado
 
 function fecharCtxMenu() {
   document.getElementById('ctx-menu').style.display = 'none';
+}
+
+// Clique no "+" — abre direto o modal, ou menu se houver algo copiado
+function cliqueCelulaSemana(e, ds, projId) {
+  if (_lancCopiado) {
+    // Tem algo copiado: mostrar menu com opção de colar
+    _ctxLancamento = null;
+    _ctxDiaClicado = ds;
+    _ctxProjId     = projId;
+    const menu = document.getElementById('ctx-menu');
+    document.getElementById('ctx-copiar').style.display = 'none';
+    document.getElementById('ctx-remover').style.display = 'none';
+    atualizarCtxColar(ds);
+    posCtxMenu(e);
+    menu.style.display = 'block';
+  } else {
+    // Sem nada copiado: abre modal direto
+    abrirLancamentoRapido(ds, projId);
+  }
 }
 
 // Abrir menu no chip (lançamento existente)
