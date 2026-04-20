@@ -108,10 +108,20 @@
 
   /* SPINNER */
   .spinner{width:20px;height:20px;border:2px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:spin 0.8s linear infinite;display:inline-block;vertical-align:middle;margin-right:8px;}
+  /* FILTROS PLANTÕES */
+  .btn-filtro-plantao{flex:1;padding:8px 4px;font-size:11px;font-weight:600;border-radius:var(--radius-sm);border:1.5px solid var(--border);background:#fff;color:var(--text2);cursor:pointer;transition:all 0.15s;}
+  .btn-filtro-plantao.active{background:var(--blue);color:#fff;border-color:var(--blue);}
   @keyframes spin{to{transform:rotate(360deg);}}
 
   /* PULL TO REFRESH hint */
   .refresh-hint{text-align:center;font-size:11px;color:var(--text3);padding:8px;margin-bottom:4px;}
+  /* CONFIRMAÇÃO DE PLANTÃO */
+  .btn-confirmar{width:100%;padding:12px;font-size:13px;font-weight:700;border-radius:var(--radius-sm);border:none;cursor:pointer;transition:all 0.2s;margin-top:10px;letter-spacing:0.2px;}
+  .btn-confirmar.pendente{background:#fff;color:var(--blue);border:2px solid var(--blue);}
+  .btn-confirmar.pendente:active{background:var(--blue-light);}
+  .btn-confirmar.confirmado{background:var(--green-light);color:var(--green);border:2px solid var(--green);cursor:default;}
+  .confirmado-badge{display:inline-flex;align-items:center;gap:4px;background:var(--green-light);color:var(--green);font-size:11px;font-weight:600;padding:3px 10px;border-radius:99px;margin-top:6px;}
+  .pendente-badge{display:inline-flex;align-items:center;gap:4px;background:var(--amber-light);color:var(--amber);font-size:11px;font-weight:600;padding:3px 10px;border-radius:99px;margin-top:6px;}
 </style>
 </head>
 <body>
@@ -141,6 +151,7 @@
   </div>
   <div class="tab" onclick="showPage('plantoes',this)">
     <span class="tab-icon">📅</span>Plantões
+    <span id="badge-confirmacao" style="display:none;background:var(--amber);color:#fff;font-size:9px;font-weight:700;border-radius:99px;padding:1px 5px;margin-left:2px;vertical-align:top;margin-top:2px;"></span>
   </div>
   <div class="tab" onclick="showPage('historico',this)">
     <span class="tab-icon">📊</span>Histórico
@@ -179,8 +190,14 @@
 
   <!-- PLANTÕES -->
   <div id="page-plantoes" class="page">
-    <div class="refresh-hint">Seus próximos plantões escalados</div>
-    <div id="plantoes-lista"><div class="empty"><div class="empty-icon">📅</div>Nenhum plantão escalado</div></div>
+    <!-- Filtro de período -->
+    <div style="display:flex;gap:6px;margin-bottom:12px;">
+      <button class="btn-filtro-plantao active" id="fp-prox" onclick="filtrarPlantoes('proximos',this)">Próximos</button>
+      <button class="btn-filtro-plantao" id="fp-pend" onclick="filtrarPlantoes('pendentes',this)">⚠️ Pendentes</button>
+      <button class="btn-filtro-plantao" id="fp-conf" onclick="filtrarPlantoes('confirmados',this)">✅ Confirmados</button>
+    </div>
+    <div class="refresh-hint" id="plantoes-hint">Toque em um plantão para confirmar sua presença</div>
+    <div id="plantoes-lista"><div class="empty"><div class="empty-icon">📅</div>Carregando...</div></div>
   </div>
 
   <!-- HISTÓRICO -->
@@ -645,6 +662,14 @@ function showPage(id, el) {
 }
 
 function fBRL(v) { return 'R$ ' + Number(v||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+function toastMed(msg, ok=true) {
+  const t = document.getElementById('toast-med');
+  if (!t) return;
+  t.textContent = msg;
+  t.style.background = ok ? '#2d7a3a' : '#b03030';
+  t.style.display = 'block';
+  setTimeout(() => t.style.display = 'none', 2800);
+}
 
 function toast(msg) {
   const t = document.getElementById('toast-med');
