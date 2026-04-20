@@ -2099,7 +2099,7 @@ function abrirLancamentoRapido(ds, projId) {
   if (projId) atualizarValorRapido();
 
   overlay.classList.add('open');
-  setTimeout(() => document.getElementById('mr-med').focus(), 100);
+  setTimeout(() => { const el = document.getElementById('mr-med-busca'); if(el) el.focus(); }, 100);
 }
 
 function fecharModalRapido() {
@@ -2288,30 +2288,26 @@ async function salvarLancamentoRapido() {
       // Confirmação visual no modal
       const suc = document.getElementById('mr-sucesso');
       if (suc) { suc.textContent = '✓ ' + okCount + ' médico(s) registrado(s) — ' + fDate(ds) + ' ' + ini + '–' + fim; suc.style.display='block'; }
-      // Limpar campos para próximo
-      ['mr-med','mr-valor','mr-setor','mr-obs'].forEach(function(id){ var el=document.getElementById(id); if(el) el.value=''; });
-      var prv=document.getElementById('mr-preview'); if(prv) prv.style.display='none';
+      // Limpar campos para próximo lançamento
       var bdg=document.getElementById('mr-valor-badge'); if(bdg) bdg.style.display='none';
+      var prv=document.getElementById('mr-preview'); if(prv) prv.style.display='none';
+      var calc=document.getElementById('mr-horario-calc'); if(calc) calc.style.display='none';
+      // Desmarcar médicos
+      document.querySelectorAll('#mr-med-lista input[type=checkbox]').forEach(c=>{c.checked=false;});
+      document.querySelectorAll('.mr-med-item').forEach(r=>r.classList.remove('selecionado'));
+      atualizarCountMR();
+      // Repreencher valor padrão
+      document.getElementById('mr-valor').value='';
       if(projId) atualizarValorRapido();
-      // Adicionar o novo lançamento ao array local diretamente (sem fetch)
-      var novoLanc = {
-        id: 'temp_'+Date.now(),
-        medico_id: medId, projeto_id: projId,
-        medico: med?.nome||'', crm: med?.crm||'',
-        projeto: (projetos.find(function(p){return p.id===projId;})||{}).nome||'',
-        data: ds, hora_ini: ini, hora_fim: fim, horas: horas,
-        tipo: tipo, setor: setor||'', honorario: honorario, valor_hora: valorH
-      };
-      lancamentos.unshift(novoLanc);
-      // Redesenhar apenas o grid semanal
+      // Redesenhar grid semanal (lançamentos já foram inseridos no loop acima)
       var semGrid = document.getElementById('sem-grid');
       if (semGrid) renderSemana();
-      // Foco no select de médico para próximo lançamento
-      setTimeout(function(){ var el=document.getElementById('mr-med'); if(el) el.focus(); }, 100);
+      // Foco na busca de médico para próximo lançamento
+      setTimeout(function(){ var el=document.getElementById('mr-med-busca'); if(el) el.focus(); }, 100);
       // Sincronizar com servidor em background após 2s
       setTimeout(async function(){
         var d2=await sb('/rest/v1/lancamentos?select=*,medicos(nome,crm),projetos(nome)&order=data.desc&limit=200');
-        if(d2){ lancamentos=d2.map(function(l){ return Object.assign({},l,{medico:l.medicos?.nome||'',crm:l.medicos?.crm||'',projeto:l.projetos?.nome||''}); }); }
+        if(d2){ lancamentos=d2.map(function(l){ return Object.assign({},l,{medico:l.medicos?.nome||'',crm:l.medicos?.crm||'',projeto:l.projetos?.nome||''}); }); renderSemana(); }
       }, 2000);
     } else {
       var errTxt = await res.text();
