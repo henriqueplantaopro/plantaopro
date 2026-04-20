@@ -221,6 +221,16 @@ tr:hover td{background:var(--bg3);}
   .sem-card-nome{font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
   .sem-card-hora{font-size:10px;color:var(--text3);font-family:monospace;}
   .sem-card-setor{font-size:10px;color:var(--text2);}
+  /* Grupos de categoria no calendário semanal */
+  .sem-grupo{border-bottom:1px solid var(--border);}
+  .sem-grupo:last-of-type{border-bottom:none;}
+  .sem-grupo-label{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--text3);padding:4px 6px 2px;background:var(--bg3);border-bottom:1px solid var(--border);}
+  .sem-card{background:#fff;border-radius:0;padding:5px 20px 5px 8px;margin:0;border-left:3px solid var(--green);font-size:11px;cursor:pointer;box-shadow:none;border-bottom:1px solid #f0f0f0;}
+  .sem-card:last-child{border-bottom:none;}
+  .sem-card:hover{background:var(--bg3);}
+  .sem-card.noturno{border-left-color:var(--purple);}
+  .sem-card.h24{border-left-color:var(--amber);}
+  .sem-card.custom{border-left-color:var(--blue);}
   .sem-card-opts{position:absolute;top:2px;right:3px;background:rgba(255,255,255,0.85);border:none;cursor:pointer;font-size:13px;color:var(--text2);padding:0 4px;line-height:1.4;border-radius:3px;font-weight:700;box-shadow:0 1px 2px rgba(0,0,0,0.1);}
   .sem-card-opts:hover{background:var(--blue);color:#fff;}
   .sem-card{position:relative;padding-right:18px;}
@@ -1977,6 +1987,14 @@ function renderSemana() {
   });
   html += '</tr></thead><tbody><tr>';
 
+  // Categorias de agrupamento
+  const categorias = [
+    { key:'diurno',   label:'☀️ Diurno 07–19',   cls:'',        fn: l => !l.tipo?.includes('Noturno') && !l.tipo?.includes('24') && l.tipo !== 'Personalizado' && !l.tipo?.includes('Sobre') },
+    { key:'noturno',  label:'🌙 Noturno 19–07',   cls:'noturno', fn: l => l.tipo?.includes('Noturno') },
+    { key:'h24',      label:'🔄 24h 07–07',        cls:'h24',     fn: l => l.tipo?.includes('24') },
+    { key:'custom',   label:'✏️ Personalizado',    cls:'custom',  fn: l => l.tipo === 'Personalizado' || l.tipo?.includes('Sobre') || l.tipo?.includes('Rotina') || l.tipo?.includes('Manhã') || l.tipo?.includes('Tarde') || l.tipo?.includes('Sem') },
+  ];
+
   dias.forEach(d => {
     const ds = d.toISOString().slice(0,10);
     const isHoje = d.getTime()===hj.getTime();
@@ -1984,20 +2002,31 @@ function renderSemana() {
     if(pid) evts=evts.filter(l=>l.projeto_id===pid);
     if(mid) evts=evts.filter(l=>l.medico_id===mid);
 
-    html += `<td class="sem-td${isHoje?' hoje-col':''}">`;
-    evts.forEach(l => {
-      const turno = l.tipo?.includes('Noturno')?'noturno':l.tipo?.includes('24')?'h24':'';
-      html += `<div class="sem-card ${turno}">
-        <button class="sem-card-opts" onclick="event.stopPropagation();abrirCtxChip(event,'${l.id}','${ds}','${pid||l.projeto_id}')" title="Opções">⋮</button>
-        <div class="sem-card-nome" onclick="verDetalhesSemana('${l.id}')">${(l.medico||'').split(' ').slice(0,2).join(' ')}</div>
-        <div class="sem-card-hora">${(l.hora_ini||'').slice(0,5)}–${(l.hora_fim||'').slice(0,5)}</div>
-        ${l.setor?`<div class="sem-card-setor">${l.setor}</div>`:''}
-      </div>`;
+    html += `<td class="sem-td${isHoje?' hoje-col':''}" style="padding:0;vertical-align:top;">`;
+
+    // Renderizar cada categoria
+    categorias.forEach(cat => {
+      const grupo = evts.filter(cat.fn);
+      if (grupo.length === 0) return; // não mostrar seção vazia
+
+      html += `<div class="sem-grupo">
+        <div class="sem-grupo-label">${cat.label}</div>`;
+      grupo.forEach(l => {
+        html += `<div class="sem-card ${cat.cls}">
+          <button class="sem-card-opts" onclick="event.stopPropagation();abrirCtxChip(event,'${l.id}','${ds}','${pid||l.projeto_id}')" title="Opções">⋮</button>
+          <div class="sem-card-nome" onclick="verDetalhesSemana('${l.id}')">${(l.medico||'').split(' ').slice(0,2).join(' ')}</div>
+          <div class="sem-card-hora">${(l.hora_ini||'').slice(0,5)}–${(l.hora_fim||'').slice(0,5)}</div>
+          ${l.setor?`<div class="sem-card-setor">${l.setor}</div>`:''}
+        </div>`;
+      });
+      html += `</div>`;
     });
 
-    // Botões de ação na célula
+    // Botões de ação
+    html += `<div style="padding:4px;">`;
     html += `<button class="sem-add-btn" onclick="abrirLancamentoRapido('${ds}','${pid}')" title="Adicionar plantão">+</button>`;
     html += `<button class="sem-colar-btn" id="colar-${ds}" onclick="colarNoDia('${ds}','${pid}')" style="display:none;" title="Colar plantão copiado">📌 Colar</button>`;
+    html += `</div>`;
     html += '</td>';
   });
 
