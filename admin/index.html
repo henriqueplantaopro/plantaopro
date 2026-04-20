@@ -164,6 +164,29 @@ tr:hover td{background:var(--bg3);}
   .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
   hr{border:none;border-top:1px solid var(--border);margin:14px 0;}
   .mono{font-family:'Courier New',monospace;}
+  /* Escala por profissional */
+  .escala-table{width:100%;border-collapse:collapse;min-width:800px;font-size:12px;}
+  .escala-th{background:var(--blue);color:#fff;padding:8px 10px;text-align:center;font-size:11px;font-weight:600;white-space:nowrap;position:sticky;top:0;}
+  .escala-th-hoje{background:#0f3d7a;}
+  .escala-td-med{padding:10px 12px;border-bottom:1px solid var(--border);white-space:nowrap;position:sticky;left:0;background:#fff;z-index:1;min-width:180px;border-right:2px solid var(--border);}
+  .escala-td-med:hover{background:var(--bg3);}
+  .escala-med-nome{font-size:12px;font-weight:600;color:var(--text);}
+  .escala-med-horas{font-size:10px;color:var(--text3);margin-top:1px;}
+  .escala-td{padding:4px;border-bottom:1px solid var(--border);border-right:1px solid var(--border);vertical-align:top;min-width:110px;min-height:50px;}
+  .escala-td.hoje-col{background:var(--blue-light);}
+  .escala-chip{border-radius:5px;padding:4px 7px;margin-bottom:3px;cursor:pointer;position:relative;font-size:11px;font-weight:500;line-height:1.3;}
+  .escala-chip.diurno{background:var(--green-bg);color:var(--green);border-left:3px solid var(--green);}
+  .escala-chip.noturno{background:var(--purple-bg);color:var(--purple);border-left:3px solid var(--purple);}
+  .escala-chip.h24{background:var(--amber-bg);color:var(--amber);border-left:3px solid var(--amber);}
+  .escala-chip.fds{background:#fce4ec;color:#c2185b;border-left:3px solid #c2185b;}
+  .escala-chip.confirmado::after{content:'✅';font-size:9px;margin-left:4px;}
+  .escala-add{display:flex;align-items:center;justify-content:center;width:100%;padding:4px;border:1.5px dashed var(--border2);border-radius:5px;background:transparent;cursor:pointer;color:var(--text3);font-size:16px;margin-top:2px;transition:all 0.15s;}
+  .escala-add:hover{border-color:var(--blue);color:var(--blue);background:var(--blue-light);}
+  /* Tooltip */
+  .tooltip{position:fixed;background:#1a1a1a;color:#fff;padding:10px 13px;border-radius:8px;font-size:12px;line-height:1.6;z-index:9999;pointer-events:none;max-width:240px;box-shadow:0 4px 16px rgba(0,0,0,0.3);display:none;}
+  .tooltip-row{display:flex;gap:6px;align-items:baseline;}
+  .tooltip-label{color:#aaa;font-size:10px;min-width:60px;}
+  .tooltip-val{font-weight:600;}
   /* Lançamento em lote */
   .medico-row{display:grid;grid-template-columns:2fr 1fr 1fr 1fr 36px;gap:8px;align-items:center;padding:10px 12px;border-bottom:1px solid var(--border);transition:background 0.1s;}
   .medico-row:last-child{border-bottom:none;}
@@ -242,6 +265,7 @@ tr:hover td{background:var(--bg3);}
     <div class="nav-item" onclick="showTab('checkins',this)">📍 Check-ins</div>
     <div class="nav-item" onclick="showTab('relatorios',this)">📈 Relatórios</div>
     <div class="nav-item" onclick="showTab('calendario',this)">📅 Calendário</div>
+    <div class="nav-item" onclick="showTab('escala',this)">👥 Escala por profissional</div>
     <div class="nav-item" onclick="showTab('importar',this)">📥 Importar CSV</div>
     <div class="nav-item" onclick="showTab('exportar',this)">📤 Exportar TOTVS</div>
   </nav>
@@ -258,6 +282,21 @@ tr:hover td{background:var(--bg3);}
   <div id="tab-dashboard" class="section active">
     <div class="page-title">Dashboard</div>
     <div class="page-sub">Visão geral em tempo real</div>
+
+    <!-- ALERTAS DE FURO -->
+    <div id="dash-furos-card" style="display:none;margin-bottom:14px;">
+      <div class="card" style="border-left:4px solid var(--red);background:var(--red-bg);padding:14px 18px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;">
+          <div>
+            <div style="font-size:13px;font-weight:700;color:var(--red);">⚠️ Plantões sem confirmação — próximas 48h</div>
+            <div style="font-size:12px;color:var(--text2);margin-top:4px;">Médicos que ainda não confirmaram presença</div>
+          </div>
+          <div style="font-size:32px;font-weight:700;color:var(--red);" id="dash-furos-count">0</div>
+        </div>
+        <div id="dash-furos-lista" style="margin-top:10px;"></div>
+      </div>
+    </div>
+
     <div class="metrics">
       <div class="metric"><div class="metric-label">Médicos ativos</div><div class="metric-val" id="d-medicos">—</div></div>
       <div class="metric"><div class="metric-label">Plantões este mês</div><div class="metric-val" id="d-plantoes">—</div></div>
@@ -340,7 +379,7 @@ tr:hover td{background:var(--bg3);}
         <div class="form-group"><label>Data</label><input id="ld" type="date"></div>
         <div class="form-group"><label>Início</label><input id="li" type="time" value="07:00"></div>
         <div class="form-group"><label>Fim</label><input id="lf" type="time" value="19:00"></div>
-        <div class="form-group"><label>Tipo</label><select id="lt"><option>Diurno 12h</option><option>Noturno 12h</option><option>24h</option><option>Sobreaviso</option><option>Personalizado</option></select></div>
+        <div class="form-group"><label>Tipo</label><select id="lt"><option>Diurno 12h</option><option>Noturno 12h</option><option>24h</option><option>Fim de Semana Diurno</option><option>Fim de Semana Noturno</option><option>Rotina Manhã</option><option>Rotina Tarde</option><option>Sobreaviso</option><option>Plantão 4 Semanas</option><option>Plantão 5 Semanas</option><option>Personalizado</option></select></div>
       </div>
       <div class="form-row four">
         <div class="form-group"><label>Valor total (R$)</label><input id="lval" type="text" placeholder="1.800,00" oninput="updatePreviewLanc()"></div>
@@ -372,7 +411,7 @@ tr:hover td{background:var(--bg3);}
         <div class="form-group"><label>Fim</label><input id="lote-fim" type="time" value="19:00" oninput="atualizarDuracaoLote()"></div>
         <div class="form-group"><label>Tipo</label>
           <select id="lote-tipo">
-            <option>Diurno 12h</option><option>Noturno 12h</option><option>24h</option><option>Sobreaviso</option><option>Personalizado</option>
+            <option>Diurno 12h</option><option>Noturno 12h</option><option>24h</option><option>Fim de Semana Diurno</option><option>Fim de Semana Noturno</option><option>Rotina Manhã</option><option>Rotina Tarde</option><option>Sobreaviso</option><option>Plantão 4 Semanas</option><option>Plantão 5 Semanas</option><option>Personalizado</option>
           </select>
         </div>
       </div>
@@ -627,7 +666,7 @@ tr:hover td{background:var(--bg3);}
         <div class="form-group"><label>Fim</label><input id="agd-fim" type="time" value="19:00" oninput="atualizarDuracaoAgenda()"></div>
         <div class="form-group"><label>Tipo</label>
           <select id="agd-tipo" onchange="preencherValorPadraoAgenda()">
-            <option>Diurno 12h</option><option>Noturno 12h</option><option>24h</option><option>Sobreaviso</option><option>Personalizado</option>
+            <option>Diurno 12h</option><option>Noturno 12h</option><option>24h</option><option>Fim de Semana Diurno</option><option>Fim de Semana Noturno</option><option>Rotina Manhã</option><option>Rotina Tarde</option><option>Sobreaviso</option><option>Plantão 4 Semanas</option><option>Plantão 5 Semanas</option><option>Personalizado</option>
           </select>
         </div>
         <div class="form-group">
@@ -681,6 +720,39 @@ tr:hover td{background:var(--bg3);}
       <button class="btn btn-success" onclick="gerarPreviewAgenda()">Gerar pré-visualização →</button>
     </div>
   </div>
+
+  <!-- ESCALA POR PROFISSIONAL -->
+  <div id="tab-escala" class="section">
+    <div class="page-title">Escala por Profissional</div>
+    <div class="page-sub">Visão semanal de todos os médicos escalados</div>
+
+    <div class="card" style="padding:12px 16px;margin-bottom:12px;">
+      <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;">
+        <div class="form-group" style="flex:1;min-width:180px;"><label>Projeto</label><select id="esc-proj" onchange="renderEscala()"><option value="">Todos os projetos</option></select></div>
+        <div class="form-group" style="min-width:200px;"><label>Buscar médico</label><input id="esc-busca" type="text" placeholder="Nome do médico..." oninput="renderEscala()" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:var(--radius);font-size:13px;"></div>
+        <div style="display:flex;gap:6px;align-items:flex-end;padding-bottom:1px;">
+          <button class="btn btn-ghost btn-sm" onclick="navEscala(-1)">‹ Anterior</button>
+          <span id="esc-label" style="font-size:13px;font-weight:600;white-space:nowrap;line-height:2.2;"></span>
+          <button class="btn btn-ghost btn-sm" onclick="navEscala(1)">Próxima ›</button>
+          <button class="btn btn-ghost btn-sm" onclick="escOffset=0;renderEscala()">Hoje</button>
+        </div>
+      </div>
+      <div style="display:flex;gap:12px;margin-top:10px;font-size:11px;flex-wrap:wrap;">
+        <span><span style="display:inline-block;width:10px;height:10px;background:var(--green-bg);border-left:3px solid var(--green);border-radius:2px;margin-right:4px;"></span>Diurno</span>
+        <span><span style="display:inline-block;width:10px;height:10px;background:var(--purple-bg);border-left:3px solid var(--purple);border-radius:2px;margin-right:4px;"></span>Noturno</span>
+        <span><span style="display:inline-block;width:10px;height:10px;background:var(--amber-bg);border-left:3px solid var(--amber);border-radius:2px;margin-right:4px;"></span>24h</span>
+        <span><span style="display:inline-block;width:10px;height:10px;background:#fce4ec;border-left:3px solid #c2185b;border-radius:2px;margin-right:4px;"></span>Fim de semana</span>
+        <span style="margin-left:8px;color:var(--text3);">✅ = confirmado pelo médico</span>
+      </div>
+    </div>
+
+    <div style="overflow-x:auto;">
+      <div id="escala-grid"></div>
+    </div>
+  </div>
+
+  <!-- Tooltip global -->
+  <div class="tooltip" id="tooltip-escala"></div>
 
   <!-- EXPORTAR TOTVS -->
   <div id="tab-exportar" class="section">
@@ -934,6 +1006,36 @@ async function carregarDashboard() {
       <td>${new Date(c.feito_em).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}</td>
       <td>${c.aprovado?'<span class="checkin-ok">✅ Aprovado</span>':'<span class="checkin-fail">❌ Fora do raio</span>'}</td>
     </tr>`).join('') + '</tbody></table>' : '<div class="empty">Nenhum check-in hoje</div>';
+  // Calcular alertas de furos
+  calcularFurosDash();
+}
+
+function calcularFurosDash() {
+  const agora = new Date();
+  const em48h = new Date(agora.getTime() + 48*3600000);
+  const furos = lancamentos.filter(l => {
+    if (!l.data || !l.hora_ini) return false;
+    const ini = new Date(l.data + 'T' + l.hora_ini);
+    return ini > agora && ini <= em48h && !l.confirmado;
+  });
+  const card  = document.getElementById('dash-furos-card');
+  const count = document.getElementById('dash-furos-count');
+  const lista = document.getElementById('dash-furos-lista');
+  if (!card) return;
+  if (furos.length > 0) {
+    card.style.display = 'block';
+    count.textContent = furos.length;
+    lista.innerHTML = furos.slice(0,5).map(l => {
+      const ini = new Date(l.data + 'T' + l.hora_ini);
+      const faltaH = Math.round((ini - agora) / 3600000);
+      return '<div style="font-size:12px;padding:4px 0;border-top:1px solid #f5c0c0;display:flex;justify-content:space-between;">' +
+        '<span><strong>' + (l.medico||'—') + '</strong> · ' + (l.projeto||'—') + ' · ' + fDate(l.data) + ' ' + (l.hora_ini||'').slice(0,5) + '</span>' +
+        '<span style="color:var(--red);font-weight:600;">em ' + faltaH + 'h</span>' +
+        '</div>';
+    }).join('') + (furos.length > 5 ? '<div style="font-size:11px;color:var(--text3);margin-top:4px;">... e mais ' + (furos.length-5) + ' plantões</div>' : '');
+  } else {
+    card.style.display = 'none';
+  }
 }
 
 // ── MÉDICOS ───────────────────────────────────────────
@@ -1474,6 +1576,7 @@ function showTab(id,el){
   if(id==='relatorios'){ popRelSelects(); }
   if(id==='calendario'){ popCalSelects(); switchCalTab(_calTabAtiva||'mensal'); }
   if(id==='exportar'){ renderLayoutPreview(); popExportSelects(); }
+  if(id==='escala'){ initEscala(); }
   if(id==='importar') switchImpTab('med');
   if(id==='lote'){ initLote(); }
   if(id==='lotemed'){ initAgenda(); }
@@ -1898,12 +2001,22 @@ function selecionarTipoRapido(btn) {
 
 function getHorasRapido() {
   const tipo = document.getElementById('mr-tipo').value;
-  if (tipo === 'Personalizado') {
-    return parseFloat(document.getElementById('mr-horas-custom')?.value)||0;
-  }
+  if (tipo === 'Personalizado') return parseFloat(document.getElementById('mr-horas-custom')?.value)||0;
   if (tipo.includes('24')) return 24;
   if (tipo.includes('12')) return 12;
   if (tipo.includes('Sobre')) return 6;
+  if (tipo.includes('Manhã') || tipo.includes('Tarde')) return 6;
+  if (tipo.includes('4 Sem')) return 12;
+  if (tipo.includes('5 Sem')) return 12;
+  return 12;
+}
+function getHorasTipo(tipo) {
+  if (!tipo) return 12;
+  if (tipo === 'Personalizado') return 0;
+  if (tipo.includes('24')) return 24;
+  if (tipo.includes('12')) return 12;
+  if (tipo.includes('Sobre')) return 6;
+  if (tipo.includes('Manhã') || tipo.includes('Tarde')) return 6;
   return 12;
 }
 
@@ -2083,6 +2196,155 @@ async function copiarSemana() {
   await carregarLancamentos();
   renderSemana();
 }
+
+
+// ─── ESCALA POR PROFISSIONAL ─────────────────────────────
+let escOffset = 0;
+
+function initEscala() {
+  const sp = document.getElementById('esc-proj');
+  if (sp) {
+    sp.innerHTML = '<option value="">Todos os projetos</option>' +
+      sortedProjetos().map(p=>`<option value="${p.id}">${p.nome}</option>`).join('');
+  }
+  escOffset = 0;
+  renderEscala();
+}
+
+function navEscala(d) { escOffset += d; renderEscala(); }
+
+function renderEscala() {
+  const seg = getSegundaDaSemana(escOffset);
+  const dias = Array.from({length:7}, (_,i) => {
+    const d = new Date(seg); d.setDate(seg.getDate()+i); return d;
+  });
+  const hj = new Date(); hj.setHours(0,0,0,0);
+  const dows = ['Seg','Ter','Qua','Qui','Sex','Sáb','Dom'];
+  const d1str = dias[0].toLocaleDateString('pt-BR',{day:'2-digit',month:'short'});
+  const d7str = dias[6].toLocaleDateString('pt-BR',{day:'2-digit',month:'short',year:'numeric'});
+  document.getElementById('esc-label').textContent = `${d1str} — ${d7str}`;
+
+  const pid   = document.getElementById('esc-proj')?.value || '';
+  const busca = (document.getElementById('esc-busca')?.value || '').toLowerCase();
+
+  // Filtrar médicos que têm pelo menos 1 plantão na semana OU busca ativa
+  const dataStrs = dias.map(d => d.toISOString().slice(0,10));
+  let lancSemana = lancamentos.filter(l => dataStrs.includes(l.data));
+  if (pid) lancSemana = lancSemana.filter(l => l.projeto_id === pid);
+
+  const medIds = new Set(lancSemana.map(l => l.medico_id));
+  let medsFiltrados = sortedMedicos().filter(m => {
+    const temPlantao = medIds.has(m.id);
+    const buscaOk = !busca || m.nome.toLowerCase().includes(busca);
+    return buscaOk && (temPlantao || busca);
+  });
+
+  const grid = document.getElementById('escala-grid');
+  if (!medsFiltrados.length) {
+    grid.innerHTML = '<div class="empty">Nenhum médico escalado nesta semana.</div>';
+    return;
+  }
+
+  // Cabeçalho
+  let html = `<table class="escala-table"><thead><tr>
+    <th class="escala-th" style="text-align:left;">Profissional</th>`;
+  dias.forEach((d,i) => {
+    const ds = d.toISOString().slice(0,10);
+    const isHoje = d.getTime() === hj.getTime();
+    const isFds  = d.getDay() === 0 || d.getDay() === 6;
+    html += `<th class="escala-th${isHoje?' escala-th-hoje':''}" style="${isFds?'background:#37474f;':''}">
+      <div>${dows[i]}</div>
+      <div style="font-size:14px;font-weight:700;">${d.getDate()}</div>
+    </th>`;
+  });
+  html += '</tr></thead><tbody>';
+
+  medsFiltrados.forEach(m => {
+    const lancMed = lancSemana.filter(l => l.medico_id === m.id);
+    const totalHoras = lancMed.reduce((s,l) => s+(l.horas||0), 0);
+
+    html += `<tr>
+      <td class="escala-td-med">
+        <div class="escala-med-nome">${m.nome}</div>
+        <div class="escala-med-horas">${Math.round(totalHoras*10)/10}h na semana · ${m.crm||''}</div>
+      </td>`;
+
+    dias.forEach(d => {
+      const ds = d.toISOString().slice(0,10);
+      const isHoje = d.getTime() === hj.getTime();
+      const isFds  = d.getDay() === 0 || d.getDay() === 6;
+      const evts = lancMed.filter(l => l.data === ds);
+
+      html += `<td class="escala-td${isHoje?' hoje-col':''}" style="${isFds?'background:#fafafa;':''}">`;
+
+      evts.forEach(l => {
+        const proj = projetos.find(p => p.id === l.projeto_id);
+        const tipo = l.tipo || '';
+        let cls = 'diurno';
+        if (tipo.includes('Noturno')) cls = 'noturno';
+        else if (tipo.includes('24')) cls = 'h24';
+        else if (isFds) cls = 'fds';
+        const conf = l.confirmado ? ' confirmado' : '';
+        const ini = (l.hora_ini||'').slice(0,5);
+        const fim = (l.hora_fim||'').slice(0,5);
+        // Dados para tooltip em data-attributes
+        html += `<div class="escala-chip ${cls}${conf}"
+          onmouseenter="showTooltip(event,this)"
+          onmouseleave="hideTooltip()"
+          data-proj="${proj?.nome||''}"
+          data-setor="${l.setor||''}"
+          data-tipo="${tipo}"
+          data-hora="${ini}–${fim}"
+          data-horas="${l.horas}h"
+          data-hon="${fBRL(l.honorario||0)}"
+          data-conf="${l.confirmado?'Sim':'Não'}"
+          onclick="abrirLancamentoRapido('${ds}','${l.projeto_id}')">
+          <div>${ini}–${fim}</div>
+          <div style="font-size:10px;opacity:0.8;">${proj?.nome||tipo}</div>
+        </div>`;
+      });
+
+      // Botão adicionar
+      html += `<button class="escala-add" onclick="abrirLancamentoRapido('${ds}','${pid}')" title="Adicionar plantão">+</button>`;
+      html += '</td>';
+    });
+    html += '</tr>';
+  });
+
+  html += '</tbody></table>';
+  grid.innerHTML = html;
+}
+
+function showTooltip(e, el) {
+  const t = document.getElementById('tooltip-escala');
+  if (!t) return;
+  t.innerHTML = `
+    <div class="tooltip-row"><span class="tooltip-label">Projeto</span><span class="tooltip-val">${el.dataset.proj||'—'}</span></div>
+    ${el.dataset.setor?`<div class="tooltip-row"><span class="tooltip-label">Setor</span><span class="tooltip-val">${el.dataset.setor}</span></div>`:''}
+    <div class="tooltip-row"><span class="tooltip-label">Tipo</span><span class="tooltip-val">${el.dataset.tipo||'—'}</span></div>
+    <div class="tooltip-row"><span class="tooltip-label">Horário</span><span class="tooltip-val">${el.dataset.hora}</span></div>
+    <div class="tooltip-row"><span class="tooltip-label">Horas</span><span class="tooltip-val">${el.dataset.horas}</span></div>
+    <div class="tooltip-row"><span class="tooltip-label">Honorários</span><span class="tooltip-val">${el.dataset.hon}</span></div>
+    <div class="tooltip-row"><span class="tooltip-label">Confirmado</span><span class="tooltip-val">${el.dataset.conf==='Sim'?'✅ Sim':'⚠️ Não'}</span></div>`;
+  t.style.display = 'block';
+  posTooltip(e);
+}
+function posTooltip(e) {
+  const t = document.getElementById('tooltip-escala');
+  if (!t) return;
+  const x = e.clientX + 14;
+  const y = e.clientY + 14;
+  const w = window.innerWidth, h = window.innerHeight;
+  t.style.left = (x + 250 > w ? x - 260 : x) + 'px';
+  t.style.top  = (y + 200 > h ? y - 210 : y) + 'px';
+}
+function hideTooltip() {
+  const t = document.getElementById('tooltip-escala');
+  if (t) t.style.display = 'none';
+}
+document.addEventListener('mousemove', e => {
+  if (document.getElementById('tooltip-escala')?.style.display === 'block') posTooltip(e);
+});
 
 // Inicia com Enter no login
 document.getElementById('l-email').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('l-senha').focus();});
