@@ -115,6 +115,17 @@
 
   /* PULL TO REFRESH hint */
   .refresh-hint{text-align:center;font-size:11px;color:var(--text3);padding:8px;margin-bottom:4px;}
+  /* Plantões disponíveis */
+  .plantao-aberto-card{background:#fff;border-radius:var(--radius);margin-bottom:10px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.08);border:2px dashed var(--amber);}
+  .plantao-aberto-header{padding:12px 16px;background:var(--amber-light);}
+  .plantao-aberto-proj{font-size:14px;font-weight:700;color:var(--amber);}
+  .plantao-aberto-data{font-size:12px;color:var(--text2);margin-top:2px;}
+  .btn-candidatar{width:100%;padding:12px;font-size:14px;font-weight:700;border-radius:0;border:none;cursor:pointer;transition:all 0.2s;letter-spacing:0.2px;}
+  .btn-candidatar.disponivel{background:var(--amber);color:#fff;}
+  .btn-candidatar.disponivel:active{background:#6e4400;}
+  .btn-candidatar.inscrito{background:var(--green-light);color:var(--green);cursor:default;}
+  .btn-candidatar.recusado{background:var(--red-light);color:var(--red);cursor:default;}
+  .conflito-aviso{background:var(--red-light);border-radius:var(--radius-sm);padding:8px 12px;font-size:12px;color:var(--red);margin:0 16px 10px;}
   /* CONFIRMAÇÃO DE PLANTÃO */
   .btn-confirmar{width:100%;padding:12px;font-size:13px;font-weight:700;border-radius:var(--radius-sm);border:none;cursor:pointer;transition:all 0.2s;margin-top:10px;letter-spacing:0.2px;}
   .btn-confirmar.pendente{background:#fff;color:var(--blue);border:2px solid var(--blue);}
@@ -152,6 +163,10 @@
   <div class="tab" onclick="showPage('plantoes',this)">
     <span class="tab-icon">📅</span>Plantões
     <span id="badge-confirmacao" style="display:none;background:var(--amber);color:#fff;font-size:9px;font-weight:700;border-radius:99px;padding:1px 5px;margin-left:2px;vertical-align:top;margin-top:2px;"></span>
+  </div>
+  <div class="tab" onclick="showPage('disponiveis',this)">
+    <span class="tab-icon">📢</span>Disponíveis
+    <span id="badge-disp" style="display:none;background:var(--amber);color:#fff;font-size:9px;font-weight:700;border-radius:99px;padding:1px 5px;margin-left:2px;vertical-align:top;margin-top:2px;"></span>
   </div>
   <div class="tab" onclick="showPage('historico',this)">
     <span class="tab-icon">📊</span>Histórico
@@ -198,6 +213,12 @@
     </div>
     <div class="refresh-hint" id="plantoes-hint">Toque em um plantão para confirmar sua presença</div>
     <div id="plantoes-lista"><div class="empty"><div class="empty-icon">📅</div>Carregando...</div></div>
+  </div>
+
+  <!-- PLANTÕES DISPONÍVEIS -->
+  <div id="page-disponiveis" class="page">
+    <div class="refresh-hint">Plantões abertos nos seus hospitais — toque para se candidatar</div>
+    <div id="disponiveis-lista"><div class="empty"><div class="empty-icon">📢</div>Carregando...</div></div>
   </div>
 
   <!-- HISTÓRICO -->
@@ -592,6 +613,161 @@ async function carregarPlantoes() {
       </div>
     </div>`;
   }).join('');
+}
+
+// ── PLANTÕES DISPONÍVEIS ─────────────────────────────────
+async function carregarDisponiveis() {
+  const el = document.getElementById('disponiveis-lista');
+  if (!el || !medico) return;
+  el.innerHTML = '<div class="empty"><div class="empty-icon">📢</div>Carregando...</div>';
+
+  // Buscar projetos vinculados ao médico
+  const projVinc = medico.projetos_vinculados || [];
+  if (!projVinc.length) {
+    el.innerHTML = '<div class="empty"><div class="empty-icon">🏥</div>Nenhum hospital vinculado ao seu cadastro.</div>';
+    return;
+  }
+
+  // Buscar plantões abertos nos projetos vinculados a partir de hoje
+  const hoje = new Date().toISOString().slice(0,10);
+  const { data: abertos } = await supabaseFetch(
+    `/rest/v1/lancamentos?aberto=eq.true&data=gte.${hoje}&projeto_id=in.(${projVinc.join(',')})&select=*,projetos(nome)&order=data,hora_ini`
+  ).then(d => ({data: d})).catch(()=>({data:[]}));
+
+  const lista = abertos || [];
+
+  // Buscar minhas candidaturas
+  const minhasCand = await supabaseFetch(
+    `/rest/v1/candidaturas?medico_id=eq.${medico.id}&select=*`
+  ) || [];
+
+  // Buscar meus plantões para verificar conflito de horário
+  const meusPlantoes = await supabaseFetch(
+    `/rest/v1/lancamentos?medico_id=eq.${medico.id}&data=gte.${hoje}&select=data,hora_ini,hora_fim,horas,tipo`
+  ) || [];
+
+  // Badge
+  const disponiveis = lista.filter(l => {
+    const jaInsc = minhasCand.find(c=>c.lancamento_id===l.id);
+    return !jaInsc && (l.vagas_preenchidas||0) < (l.vagas||1);
+  }).length;
+  const badge = document.getElementById('badge-disp');
+  if (badge) { badge.textContent=disponiveis; badge.style.display=disponiveis>0?'inline':'none'; }
+
+  if (!lista.length) {
+    el.innerHTML = '<div class="empty"><div class="empty-icon">📢</div>Nenhum plantão disponível no momento.</div>';
+    return;
+  }
+
+  el.innerHTML = lista.map(l => {
+    const d = new Date(l.data+'T12:00:00');
+    const dataFmt = d.toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'long'});
+    const proj = l.projetos?.nome || '';
+    const vagas = (l.vagas||1) - (l.vagas_preenchidas||0);
+    const cheia = vagas <= 0;
+
+    // Verificar minha candidatura
+    const minhaCand = minhasCand.find(c=>c.lancamento_id===l.id);
+
+    // Verificar conflito de horário (máx 24h seguidas, mínimo 12h descanso)
+    const conflito = verificarConflito(l, meusPlantoes);
+
+    let btnHtml = '';
+    if (minhaCand) {
+      if (minhaCand.status==='aprovado') btnHtml = `<button class="btn-candidatar inscrito" disabled>✅ Aprovado — você está escalado</button>`;
+      else if (minhaCand.status==='recusado') btnHtml = `<button class="btn-candidatar recusado" disabled>❌ Candidatura recusada</button>`;
+      else btnHtml = `<button class="btn-candidatar inscrito" disabled>⏳ Candidatura enviada — aguardando aprovação</button>`;
+    } else if (cheia) {
+      btnHtml = `<button class="btn-candidatar inscrito" disabled>🔒 Vagas preenchidas</button>`;
+    } else if (conflito) {
+      btnHtml = `<div class="conflito-aviso">⚠️ ${conflito}</div><button class="btn-candidatar recusado" disabled>Conflito de horário</button>`;
+    } else {
+      btnHtml = `<button class="btn-candidatar disponivel" onclick="candidatar('${l.id}', this)">📋 Me candidatar para este plantão</button>`;
+    }
+
+    const turno = l.tipo?.includes('Noturno')?'badge-purple':l.tipo?.includes('24')?'badge-amber':'badge-green';
+
+    return `<div class="plantao-aberto-card">
+      <div class="plantao-aberto-header">
+        <div class="plantao-aberto-proj">📢 ${proj}</div>
+        <div class="plantao-aberto-data" style="text-transform:capitalize;">${dataFmt}</div>
+      </div>
+      <div class="plantao-body">
+        <div><div class="plantao-info-label">Horário</div><div class="plantao-info-val">${(l.hora_ini||'').slice(0,5)}–${(l.hora_fim||'').slice(0,5)}</div></div>
+        <div><div class="plantao-info-label">Horas</div><div class="plantao-info-val">${l.horas}h</div></div>
+        <div><div class="plantao-info-label">Vagas</div><div class="plantao-info-val" style="color:${cheia?'var(--green)':'var(--amber)'};">${cheia?'Preenchido':vagas+' disponível(is)'}</div></div>
+      </div>
+      ${l.setor?`<div style="padding:0 16px 8px;font-size:12px;color:var(--text2);">🏥 ${l.setor}</div>`:''}
+      ${l.honorario?`<div style="padding:0 16px 8px;font-size:13px;font-weight:700;color:var(--green);">${fBRL(l.honorario)}</div>`:''}
+      <span class="badge ${turno}" style="margin:0 16px 10px;display:inline-block;">${l.tipo||''}</span>
+      ${btnHtml}
+    </div>`;
+  }).join('');
+}
+
+function verificarConflito(plantao, meusPlantoes) {
+  // Regra: máximo 24h trabalhando consecutivo, mínimo 12h de descanso entre plantões
+  const iniNovo = new Date(`${plantao.data}T${plantao.hora_ini||'00:00'}`);
+  const fimNovo = new Date(iniNovo.getTime() + (plantao.horas||0)*3600000);
+
+  for (const p of meusPlantoes) {
+    const iniExist = new Date(`${p.data}T${p.hora_ini||'00:00'}`);
+    const fimExist = new Date(iniExist.getTime() + (p.horas||0)*3600000);
+
+    // Verificar sobreposição direta
+    if (iniNovo < fimExist && fimNovo > iniExist) {
+      return 'Conflito: você já tem plantão neste horário.';
+    }
+
+    // Verificar descanso mínimo de 12h após plantão existente
+    const descFim = new Date(fimExist.getTime() + 12*3600000);
+    if (iniNovo >= fimExist && iniNovo < descFim) {
+      const hDesc = Math.round((descFim - iniNovo)/3600000);
+      return `Descanso insuficiente: você precisa de mais ${hDesc}h de descanso.`;
+    }
+
+    // Verificar descanso mínimo antes do plantão existente
+    const descAnt = new Date(iniExist.getTime() - 12*3600000);
+    if (fimNovo > descAnt && fimNovo <= iniExist) {
+      return 'Descanso insuficiente antes do próximo plantão.';
+    }
+
+    // Verificar acúmulo de horas (máx 24h seguidas)
+    if (iniNovo <= iniExist && fimNovo >= iniExist) {
+      const hTotal = (fimNovo - iniNovo)/3600000;
+      if (hTotal > 24) return 'Excede o limite de 24 horas de trabalho consecutivo.';
+    }
+  }
+  return null;
+}
+
+async function candidatar(lancId, btn) {
+  if (btn) { btn.disabled=true; btn.textContent='Enviando...'; }
+  try {
+    const res = await fetch(SUPABASE_URL+'/rest/v1/candidaturas', {
+      method:'POST',
+      headers:{
+        'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,
+        'Content-Type':'application/json','Prefer':'return=minimal'
+      },
+      body: JSON.stringify({
+        lancamento_id: lancId,
+        medico_id: medico.id,
+        status: 'pendente',
+        criado_em: new Date().toISOString()
+      })
+    });
+    if (res.ok || res.status===204) {
+      if (btn) { btn.className='btn-candidatar inscrito'; btn.textContent='⏳ Candidatura enviada — aguardando aprovação'; btn.disabled=true; }
+      toastMed('✅ Candidatura enviada! Aguarde aprovação.');
+    } else {
+      if (btn) { btn.disabled=false; btn.textContent='📋 Me candidatar para este plantão'; }
+      toastMed('Erro ao enviar candidatura', false);
+    }
+  } catch(e) {
+    if (btn) { btn.disabled=false; btn.textContent='📋 Me candidatar para este plantão'; }
+    toastMed('Erro de conexão', false);
+  }
 }
 
 // ── HISTÓRICO ────────────────────────────────────────────
