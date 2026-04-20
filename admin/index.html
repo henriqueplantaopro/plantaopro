@@ -831,30 +831,49 @@ tr:hover td{background:var(--bg3);}
           <option value="">Selecione...</option>
         </select>
       </div>
-      <!-- Tipo de plantão — determina duração automaticamente -->
+      <!-- Tipo de plantão — determina duração e horário automaticamente -->
       <div class="form-group" style="margin-bottom:10px;">
         <label>Tipo de plantão</label>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:6px;" id="mr-tipo-grid">
-          <button type="button" class="mr-tipo-btn active" data-tipo="Diurno 12h" data-horas="12" onclick="selecionarTipoRapido(this)">☀️ Diurno 12h</button>
-          <button type="button" class="mr-tipo-btn" data-tipo="Noturno 12h" data-horas="12" onclick="selecionarTipoRapido(this)">🌙 Noturno 12h</button>
-          <button type="button" class="mr-tipo-btn" data-tipo="24h" data-horas="24" onclick="selecionarTipoRapido(this)">🔄 Plantão 24h</button>
-          <button type="button" class="mr-tipo-btn" data-tipo="Personalizado" data-horas="0" onclick="selecionarTipoRapido(this)">✏️ Personalizado</button>
+          <button type="button" id="mr-btn-diurno" data-tipo="Diurno 12h" data-horas="12" data-ini="07:00" onclick="selecionarTipoRapido(this)">☀️ Diurno 12h</button>
+          <button type="button" id="mr-btn-noturno" data-tipo="Noturno 12h" data-horas="12" data-ini="19:00" onclick="selecionarTipoRapido(this)">🌙 Noturno 12h</button>
+          <button type="button" id="mr-btn-24h" data-tipo="24h" data-horas="24" data-ini="07:00" onclick="selecionarTipoRapido(this)">🔄 Plantão 24h</button>
+          <button type="button" id="mr-btn-custom" data-tipo="Personalizado" data-horas="0" data-ini="" onclick="selecionarTipoRapido(this)">✏️ Personalizado</button>
         </div>
         <input type="hidden" id="mr-tipo" value="Diurno 12h">
       </div>
-      <!-- Personalizado: campo de horas -->
-      <div class="form-group" id="mr-horas-custom-row" style="display:none;margin-bottom:10px;">
-        <label>Duração (horas)</label>
-        <input id="mr-horas-custom" type="number" min="1" max="48" placeholder="Ex: 6" oninput="atualizarPreviewRapido()" style="max-width:120px;">
-      </div>
-      <div class="form-row" style="margin-bottom:10px;">
-        <div class="form-group">
-          <label>Horário de início</label>
-          <input id="mr-ini" type="time" value="07:00" oninput="atualizarPreviewRapido()">
+      <!-- Personalizado: início livre + duração em horas -->
+      <div id="mr-horas-custom-row" style="display:none;margin-bottom:10px;">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Horário de início</label>
+            <input id="mr-ini" type="time" value="07:00" oninput="atualizarPreviewRapido()">
+          </div>
+          <div class="form-group">
+            <label>Duração (horas)</label>
+            <input id="mr-horas-custom" type="number" min="1" max="48" placeholder="Ex: 6" oninput="atualizarPreviewRapido()">
+          </div>
         </div>
+      </div>
+      <!-- Horário fixo (mostrado para tipos com horário predefinido) -->
+      <div id="mr-ini-fixo-row" style="margin-bottom:10px;">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Horário de início</label>
+            <input id="mr-ini-fixo" type="time" value="07:00" disabled style="background:var(--bg3);color:var(--text2);">
+            <span style="font-size:11px;color:var(--text3);margin-top:3px;display:block;">⚑ Horário fixo para este tipo</span>
+          </div>
+          <div class="form-group">
+            <label>Setor</label>
+            <input id="mr-setor" type="text" placeholder="Emergência, UTI...">
+          </div>
+        </div>
+      </div>
+      <!-- Setor para personalizado -->
+      <div id="mr-setor-custom-row" style="display:none;margin-bottom:10px;">
         <div class="form-group">
           <label>Setor</label>
-          <input id="mr-setor" type="text" placeholder="Emergência, UTI...">
+          <input id="mr-setor-custom" type="text" placeholder="Emergência, UTI...">
         </div>
       </div>
       <!-- Preview calculado -->
@@ -1961,12 +1980,20 @@ function abrirLancamentoRapido(ds, projId) {
   document.getElementById('mr-med').value = '';
   document.getElementById('mr-ini').value = '07:00';
   document.getElementById('mr-tipo').value = 'Diurno 12h';
-  // Resetar botões de tipo
-  document.querySelectorAll('.mr-tipo-btn').forEach(b=>b.classList.remove('active'));
-  const diurnoBtn = document.querySelector('.mr-tipo-btn[data-tipo="Diurno 12h"]');
-  if (diurnoBtn) diurnoBtn.classList.add('active');
-  const customRow = document.getElementById('mr-horas-custom-row');
-  if (customRow) customRow.style.display='none';
+  // Resetar botões — estilo inline garante funcionamento
+  ['mr-btn-diurno','mr-btn-noturno','mr-btn-24h','mr-btn-custom'].forEach(function(id){
+    var b=document.getElementById(id); if(b) b.style.cssText=_estiloNormalMR;
+  });
+  var diurnoBtn=document.getElementById('mr-btn-diurno');
+  if(diurnoBtn) diurnoBtn.style.cssText=_estiloAtivoMR;
+  var customRow=document.getElementById('mr-horas-custom-row');
+  if(customRow) customRow.style.display='none';
+  var fixoRow=document.getElementById('mr-ini-fixo-row');
+  if(fixoRow) fixoRow.style.display='block';
+  var fixo=document.getElementById('mr-ini-fixo');
+  if(fixo) fixo.value='07:00';
+  var setorCustom=document.getElementById('mr-setor-custom-row');
+  if(setorCustom) setorCustom.style.display='none';
   document.getElementById('mr-setor').value = '';
   document.getElementById('mr-valor').value = '';
   document.getElementById('mr-obs').value = '';
@@ -1986,22 +2013,56 @@ function fecharModalRapido() {
   document.getElementById('modal-rapido').classList.remove('open');
 }
 
+// Estilos dos botões de tipo (azul = selecionado, cinza = normal)
+var _estiloAtivoMR  = 'padding:10px 8px;border:2px solid var(--blue);border-radius:8px;background:var(--blue);color:#fff;font-size:13px;font-weight:700;cursor:pointer;text-align:center;width:100%;';
+var _estiloNormalMR = 'padding:10px 8px;border:2px solid #e0dbd2;border-radius:8px;background:#fff;color:#555;font-size:13px;font-weight:500;cursor:pointer;text-align:center;width:100%;';
+
 function selecionarTipoRapido(btn) {
-  // Atualizar botões visuais
-  document.querySelectorAll('.mr-tipo-btn').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active');
-  const tipo = btn.dataset.tipo;
+  // Resetar todos os botões
+  ['mr-btn-diurno','mr-btn-noturno','mr-btn-24h','mr-btn-custom'].forEach(function(id) {
+    var b = document.getElementById(id);
+    if (b) b.style.cssText = _estiloNormalMR;
+  });
+  // Destacar o botão clicado
+  btn.style.cssText = _estiloAtivoMR;
+
+  var tipo = btn.dataset.tipo;
+  var iniFixo = btn.dataset.ini; // horário predefinido
   document.getElementById('mr-tipo').value = tipo;
-  // Mostrar/esconder campo de horas personalizadas
-  const customRow = document.getElementById('mr-horas-custom-row');
-  if (customRow) customRow.style.display = tipo==='Personalizado' ? 'block' : 'none';
+
+  var customRow  = document.getElementById('mr-horas-custom-row');
+  var fixoRow    = document.getElementById('mr-ini-fixo-row');
+  var setorCustom = document.getElementById('mr-setor-custom-row');
+
+  if (tipo === 'Personalizado') {
+    // Personalizado: mostrar início livre + duração
+    if (customRow)  customRow.style.display  = 'block';
+    if (fixoRow)    fixoRow.style.display    = 'none';
+    if (setorCustom) setorCustom.style.display = 'block';
+    var ini = document.getElementById('mr-ini');
+    if (ini) ini.value = '07:00';
+  } else {
+    // Tipos fixos: mostrar horário bloqueado
+    if (customRow)  customRow.style.display  = 'none';
+    if (fixoRow)    fixoRow.style.display    = 'block';
+    if (setorCustom) setorCustom.style.display = 'none';
+    var fixo = document.getElementById('mr-ini-fixo');
+    if (fixo) fixo.value = iniFixo;
+  }
+
   // Limpar valor para recalcular pelo padrão do projeto
   document.getElementById('mr-valor').value = '';
-  document.getElementById('mr-valor-badge').style.display = 'none';
+  var badge = document.getElementById('mr-valor-badge');
+  if (badge) badge.style.display = 'none';
   atualizarValorRapido();
   atualizarPreviewRapido();
 }
 
+function getIniRapido() {
+  var tipo = document.getElementById('mr-tipo').value;
+  if (tipo === 'Personalizado') return document.getElementById('mr-ini')?.value || '07:00';
+  return document.getElementById('mr-ini-fixo')?.value || '07:00';
+}
 function getHorasRapido() {
   const tipo = document.getElementById('mr-tipo').value;
   if (tipo === 'Personalizado') return parseFloat(document.getElementById('mr-horas-custom')?.value)||0;
@@ -2053,7 +2114,7 @@ function atualizarValorRapido() {
 }
 
 function atualizarPreviewRapido() {
-  const ini   = document.getElementById('mr-ini').value || '07:00';
+  const ini   = getIniRapido();
   const horas = getHorasRapido();
   const fim   = calcFimRapido(ini, horas);
   const durEl = document.getElementById('mr-dur-label');
@@ -2085,11 +2146,14 @@ async function salvarLancamentoRapido() {
   const ds    = overlay.dataset.ds;
   const medId = document.getElementById('mr-med').value;
   const projId= document.getElementById('mr-proj').value;
-  const ini   = document.getElementById('mr-ini').value || '07:00';
+  const ini   = getIniRapido();
   const tipo  = document.getElementById('mr-tipo').value;
   const horas = getHorasRapido();
   const fim   = calcFimRapido(ini, horas);
-  const setor = document.getElementById('mr-setor').value.trim();
+  const tipo_tmp = document.getElementById('mr-tipo').value;
+  const setor = tipo_tmp === 'Personalizado'
+    ? (document.getElementById('mr-setor-custom')?.value||'').trim()
+    : (document.getElementById('mr-setor')?.value||'').trim();
   const obs   = document.getElementById('mr-obs').value.trim();
   const valor = parseBRL(document.getElementById('mr-valor').value);
 
