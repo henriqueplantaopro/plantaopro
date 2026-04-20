@@ -245,6 +245,13 @@ tr:hover td{background:var(--bg3);}
   .mr-med-item:hover{background:var(--bg3);}
   .mr-med-item.selecionado{background:var(--blue-light);}
   .mr-med-item input[type=checkbox]{width:15px;height:15px;accent-color:var(--blue);flex-shrink:0;}
+  /* Menu de contexto */
+  .ctx-menu{position:fixed;background:#fff;border:1px solid var(--border);border-radius:var(--radius);box-shadow:0 4px 16px rgba(0,0,0,0.15);z-index:9999;min-width:160px;display:none;padding:4px 0;}
+  .ctx-item{padding:9px 14px;font-size:13px;cursor:pointer;color:var(--text);display:flex;align-items:center;gap:8px;transition:background 0.1s;}
+  .ctx-item:hover{background:var(--blue-light);color:var(--blue);}
+  .ctx-item.danger{color:var(--red);}
+  .ctx-item.danger:hover{background:var(--red-bg);}
+  .ctx-sep{border-top:1px solid var(--border);margin:4px 0;}
 </style>
 </head>
 <body>
@@ -921,6 +928,17 @@ tr:hover td{background:var(--bg3);}
       <button class="btn btn-ghost" onclick="fecharModalRapido()">Fechar</button>
     </div>
   </div>
+</div>
+
+<!-- MENU DE CONTEXTO — Calendário semanal -->
+<div class="ctx-menu" id="ctx-menu">
+  <div class="ctx-item" id="ctx-copiar" onclick="ctxCopiar()">📋 Copiar plantão</div>
+  <div class="ctx-sep"></div>
+  <div class="ctx-item" id="ctx-colar" onclick="ctxColar()" style="display:none;">📌 Colar aqui</div>
+  <div class="ctx-item" id="ctx-colar-dia" style="font-size:11px;color:var(--text3);padding:4px 14px;cursor:default;display:none;"></div>
+  <div class="ctx-sep" id="ctx-sep-colar" style="display:none;"></div>
+  <div class="ctx-item" onclick="ctxNovoPlantao()">+ Novo plantão</div>
+  <div class="ctx-item danger" id="ctx-remover" onclick="ctxRemover()" style="display:none;">🗑️ Remover plantão</div>
 </div>
 
 <div id="toast"></div>
@@ -1964,7 +1982,7 @@ function renderSemana() {
 
     // Botão "+" para adicionar
     const projFiltrado = pid ? projetos.find(p=>p.id===pid) : null;
-    html += `<button class="sem-add-btn" onclick="abrirLancamentoRapido('${ds}','${pid}')" title="Adicionar plantão em ${d.toLocaleDateString('pt-BR')}">+</button>`;
+    html += `<button class="sem-add-btn" onclick="abrirLancamentoRapido('${ds}','${pid}')" oncontextmenu="abrirCtxCelula(event,'${ds}','${pid}')" title="Clique para adicionar · Botão direito para mais opções">+</button>`;
     html += '</td>';
   });
 
@@ -2221,16 +2239,21 @@ async function salvarLancamentoRapido() {
   const tipo  = document.getElementById('mr-tipo').value;
   const horas = getHorasRapido();
   const fim   = calcFimRapido(ini, horas);
-  const tipo_tmp = document.getElementById('mr-tipo').value;
-  const setor = tipo_tmp === 'Personalizado'
-    ? (document.getElementById('mr-setor-custom')?.value||'').trim()
-    : (document.getElementById('mr-setor')?.value||'').trim();
+  // Setor: usar o campo visível (fixo ou personalizado)
+  const setor = (() => {
+    const sCustom = document.getElementById('mr-setor-custom');
+    const sFix    = document.getElementById('mr-setor');
+    const sCustomRow = document.getElementById('mr-setor-custom-row');
+    if (sCustomRow && sCustomRow.style.display !== 'none' && sCustom) return sCustom.value.trim();
+    return (sFix?.value||'').trim();
+  })();
   const obs   = document.getElementById('mr-obs').value.trim();
   const valor = parseBRL(document.getElementById('mr-valor').value);
 
   if (!medsSel.length) { toast('Selecione ao menos um médico',true); return; }
   if (!projId) { toast('Selecione um projeto',true); return; }
   if (!ds)     { toast('Data inválida',true); return; }
+  if (horas <= 0) { toast('Informe a duração do plantão',true); return; }
 
   const med = medsSel[0]; // referência para o primeiro
   const honorario=valor||Math.round(horas*(med?.valor_hora||0)*100)/100;
@@ -2495,6 +2518,138 @@ function hideTooltip() {
 document.addEventListener('mousemove', e => {
   if (document.getElementById('tooltip-escala')?.style.display === 'block') posTooltip(e);
 });
+
+
+// ─── MENU DE CONTEXTO — CALENDÁRIO SEMANAL ───────────
+let _ctxLancamento = null; // lançamento clicado
+let _ctxDiaClicado = null; // data clicada
+let _ctxProjId     = null; // projeto do contexto
+let _lancCopiado   = null; // lançamento copiado
+
+function fecharCtxMenu() {
+  document.getElementById('ctx-menu').style.display = 'none';
+}
+
+// Abrir menu no chip (lançamento existente)
+function abrirCtxChip(e, lancId, ds, projId) {
+  e.preventDefault();
+  e.stopPropagation();
+  const lanc = lancamentos.find(l => l.id === lancId || l.id == lancId);
+  _ctxLancamento = lanc || null;
+  _ctxDiaClicado = ds;
+  _ctxProjId     = projId;
+
+  const menu = document.getElementById('ctx-menu');
+  document.getElementById('ctx-copiar').style.display = lanc ? 'flex' : 'none';
+  document.getElementById('ctx-remover').style.display = lanc ? 'flex' : 'none';
+  document.getElementById('ctx-novoPlantao') && (document.getElementById('ctx-novoPlantao').style.display='flex');
+
+  // Mostrar opção colar se tiver algo copiado
+  atualizarCtxColar(ds);
+  posCtxMenu(e);
+  menu.style.display = 'block';
+}
+
+// Abrir menu no botão "+" (célula vazia)
+function abrirCtxCelula(e, ds, projId) {
+  e.preventDefault();
+  e.stopPropagation();
+  _ctxLancamento = null;
+  _ctxDiaClicado = ds;
+  _ctxProjId     = projId;
+
+  const menu = document.getElementById('ctx-menu');
+  document.getElementById('ctx-copiar').style.display = 'none';
+  document.getElementById('ctx-remover').style.display = 'none';
+  atualizarCtxColar(ds);
+  posCtxMenu(e);
+  menu.style.display = 'block';
+}
+
+function atualizarCtxColar(ds) {
+  const colar  = document.getElementById('ctx-colar');
+  const label  = document.getElementById('ctx-colar-dia');
+  const sep    = document.getElementById('ctx-sep-colar');
+  if (_lancCopiado) {
+    const d = new Date(ds+'T12:00:00');
+    const dFmt = d.toLocaleDateString('pt-BR',{weekday:'short',day:'2-digit',month:'short'});
+    colar.style.display = 'flex';
+    label.style.display = 'block';
+    label.textContent = `↳ ${_lancCopiado.medico} · ${(_lancCopiado.hora_ini||'').slice(0,5)}`;
+    sep.style.display = 'block';
+  } else {
+    colar.style.display = 'none';
+    label.style.display = 'none';
+    sep.style.display = 'none';
+  }
+}
+
+function posCtxMenu(e) {
+  const menu = document.getElementById('ctx-menu');
+  menu.style.display = 'block';
+  const w = window.innerWidth, h = window.innerHeight;
+  const mw = menu.offsetWidth || 180, mh = menu.offsetHeight || 150;
+  menu.style.left = (e.clientX + mw > w ? e.clientX - mw : e.clientX) + 'px';
+  menu.style.top  = (e.clientY + mh > h ? e.clientY - mh : e.clientY) + 'px';
+}
+
+function ctxCopiar() {
+  if (!_ctxLancamento) return;
+  _lancCopiado = { ..._ctxLancamento };
+  toast('✓ Plantão de ' + (_lancCopiado.medico||'') + ' copiado!');
+  fecharCtxMenu();
+}
+
+async function ctxColar() {
+  if (!_lancCopiado || !_ctxDiaClicado) return;
+  fecharCtxMenu();
+  const ds = _ctxDiaClicado;
+  const l  = _lancCopiado;
+  // Verificar se já existe no dia
+  const jaExiste = lancamentos.find(x => x.data===ds && x.medico_id===l.medico_id && x.projeto_id===l.projeto_id);
+  if (jaExiste) { toast('⚠️ ' + l.medico + ' já tem plantão neste dia', true); return; }
+  try {
+    const res = await fetch(SUPABASE_URL+'/rest/v1/lancamentos', {
+      method: 'POST',
+      headers: {'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},
+      body: JSON.stringify({medico_id:l.medico_id,projeto_id:l.projeto_id,data:ds,hora_ini:l.hora_ini,hora_fim:l.hora_fim,horas:l.horas,tipo:l.tipo,setor:l.setor||null,honorario:l.honorario,valor_hora:l.valor_hora||0,obs:l.obs||null,codigo_totvs:null})
+    });
+    if (res.ok) {
+      lancamentos.unshift({...l, id:'tmp_'+Date.now(), data:ds});
+      renderSemana();
+      if (document.getElementById('escala-grid')) renderEscala();
+      toast('✓ Plantão colado em ' + new Date(ds+'T12:00:00').toLocaleDateString('pt-BR',{day:'2-digit',month:'short'}));
+    } else { toast('Erro ao colar plantão', true); }
+  } catch(e) { toast('Erro de conexão', true); }
+}
+
+async function ctxRemover() {
+  if (!_ctxLancamento) return;
+  const l = _ctxLancamento;
+  fecharCtxMenu();
+  if (!confirm('Remover plantão de ' + l.medico + ' em ' + fDate(l.data) + '?')) return;
+  try {
+    const res = await fetch(SUPABASE_URL+'/rest/v1/lancamentos?id=eq.'+l.id, {
+      method:'DELETE',
+      headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Prefer':'return=minimal'}
+    });
+    if (res.ok || res.status===204) {
+      lancamentos = lancamentos.filter(x => x.id !== l.id && x.id != l.id);
+      renderSemana();
+      if (document.getElementById('escala-grid')) renderEscala();
+      toast('Plantão removido!');
+    } else { toast('Erro ao remover', true); }
+  } catch(e) { toast('Erro de conexão', true); }
+}
+
+function ctxNovoPlantao() {
+  fecharCtxMenu();
+  if (_ctxDiaClicado) abrirLancamentoRapido(_ctxDiaClicado, _ctxProjId||'');
+}
+
+// Fechar menu ao clicar fora ou pressionar ESC
+document.addEventListener('click', e => { if (!document.getElementById('ctx-menu')?.contains(e.target)) fecharCtxMenu(); });
+document.addEventListener('contextmenu', e => { if (!document.getElementById('ctx-menu')?.contains(e.target)) fecharCtxMenu(); });
 
 // Inicia com Enter no login
 document.getElementById('l-email').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('l-senha').focus();});
