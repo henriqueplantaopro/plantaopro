@@ -221,6 +221,10 @@ tr:hover td{background:var(--bg3);}
   .sem-card-nome{font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
   .sem-card-hora{font-size:10px;color:var(--text3);font-family:monospace;}
   .sem-card-setor{font-size:10px;color:var(--text2);}
+  .sem-card-opts{position:absolute;top:2px;right:3px;background:none;border:none;cursor:pointer;font-size:12px;color:var(--text3);padding:0 2px;line-height:1;opacity:0;transition:opacity 0.15s;border-radius:3px;}
+  .sem-card:hover .sem-card-opts{opacity:1;}
+  .sem-card-opts:hover{background:rgba(0,0,0,0.1);color:var(--text);}
+  .sem-card{position:relative;}
   .sem-add-btn{display:flex;align-items:center;justify-content:center;width:100%;padding:6px;border:1.5px dashed var(--border2);border-radius:6px;background:transparent;cursor:pointer;color:var(--text3);font-size:18px;transition:all 0.15s;margin-top:2px;}
   .sem-add-btn:hover{border-color:var(--blue);color:var(--blue);background:var(--blue-light);}
   /* Agenda por médico */
@@ -1982,7 +1986,7 @@ function renderSemana() {
 
     // Botão "+" para adicionar
     const projFiltrado = pid ? projetos.find(p=>p.id===pid) : null;
-    html += `<button class="sem-add-btn" onclick="abrirLancamentoRapido('${ds}','${pid}')" oncontextmenu="abrirCtxCelula(event,'${ds}','${pid}')" title="Clique para adicionar · Botão direito para mais opções">+</button>`;
+    html += `<button class="sem-add-btn" onclick="abrirLancamentoRapido('${ds}','${pid}')" title="Adicionar plantão">+</button>`;
     html += '</td>';
   });
 
@@ -2272,7 +2276,7 @@ async function salvarLancamentoRapido() {
         headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},
         body:JSON.stringify({medico_id:medAtual.id,projeto_id:projId,data:ds,hora_ini:ini,hora_fim:fim,horas,tipo,setor:setor||null,honorario:honAtual,valor_hora:vhAtual,obs:obs||null,codigo_totvs:null})
       });
-      if (res.ok) {
+      if (res.ok || res.status===204 || res.status===201) {
         okCount++;
         lancamentos.unshift({id:'tmp_'+Date.now()+'_'+okCount,medico_id:medAtual.id,projeto_id:projId,
           medico:medAtual.nome,crm:medAtual.crm||'',
@@ -2461,7 +2465,7 @@ function renderEscala() {
         const ini = (l.hora_ini||'').slice(0,5);
         const fim = (l.hora_fim||'').slice(0,5);
         // Dados para tooltip em data-attributes
-        html += `<div class="escala-chip ${cls}${conf}"
+        html += `<div class="escala-chip ${cls}${conf}" style="position:relative;"
           onmouseenter="showTooltip(event,this)"
           onmouseleave="hideTooltip()"
           data-proj="${proj?.nome||''}"
@@ -2470,10 +2474,10 @@ function renderEscala() {
           data-hora="${ini}–${fim}"
           data-horas="${l.horas}h"
           data-hon="${fBRL(l.honorario||0)}"
-          data-conf="${l.confirmado?'Sim':'Não'}"
-          onclick="abrirLancamentoRapido('${ds}','${l.projeto_id}')">
-          <div>${ini}–${fim}</div>
-          <div style="font-size:10px;opacity:0.8;">${proj?.nome||tipo}</div>
+          data-conf="${l.confirmado?'Sim':'Não'}">
+          <button class="sem-card-opts" style="position:absolute;top:1px;right:2px;" onclick="event.stopPropagation();abrirCtxChip(event,'${l.id}','${ds}','${l.projeto_id}')" title="Opções">⋮</button>
+          <div onclick="abrirLancamentoRapido('${ds}','${l.projeto_id}')">${ini}–${fim}</div>
+          <div style="font-size:10px;opacity:0.8;" onclick="abrirLancamentoRapido('${ds}','${l.projeto_id}')">${proj?.nome||tipo}</div>
         </div>`;
       });
 
