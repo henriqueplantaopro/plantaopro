@@ -405,19 +405,29 @@ function mostrarApp() {
   document.getElementById('hdr-crm').textContent = medico.crm;
   document.getElementById('hdr-avatar').textContent = medico.nome.split(' ').slice(0,2).map(n=>n[0]).join('');
 
-  // Mostra UI imediatamente, sem esperar projetos
-  document.getElementById('splash').classList.add('hide');
-  document.getElementById('header').style.display = 'block';
-  document.getElementById('tabs').style.display = 'flex';
-  document.getElementById('main-content').style.display = 'block';
+  // Mostrar UI imediatamente — sem esperar nada
+  const splash = document.getElementById('splash');
+  if (splash) splash.classList.add('hide');
+  const header = document.getElementById('header');
+  if (header) header.style.display = 'block';
+  const tabs = document.getElementById('tabs');
+  if (tabs) tabs.style.display = 'flex';
+  const main = document.getElementById('main-content');
+  if (main) main.style.display = 'block';
 
-  // Carrega dados em paralelo
-  carregarProjetos().catch(e => console.error('Projetos:', e));
-  iniciarGPS();
-  carregarPlantoes().catch(e => console.error('Plantões:', e));
-  carregarHistorico().catch(e => console.error('Histórico:', e));
-  carregarCheckinsHoje().catch(e => console.error('Checkins:', e));
-  carregarDisponiveis().catch(e => console.error('Disponíveis:', e));
+  // Timeout de segurança — garante que o splash some mesmo se algo falhar
+  setTimeout(() => {
+    const s = document.getElementById('splash');
+    if (s) { s.style.display = 'none'; }
+  }, 3000);
+
+  // Carregar dados de forma independente
+  try { carregarProjetos(); } catch(e) { console.error(e); }
+  try { iniciarGPS(); } catch(e) { console.error(e); }
+  try { carregarPlantoes(); } catch(e) { console.error(e); }
+  try { carregarHistorico(); } catch(e) { console.error(e); }
+  try { carregarCheckinsHoje(); } catch(e) { console.error(e); }
+  try { carregarDisponiveis(); } catch(e) { console.error(e); }
 }
 
 
