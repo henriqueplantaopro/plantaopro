@@ -1019,6 +1019,44 @@ tr:hover td{background:var(--bg3);}
   <div class="ctx-item danger" id="ctx-remover" onclick="ctxRemover()" style="display:none;">🗑️ Remover plantão</div>
 </div>
 
+<!-- MODAL EDITAR MÉDICO -->
+<div class="modal-overlay" id="modal-editar-med" onclick="if(event.target===this)fecharEditarMedico()">
+  <div class="modal" style="max-width:680px;">
+    <div class="modal-header">
+      <div class="modal-title">✏️ Editar médico</div>
+      <button class="modal-close" onclick="fecharEditarMedico()">✕</button>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Nome completo</label><input id="em-nome" type="text"></div>
+      <div class="form-group"><label>E-mail</label><input id="em-email" type="email"></div>
+    </div>
+    <div class="form-row four">
+      <div class="form-group"><label>Telefone</label><input id="em-tel" type="text"></div>
+      <div class="form-group"><label>Data de nascimento</label><input id="em-nasc" type="date"></div>
+      <div class="form-group"><label>CPF</label><input id="em-cpf" type="text"></div>
+      <div class="form-group"><label>Tipo</label>
+        <select id="em-tipo">
+          <option>Plantonista</option><option>Diarista</option><option>Coordenador</option><option>Residente</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row four">
+      <div class="form-group"><label>CRM</label><input id="em-crm" type="text"></div>
+      <div class="form-group"><label>RQE</label><input id="em-rqe" type="text"></div>
+      <div class="form-group"><label>Especialidade</label><input id="em-esp" type="text"></div>
+      <div class="form-group"><label>Valor/hora (R$)</label><input id="em-valor" type="number" step="0.01"></div>
+    </div>
+    <div class="form-group">
+      <label>Projetos vinculados <span style="font-weight:400;font-size:11px;color:var(--text3);">(plantões disponíveis visíveis no app)</span></label>
+      <div id="em-projetos-check" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="fecharEditarMedico()">Cancelar</button>
+      <button class="btn btn-primary" onclick="salvarEdicaoMedico()">💾 Salvar alterações</button>
+    </div>
+  </div>
+</div>
+
 <div id="toast"></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -1206,7 +1244,10 @@ function renderMedicos() {
         <td style="font-family:monospace;">${fBRL(m.valor_hora||0)}</td>
         <td style="font-size:12px;">${devStatus}${devReset?'<br>'+devReset:''}</td>
         <td><button class="btn btn-link" onclick="verLinkMedico('${m.token_acesso}','${m.nome}','${m.telefone||''}')">📱 Link</button></td>
-        <td><button class="btn btn-danger" onclick="delMedico('${m.id}')">Remover</button></td>
+        <td style="white-space:nowrap;">
+          <button class="btn btn-ghost btn-sm" onclick="abrirEditarMedico('${m.id}')">✏️ Editar</button>
+          <button class="btn btn-danger btn-sm" onclick="delMedico('${m.id}')">Remover</button>
+        </td>
       </tr>`;
     }).join('') + '</tbody></table>';
 }
@@ -1238,6 +1279,81 @@ async function delMedico(id) {
   if (!confirm('Remover médico?')) return;
   await sb(`/rest/v1/medicos?id=eq.${id}`, { method:'DELETE' });
   await carregarMedicos();
+}
+
+let _editandoMedId = null;
+
+function abrirEditarMedico(id) {
+  const m = medicos.find(x => x.id === id || x.id == id);
+  if (!m) return;
+  _editandoMedId = id;
+
+  // Preencher campos
+  document.getElementById('em-nome').value  = m.nome || '';
+  document.getElementById('em-email').value = m.email || '';
+  document.getElementById('em-tel').value   = m.telefone || '';
+  document.getElementById('em-nasc').value  = m.data_nascimento || '';
+  document.getElementById('em-cpf').value   = m.cpf || '';
+  document.getElementById('em-tipo').value  = m.tipo || 'Plantonista';
+  document.getElementById('em-crm').value   = m.crm || '';
+  document.getElementById('em-rqe').value   = m.rqe || '';
+  document.getElementById('em-esp').value   = m.especialidade || '';
+  document.getElementById('em-valor').value = m.valor_hora || '';
+
+  // Projetos vinculados
+  const projVinc = m.projetos_vinculados || [];
+  const elProj = document.getElementById('em-projetos-check');
+  if (elProj) {
+    elProj.innerHTML = sortedProjetos().map(p => `
+      <label style="display:flex;align-items:center;gap:5px;font-size:12px;background:var(--bg3);padding:4px 10px;border-radius:99px;cursor:pointer;border:1px solid ${projVinc.includes(p.id)?'var(--blue)':'var(--border)'};">
+        <input type="checkbox" class="em-proj-chk" value="${p.id}" ${projVinc.includes(p.id)?'checked':''} style="accent-color:var(--blue);">
+        ${p.nome}
+      </label>`).join('');
+  }
+
+  document.getElementById('modal-editar-med').classList.add('open');
+}
+
+function fecharEditarMedico() {
+  document.getElementById('modal-editar-med').classList.remove('open');
+  _editandoMedId = null;
+}
+
+async function salvarEdicaoMedico() {
+  if (!_editandoMedId) return;
+  const projsVinc = [...document.querySelectorAll('.em-proj-chk:checked')].map(c => c.value);
+  const payload = {
+    nome:           document.getElementById('em-nome').value.trim(),
+    email:          document.getElementById('em-email').value.trim(),
+    telefone:       document.getElementById('em-tel').value.trim(),
+    data_nascimento: document.getElementById('em-nasc').value || null,
+    cpf:            document.getElementById('em-cpf').value.trim(),
+    tipo:           document.getElementById('em-tipo').value,
+    crm:            document.getElementById('em-crm').value.trim(),
+    rqe:            document.getElementById('em-rqe').value.trim(),
+    especialidade:  document.getElementById('em-esp').value.trim(),
+    valor_hora:     parseFloat(document.getElementById('em-valor').value) || 0,
+    projetos_vinculados: projsVinc
+  };
+  if (!payload.nome || !payload.crm) { toast('Nome e CRM são obrigatórios', true); return; }
+  const btn = document.querySelector('#modal-editar-med .btn-primary');
+  if (btn) { btn.disabled = true; btn.textContent = 'Salvando...'; }
+  try {
+    const res = await fetch(SUPABASE_URL + '/rest/v1/medicos?id=eq.' + _editandoMedId, {
+      method: 'PATCH',
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+      body: JSON.stringify(payload)
+    });
+    if (res.ok || res.status === 204) {
+      toast('✅ Médico atualizado!');
+      fecharEditarMedico();
+      await carregarMedicos();
+    } else {
+      const err = await res.text().catch(()=>'');
+      toast('Erro ao salvar: ' + err.slice(0,80), true);
+    }
+  } catch(e) { toast('Erro de conexão', true); }
+  if (btn) { btn.disabled = false; btn.textContent = '💾 Salvar alterações'; }
 }
 
 async function resetarDispositivo(id, nome) {
