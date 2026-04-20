@@ -621,33 +621,50 @@ async function carregarDisponiveis() {
   if (!el || !medico) return;
   el.innerHTML = '<div class="empty"><div class="empty-icon">📢</div>Carregando...</div>';
 
-  // Buscar projetos vinculados ao médico
+  // Buscar projetos vinculados ao médico (pode ser array de UUIDs ou vazio)
   const projVinc = medico.projetos_vinculados || [];
-  if (!projVinc.length) {
-    el.innerHTML = '<div class="empty"><div class="empty-icon">🏥</div>Nenhum hospital vinculado ao seu cadastro.</div>';
-    return;
+
+  // Buscar plantões abertos — se não tiver projetos vinculados, busca todos
+  const hoje = new Date().toISOString().slice(0,10);
+  let pathLanc = `/rest/v1/lancamentos?aberto=eq.true&data=gte.${hoje}&select=*,projetos(nome)&order=data,hora_ini`;
+  if (projVinc.length > 0) {
+    pathLanc += `&projeto_id=in.(${projVinc.join(',')})`;
   }
 
-  // Buscar plantões abertos nos projetos vinculados a partir de hoje
-  const hoje = new Date().toISOString().slice(0,10);
-  const { data: abertos } = await supabaseFetch(
-    `/rest/v1/lancamentos?aberto=eq.true&data=gte.${hoje}&projeto_id=in.(${projVinc.join(',')})&select=*,projetos(nome)&order=data,hora_ini`
-  ).then(d => ({data: d})).catch(()=>({data:[]}));
-
-  const lista = abertos || [];
+  let abertos = [];
+  try {
+    const res = await supabaseFetch(pathLanc);
+    abertos = Array.isArray(res) ? res : [];
+  } catch(e) {
+    console.error('Erro ao buscar plantões:', e);
+  }
 
   // Buscar minhas candidaturas
-  const minhasCand = await supabaseFetch(
-    `/rest/v1/candidaturas?medico_id=eq.${medico.id}&select=*`
-  ) || [];
+  let minhasCand = [];
+  try {
+    const r = await supabaseFetch(`/rest/v1/candidaturas?medico_id=eq.${medico.id}&select=*`);
+    minhasCand = Array.isArray(r) ? r : [];
+  } catch(e) {}
 
   // Buscar meus plantões para verificar conflito de horário
-  const meusPlantoes = await supabaseFetch(
-    `/rest/v1/lancamentos?medico_id=eq.${medico.id}&data=gte.${hoje}&select=data,hora_ini,hora_fim,horas,tipo`
-  ) || [];
+  let meusPlantoes = [];
+  try {
+    const r = await supabaseFetch(`/rest/v1/lancamentos?medico_id=eq.${medico.id}&data=gte.${hoje}&select=data,hora_ini,hora_fim,horas,tipo`);
+    meusPlantoes = Array.isArray(r) ? r : [];
+  } catch(e) {}
 
   // Badge
-  const disponiveis = lista.filter(l => {
+  const disponiveis = abertos.filter(l => {
+    const jaInsc = minhasCand.find(c=>c.lancamento_id===l.id);
+    return !jaInsc && (l.vagas_preenchidas||0) < (l.vagas||1);
+  }).length;
+  const badge = document.getElementById('badge-disp');
+  if (badge) { badge.textContent=disponiveis; badge.style.display=disponiveis>0?'inline':'none'; }
+
+  if (!abertos.length) {
+    el.innerHTML = '<div class="empty"><div class="empty-icon">📢</div>Nenhum plantão disponível no momento.</div>';
+    return;
+  }
     const jaInsc = minhasCand.find(c=>c.lancamento_id===l.id);
     return !jaInsc && (l.vagas_preenchidas||0) < (l.vagas||1);
   }).length;
@@ -659,7 +676,7 @@ async function carregarDisponiveis() {
     return;
   }
 
-  el.innerHTML = lista.map(l => {
+  el.innerHTML = abertos.map(l => {
     const d = new Date(l.data+'T12:00:00');
     const dataFmt = d.toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'long'});
     const proj = l.projetos?.nome || '';
