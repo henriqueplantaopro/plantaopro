@@ -405,17 +405,19 @@ function mostrarApp() {
   document.getElementById('hdr-crm').textContent = medico.crm;
   document.getElementById('hdr-avatar').textContent = medico.nome.split(' ').slice(0,2).map(n=>n[0]).join('');
 
-  // Carrega projetos e mostra UI
-  carregarProjetos().then(() => {
-    document.getElementById('splash').classList.add('hide');
-    document.getElementById('header').style.display = 'block';
-    document.getElementById('tabs').style.display = 'flex';
-    document.getElementById('main-content').style.display = 'block';
-    iniciarGPS();
-    carregarPlantoes();
-    carregarHistorico();
-    carregarCheckinsHoje();
-  });
+  // Mostra UI imediatamente, sem esperar projetos
+  document.getElementById('splash').classList.add('hide');
+  document.getElementById('header').style.display = 'block';
+  document.getElementById('tabs').style.display = 'flex';
+  document.getElementById('main-content').style.display = 'block';
+
+  // Carrega dados em paralelo
+  carregarProjetos().catch(e => console.error('Projetos:', e));
+  iniciarGPS();
+  carregarPlantoes().catch(e => console.error('Plantões:', e));
+  carregarHistorico().catch(e => console.error('Histórico:', e));
+  carregarCheckinsHoje().catch(e => console.error('Checkins:', e));
+  carregarDisponiveis().catch(e => console.error('Disponíveis:', e));
 }
 
 
