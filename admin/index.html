@@ -221,10 +221,9 @@ tr:hover td{background:var(--bg3);}
   .sem-card-nome{font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
   .sem-card-hora{font-size:10px;color:var(--text3);font-family:monospace;}
   .sem-card-setor{font-size:10px;color:var(--text2);}
-  .sem-card-opts{position:absolute;top:2px;right:3px;background:none;border:none;cursor:pointer;font-size:12px;color:var(--text3);padding:0 2px;line-height:1;opacity:0;transition:opacity 0.15s;border-radius:3px;}
-  .sem-card:hover .sem-card-opts{opacity:1;}
-  .sem-card-opts:hover{background:rgba(0,0,0,0.1);color:var(--text);}
-  .sem-card{position:relative;}
+  .sem-card-opts{position:absolute;top:2px;right:3px;background:rgba(255,255,255,0.85);border:none;cursor:pointer;font-size:13px;color:var(--text2);padding:0 4px;line-height:1.4;border-radius:3px;font-weight:700;box-shadow:0 1px 2px rgba(0,0,0,0.1);}
+  .sem-card-opts:hover{background:var(--blue);color:#fff;}
+  .sem-card{position:relative;padding-right:18px;}
   .sem-add-btn{display:flex;align-items:center;justify-content:center;width:100%;padding:6px;border:1.5px dashed var(--border2);border-radius:6px;background:transparent;cursor:pointer;color:var(--text3);font-size:18px;transition:all 0.15s;margin-top:2px;}
   .sem-add-btn:hover{border-color:var(--blue);color:var(--blue);background:var(--blue-light);}
   /* Agenda por médico */
@@ -1976,9 +1975,9 @@ function renderSemana() {
     html += `<td class="sem-td${isHoje?' hoje-col':''}">`;
     evts.forEach(l => {
       const turno = l.tipo?.includes('Noturno')?'noturno':l.tipo?.includes('24')?'h24':'';
-      const proj = projetos.find(p=>p.id===l.projeto_id);
-      html += `<div class="sem-card ${turno}" onclick="verDetalhesSemana('${l.id}')" title="${l.medico||''} · ${l.projeto||''}">
-        <div class="sem-card-nome">${(l.medico||'').split(' ').slice(0,2).join(' ')}</div>
+      html += `<div class="sem-card ${turno}">
+        <button class="sem-card-opts" onclick="event.stopPropagation();abrirCtxChip(event,'${l.id}','${ds}','${pid||l.projeto_id}')" title="Opções">⋮</button>
+        <div class="sem-card-nome" onclick="verDetalhesSemana('${l.id}')">${(l.medico||'').split(' ').slice(0,2).join(' ')}</div>
         <div class="sem-card-hora">${(l.hora_ini||'').slice(0,5)}–${(l.hora_fim||'').slice(0,5)}</div>
         ${l.setor?`<div class="sem-card-setor">${l.setor}</div>`:''}
       </div>`;
