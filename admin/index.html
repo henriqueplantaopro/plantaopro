@@ -226,6 +226,8 @@ tr:hover td{background:var(--bg3);}
   .sem-card{position:relative;padding-right:18px;}
   .sem-add-btn{display:flex;align-items:center;justify-content:center;width:100%;padding:6px;border:1.5px dashed var(--border2);border-radius:6px;background:transparent;cursor:pointer;color:var(--text3);font-size:18px;transition:all 0.15s;margin-top:2px;}
   .sem-add-btn:hover{border-color:var(--blue);color:var(--blue);background:var(--blue-light);}
+  .sem-colar-btn{display:flex;align-items:center;justify-content:center;width:100%;padding:5px 6px;border:1.5px solid var(--amber);border-radius:6px;background:var(--amber-bg);cursor:pointer;color:var(--amber);font-size:11px;font-weight:600;transition:all 0.15s;margin-top:3px;gap:4px;}
+  .sem-colar-btn:hover{background:var(--amber);color:#fff;}
   /* Agenda por médico */
   .mini-cal-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:3px;margin-top:8px;}
   .mini-cal-dow{font-size:10px;font-weight:600;color:var(--text3);text-align:center;padding:3px 0;text-transform:uppercase;}
@@ -1983,13 +1985,16 @@ function renderSemana() {
       </div>`;
     });
 
-    // Botão "+" com opção de colar se houver algo copiado
-    html += `<button class="sem-add-btn" onclick="cliqueCelulaSemana(event,'${ds}','${pid}')" title="Adicionar plantão · Clique para ver opções se tiver copiado">+</button>`;
+    // Botões de ação na célula
+    html += `<button class="sem-add-btn" onclick="abrirLancamentoRapido('${ds}','${pid}')" title="Adicionar plantão">+</button>`;
+    html += `<button class="sem-colar-btn" id="colar-${ds}" onclick="colarNoDia('${ds}','${pid}')" style="display:none;" title="Colar plantão copiado">📌 Colar</button>`;
     html += '</td>';
   });
 
   html += '</tr></tbody></table>';
   document.getElementById('sem-grid').innerHTML = html;
+  // Mostrar botões de colar se houver algo copiado
+  if (_lancCopiado) atualizarBotoesColar();
 }
 
 function verDetalhesSemana(lancId) {
@@ -2528,23 +2533,38 @@ function fecharCtxMenu() {
   document.getElementById('ctx-menu').style.display = 'none';
 }
 
-// Clique no "+" — abre direto o modal, ou menu se houver algo copiado
+// Mostrar/esconder botões de colar em todas as células
+function atualizarBotoesColar() {
+  document.querySelectorAll('.sem-colar-btn').forEach(btn => {
+    btn.style.display = _lancCopiado ? 'flex' : 'none';
+    if (_lancCopiado) {
+      btn.title = 'Colar: ' + (_lancCopiado.medico||'') + ' · ' + (_lancCopiado.hora_ini||'').slice(0,5) + '–' + (_lancCopiado.hora_fim||'').slice(0,5);
+    }
+  });
+}
+
+async function colarNoDia(ds, projId) {
+  if (!_lancCopiado) return;
+  const l = _lancCopiado;
+  const jaExiste = lancamentos.find(x => x.data===ds && x.medico_id===l.medico_id && x.projeto_id===l.projeto_id);
+  if (jaExiste) { toast('⚠️ ' + l.medico + ' já tem plantão neste dia', true); return; }
+  try {
+    const res = await fetch(SUPABASE_URL+'/rest/v1/lancamentos', {
+      method: 'POST',
+      headers: {'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},
+      body: JSON.stringify({medico_id:l.medico_id,projeto_id:projId||l.projeto_id,data:ds,hora_ini:l.hora_ini,hora_fim:l.hora_fim,horas:l.horas,tipo:l.tipo,setor:l.setor||null,honorario:l.honorario,valor_hora:l.valor_hora||0,obs:l.obs||null,codigo_totvs:null})
+    });
+    if (res.ok || res.status===204) {
+      lancamentos.unshift({...l, id:'tmp_'+Date.now(), data:ds, projeto_id:projId||l.projeto_id});
+      renderSemana();
+      toast('✓ ' + l.medico + ' colado em ' + new Date(ds+'T12:00:00').toLocaleDateString('pt-BR',{day:'2-digit',month:'short'}));
+    } else { toast('Erro ao colar plantão', true); }
+  } catch(e) { toast('Erro de conexão', true); }
+}
+
+// Clique no "+" — sempre abre o modal de novo plantão
 function cliqueCelulaSemana(e, ds, projId) {
-  if (_lancCopiado) {
-    // Tem algo copiado: mostrar menu com opção de colar
-    _ctxLancamento = null;
-    _ctxDiaClicado = ds;
-    _ctxProjId     = projId;
-    const menu = document.getElementById('ctx-menu');
-    document.getElementById('ctx-copiar').style.display = 'none';
-    document.getElementById('ctx-remover').style.display = 'none';
-    atualizarCtxColar(ds);
-    posCtxMenu(e);
-    menu.style.display = 'block';
-  } else {
-    // Sem nada copiado: abre modal direto
-    abrirLancamentoRapido(ds, projId);
-  }
+  abrirLancamentoRapido(ds, projId);
 }
 
 // Abrir menu no chip (lançamento existente)
@@ -2613,8 +2633,9 @@ function posCtxMenu(e) {
 function ctxCopiar() {
   if (!_ctxLancamento) return;
   _lancCopiado = { ..._ctxLancamento };
-  toast('✓ Plantão de ' + (_lancCopiado.medico||'') + ' copiado!');
+  toast('✓ Plantão de ' + (_lancCopiado.medico||'') + ' copiado! Clique em 📌 Colar em qualquer dia.');
   fecharCtxMenu();
+  atualizarBotoesColar(); // mostrar botões de colar em todas as células
 }
 
 async function ctxColar() {
