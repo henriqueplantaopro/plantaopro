@@ -673,7 +673,7 @@ async function carregarDisponiveis() {
   // Buscar meus plantões para verificar conflito de horário
   let meusPlantoes = [];
   try {
-    const r = await supabaseFetch(`/rest/v1/lancamentos?medico_id=eq.${medico.id}&data=gte.${hoje}&select=data,hora_ini,hora_fim,horas,tipo`);
+    const r = await supabaseFetch(`/rest/v1/lancamentos?medico_id=eq.${medico.id}&data=gte.${hoje}&select=data,hora_ini,hora_fim,horas,tipo,projeto_id,projetos(nome)`);
     meusPlantoes = Array.isArray(r) ? r : [];
   } catch(e) {}
 
@@ -764,10 +764,12 @@ function verificarConflito(plantao, meusPlantoes) {
       // Aviso informativo — nunca bloqueia
       const horaIni = gapApos >= 0 ? (p.hora_ini||'').slice(0,5) : (plantao.hora_ini||'').slice(0,5);
       const horaFim = gapApos >= 0 ? (plantao.hora_fim||'').slice(0,5) : (p.hora_fim||'').slice(0,5);
-      const local   = mesmoProjeto ? 'no mesmo hospital' : 'em hospitais diferentes';
+      const nomeLocal = mesmoProjeto
+        ? (p.projetos?.nome || 'mesmo hospital')
+        : `hospitais diferentes (${p.projetos?.nome||'hospital 1'} → ${plantao.projetos?.nome||'hospital 2'})`;
       return {
         bloqueio: false,
-        msg: `Sequência de ${hTotal}h ${local} (${horaIni}→${horaFim}). O administrador será informado ao aprovar.`
+        msg: `Sequência de ${hTotal}h em ${nomeLocal} (${horaIni}→${horaFim}). O administrador será informado ao aprovar.`
       };
     }
 
@@ -812,7 +814,7 @@ function calcularHorasConsecutivas(plantaoRef, todosPlantoes) {
 
 async function candidatar(lancId, btn, temAlerta=false) {
   if (btn) { btn.disabled=true; btn.textContent='Enviando...'; }
-  const obs = temAlerta ? 'ALERTA: sequência de plantões em hospitais diferentes — verificar descanso.' : null;
+  const obs = temAlerta ? `ALERTA: ${conflito.msg}` : null;
   try {
     const res = await fetch(SUPABASE_URL+'/rest/v1/candidaturas', {
       method:'POST',
