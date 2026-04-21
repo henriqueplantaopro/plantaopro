@@ -3123,13 +3123,15 @@ async function carregarCandidaturas() {
       candLanc.forEach(c => {
         const statusCls = c.status==='aprovado'?'cand-aprovado':c.status==='recusado'?'cand-recusado':'cand-pendente';
         const statusTxt = c.status==='aprovado'?'✅ Aprovado':c.status==='recusado'?'❌ Recusado':'⏳ Pendente';
-        html += `<div class="cand-row">
-          <div>
+        const temAlerta = c.obs && c.obs.includes('ALERTA');
+        html += `<div class="cand-row" style="${temAlerta?'background:#fff8e1;':''}">
+          <div style="flex:1;">
             <strong>${c.medicos?.nome||'—'}</strong>
             <span style="color:var(--text3);margin-left:6px;font-family:monospace;font-size:11px;">${c.medicos?.crm||''}</span>
             <div style="font-size:11px;color:var(--text3);">Candidatou-se em ${new Date(c.criado_em).toLocaleString('pt-BR',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})}</div>
+            ${temAlerta ? `<div style="font-size:11px;color:var(--amber);font-weight:600;margin-top:3px;">⚠️ ${c.obs}</div>` : ''}
           </div>
-          <div style="display:flex;align-items:center;gap:8px;">
+          <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
             <span class="cand-status ${statusCls}">${statusTxt}</span>
             ${c.status==='pendente' ? `
               <button class="btn btn-success btn-sm" onclick="responderCandidatura('${c.id}','${l.id}','aprovado',${l.vagas||1})">✓ Aprovar</button>
