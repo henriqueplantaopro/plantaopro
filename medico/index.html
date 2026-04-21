@@ -677,29 +677,6 @@ async function carregarDisponiveis() {
     meusPlantoes = Array.isArray(r) ? r : [];
   } catch(e) {}
 
-  // Badge
-  const disponiveis = abertos.filter(l => {
-    const jaInsc = minhasCand.find(c=>c.lancamento_id===l.id);
-    return !jaInsc && (l.vagas_preenchidas||0) < (l.vagas||1);
-  }).length;
-  const badge = document.getElementById('badge-disp');
-  if (badge) { badge.textContent=disponiveis; badge.style.display=disponiveis>0?'inline':'none'; }
-
-  if (!abertos.length) {
-    el.innerHTML = '<div class="empty"><div class="empty-icon">📢</div>Nenhum plantão disponível no momento.</div>';
-    return;
-  }
-    const jaInsc = minhasCand.find(c=>c.lancamento_id===l.id);
-    return !jaInsc && (l.vagas_preenchidas||0) < (l.vagas||1);
-  }).length;
-  const badge = document.getElementById('badge-disp');
-  if (badge) { badge.textContent=disponiveis; badge.style.display=disponiveis>0?'inline':'none'; }
-
-  if (!lista.length) {
-    el.innerHTML = '<div class="empty"><div class="empty-icon">📢</div>Nenhum plantão disponível no momento.</div>';
-    return;
-  }
-
   el.innerHTML = abertos.map(l => {
     const d = new Date(l.data+'T12:00:00');
     const dataFmt = d.toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'long'});
