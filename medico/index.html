@@ -357,6 +357,20 @@ async function vincularDispositivo() {
 }
 
 async function init() {
+  // Timeout global — garante que o splash some em qualquer cenário
+  setTimeout(() => {
+    const s = document.getElementById('splash');
+    if (s && !s.classList.contains('hide')) {
+      s.classList.add('hide');
+      // Se nada foi mostrado, exibir erro genérico
+      const telaErro = document.getElementById('tela-erro');
+      const header   = document.getElementById('header');
+      if (!header || header.style.display === 'none') {
+        if (telaErro) telaErro.style.display = 'block';
+      }
+    }
+  }, 8000);
+
   // Pega token da URL ou localStorage
   const params = new URLSearchParams(window.location.search);
   let token = params.get('token');
@@ -382,20 +396,18 @@ async function init() {
   const deviceId = getDeviceId();
 
   if (!medico.device_id) {
-    // Nenhum dispositivo vinculado ainda — primeiro acesso
     document.getElementById('splash').classList.add('hide');
     document.getElementById('tela-primeiro-acesso').style.display = 'block';
-    return; // Aguarda o médico clicar em "Vincular"
+    return;
   }
 
   if (medico.device_id !== deviceId) {
-    // Dispositivo diferente do registrado — bloqueia
     document.getElementById('splash').classList.add('hide');
     document.getElementById('tela-device').style.display = 'block';
     return;
   }
 
-  // Dispositivo correto — continua normalmente
+  // Dispositivo correto — abre o app
   mostrarApp();
 }
 
