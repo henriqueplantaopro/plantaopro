@@ -687,7 +687,7 @@ async function carregarDisponiveis() {
     // Verificar minha candidatura
     const minhaCand = minhasCand.find(c=>c.lancamento_id===l.id);
 
-    // Verificar conflito de horário (máx 24h seguidas, mínimo 12h descanso)
+    // Verificar conflito/alerta de horário
     const conflito = verificarConflito(l, meusPlantoes);
 
     let btnHtml = '';
@@ -697,10 +697,16 @@ async function carregarDisponiveis() {
       else btnHtml = `<button class="btn-candidatar inscrito" disabled>⏳ Candidatura enviada — aguardando aprovação</button>`;
     } else if (cheia) {
       btnHtml = `<button class="btn-candidatar inscrito" disabled>🔒 Vagas preenchidas</button>`;
-    } else if (conflito) {
-      btnHtml = `<div class="conflito-aviso">⚠️ ${conflito}</div><button class="btn-candidatar recusado" disabled>Conflito de horário</button>`;
+    } else if (conflito && conflito.bloqueio) {
+      // Bloqueio total — não pode se candidatar
+      btnHtml = `<div class="conflito-aviso">🚫 ${conflito.msg}</div>
+                 <button class="btn-candidatar recusado" disabled>Não é possível se candidatar</button>`;
+    } else if (conflito && !conflito.bloqueio) {
+      // Apenas aviso — pode se candidatar mas com alerta
+      btnHtml = `<div class="conflito-aviso" style="background:#fff3e0;border-color:#ffb74d;color:#e65100;">${conflito.msg}</div>
+                 <button class="btn-candidatar disponivel" onclick="candidatar('${l.id}', this, true)">📋 Estou ciente — me candidatar assim mesmo</button>`;
     } else {
-      btnHtml = `<button class="btn-candidatar disponivel" onclick="candidatar('${l.id}', this)">📋 Me candidatar para este plantão</button>`;
+      btnHtml = `<button class="btn-candidatar disponivel" onclick="candidatar('${l.id}', this, false)">📋 Me candidatar para este plantão</button>`;
     }
 
     const turno = l.tipo?.includes('Noturno')?'badge-purple':l.tipo?.includes('24')?'badge-amber':'badge-green';
@@ -723,44 +729,90 @@ async function carregarDisponiveis() {
   }).join('');
 }
 
+// Retorna: null (sem aviso) | { bloqueio: true, msg } | { bloqueio: false, msg }
 function verificarConflito(plantao, meusPlantoes) {
-  // Regra: máximo 24h trabalhando consecutivo, mínimo 12h de descanso entre plantões
   const iniNovo = new Date(`${plantao.data}T${plantao.hora_ini||'00:00'}`);
   const fimNovo = new Date(iniNovo.getTime() + (plantao.horas||0)*3600000);
+  const projNovo = plantao.projeto_id;
 
   for (const p of meusPlantoes) {
     const iniExist = new Date(`${p.data}T${p.hora_ini||'00:00'}`);
     const fimExist = new Date(iniExist.getTime() + (p.horas||0)*3600000);
+    const mesmoProjeto = p.projeto_id === projNovo;
 
-    // Verificar sobreposição direta
+    // 1. Sobreposição direta — único bloqueio real
     if (iniNovo < fimExist && fimNovo > iniExist) {
-      return 'Conflito: você já tem plantão neste horário.';
+      return { bloqueio: true, msg: 'Você já tem um plantão neste mesmo horário.' };
     }
 
-    // Verificar descanso mínimo de 12h após plantão existente
-    const descFim = new Date(fimExist.getTime() + 12*3600000);
-    if (iniNovo >= fimExist && iniNovo < descFim) {
-      const hDesc = Math.round((descFim - iniNovo)/3600000);
-      return `Descanso insuficiente: você precisa de mais ${hDesc}h de descanso.`;
+    // 2. Calcular se há sequência (gap < 60 min = considera consecutivo)
+    const gapApos  = iniNovo - fimExist;  // ms após plantão existente
+    const gapAntes = iniExist - fimNovo;  // ms antes do plantão existente
+    const emSequencia = (gapApos >= 0 && gapApos < 3600000) || (gapAntes >= 0 && gapAntes < 3600000);
+
+    if (emSequencia) {
+      // Calcular total de horas consecutivas acumuladas
+      const iniTotal = gapApos >= 0 ? iniExist : iniNovo;
+      const fimTotal = gapApos >= 0 ? fimNovo  : fimExist;
+      const hTotal   = Math.round((fimTotal - iniTotal) / 3600000* 10) / 10;
+
+      // Verificar se já passou de 36h consecutivas (único caso de bloqueio por horas)
+      if (hTotal > 36) {
+        return { bloqueio: true, msg: `Limite de 36h consecutivas atingido (${hTotal}h total). É necessário descanso de 12h.` };
+      }
+
+      // Aviso informativo — nunca bloqueia
+      const horaIni = gapApos >= 0 ? (p.hora_ini||'').slice(0,5) : (plantao.hora_ini||'').slice(0,5);
+      const horaFim = gapApos >= 0 ? (plantao.hora_fim||'').slice(0,5) : (p.hora_fim||'').slice(0,5);
+      const local   = mesmoProjeto ? 'no mesmo hospital' : 'em hospitais diferentes';
+      return {
+        bloqueio: false,
+        msg: `Sequência de ${hTotal}h ${local} (${horaIni}→${horaFim}). O administrador será informado ao aprovar.`
+      };
     }
 
-    // Verificar descanso mínimo antes do plantão existente
-    const descAnt = new Date(iniExist.getTime() - 12*3600000);
-    if (fimNovo > descAnt && fimNovo <= iniExist) {
-      return 'Descanso insuficiente antes do próximo plantão.';
-    }
-
-    // Verificar acúmulo de horas (máx 24h seguidas)
-    if (iniNovo <= iniExist && fimNovo >= iniExist) {
-      const hTotal = (fimNovo - iniNovo)/3600000;
-      if (hTotal > 24) return 'Excede o limite de 24 horas de trabalho consecutivo.';
+    // 3. Descanso insuficiente SOMENTE se há jornada acumulada ≥ 36h
+    // (calcular total de horas consecutivas já acumuladas antes deste plantão)
+    const horasAcum = calcularHorasConsecutivas(p, meusPlantoes);
+    if (horasAcum >= 36) {
+      const gapMin = Math.min(
+        gapApos  >= 0 ? gapApos  : Infinity,
+        gapAntes >= 0 ? gapAntes : Infinity
+      );
+      if (gapMin < 12*3600000 && gapMin > 0) {
+        const hFalta = Math.round((12*3600000 - gapMin) / 3600000);
+        return { bloqueio: true, msg: `Descanso obrigatório: após 36h de jornada, é necessário 12h de descanso. Faltam ${hFalta}h.` };
+      }
     }
   }
   return null;
 }
 
-async function candidatar(lancId, btn) {
+function calcularHorasConsecutivas(plantaoRef, todosPlantoes) {
+  // Soma as horas de plantões consecutivos que incluem o plantaoRef
+  let iniTotal = new Date(`${plantaoRef.data}T${plantaoRef.hora_ini||'00:00'}`);
+  let fimTotal = new Date(iniTotal.getTime() + (plantaoRef.horas||0)*3600000);
+  let mudou = true;
+  while (mudou) {
+    mudou = false;
+    for (const p of todosPlantoes) {
+      if (p === plantaoRef) continue;
+      const iniP = new Date(`${p.data}T${p.hora_ini||'00:00'}`);
+      const fimP = new Date(iniP.getTime() + (p.horas||0)*3600000);
+      const gapA = iniTotal - fimP;
+      const gapB = iniP - fimTotal;
+      if ((gapA >= 0 && gapA < 3600000) || (gapB >= 0 && gapB < 3600000)) {
+        if (iniP < iniTotal) { iniTotal = iniP; mudou = true; }
+        if (fimP > fimTotal) { fimTotal = fimP; mudou = true; }
+      }
+    }
+  }
+  return (fimTotal - iniTotal) / 3600000;
+}
+
+async function candidatar(lancId, btn, temAlerta=false) {
   if (btn) { btn.disabled=true; btn.textContent='Enviando...'; }
+  const obs = temAlerta ? 'ALERTA: sequência de plantões em hospitais diferentes — verificar descanso.' : null;
   try {
     const res = await fetch(SUPABASE_URL+'/rest/v1/candidaturas', {
       method:'POST',
@@ -772,7 +824,8 @@ async function candidatar(lancId, btn) {
         lancamento_id: lancId,
         medico_id: medico.id,
         status: 'pendente',
-        criado_em: new Date().toISOString()
+        criado_em: new Date().toISOString(),
+        obs: obs
       })
     });
     if (res.ok || res.status===204) {
