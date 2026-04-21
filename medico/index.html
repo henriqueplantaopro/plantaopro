@@ -703,10 +703,13 @@ async function carregarDisponiveis() {
                  <button class="btn-candidatar recusado" disabled>Não é possível se candidatar</button>`;
     } else if (conflito && !conflito.bloqueio) {
       // Apenas aviso — pode se candidatar mas com alerta
+      // Guardar msg no window para evitar problema de escape no onclick
+      const alertKey = 'alerta_' + l.id;
+      window[alertKey] = conflito.msg;
       btnHtml = `<div class="conflito-aviso" style="background:#fff3e0;border-color:#ffb74d;color:#e65100;">${conflito.msg}</div>
-                 <button class="btn-candidatar disponivel" onclick="candidatar('${l.id}', this, ${JSON.stringify(conflito.msg)})">📋 Estou ciente — me candidatar assim mesmo</button>`;
+                 <button class="btn-candidatar disponivel" onclick="candidatar('${l.id}', this, window['${alertKey}'])">📋 Estou ciente — me candidatar assim mesmo</button>`;
     } else {
-      btnHtml = `<button class="btn-candidatar disponivel" onclick="candidatar('${l.id}', this, false)">📋 Me candidatar para este plantão</button>`;
+      btnHtml = `<button class="btn-candidatar disponivel" onclick="candidatar('${l.id}', this, null)">📋 Me candidatar para este plantão</button>`;
     }
 
     const turno = l.tipo?.includes('Noturno')?'badge-purple':l.tipo?.includes('24')?'badge-amber':'badge-green';
