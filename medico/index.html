@@ -704,7 +704,7 @@ async function carregarDisponiveis() {
     } else if (conflito && !conflito.bloqueio) {
       // Apenas aviso — pode se candidatar mas com alerta
       btnHtml = `<div class="conflito-aviso" style="background:#fff3e0;border-color:#ffb74d;color:#e65100;">${conflito.msg}</div>
-                 <button class="btn-candidatar disponivel" onclick="candidatar('${l.id}', this, true)">📋 Estou ciente — me candidatar assim mesmo</button>`;
+                 <button class="btn-candidatar disponivel" onclick="candidatar('${l.id}', this, ${JSON.stringify(conflito.msg)})">📋 Estou ciente — me candidatar assim mesmo</button>`;
     } else {
       btnHtml = `<button class="btn-candidatar disponivel" onclick="candidatar('${l.id}', this, false)">📋 Me candidatar para este plantão</button>`;
     }
@@ -812,9 +812,9 @@ function calcularHorasConsecutivas(plantaoRef, todosPlantoes) {
   return (fimTotal - iniTotal) / 3600000;
 }
 
-async function candidatar(lancId, btn, temAlerta=false) {
+async function candidatar(lancId, btn, alertaMsg=null) {
   if (btn) { btn.disabled=true; btn.textContent='Enviando...'; }
-  const obs = temAlerta ? `ALERTA: ${conflito.msg}` : null;
+  const obs = alertaMsg ? `ALERTA: ${alertaMsg}` : null;
   try {
     const res = await fetch(SUPABASE_URL+'/rest/v1/candidaturas', {
       method:'POST',
