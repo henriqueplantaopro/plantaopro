@@ -2162,6 +2162,40 @@ function renderSemana() {
   const pid = document.getElementById('cal-proj')?.value||'';
   const mid = document.getElementById('cal-med')?.value||'';
 
+  // Se nenhum projeto filtrado, renderizar um calendário por projeto
+  if (!pid) {
+    const projsComLanc = sortedProjetos().filter(p =>
+      lancamentos.some(l => {
+        const ds = l.data;
+        return l.projeto_id === p.id && ds >= dias[0].toISOString().slice(0,10) && ds <= dias[6].toISOString().slice(0,10);
+      })
+    );
+    // Incluir todos os projetos mesmo sem lançamento na semana
+    const todosProjs = sortedProjetos();
+    const grid = document.getElementById('sem-grid');
+    grid.innerHTML = todosProjs.map(p =>
+      `<div style="margin-bottom:24px;">
+        <div style="font-size:13px;font-weight:700;color:var(--blue);padding:6px 0 6px;border-bottom:2px solid var(--blue);margin-bottom:6px;display:flex;align-items:center;gap:8px;">
+          🏥 ${p.nome}
+          <button class="btn btn-ghost btn-sm" style="margin-left:auto;" onclick="document.getElementById('cal-proj').value='${p.id}';renderCalAtual()">Ver só este ›</button>
+        </div>
+        <div id="sem-proj-${p.id}" style="overflow-x:auto;"></div>
+      </div>`
+    ).join('');
+    todosProjs.forEach(p => {
+      const el = document.getElementById('sem-proj-' + p.id);
+      if (el) el.innerHTML = renderSemanaGrid(dias, dows, hj, p.id, mid);
+    });
+    if (_lancCopiado) atualizarBotoesColar();
+    return;
+  }
+
+  const grid = document.getElementById('sem-grid');
+  grid.innerHTML = `<div style="overflow-x:auto;">${renderSemanaGrid(dias, dows, hj, pid, mid)}</div>`;
+  if (_lancCopiado) atualizarBotoesColar();
+}
+
+function renderSemanaGrid(dias, dows, hj, pid, mid) {
   let html = `<table class="sem-table"><thead><tr>`;
   dias.forEach((d,i) => {
     const ds = d.toISOString().slice(0,10);
@@ -2245,9 +2279,7 @@ function renderSemana() {
   });
 
   html += '</tr></tbody></table>';
-  document.getElementById('sem-grid').innerHTML = html;
-  // Mostrar botões de colar se houver algo copiado
-  if (_lancCopiado) atualizarBotoesColar();
+  return html;
 }
 
 function verDetalhesSemana(lancId) {
