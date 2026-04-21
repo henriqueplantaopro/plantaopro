@@ -1154,6 +1154,21 @@ async function carregarLancamentos(silencioso=false) {
     projeto: l.projetos?.nome || '',
   }));
   if (!silencioso) renderLancamentos();
+  // Carregar nomes dos aprovados para plantões abertos
+  carregarNomesAprovados();
+}
+
+async function carregarNomesAprovados() {
+  const abertos = lancamentos.filter(l => l.aberto && (l.vagas_preenchidas||0) > 0);
+  if (!abertos.length) return;
+  const ids = abertos.map(l => l.id);
+  const cands = await sb(`/rest/v1/candidaturas?lancamento_id=in.(${ids.join(',')})&status=eq.aprovado&select=lancamento_id,medicos(nome)`) || [];
+  window._candsAprovadas = {};
+  cands.forEach(c => {
+    const lid = c.lancamento_id;
+    if (!window._candsAprovadas[lid]) window._candsAprovadas[lid] = [];
+    window._candsAprovadas[lid].push(c.medicos?.nome || 'Médico');
+  });
 }
 
 // ── DASHBOARD ─────────────────────────────────────────
@@ -2183,15 +2198,40 @@ function renderSemana() {
       html += `<div class="sem-grupo">
         <div class="sem-grupo-label">${cat.label}</div>`;
       grupo.forEach(l => {
-        const isAberto = l.aberto && !l.medico_id;
-      const vagasInfo = isAberto ? `<div class="vaga-badge${(l.vagas_preenchidas||0)>=(l.vagas||1)?' cheia':''}">${(l.vagas||1)-(l.vagas_preenchidas||0)} vaga(s)</div>` : '';
-      html += `<div class="sem-card ${cat.cls}${isAberto?' aberto':''}">
+        if (l.aberto) {
+        // Plantão aberto com múltiplas vagas — mostrar médicos aprovados + slots vazios
+        const preenchidas = l.vagas_preenchidas || 0;
+        const totalVagas  = l.vagas || 1;
+        const vagasLivres = totalVagas - preenchidas;
+        // Buscar candidaturas aprovadas deste lançamento no array local (se carregadas)
+        const candsAprov = (window._candsAprovadas || {})[l.id] || [];
+        // Cards dos aprovados
+        for (let vi = 0; vi < preenchidas; vi++) {
+          const nomeAprov = candsAprov[vi] ? candsAprov[vi].split(' ').slice(0,2).join(' ') : `Médico ${vi+1}`;
+          html += `<div class="sem-card ${cat.cls}" style="border-left-color:var(--green);">
+            <button class="sem-card-opts" onclick="event.stopPropagation();abrirCtxChip(event,'${l.id}','${ds}','${pid||l.projeto_id}')" title="Opções">⋮</button>
+            <div class="sem-card-nome" style="color:var(--green);">✅ ${nomeAprov}</div>
+            <div class="sem-card-hora">${(l.hora_ini||'').slice(0,5)}–${(l.hora_fim||'').slice(0,5)}</div>
+            ${l.setor?`<div class="sem-card-setor">${l.setor}</div>`:''}
+          </div>`;
+        }
+        // Cards das vagas abertas restantes
+        for (let vi = 0; vi < vagasLivres; vi++) {
+          html += `<div class="sem-card ${cat.cls} aberto">
+            <button class="sem-card-opts" onclick="event.stopPropagation();abrirCtxChip(event,'${l.id}','${ds}','${pid||l.projeto_id}')" title="Opções">⋮</button>
+            <div class="sem-card-nome">📢 Vaga ${preenchidas + vi + 1}/${totalVagas}</div>
+            <div class="sem-card-hora">${(l.hora_ini||'').slice(0,5)}–${(l.hora_fim||'').slice(0,5)}</div>
+            ${l.setor?`<div class="sem-card-setor">${l.setor}</div>`:''}
+          </div>`;
+        }
+      } else {
+        html += `<div class="sem-card ${cat.cls}">
           <button class="sem-card-opts" onclick="event.stopPropagation();abrirCtxChip(event,'${l.id}','${ds}','${pid||l.projeto_id}')" title="Opções">⋮</button>
-          <div class="sem-card-nome" onclick="verDetalhesSemana('${l.id}')">${isAberto ? '📢 Vaga aberta' : (l.medico||'').split(' ').slice(0,2).join(' ')}</div>
+          <div class="sem-card-nome" onclick="verDetalhesSemana('${l.id}')">${(l.medico||'').split(' ').slice(0,2).join(' ')}</div>
           <div class="sem-card-hora">${(l.hora_ini||'').slice(0,5)}–${(l.hora_fim||'').slice(0,5)}</div>
           ${l.setor?`<div class="sem-card-setor">${l.setor}</div>`:''}
-          ${vagasInfo}
         </div>`;
+      }
       });
       html += `</div>`;
     });
