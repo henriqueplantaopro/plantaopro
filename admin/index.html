@@ -1667,7 +1667,6 @@ async function importarMedicosXLSX(event) {
   const rows = XLSX.utils.sheet_to_json(ws, {header:1, defval:''});
   if (rows.length < 2) { toast('Planilha vazia ou sem dados', true); return; }
 
-  // Cabeçalhos esperados
   const header = rows[0].map(h=>String(h).trim());
   const idx = (col) => header.findIndex(h=>h.toLowerCase().includes(col.toLowerCase()));
   const iNome=idx('Nome'), iCRM=idx('CRM'), iRQE=idx('RQE'), iEsp=idx('Especialidade'),
@@ -1675,67 +1674,79 @@ async function importarMedicosXLSX(event) {
         iEmail=idx('E-mail'), iVH=idx('Valor'), iRazao=idx('Razão'), iCNPJ=idx('CNPJ'),
         iPTipo=idx('Tipo PIX'), iPChave=idx('Chave PIX'), iProjs=idx('Projetos');
 
-  const dataRows = rows.slice(1).filter(r => r[iCRM] && !String(r[0]).startsWith('---'));
+  const dataRows = rows.slice(1).filter(r => r[iNome] && !String(r[0]).startsWith('---'));
   if (!dataRows.length) { toast('Nenhum médico encontrado na planilha', true); return; }
 
-  const confirmar = confirm(`Importar/atualizar ${dataRows.length} médico(s)? Médicos com mesmo CRM serão atualizados.`);
-  if (!confirmar) return;
+  // Montar lista de atualizações — apenas para médicos já existentes (por nome exato)
+  const paraAtualizar = [];
+  const naoEncontrados = [];
 
-  let ok=0, erros=0;
-  for (const row of dataRows) {
-    const crm = String(row[iCRM]||'').trim();
-    if (!crm) continue;
+  dataRows.forEach(row => {
+    const nome = String(row[iNome]||'').trim();
+    if (!nome) return;
+    // Buscar médico pelo NOME EXATO
+    const existente = medicos.find(m => m.nome.trim() === nome);
+    if (!existente) {
+      naoEncontrados.push(nome);
+      return;
+    }
     const espsStr = String(row[iEsp]||'').trim();
     const esps = espsStr ? espsStr.split(';').map(s=>s.trim()).filter(Boolean) : [];
     const projsStr = String(row[iProjs]||'').trim();
     const projsVinc = projsStr ? projsStr.split(';').map(s=>s.trim()).filter(Boolean)
       .map(nome => projetos.find(p=>p.nome.toLowerCase()===nome.toLowerCase())?.id)
-      .filter(Boolean) : [];
+      .filter(Boolean) : existente.projetos_vinculados || [];
+    paraAtualizar.push({
+      id: existente.id,
+      nome,
+      payload: {
+        nome,
+        crm:          String(row[iCRM]||existente.crm||'').trim(),
+        rqe:          String(row[iRQE]||existente.rqe||'').trim()||null,
+        especialidade: esps.join(', ') || existente.especialidade || '',
+        especialidades: esps.length ? esps : (existente.especialidades||[]),
+        cpf:          String(row[iCPF]||existente.cpf||'').trim()||null,
+        tipo:         String(row[iTipo]||existente.tipo||'Plantonista').trim(),
+        telefone:     String(row[iTel]||existente.telefone||'').trim()||null,
+        email:        String(row[iEmail]||existente.email||'').trim()||null,
+        razao_social: String(row[iRazao]||existente.razao_social||'').trim()||null,
+        cnpj:         String(row[iCNPJ]||existente.cnpj||'').trim()||null,
+        pix_tipo:     String(row[iPTipo]||existente.pix_tipo||'').trim()||null,
+        pix_chave:    String(row[iPChave]||existente.pix_chave||'').trim()||null,
+        projetos_vinculados: projsVinc,
+      }
+    });
+  });
 
-    const payload = {
-      nome: String(row[iNome]||'').trim(),
-      crm,
-      rqe: String(row[iRQE]||'').trim()||null,
-      especialidade: esps.join(', '),
-      especialidades: esps,
-      cpf: String(row[iCPF]||'').trim()||null,
-      tipo: String(row[iTipo]||'Plantonista').trim(),
-      data_nascimento: null,
-      telefone: String(row[iTel]||'').trim()||null,
-      email: String(row[iEmail]||'').trim()||null,
-      valor_hora: parseFloat(String(row[iVH]||'0').replace(',','.'))||0,
-      razao_social: String(row[iRazao]||'').trim()||null,
-      cnpj: String(row[iCNPJ]||'').trim()||null,
-      pix_tipo: String(row[iPTipo]||'').trim()||null,
-      pix_chave: String(row[iPChave]||'').trim()||null,
-      projetos_vinculados: projsVinc,
-    };
+  // Resumo antes de confirmar
+  let msg = `Atualizar ${paraAtualizar.length} médico(s) pelo nome exato?`;
+  if (naoEncontrados.length > 0) {
+    msg += `\n\n⚠️ ${naoEncontrados.length} nome(s) NÃO encontrado(s) no sistema (serão ignorados):\n` +
+      naoEncontrados.slice(0,10).join('\n') +
+      (naoEncontrados.length > 10 ? `\n... e mais ${naoEncontrados.length-10}` : '');
+  }
+  if (!paraAtualizar.length) { toast('Nenhum nome encontrado no sistema. Verifique se os nomes estão exatamente iguais.', true); return; }
+  if (!confirm(msg)) return;
 
-    // Verificar se já existe pelo CRM
-    const existente = medicos.find(m=>m.crm===crm);
-    if (existente) {
-      // Atualizar
-      const res = await fetch(SUPABASE_URL+'/rest/v1/medicos?id=eq.'+existente.id, {
-        method:'PATCH',
-        headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},
-        body: JSON.stringify(payload)
-      });
-      if (res.ok||res.status===204) ok++; else erros++;
-    } else {
-      // Inserir novo
-      const res = await fetch(SUPABASE_URL+'/rest/v1/medicos', {
-        method:'POST',
-        headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},
-        body: JSON.stringify({...payload, ativo:true, token_acesso: crypto.randomUUID()})
-      });
-      if (res.ok||res.status===204||res.status===201) ok++; else erros++;
-    }
+  let ok=0, erros=0;
+  for (const item of paraAtualizar) {
+    const res = await fetch(SUPABASE_URL+'/rest/v1/medicos?id=eq.'+item.id, {
+      method:'PATCH',
+      headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},
+      body: JSON.stringify(item.payload)
+    });
+    if (res.ok||res.status===204) ok++; else erros++;
   }
 
   event.target.value='';
-  toast(`✅ Importação: ${ok} médico(s) atualizados${erros>0?' · '+erros+' erro(s)':''}`);
+
+  let resultado = `✅ ${ok} médico(s) atualizados com sucesso!`;
+  if (erros > 0) resultado += ` · ${erros} erro(s).`;
+  if (naoEncontrados.length > 0) resultado += ` · ${naoEncontrados.length} nome(s) não encontrado(s) foram ignorados.`;
+  toast(resultado);
   await carregarMedicos();
 }
+
 
 async function delMedico(id) {
   if (!confirm('Remover médico?')) return;
@@ -3953,171 +3964,228 @@ async function gerarRemessa() {
   if (itensSemPix.length > 0) {
     if (!confirm(`${itensSemPix.length} profissional(is) sem chave PIX serão pulados. Continuar?`)) return;
   }
-
   const itensValidos = _fechItens.filter(i => i.medicos?.pix_chave && i.valor_total > 0);
   if (!itensValidos.length) { toast('Nenhum profissional com PIX cadastrado', true); return; }
 
-  const totalRemessa = itensValidos.reduce((s,i)=>s+i.valor_total, 0);
-  const agora = new Date();
-  const dtArq = agora.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric'}).replace(/\//g,'');
-  const hrArq = agora.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit',second:'2-digit'}).replace(/:/g,'');
-  const nrArq = String(Math.floor(Math.random()*9000)+1000);
+  const agora    = new Date();
+  const totLote  = itensValidos.reduce((s,i)=>s+i.valor_total, 0);
+  const qtRegsLote = itensValidos.length * 2 + 2; // header + trailer + A+B por item
 
-  // Dados da empresa pagadora (Bradesco padrão — ajustar conforme necessário)
-  const BANCO        = '237';
-  const AGENCIA      = '01785';
-  const AGENCIA_DV   = '0';
-  const CONTA        = '0039464';
-  const CONTA_DV     = '5';
-  const EMPRESA_NOME = 'HJM GESTAO E SERVICOS LTDA ';
-  const CNPJ_EMP     = '34958609000190';
-  const CONVENIO     = '472572';
-
-  const pad = (v,n,c=' ',right=false) => {
-    const s = String(v||'');
-    return right ? s.slice(0,n).padEnd(n,c) : s.slice(0,n).padStart(n,c);
+  // Helpers CNAB 240
+  const padR = (v,n,c=' ') => String(v||'').slice(0,n).padEnd(n,c);
+  const padL = (v,n,c='0') => String(v||'').slice(0,n).padStart(n,c);
+  const cents = v => String(Math.round((parseFloat(v)||0)*100)).padStart(15,'0');
+  const dtFmt = (d) => { // retorna DDMMAAAA
+    const dt = d instanceof Date ? d : new Date(String(d)+'T12:00:00');
+    const dd = String(dt.getDate()).padStart(2,'0');
+    const mm = String(dt.getMonth()+1).padStart(2,'0');
+    const aa = String(dt.getFullYear());
+    return dd+mm+aa;
   };
-  const padN = (v,n) => pad(Math.round((v||0)*100).toString().replace('.',''),n,'0');
-  const dtBr = (d) => d.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric'}).replace(/\//g,'');
+  const hrFmt = (d) => {
+    const h = String(d.getHours()).padStart(2,'0');
+    const m = String(d.getMinutes()).padStart(2,'0');
+    const s = String(d.getSeconds()).padStart(2,'0');
+    return h+m+s;
+  };
+  const verif = (linha, nome) => {
+    if (linha.length !== 240) console.error(`CNAB: ${nome} tem ${linha.length} chars (esperado 240)`);
+    return linha.slice(0,240).padEnd(240,' ');
+  };
 
-  let linhas = [];
-  let nrLote = 1, nrReg = 1, nrRegLote = 1;
+  // Dados empresa pagadora
+  const BANCO     = '237';
+  const AG        = '01785'; const AG_DV  = '0';
+  const CC        = '0039464'; const CC_DV = '5';
+  const EMP_NOME  = padR('HJM GESTAO E SERVICOS LTDA',30);
+  const CNPJ_EMP  = '34958609000190';
+  const CONVENIO  = padR('472572',20);
+  const dtGer     = dtFmt(agora);
+  const hrGer     = hrFmt(agora);
+  const nrArq     = String(Math.floor(Math.random()*99999)+1).padStart(6,'0');
+  const dtPag     = dtFmt(new Date(_fechAtivo.data_fim+'T12:00:00'));
 
-  // Header do arquivo (segmento 0)
-  linhas.push(
-    pad(BANCO,3,'0') +
-    pad('0000',4,'0') +
-    '0' + // reg type header arq
-    ' '.repeat(9) +
-    '2' + // tipo inscrição CNPJ
-    pad(CNPJ_EMP,14,'0') +
-    pad(CONVENIO,20,' ',true) +
-    pad(AGENCIA,5,'0') + AGENCIA_DV +
-    pad(CONTA,12,'0') + CONTA_DV + ' ' +
-    pad(EMPRESA_NOME,30,' ',true) +
-    pad('BANCO BRADESCO SA',30,' ',true) +
-    '1' + // código remessa
-    pad(dtArq,8,'0') + pad(hrArq,6,'0') +
-    pad(nrArq,6,'0') +
-    '089' + // versão layout CNAB240
-    pad('0',6,'0') + // densidade
-    ' '.repeat(20) +
-    ' '.repeat(29)
+  const linhas = [];
+
+  // ── HEADER ARQUIVO ────────────────────────────────────
+  const ha = verif(
+    BANCO +                   // 001-003 banco
+    '0000' +                  // 004-007 lote (0000 = arquivo)
+    '0' +                     // 008     tipo reg
+    ' '.repeat(9) +           // 009-017 brancos
+    '2' +                     // 018     tipo inscrição (2=CNPJ)
+    CNPJ_EMP +                // 019-032 CNPJ (14)
+    CONVENIO +                // 033-052 convênio (20)
+    padL(AG,5) +              // 053-057 agência (5)
+    AG_DV +                   // 058     DV agência
+    padL(CC,12) +             // 059-070 conta (12)
+    CC_DV +                   // 071     DV conta
+    ' ' +                     // 072     DAC
+    EMP_NOME +                // 073-102 nome empresa (30)
+    padR('BANCO BRADESCO SA',30) + // 103-132 nome banco (30)
+    ' '.repeat(10) +          // 133-142 brancos (10)
+    '1' +                     // 143     código remessa
+    dtGer +                   // 144-151 data geração (8)
+    hrGer +                   // 152-157 hora geração (6)
+    nrArq +                   // 158-163 n° arquivo (6)
+    '089' +                   // 164-166 versão layout
+    '01600' +                 // 167-171 densidade (5)
+    ' '.repeat(20) +          // 172-191 reservado banco (20)
+    ' '.repeat(20) +          // 192-211 reservado empresa (20)
+    ' '.repeat(29),           // 212-240 brancos (29)
+    'Header Arquivo'
   );
+  linhas.push(ha);
 
-  // Para cada beneficiário — gerar lote PIX
-  // Um único lote com todos os pagamentos
-  const totLote = itensValidos.reduce((s,i)=>s+i.valor_total,0);
-  const nrRegsLote = itensValidos.length * 2 + 2; // A+B por beneficiário + header + trailer lote
-
-  // Header lote
-  linhas.push(
-    pad(BANCO,3,'0') + pad(nrLote,4,'0') + '1' + // header lote
-    'C' + // crédito
-    ' ' + '45' + // pagamento fornecedores
-    '030' + // versão layout lote
-    ' ' +
-    '2' + pad(CNPJ_EMP,14,'0') +
-    pad(CONVENIO,20,' ',true) +
-    pad(AGENCIA,5,'0') + AGENCIA_DV +
-    pad(CONTA,12,'0') + CONTA_DV + ' ' +
-    pad(EMPRESA_NOME,30,' ',true) +
-    ' '.repeat(40) +
-    pad(dtArq,8,'0') +
-    ' '.repeat(8) +
-    padN(totLote,18) +
-    pad(nrRegsLote,6,'0') +
-    ' '.repeat(33)
+  // ── HEADER LOTE ───────────────────────────────────────
+  const hl = verif(
+    BANCO +                   // 001-003
+    '0001' +                  // 004-007 lote 1
+    '1' +                     // 008     tipo reg header lote
+    'C' +                     // 009     operação crédito
+    ' ' +                     // 010     brancos
+    '45' +                    // 011-012 tipo serviço PIX
+    '030' +                   // 013-015 versão layout lote
+    ' ' +                     // 016     brancos
+    '2' +                     // 017     tipo inscrição empresa
+    CNPJ_EMP +                // 018-031 CNPJ (14)
+    CONVENIO +                // 032-051 convênio (20)
+    padL(AG,5) +              // 052-056 agência (5)
+    AG_DV +                   // 057     DV agência
+    padL(CC,12) +             // 058-069 conta (12)
+    CC_DV +                   // 070     DV conta
+    ' ' +                     // 071     DAC
+    EMP_NOME +                // 072-101 nome empresa (30)
+    ' '.repeat(40) +          // 102-141 mensagem (40)
+    dtGer +                   // 142-149 data gravação (8)
+    '00000000' +              // 150-157 data crédito (8)
+    cents(totLote) +          // 158-172 total valores (15)
+    String(qtRegsLote).padStart(6,'0') + // 173-178 qtd registros (6)
+    ' '.repeat(33) +          // 179-211 brancos (33)
+    ' '.repeat(10) +          // 212-221 ocorrências (10) — aqui começa info extra
+    ' '.repeat(19),           // 222-240 brancos (19)
+    'Header Lote'
   );
-  nrRegLote = 1;
+  linhas.push(hl);
 
+  // ── DETALHE A + B por beneficiário ────────────────────
   itensValidos.forEach((item, idx) => {
     const m = item.medicos||{};
-    const chave = (m.pix_chave||'').replace(/\D/g,'') || m.pix_chave;
-    const tipoChave = m.pix_tipo==='CPF'?'1':m.pix_tipo==='CNPJ'?'2':m.pix_tipo==='EMAIL'?'3':m.pix_tipo==='TELEFONE'?'4':'5';
-    const favorNome = pad((m.razao_social||m.nome||'').toUpperCase(),30,' ',true);
-    const nrDoc = pad(String(idx+1).padStart(10,'0')+nrLote,15,'0');
+    const nrSeqA = (idx*2)+1;
+    const nrSeqB = (idx*2)+2;
+    const nrDoc  = String(idx+1).padStart(15,'0');
+    const tipoChave = {CPF:'1',CNPJ:'2',EMAIL:'3',TELEFONE:'4',ALEATORIA:'5'}[m.pix_tipo||'CPF']||'1';
 
     // Segmento A
-    nrRegLote++;
-    linhas.push(
-      pad(BANCO,3,'0') + pad(nrLote,4,'0') + '3' +
-      pad(nrRegLote,5,'0') + 'A' +
-      '0' + // mov inclusão
-      pad('009',3,'0') + // câmara PIX
-      pad('',3,'0') + // banco favorecido
-      pad('',5,'0') + ' ' + // agência
-      pad('',12,'0') + ' ' + ' ' + // conta
-      pad(favorNome,30,' ',true) +
-      pad(nrDoc,15,' ',true) +
-      pad(dtBr(new Date(_fechAtivo.data_fim+'T12:00:00')),8,'0') +
-      'BRL' +
-      padN(item.valor_total,15) +
-      pad(dtBr(agora),8,'0') +
-      padN(0,15) +
-      '00' + // ocorrências
-      pad(' '.repeat(10),10,' ',true) +
-      pad(' '.repeat(40),40,' ',true)
+    const sa = verif(
+      BANCO +                 // 001-003
+      '0001' +                // 004-007 lote
+      '3' +                   // 008     tipo reg detalhe
+      String(nrSeqA).padStart(5,'0') + // 009-013 n° seq (5)
+      'A' +                   // 014     segmento
+      '0' +                   // 015     tipo movimento (0=inclusão)
+      '00' +                  // 016-017 instrução
+      '009' +                 // 018-020 câmara PIX
+      '000' +                 // 021-023 banco favorecido
+      '00000' +               // 024-028 agência favorecido
+      '0' +                   // 029     DV agência fav
+      '000000000000' +        // 030-041 conta favorecido (12)
+      '0' +                   // 042     DV conta fav
+      ' ' +                   // 043     DAC
+      padR(m.nome||'',30) +   // 044-073 nome favorecido (30)
+      padR(nrDoc,20) +        // 074-093 n° doc empresa (20)
+      dtPag +                 // 094-101 data pagamento (8)
+      'BRL' +                 // 102-104 moeda (3)
+      '0'.repeat(15) +        // 105-119 qtd moeda (15)
+      cents(item.valor_total) + // 120-134 valor pagamento (15)
+      ' '.repeat(20) +        // 135-154 n° doc banco (20)
+      '00000000' +            // 155-162 data real pgto (8)
+      '0'.repeat(15) +        // 163-177 valor real pgto (15)
+      ' '.repeat(40) +        // 178-217 informação 2 (40)
+      '01' +                  // 218-219 fin. TEF (PIX)
+      ' '.repeat(5) +         // 220-224 fins específicos
+      '0'.repeat(5) +         // 225-229 n° NF
+      ' '.repeat(9) +         // 230-238 brancos
+      '00',                   // 239-240 ocorrências
+      'Segmento A'
     );
+    linhas.push(sa);
 
-    // Segmento B — chave PIX
-    nrRegLote++;
-    linhas.push(
-      pad(BANCO,3,'0') + pad(nrLote,4,'0') + '3' +
-      pad(nrRegLote,5,'0') + 'B' +
-      ' ' +
-      tipoChave +
-      pad(m.pix_chave||'',77,' ',true) +
-      pad(dtBr(new Date(_fechAtivo.data_fim+'T12:00:00')),8,'0') +
-      padN(0,15) + padN(0,15) +
-      ' '.repeat(30) +
-      pad(' '.repeat(10),10,' ',true)
+    // Segmento B (chave PIX)
+    const sb = verif(
+      BANCO +                 // 001-003
+      '0001' +                // 004-007 lote
+      '3' +                   // 008     tipo reg
+      String(nrSeqB).padStart(5,'0') + // 009-013 seq (5)
+      'B' +                   // 014     segmento B
+      ' ' +                   // 015     brancos
+      tipoChave +             // 016     tipo chave PIX
+      padR(m.pix_chave||'',77) + // 017-093 chave PIX (77)
+      dtPag +                 // 094-101 data vencimento (8)
+      '0'.repeat(15) +        // 102-116 valor abatimento (15)
+      '0'.repeat(15) +        // 117-131 valor desconto (15)
+      '0'.repeat(15) +        // 132-146 valor mora (15)
+      '0'.repeat(15) +        // 147-161 valor multa (15)
+      ' '.repeat(30) +        // 162-191 id transação PIX (30)
+      ' '.repeat(40) +        // 192-231 informações PIX (40)
+      ' '.repeat(9),          // 232-240 brancos (9)
+      'Segmento B'
     );
+    linhas.push(sb);
   });
 
-  // Trailer lote
-  nrRegLote++;
-  linhas.push(
-    pad(BANCO,3,'0') + pad(nrLote,4,'0') + '5' +
-    ' '.repeat(9) +
-    pad(nrRegLote,6,'0') +
-    pad(itensValidos.length,6,'0') +
-    padN(totLote,18) +
-    pad('0',6,'0') + padN(0,18) +
-    pad('0',6,'0') + padN(0,18) +
-    ' '.repeat(145)
+  // ── TRAILER LOTE ──────────────────────────────────────
+  const tl = verif(
+    BANCO +                   // 001-003
+    '0001' +                  // 004-007 lote
+    '5' +                     // 008     tipo reg trailer lote
+    ' '.repeat(9) +           // 009-017 brancos (9)
+    String(qtRegsLote).padStart(6,'0') + // 018-023 qtd regs (6)
+    '0'.padStart(6,'0') +     // 024-029 qtd débito (6)
+    cents(0) +                // 030-044 soma débito (15)
+    String(itensValidos.length).padStart(6,'0') + // 045-050 qtd crédito (6)
+    cents(totLote) +          // 051-065 soma crédito (15)
+    ' '.repeat(165) +         // 066-230 brancos (165)
+    ' '.repeat(10),           // 231-240 ocorrências (10)
+    'Trailer Lote'
   );
+  linhas.push(tl);
 
-  // Trailer arquivo
+  // ── TRAILER ARQUIVO ───────────────────────────────────
   const totalRegs = linhas.length + 1;
-  linhas.push(
-    pad(BANCO,3,'0') + '99999' + '9' +
-    ' '.repeat(9) +
-    pad(1,6,'0') + // qtd lotes
-    pad(totalRegs,6,'0') +
-    ' '.repeat(6) + ' '.repeat(205)
+  const ta = verif(
+    BANCO +                   // 001-003
+    '9999' +                  // 004-007
+    '9' +                     // 008     tipo reg trailer arquivo
+    ' '.repeat(9) +           // 009-017 brancos (9)
+    '1'.padStart(6,'0') +     // 018-023 qtd lotes (6)
+    String(totalRegs).padStart(6,'0') + // 024-029 qtd regs total (6)
+    ' '.repeat(6) +           // 030-035 qtd contas (6)
+    ' '.repeat(205),          // 036-240 brancos (205)
+    'Trailer Arquivo'
   );
+  linhas.push(ta);
 
   const CRLF = '\r\n';
   const conteudo = linhas.join(CRLF) + CRLF;
-  const nomeArq = `Remessa_${agora.toISOString().replace(/[-:.TZ]/g,'').slice(0,14)}.rem`;
+  const nomeArq = 'Remessa_'+agora.toISOString().replace(/[-:.TZ]/g,'').slice(0,14)+'.rem';
 
-  // Salvar remessa no Supabase
+  // Salvar no Supabase
   await sb('/rest/v1/remessas', {
     method:'POST',
-    body: JSON.stringify({ fechamento_id:_fechAtivo.id, nome_arquivo:nomeArq, conteudo, total:totLote })
+    body: JSON.stringify({fechamento_id:_fechAtivo.id, nome_arquivo:nomeArq, conteudo, total:totLote})
   });
 
-  // Download do arquivo
-  const blob = new Blob([conteudo], {type:'text/plain;charset=utf-8'});
+  // Download
+  const blob = new Blob([conteudo], {type:'text/plain;charset=windows-1252'});
   const url  = URL.createObjectURL(blob);
-  const a    = document.createElement('a');
-  a.href = url; a.download = nomeArq; a.click();
+  const a    = document.createElement('a'); a.href=url; a.download=nomeArq; a.click();
   URL.revokeObjectURL(url);
 
-  toast(`✅ Remessa gerada: ${itensValidos.length} pagamentos — ${fBRL(totLote)}`);
+  toast(`✅ Remessa CNAB 240 gerada: ${itensValidos.length} pagamentos — ${fBRL(totLote)}`);
   mfechTab('remessa', document.querySelectorAll('.mfech-tab-btn')[1]);
 }
+
 
 // ── LISTAR REMESSAS ────────────────────────────────────
 async function carregarRemessas() {
