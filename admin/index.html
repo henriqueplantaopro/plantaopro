@@ -502,7 +502,7 @@ tr:hover td{background:var(--bg3);}
         </div>
         <div class="form-row">
           <div class="form-group"><label>Tipo de chave PIX</label>
-            <select id="mn-pix-tipo">
+            <select id="mn-pix-tipo" onchange="autoPreencherPixNovo()">
               <option value="">Sem PIX cadastrado</option>
               <option value="CPF">CPF</option>
               <option value="CNPJ">CNPJ</option>
@@ -511,7 +511,14 @@ tr:hover td{background:var(--bg3);}
               <option value="ALEATORIA">Chave aleatória</option>
             </select>
           </div>
-          <div class="form-group"><label>Chave PIX</label><input id="mn-pix-chave" type="text" placeholder="Digite a chave PIX"></div>
+          <div class="form-group">
+            <label>Chave PIX</label>
+            <div style="position:relative;">
+              <input id="mn-pix-chave" type="text" placeholder="Digite a chave PIX" oninput="validarPixNovo()" style="width:100%;padding-right:30px;">
+              <span id="mn-pix-status" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);font-size:16px;display:none;"></span>
+            </div>
+            <div id="mn-pix-aviso" style="display:none;font-size:11px;margin-top:4px;padding:4px 8px;border-radius:4px;"></div>
+          </div>
         </div>
       </div>
       <!-- Projetos vinculados -->
@@ -1387,7 +1394,7 @@ tr:hover td{background:var(--bg3);}
     <div class="form-row">
       <div class="form-group">
         <label>Tipo de chave PIX</label>
-        <select id="em-pix-tipo">
+        <select id="em-pix-tipo" onchange="autoPreencherPixEdit()">
           <option value="">Sem PIX cadastrado</option>
           <option value="CPF">CPF</option>
           <option value="CNPJ">CNPJ</option>
@@ -1398,7 +1405,11 @@ tr:hover td{background:var(--bg3);}
       </div>
       <div class="form-group">
         <label>Chave PIX</label>
-        <input id="em-pix-chave" type="text" placeholder="Digite a chave PIX">
+        <div style="position:relative;">
+          <input id="em-pix-chave" type="text" placeholder="Digite a chave PIX" oninput="validarPixEdit()" style="width:100%;padding-right:30px;">
+          <span id="em-pix-status" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);font-size:16px;display:none;"></span>
+        </div>
+        <div id="em-pix-aviso" style="display:none;font-size:11px;margin-top:4px;padding:4px 8px;border-radius:4px;"></div>
       </div>
     </div>
     <div class="form-group">
@@ -4208,6 +4219,163 @@ async function processarRetorno(event) {
   toast(`✅ Retorno processado: ${pagosCount} pagamentos confirmados`);
 }
 
+
+
+// ─── VALIDAÇÃO PIX ───────────────────────────────────────
+
+function limparCpf(v) { return (v||'').replace(/\D/g,''); }
+function limparCnpj(v) { return (v||'').replace(/\D/g,''); }
+
+// Modal de EDIÇÃO — ao selecionar CPF como tipo PIX, preencher com CPF do médico
+function autoPreencherPixEdit() {
+  const tipo  = document.getElementById('em-pix-tipo')?.value;
+  const chave = document.getElementById('em-pix-chave');
+  if (!chave) return;
+
+  if (tipo === 'CPF') {
+    const cpf = document.getElementById('em-cpf')?.value?.trim();
+    if (cpf) {
+      chave.value = cpf;
+      mostrarAvisoPixEdit('✅ Preenchido com o CPF do cadastro — confirme se está correto.', 'green');
+    } else {
+      chave.value = '';
+      mostrarAvisoPixEdit('⚠️ CPF não cadastrado. Preencha o CPF do médico primeiro.', 'amber');
+    }
+  } else if (tipo === 'CNPJ') {
+    const cnpj = document.getElementById('em-cnpj')?.value?.trim();
+    if (cnpj) {
+      chave.value = cnpj;
+      mostrarAvisoPixEdit('✅ Preenchido com o CNPJ do cadastro.', 'green');
+    } else {
+      chave.value = '';
+      mostrarAvisoPixEdit('⚠️ CNPJ não cadastrado. Preencha o CNPJ do médico primeiro.', 'amber');
+    }
+  } else if (tipo === 'EMAIL') {
+    // Email pode ser diferente do cadastro — não preencher automaticamente
+    mostrarAvisoPixEdit('ℹ️ Digite o e-mail cadastrado como chave PIX do médico.', 'blue');
+  } else {
+    chave.value = '';
+    esconderAvisoPixEdit();
+  }
+  validarPixEdit();
+}
+
+// Validar chave PIX no modal de edição
+function validarPixEdit() {
+  const tipo  = document.getElementById('em-pix-tipo')?.value;
+  const chave = (document.getElementById('em-pix-chave')?.value||'').trim();
+  const cpfCad  = limparCpf(document.getElementById('em-cpf')?.value||'');
+  const cnpjCad = limparCnpj(document.getElementById('em-cnpj')?.value||'');
+  const emailCad = (document.getElementById('em-email')?.value||'').trim().toLowerCase();
+  const st = document.getElementById('em-pix-status');
+
+  if (!chave || !tipo) { if(st) st.style.display='none'; esconderAvisoPixEdit(); return; }
+
+  if (tipo === 'CPF') {
+    const chaveLimpa = limparCpf(chave);
+    if (cpfCad && chaveLimpa !== cpfCad) {
+      if(st){ st.textContent='⚠️'; st.style.display='inline'; }
+      mostrarAvisoPixEdit('⚠️ A chave PIX (CPF) é diferente do CPF cadastrado. Confirme se está correto.', 'red');
+    } else if (cpfCad && chaveLimpa === cpfCad) {
+      if(st){ st.textContent='✅'; st.style.display='inline'; }
+      mostrarAvisoPixEdit('✅ Chave PIX confere com o CPF cadastrado.', 'green');
+    } else {
+      if(st) st.style.display='none'; esconderAvisoPixEdit();
+    }
+  } else if (tipo === 'CNPJ') {
+    const chaveLimpa = limparCnpj(chave);
+    if (cnpjCad && chaveLimpa !== cnpjCad) {
+      if(st){ st.textContent='⚠️'; st.style.display='inline'; }
+      mostrarAvisoPixEdit('⚠️ A chave PIX (CNPJ) é diferente do CNPJ cadastrado.', 'red');
+    } else if (cnpjCad && chaveLimpa === cnpjCad) {
+      if(st){ st.textContent='✅'; st.style.display='inline'; }
+      mostrarAvisoPixEdit('✅ Chave PIX confere com o CNPJ cadastrado.', 'green');
+    } else {
+      if(st) st.style.display='none'; esconderAvisoPixEdit();
+    }
+  } else if (tipo === 'EMAIL') {
+    if(st) st.style.display='none';
+    mostrarAvisoPixEdit('ℹ️ Use qualquer e-mail vinculado à chave PIX do médico.', 'blue');
+  } else {
+    if(st) st.style.display='none';
+    mostrarAvisoPixEdit('ℹ️ Chave aleatória/telefone: confirme com o médico se a conta está correta.', 'blue');
+  }
+}
+
+function mostrarAvisoPixEdit(msg, cor) {
+  const el = document.getElementById('em-pix-aviso');
+  if (!el) return;
+  const cores = { green:'background:var(--green-bg);color:var(--green);', red:'background:var(--red-bg);color:var(--red);', amber:'background:var(--amber-bg);color:var(--amber);', blue:'background:var(--blue-light);color:var(--blue);' };
+  el.style.cssText = (cores[cor]||cores.blue) + 'display:block;font-size:11px;margin-top:4px;padding:5px 9px;border-radius:4px;';
+  el.textContent = msg;
+}
+function esconderAvisoPixEdit() { const el=document.getElementById('em-pix-aviso'); if(el) el.style.display='none'; }
+
+// ── Mesmo para formulário de NOVO médico ──────────────
+function autoPreencherPixNovo() {
+  const tipo  = document.getElementById('mn-pix-tipo')?.value;
+  const chave = document.getElementById('mn-pix-chave');
+  if (!chave) return;
+  if (tipo === 'CPF') {
+    const cpf = document.getElementById('mcpf')?.value?.trim();
+    if (cpf) { chave.value = cpf; mostrarAvisoPixNovo('✅ Preenchido com o CPF do cadastro acima.', 'green'); }
+    else { chave.value=''; mostrarAvisoPixNovo('⚠️ Preencha o CPF do médico primeiro.', 'amber'); }
+  } else if (tipo === 'CNPJ') {
+    const cnpj = document.getElementById('mn-cnpj')?.value?.trim();
+    if (cnpj) { chave.value = cnpj; mostrarAvisoPixNovo('✅ Preenchido com o CNPJ cadastrado.', 'green'); }
+    else { chave.value=''; mostrarAvisoPixNovo('⚠️ Preencha o CNPJ do médico primeiro.', 'amber'); }
+  } else if (tipo === 'EMAIL') {
+    mostrarAvisoPixNovo('ℹ️ Digite o e-mail cadastrado como chave PIX do médico.', 'blue');
+  } else { chave.value=''; esconderAvisoPixNovo(); }
+  validarPixNovo();
+}
+
+function validarPixNovo() {
+  const tipo  = document.getElementById('mn-pix-tipo')?.value;
+  const chave = (document.getElementById('mn-pix-chave')?.value||'').trim();
+  const cpfCad   = limparCpf(document.getElementById('mcpf')?.value||'');
+  const cnpjCad  = limparCnpj(document.getElementById('mn-cnpj')?.value||'');
+  const emailCad = (document.getElementById('memail')?.value||'').trim().toLowerCase();
+  const st = document.getElementById('mn-pix-status');
+
+  if (!chave || !tipo) { if(st) st.style.display='none'; esconderAvisoPixNovo(); return; }
+
+  if (tipo==='CPF') {
+    const cl = limparCpf(chave);
+    if (cpfCad && cl!==cpfCad) { if(st){st.textContent='⚠️';st.style.display='inline';} mostrarAvisoPixNovo('⚠️ CPF da chave PIX difere do CPF cadastrado acima.','red'); }
+    else if (cpfCad && cl===cpfCad) { if(st){st.textContent='✅';st.style.display='inline';} mostrarAvisoPixNovo('✅ Chave confere com o CPF cadastrado.','green'); }
+    else { if(st) st.style.display='none'; esconderAvisoPixNovo(); }
+  } else if (tipo==='CNPJ') {
+    const cl = limparCnpj(chave);
+    if (cnpjCad && cl!==cnpjCad) { if(st){st.textContent='⚠️';st.style.display='inline';} mostrarAvisoPixNovo('⚠️ CNPJ da chave PIX difere do CNPJ cadastrado.','red'); }
+    else if (cnpjCad && cl===cnpjCad) { if(st){st.textContent='✅';st.style.display='inline';} mostrarAvisoPixNovo('✅ Confere com o CNPJ cadastrado.','green'); }
+    else { if(st) st.style.display='none'; esconderAvisoPixNovo(); }
+  } else if (tipo==='EMAIL') {
+    if(st) st.style.display='none';
+    mostrarAvisoPixNovo('ℹ️ Use qualquer e-mail vinculado à chave PIX do médico.','blue');
+  } else {
+    if(st) st.style.display='none';
+    mostrarAvisoPixNovo('ℹ️ Chave aleatória/telefone: confirme com o médico se a conta está correta.','blue');
+  }
+}
+
+function mostrarAvisoPixNovo(msg, cor) {
+  const el = document.getElementById('mn-pix-aviso');
+  if (!el) return;
+  const cores = { green:'background:var(--green-bg);color:var(--green);', red:'background:var(--red-bg);color:var(--red);', amber:'background:var(--amber-bg);color:var(--amber);', blue:'background:var(--blue-light);color:var(--blue);' };
+  el.style.cssText = (cores[cor]||cores.blue) + 'display:block;font-size:11px;margin-top:4px;padding:5px 9px;border-radius:4px;';
+  el.textContent = msg;
+}
+function esconderAvisoPixNovo() { const el=document.getElementById('mn-pix-aviso'); if(el) el.style.display='none'; }
+
+// Ao abrir o modal de edição, disparar validação
+const _origAbrirEditarMedico = abrirEditarMedico;
+function abrirEditarMedico(id) {
+  _origAbrirEditarMedico(id);
+  setTimeout(() => validarPixEdit(), 200);
+}
+
+// ── FIM VALIDAÇÃO PIX ─────────────────────────────────
 
 // Inicia com Enter no login
 document.getElementById('l-email').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('l-senha').focus();});
