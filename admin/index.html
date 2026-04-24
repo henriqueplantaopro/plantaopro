@@ -3972,9 +3972,21 @@ async function gerarRemessa() {
   const qtRegsLote = itensValidos.length * 2 + 2; // header + trailer + A+B por item
 
   // Helpers CNAB 240
-  const padR = (v,n,c=' ') => String(v||'').slice(0,n).padEnd(n,c);
-  const padL = (v,n,c='0') => String(v||'').slice(0,n).padStart(n,c);
+  // CNAB usa ASCII — remover acentos para garantir 1 char = 1 byte
+  const toAscii = (v) => String(v||'')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g,'')  // remove diacríticos
+    .replace(/[^\x00-\x7F]/g,' ');  // substitui não-ASCII por espaço
+  const padR = (v,n,c=' ') => toAscii(v).slice(0,n).padEnd(n,c);
+  const padL = (v,n,c='0') => toAscii(v).slice(0,n).padStart(n,c);
   const cents = v => String(Math.round((parseFloat(v)||0)*100)).padStart(15,'0');
+  // Limpar chave PIX — remover pontos, traços, barras
+  const limparChave = (chave, tipo) => {
+    if (!chave) return '';
+    if (tipo === 'CPF' || tipo === 'CNPJ') return chave.replace(/[.\-\/]/g,'');
+    if (tipo === 'TELEFONE') return chave.replace(/[^0-9+]/g,'');
+    return chave.trim();
+  };
   const dtFmt = (d) => { // retorna DDMMAAAA
     const dt = d instanceof Date ? d : new Date(String(d)+'T12:00:00');
     const dd = String(dt.getDate()).padStart(2,'0');
@@ -4075,6 +4087,7 @@ async function gerarRemessa() {
     const nrSeqB = (idx*2)+2;
     const nrDoc  = String(idx+1).padStart(15,'0');
     const tipoChave = {CPF:'1',CNPJ:'2',EMAIL:'3',TELEFONE:'4',ALEATORIA:'5'}[m.pix_tipo||'CPF']||'1';
+    const chaveLimpa = limparChave(m.pix_chave||'', m.pix_tipo||'');
 
     // Segmento A
     const sa = verif(
@@ -4120,7 +4133,7 @@ async function gerarRemessa() {
       'B' +                   // 014     segmento B
       ' ' +                   // 015     brancos
       tipoChave +             // 016     tipo chave PIX
-      padR(m.pix_chave||'',77) + // 017-093 chave PIX (77)
+      padR(chaveLimpa,77) +       // 017-093 chave PIX (77) — sem formatação
       dtPag +                 // 094-101 data vencimento (8)
       '0'.repeat(15) +        // 102-116 valor abatimento (15)
       '0'.repeat(15) +        // 117-131 valor desconto (15)
