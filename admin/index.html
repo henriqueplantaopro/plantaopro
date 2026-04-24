@@ -271,6 +271,13 @@ tr:hover td{background:var(--bg3);}
   .rel-tipo-btn{padding:9px 8px;border:1.5px solid var(--border);border-radius:var(--radius);background:#fff;font-size:12px;font-weight:500;cursor:pointer;color:var(--text2);transition:all 0.15s;text-align:center;}
   .rel-tipo-btn:hover{border-color:var(--blue);color:var(--blue);background:var(--blue-light);}
   .rel-tipo-btn.active{border-color:var(--blue);background:var(--blue);color:#fff;font-weight:600;}
+  /* Financeiro */
+  .fech-card{background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:14px 18px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;gap:12px;cursor:pointer;transition:box-shadow 0.15s;}
+  .fech-card:hover{box-shadow:0 2px 8px rgba(0,0,0,0.1);}
+  .fech-status-pago{background:var(--green-bg);color:var(--green);padding:2px 10px;border-radius:99px;font-size:11px;font-weight:600;}
+  .fech-status-parcial{background:var(--amber-bg);color:var(--amber);padding:2px 10px;border-radius:99px;font-size:11px;font-weight:600;}
+  .fech-status-aberto{background:var(--bg3);color:var(--text2);padding:2px 10px;border-radius:99px;font-size:11px;font-weight:600;}
+  .active-tab{border-bottom:2px solid var(--blue)!important;color:var(--blue)!important;font-weight:600!important;}
 
   .mr-med-item{display:flex;align-items:center;gap:8px;padding:7px 10px;cursor:pointer;border-bottom:1px solid var(--border);font-size:13px;transition:background 0.1s;}
   .mr-med-item:last-child{border-bottom:none;}
@@ -317,6 +324,7 @@ tr:hover td{background:var(--bg3);}
     <div class="nav-item" onclick="showTab('checkins',this)">📍 Check-ins</div>
     <div class="nav-item" onclick="showTab('candidaturas',this)">📢 Plantões abertos <span id="badge-cand" style="display:none;background:var(--red);color:#fff;font-size:9px;font-weight:700;border-radius:99px;padding:1px 5px;margin-left:4px;"></span></div>
     <div class="nav-item" onclick="showTab('relatorios',this)">📈 Relatórios</div>
+    <div class="nav-item" onclick="showTab('financeiro',this)">💰 Financeiro</div>
     <div class="nav-item" onclick="showTab('calendario',this)">📅 Calendário</div>
     <div class="nav-item" onclick="showTab('escala',this)">👥 Escala por profissional</div>
     <div class="nav-item" onclick="showTab('importar',this)">📥 Importar CSV</div>
@@ -854,6 +862,92 @@ tr:hover td{background:var(--bg3);}
   <!-- Tooltip global -->
   <div class="tooltip" id="tooltip-escala"></div>
 
+  <!-- FINANCEIRO -->
+  <div id="tab-financeiro" class="section">
+    <div class="page-title">Financeiro</div>
+    <div class="page-sub">Fechamentos, remessas e controle de pagamentos</div>
+
+    <!-- Sub-abas -->
+    <div style="display:flex;gap:0;border-bottom:2px solid var(--border);margin-bottom:16px;">
+      <button id="fin-tab-lista" class="btn btn-ghost" onclick="finShowTab('lista',this)" style="border-radius:var(--radius) var(--radius) 0 0;border-bottom:2px solid var(--blue);color:var(--blue);font-weight:600;">📋 Fechamentos</button>
+      <button id="fin-tab-novo" class="btn btn-ghost" onclick="finShowTab('novo',this)" style="border-radius:var(--radius) var(--radius) 0 0;">+ Novo fechamento</button>
+    </div>
+
+    <!-- Lista de fechamentos -->
+    <div id="fin-page-lista">
+      <div id="fin-lista"><div class="empty">Carregando...</div></div>
+    </div>
+
+    <!-- Novo fechamento -->
+    <div id="fin-page-novo" style="display:none;">
+      <div class="card" style="max-width:600px;">
+        <div class="card-title">Criar novo fechamento</div>
+        <div class="form-group"><label>Nome do fechamento</label><input id="fin-nome" type="text" placeholder="Ex: Hospital Bonsucesso — Abril 2026"></div>
+        <div class="form-row">
+          <div class="form-group"><label>Projeto</label><select id="fin-proj"><option value="">Todos os projetos</option></select></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>Data início</label><input id="fin-d1" type="date"></div>
+          <div class="form-group"><label>Data fim</label><input id="fin-d2" type="date"></div>
+        </div>
+        <div class="form-group"><label>Observações</label><input id="fin-obs" type="text" placeholder="Opcional"></div>
+        <div style="margin-top:12px;display:flex;gap:8px;">
+          <button class="btn btn-primary" onclick="criarFechamento()">✓ Criar fechamento</button>
+          <button class="btn btn-ghost" onclick="finShowTab('lista',document.getElementById('fin-tab-lista'))">Cancelar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL DETALHE FECHAMENTO -->
+  <div class="modal-overlay" id="modal-fechamento" onclick="if(event.target===this)fecharModalFechamento()">
+    <div class="modal" style="max-width:900px;max-height:90vh;overflow-y:auto;">
+      <div class="modal-header">
+        <div>
+          <div class="modal-title" id="mfech-titulo">Fechamento</div>
+          <div style="font-size:12px;color:var(--text3);" id="mfech-sub"></div>
+        </div>
+        <button class="modal-close" onclick="fecharModalFechamento()">✕</button>
+      </div>
+
+      <!-- Sub-abas do modal -->
+      <div style="display:flex;gap:0;border-bottom:2px solid var(--border);margin-bottom:16px;">
+        <button class="btn btn-ghost mfech-tab-btn active-tab" onclick="mfechTab('fechamento',this)" style="border-radius:4px 4px 0 0;font-size:12px;">📋 Fechamento</button>
+        <button class="btn btn-ghost mfech-tab-btn" onclick="mfechTab('remessa',this)" style="border-radius:4px 4px 0 0;font-size:12px;">📤 Remessa</button>
+        <button class="btn btn-ghost mfech-tab-btn" onclick="mfechTab('retorno',this)" style="border-radius:4px 4px 0 0;font-size:12px;">📥 Retorno</button>
+      </div>
+
+      <!-- Aba Fechamento -->
+      <div id="mfech-page-fechamento">
+        <div style="margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+          <div id="mfech-resumo" style="font-size:12px;color:var(--text2);"></div>
+          <div style="display:flex;gap:6px;">
+            <button class="btn btn-success btn-sm" onclick="gerarRemessa()">📤 Gerar remessa</button>
+            <button class="btn btn-ghost btn-sm" onclick="exportarFechamentoXLSX()">⬇ Excel</button>
+          </div>
+        </div>
+        <div id="mfech-tabela"></div>
+      </div>
+
+      <!-- Aba Remessa -->
+      <div id="mfech-page-remessa" style="display:none;">
+        <div id="mfech-remessas-lista"><div class="empty">Nenhuma remessa gerada ainda.</div></div>
+      </div>
+
+      <!-- Aba Retorno -->
+      <div id="mfech-page-retorno" style="display:none;">
+        <div class="card" style="border:2px dashed var(--border);text-align:center;padding:32px;">
+          <div style="font-size:32px;margin-bottom:8px;">📥</div>
+          <div style="font-size:14px;font-weight:600;margin-bottom:4px;">Upload do arquivo de retorno (.RET)</div>
+          <div style="font-size:12px;color:var(--text2);margin-bottom:16px;">Gerado pelo Bradesco após processar a remessa</div>
+          <input type="file" id="ret-file-input" accept=".ret,.txt,.RET" style="display:none;" onchange="processarRetorno(event)">
+          <button class="btn btn-primary" onclick="document.getElementById('ret-file-input').click()">Selecionar arquivo .RET</button>
+        </div>
+        <div id="ret-resultado" style="margin-top:12px;"></div>
+      </div>
+    </div>
+  </div>
+
   <!-- EXPORTAR TOTVS -->
   <div id="tab-exportar" class="section">
     <div class="page-title">Exportar TOTVS</div>
@@ -1045,6 +1139,33 @@ tr:hover td{background:var(--bg3);}
       <div class="form-group"><label>RQE</label><input id="em-rqe" type="text"></div>
       <div class="form-group"><label>Especialidade</label><input id="em-esp" type="text"></div>
       <div class="form-group"><label>Valor/hora (R$)</label><input id="em-valor" type="number" step="0.01"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Razão social <span style="font-weight:400;font-size:11px;color:var(--text3);">(se PJ)</span></label>
+        <input id="em-razao" type="text" placeholder="Empresa LTDA">
+      </div>
+      <div class="form-group">
+        <label>CNPJ <span style="font-weight:400;font-size:11px;color:var(--text3);">(se PJ)</span></label>
+        <input id="em-cnpj" type="text" placeholder="00.000.000/0000-00">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Tipo de chave PIX</label>
+        <select id="em-pix-tipo">
+          <option value="">Sem PIX cadastrado</option>
+          <option value="CPF">CPF</option>
+          <option value="CNPJ">CNPJ</option>
+          <option value="EMAIL">E-mail</option>
+          <option value="TELEFONE">Telefone</option>
+          <option value="ALEATORIA">Chave aleatória</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Chave PIX</label>
+        <input id="em-pix-chave" type="text" placeholder="Digite a chave PIX">
+      </div>
     </div>
     <div class="form-group">
       <label>Projetos vinculados <span style="font-weight:400;font-size:11px;color:var(--text3);">(plantões disponíveis visíveis no app)</span></label>
@@ -1339,6 +1460,10 @@ async function salvarEdicaoMedico() {
   const projsVinc = [...document.querySelectorAll('.em-proj-chk:checked')].map(c => c.value);
   const payload = {
     nome:           document.getElementById('em-nome').value.trim(),
+    razao_social:   document.getElementById('em-razao')?.value.trim()||null,
+    cnpj:           document.getElementById('em-cnpj')?.value.trim()||null,
+    pix_tipo:       document.getElementById('em-pix-tipo')?.value||null,
+    pix_chave:      document.getElementById('em-pix-chave')?.value.trim()||null,
     email:          document.getElementById('em-email').value.trim(),
     telefone:       document.getElementById('em-tel').value.trim(),
     data_nascimento: document.getElementById('em-nasc').value || null,
@@ -1855,6 +1980,7 @@ function showTab(id,el){
   if(id==='lote'){ initLote(); }
   if(id==='lotemed'){ initAgenda(); }
   if(id==='candidaturas'){ initCandidaturas(); }
+  if(id==='financeiro'){ initFinanceiro(); }
   if(id==='medicos'){ renderMedProjetosCheck(); }
   if(id==='dashboard') updateDash();
 }
@@ -3235,6 +3361,486 @@ function initCandidaturas() {
 
 // Mostrar plantões abertos no calendário semanal com visual diferente
 // (já tratado no renderSemana pela flag l.aberto)
+
+
+// ─── MÓDULO FINANCEIRO ───────────────────────────────────
+let _fechAtivo = null;   // fechamento aberto no modal
+let _fechItens = [];     // itens do fechamento ativo
+
+function finShowTab(id, btn) {
+  ['lista','novo'].forEach(t => {
+    const el = document.getElementById('fin-page-'+t);
+    if (el) el.style.display = t===id ? 'block' : 'none';
+  });
+  document.querySelectorAll('#tab-financeiro .btn-ghost').forEach(b => {
+    b.style.borderBottom = ''; b.style.color = ''; b.style.fontWeight = '';
+  });
+  if (btn) { btn.style.borderBottom='2px solid var(--blue)'; btn.style.color='var(--blue)'; btn.style.fontWeight='600'; }
+  if (id === 'lista') carregarFechamentos();
+}
+
+async function initFinanceiro() {
+  const sp = document.getElementById('fin-proj');
+  if (sp) sp.innerHTML = '<option value="">Todos os projetos</option>' +
+    sortedProjetos().map(p=>`<option value="${p.id}">${p.nome}</option>`).join('');
+  // Datas padrão: mês atual
+  const hoje = new Date();
+  const d1 = new Date(hoje.getFullYear(), hoje.getMonth(), 1).toISOString().slice(0,10);
+  const d2 = new Date(hoje.getFullYear(), hoje.getMonth()+1, 0).toISOString().slice(0,10);
+  document.getElementById('fin-d1').value = d1;
+  document.getElementById('fin-d2').value = d2;
+  finShowTab('lista', document.getElementById('fin-tab-lista'));
+}
+
+// ── LISTAR FECHAMENTOS ─────────────────────────────────
+async function carregarFechamentos() {
+  const el = document.getElementById('fin-lista');
+  if (!el) return;
+  el.innerHTML = '<div class="empty">Carregando...</div>';
+  const data = await sb('/rest/v1/fechamentos?select=*,projetos(nome)&order=criado_em.desc') || [];
+  if (!data.length) {
+    el.innerHTML = '<div class="empty">Nenhum fechamento criado ainda. Clique em "+ Novo fechamento" para começar.</div>';
+    return;
+  }
+  el.innerHTML = data.map(f => {
+    const pct = f.total_valor > 0 ? Math.round(f.total_pago/f.total_valor*100) : 0;
+    const statusCls = f.status==='pago'?'fech-status-pago':f.status==='parcial'?'fech-status-parcial':'fech-status-aberto';
+    const statusTxt = f.status==='pago'?'✅ Pago integralmente':f.status==='parcial'?`Pago parcialmente (${pct}%)`:'Sem pagamento';
+    return `<div class="fech-card" onclick="abrirFechamento('${f.id}')">
+      <div>
+        <div style="font-size:14px;font-weight:700;">${f.nome}</div>
+        <div style="font-size:12px;color:var(--text2);margin-top:2px;">${fDate(f.data_inicio)} → ${fDate(f.data_fim)} · ${f.projetos?.nome||'Todos os projetos'}</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:16px;flex-shrink:0;">
+        <div style="text-align:right;">
+          <div style="font-size:13px;font-weight:700;">${fBRL(f.total_valor)}</div>
+          <div style="font-size:11px;color:var(--text3);">Total a pagar</div>
+        </div>
+        <span class="${statusCls}">${statusTxt}</span>
+        <button class="btn btn-danger btn-sm" onclick="event.stopPropagation();deletarFechamento('${f.id}')" title="Excluir">🗑</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── CRIAR FECHAMENTO ───────────────────────────────────
+async function criarFechamento() {
+  const nome  = document.getElementById('fin-nome').value.trim();
+  const projId= document.getElementById('fin-proj').value;
+  const d1    = document.getElementById('fin-d1').value;
+  const d2    = document.getElementById('fin-d2').value;
+  const obs   = document.getElementById('fin-obs').value.trim();
+  if (!nome||!d1||!d2) { toast('Preencha nome e datas', true); return; }
+
+  // Calcular total com base nos lançamentos
+  let query = `/rest/v1/lancamentos?data=gte.${d1}&data=lte.${d2}&select=medico_id,honorario,horas,medicos(nome,crm,pix_tipo,pix_chave)`;
+  if (projId) query += `&projeto_id=eq.${projId}`;
+  const lancs = await sb(query) || [];
+
+  // Agrupar por médico
+  const porMed = {};
+  lancs.forEach(l => {
+    if (!l.medico_id) return;
+    if (!porMed[l.medico_id]) porMed[l.medico_id] = { medico_id:l.medico_id, nome:l.medicos?.nome||'', crm:l.medicos?.crm||'', pix_tipo:l.medicos?.pix_tipo||'', pix_chave:l.medicos?.pix_chave||'', plantoes:0, horas:0, valor:0 };
+    porMed[l.medico_id].plantoes++;
+    porMed[l.medico_id].horas += l.horas||0;
+    porMed[l.medico_id].valor += l.honorario||0;
+  });
+  const itens = Object.values(porMed);
+  const totalValor = itens.reduce((s,i)=>s+i.valor,0);
+
+  // Criar fechamento
+  const res = await sb('/rest/v1/fechamentos', {
+    method:'POST',
+    body: JSON.stringify({ nome, projeto_id:projId||null, data_inicio:d1, data_fim:d2, obs:obs||null, status:'aberto', total_valor:totalValor, total_pago:0 })
+  });
+  if (!res || !res[0]?.id) { toast('Erro ao criar fechamento', true); return; }
+  const fechId = res[0].id;
+
+  // Criar itens
+  if (itens.length > 0) {
+    for (const it of itens) {
+      await sb('/rest/v1/fechamento_itens', {
+        method:'POST',
+        body: JSON.stringify({ fechamento_id:fechId, medico_id:it.medico_id, plantoes:it.plantoes, horas:it.horas, valor_total:it.valor, valor_pago:0, status:'pendente' })
+      });
+    }
+  }
+
+  toast(`✅ Fechamento criado com ${itens.length} profissional(is) — ${fBRL(totalValor)}`);
+  document.getElementById('fin-nome').value='';
+  finShowTab('lista', document.getElementById('fin-tab-lista'));
+}
+
+async function deletarFechamento(id) {
+  if (!confirm('Excluir fechamento?')) return;
+  await sb(`/rest/v1/fechamentos?id=eq.${id}`, {method:'DELETE'});
+  carregarFechamentos();
+}
+
+// ── ABRIR FECHAMENTO (MODAL) ───────────────────────────
+async function abrirFechamento(id) {
+  const fech = (await sb(`/rest/v1/fechamentos?id=eq.${id}&select=*,projetos(nome)`))||[];
+  if (!fech[0]) return;
+  _fechAtivo = fech[0];
+
+  document.getElementById('mfech-titulo').textContent = fech[0].nome;
+  document.getElementById('mfech-sub').textContent = `${fDate(fech[0].data_inicio)} → ${fDate(fech[0].data_fim)} · ${fech[0].projetos?.nome||'Todos os projetos'}`;
+  document.getElementById('modal-fechamento').classList.add('open');
+
+  mfechTab('fechamento', document.querySelector('.mfech-tab-btn'));
+}
+
+function fecharModalFechamento() {
+  document.getElementById('modal-fechamento').classList.remove('open');
+  _fechAtivo = null;
+}
+
+function mfechTab(id, btn) {
+  ['fechamento','remessa','retorno'].forEach(t => {
+    const el = document.getElementById('mfech-page-'+t);
+    if (el) el.style.display = t===id?'block':'none';
+  });
+  document.querySelectorAll('.mfech-tab-btn').forEach(b => b.classList.remove('active-tab'));
+  if (btn) btn.classList.add('active-tab');
+  if (id==='fechamento') carregarItensFechamento();
+  if (id==='remessa')   carregarRemessas();
+  if (id==='retorno')   document.getElementById('ret-resultado').innerHTML='';
+}
+
+async function carregarItensFechamento() {
+  if (!_fechAtivo) return;
+  const el = document.getElementById('mfech-tabela');
+  el.innerHTML='<div class="empty">Carregando...</div>';
+
+  const itens = await sb(`/rest/v1/fechamento_itens?fechamento_id=eq.${_fechAtivo.id}&select=*,medicos(nome,crm,pix_tipo,pix_chave,razao_social,cnpj)&order=medicos(nome)`) || [];
+  _fechItens = itens;
+
+  const totPlan = itens.reduce((s,i)=>s+i.plantoes,0);
+  const totVal  = itens.reduce((s,i)=>s+i.valor_total,0);
+  const totPago = itens.reduce((s,i)=>s+i.valor_pago,0);
+  document.getElementById('mfech-resumo').innerHTML = `
+    <span style="margin-right:16px;"><strong>${itens.length}</strong> profissional(is)</span>
+    <span style="margin-right:16px;"><strong>${totPlan}</strong> plantões</span>
+    <span style="margin-right:16px;">Total: <strong style="color:var(--blue);">${fBRL(totVal)}</strong></span>
+    <span>Pago: <strong style="color:var(--green);">${fBRL(totPago)}</strong></span>`;
+
+  if (!itens.length) { el.innerHTML='<div class="empty">Nenhum profissional neste fechamento.</div>'; return; }
+
+  el.innerHTML = `<table><thead><tr>
+    <th>Profissional</th><th>CRM</th><th>Dados bancários</th>
+    <th style="text-align:center;">Plantões</th><th style="text-align:center;">Horas</th>
+    <th>Valor a receber</th><th>Valor pago</th><th>Status</th>
+  </tr></thead><tbody>` +
+  itens.map(i => {
+    const m = i.medicos || {};
+    const pix = m.pix_tipo && m.pix_chave ? `<span style="font-size:10px;background:var(--green-bg);color:var(--green);padding:1px 6px;border-radius:99px;">PIX ${m.pix_tipo}</span> ${m.pix_chave}` : '<span style="color:var(--red);font-size:11px;">⚠️ Sem PIX</span>';
+    const stCls = i.status==='pago'?'color:var(--green);font-weight:600;':'color:var(--text2);';
+    return `<tr>
+      <td><strong>${m.nome||'—'}</strong>${m.razao_social?`<br><span style="font-size:10px;color:var(--text3);">${m.razao_social}</span>`:''}</td>
+      <td class="mono">${m.crm||'—'}</td>
+      <td style="font-size:12px;">${pix}</td>
+      <td style="text-align:center;">${i.plantoes}</td>
+      <td style="text-align:center;">${Math.round(i.horas*10)/10}h</td>
+      <td class="mono" style="font-weight:600;">${fBRL(i.valor_total)}</td>
+      <td class="mono" style="color:var(--green);">${fBRL(i.valor_pago)}</td>
+      <td style="${stCls}">${i.status==='pago'?'✅ Pago':'⏳ Pendente'}</td>
+    </tr>`;
+  }).join('') +
+  `</tbody><tfoot><tr style="border-top:2px solid var(--border2);">
+    <td colspan="3" style="font-weight:700;padding:10px;">TOTAL</td>
+    <td style="text-align:center;font-weight:700;">${totPlan}</td>
+    <td></td>
+    <td class="mono" style="font-weight:700;color:var(--blue);">${fBRL(totVal)}</td>
+    <td class="mono" style="font-weight:700;color:var(--green);">${fBRL(totPago)}</td>
+    <td></td>
+  </tr></tfoot></table>`;
+}
+
+function exportarFechamentoXLSX() {
+  if (!_fechItens.length) { toast('Sem dados', true); return; }
+  const wb = XLSX.utils.book_new();
+  const rows = [['Profissional','Razão Social','CRM','CPF/CNPJ','Tipo PIX','Chave PIX','Plantões','Horas','Valor Total','Valor Pago','Saldo','Status']];
+  _fechItens.forEach(i => {
+    const m = i.medicos||{};
+    rows.push([m.nome||'',m.razao_social||'',m.crm||'',m.cnpj||m.cpf||'',m.pix_tipo||'',m.pix_chave||'',i.plantoes,Math.round(i.horas*10)/10,i.valor_total,i.valor_pago,i.valor_total-i.valor_pago,i.status]);
+  });
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(rows),'Fechamento');
+  XLSX.writeFile(wb,(_fechAtivo?.nome||'fechamento').replace(/[^a-zA-Z0-9]/g,'_')+'.xlsx');
+}
+
+// ── GERAR REMESSA BRADESCO CNAB 240 PIX ───────────────
+async function gerarRemessa() {
+  if (!_fechAtivo) return;
+  const itensSemPix = _fechItens.filter(i => !i.medicos?.pix_chave);
+  if (itensSemPix.length > 0) {
+    if (!confirm(`${itensSemPix.length} profissional(is) sem chave PIX serão pulados. Continuar?`)) return;
+  }
+
+  const itensValidos = _fechItens.filter(i => i.medicos?.pix_chave && i.valor_total > 0);
+  if (!itensValidos.length) { toast('Nenhum profissional com PIX cadastrado', true); return; }
+
+  const totalRemessa = itensValidos.reduce((s,i)=>s+i.valor_total, 0);
+  const agora = new Date();
+  const dtArq = agora.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric'}).replace(/\//g,'');
+  const hrArq = agora.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit',second:'2-digit'}).replace(/:/g,'');
+  const nrArq = String(Math.floor(Math.random()*9000)+1000);
+
+  // Dados da empresa pagadora (Bradesco padrão — ajustar conforme necessário)
+  const BANCO        = '237';
+  const AGENCIA      = '01785';
+  const AGENCIA_DV   = '0';
+  const CONTA        = '0039464';
+  const CONTA_DV     = '5';
+  const EMPRESA_NOME = 'HJM GESTAO E SERVICOS LTDA ';
+  const CNPJ_EMP     = '34958609000190';
+  const CONVENIO     = '472572';
+
+  const pad = (v,n,c=' ',right=false) => {
+    const s = String(v||'');
+    return right ? s.slice(0,n).padEnd(n,c) : s.slice(0,n).padStart(n,c);
+  };
+  const padN = (v,n) => pad(Math.round((v||0)*100).toString().replace('.',''),n,'0');
+  const dtBr = (d) => d.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric'}).replace(/\//g,'');
+
+  let linhas = [];
+  let nrLote = 1, nrReg = 1, nrRegLote = 1;
+
+  // Header do arquivo (segmento 0)
+  linhas.push(
+    pad(BANCO,3,'0') +
+    pad('0000',4,'0') +
+    '0' + // reg type header arq
+    ' '.repeat(9) +
+    '2' + // tipo inscrição CNPJ
+    pad(CNPJ_EMP,14,'0') +
+    pad(CONVENIO,20,' ',true) +
+    pad(AGENCIA,5,'0') + AGENCIA_DV +
+    pad(CONTA,12,'0') + CONTA_DV + ' ' +
+    pad(EMPRESA_NOME,30,' ',true) +
+    pad('BANCO BRADESCO SA',30,' ',true) +
+    '1' + // código remessa
+    pad(dtArq,8,'0') + pad(hrArq,6,'0') +
+    pad(nrArq,6,'0') +
+    '089' + // versão layout CNAB240
+    pad('0',6,'0') + // densidade
+    ' '.repeat(20) +
+    ' '.repeat(29)
+  );
+
+  // Para cada beneficiário — gerar lote PIX
+  // Um único lote com todos os pagamentos
+  const totLote = itensValidos.reduce((s,i)=>s+i.valor_total,0);
+  const nrRegsLote = itensValidos.length * 2 + 2; // A+B por beneficiário + header + trailer lote
+
+  // Header lote
+  linhas.push(
+    pad(BANCO,3,'0') + pad(nrLote,4,'0') + '1' + // header lote
+    'C' + // crédito
+    ' ' + '45' + // pagamento fornecedores
+    '030' + // versão layout lote
+    ' ' +
+    '2' + pad(CNPJ_EMP,14,'0') +
+    pad(CONVENIO,20,' ',true) +
+    pad(AGENCIA,5,'0') + AGENCIA_DV +
+    pad(CONTA,12,'0') + CONTA_DV + ' ' +
+    pad(EMPRESA_NOME,30,' ',true) +
+    ' '.repeat(40) +
+    pad(dtArq,8,'0') +
+    ' '.repeat(8) +
+    padN(totLote,18) +
+    pad(nrRegsLote,6,'0') +
+    ' '.repeat(33)
+  );
+  nrRegLote = 1;
+
+  itensValidos.forEach((item, idx) => {
+    const m = item.medicos||{};
+    const chave = (m.pix_chave||'').replace(/\D/g,'') || m.pix_chave;
+    const tipoChave = m.pix_tipo==='CPF'?'1':m.pix_tipo==='CNPJ'?'2':m.pix_tipo==='EMAIL'?'3':m.pix_tipo==='TELEFONE'?'4':'5';
+    const favorNome = pad((m.razao_social||m.nome||'').toUpperCase(),30,' ',true);
+    const nrDoc = pad(String(idx+1).padStart(10,'0')+nrLote,15,'0');
+
+    // Segmento A
+    nrRegLote++;
+    linhas.push(
+      pad(BANCO,3,'0') + pad(nrLote,4,'0') + '3' +
+      pad(nrRegLote,5,'0') + 'A' +
+      '0' + // mov inclusão
+      pad('009',3,'0') + // câmara PIX
+      pad('',3,'0') + // banco favorecido
+      pad('',5,'0') + ' ' + // agência
+      pad('',12,'0') + ' ' + ' ' + // conta
+      pad(favorNome,30,' ',true) +
+      pad(nrDoc,15,' ',true) +
+      pad(dtBr(new Date(_fechAtivo.data_fim+'T12:00:00')),8,'0') +
+      'BRL' +
+      padN(item.valor_total,15) +
+      pad(dtBr(agora),8,'0') +
+      padN(0,15) +
+      '00' + // ocorrências
+      pad(' '.repeat(10),10,' ',true) +
+      pad(' '.repeat(40),40,' ',true)
+    );
+
+    // Segmento B — chave PIX
+    nrRegLote++;
+    linhas.push(
+      pad(BANCO,3,'0') + pad(nrLote,4,'0') + '3' +
+      pad(nrRegLote,5,'0') + 'B' +
+      ' ' +
+      tipoChave +
+      pad(m.pix_chave||'',77,' ',true) +
+      pad(dtBr(new Date(_fechAtivo.data_fim+'T12:00:00')),8,'0') +
+      padN(0,15) + padN(0,15) +
+      ' '.repeat(30) +
+      pad(' '.repeat(10),10,' ',true)
+    );
+  });
+
+  // Trailer lote
+  nrRegLote++;
+  linhas.push(
+    pad(BANCO,3,'0') + pad(nrLote,4,'0') + '5' +
+    ' '.repeat(9) +
+    pad(nrRegLote,6,'0') +
+    pad(itensValidos.length,6,'0') +
+    padN(totLote,18) +
+    pad('0',6,'0') + padN(0,18) +
+    pad('0',6,'0') + padN(0,18) +
+    ' '.repeat(145)
+  );
+
+  // Trailer arquivo
+  const totalRegs = linhas.length + 1;
+  linhas.push(
+    pad(BANCO,3,'0') + '99999' + '9' +
+    ' '.repeat(9) +
+    pad(1,6,'0') + // qtd lotes
+    pad(totalRegs,6,'0') +
+    ' '.repeat(6) + ' '.repeat(205)
+  );
+
+  const conteudo = linhas.join('
+') + '
+';
+  const nomeArq = `Remessa_${agora.toISOString().replace(/[-:.TZ]/g,'').slice(0,14)}.rem`;
+
+  // Salvar remessa no Supabase
+  await sb('/rest/v1/remessas', {
+    method:'POST',
+    body: JSON.stringify({ fechamento_id:_fechAtivo.id, nome_arquivo:nomeArq, conteudo, total:totLote })
+  });
+
+  // Download do arquivo
+  const blob = new Blob([conteudo], {type:'text/plain;charset=utf-8'});
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href = url; a.download = nomeArq; a.click();
+  URL.revokeObjectURL(url);
+
+  toast(`✅ Remessa gerada: ${itensValidos.length} pagamentos — ${fBRL(totLote)}`);
+  mfechTab('remessa', document.querySelectorAll('.mfech-tab-btn')[1]);
+}
+
+// ── LISTAR REMESSAS ────────────────────────────────────
+async function carregarRemessas() {
+  if (!_fechAtivo) return;
+  const el = document.getElementById('mfech-remessas-lista');
+  const data = await sb(`/rest/v1/remessas?fechamento_id=eq.${_fechAtivo.id}&order=criado_em.desc`) || [];
+  if (!data.length) { el.innerHTML='<div class="empty">Nenhuma remessa gerada ainda.</div>'; return; }
+  el.innerHTML = data.map(r => `
+    <div class="card" style="margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;">
+      <div>
+        <div style="font-size:13px;font-weight:600;">${r.nome_arquivo}</div>
+        <div style="font-size:11px;color:var(--text2);">Gerado em ${new Date(r.criado_em).toLocaleString('pt-BR',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})} · ${fBRL(r.total)}</div>
+        ${r.retorno_em?`<div style="font-size:11px;color:var(--green);">✅ Retorno processado em ${new Date(r.retorno_em).toLocaleString('pt-BR',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})}</div>`:''}
+      </div>
+      <button class="btn btn-ghost btn-sm" onclick="downloadRemessa('${r.id}')">⬇ Download</button>
+    </div>`).join('');
+}
+
+async function downloadRemessa(id) {
+  const data = await sb(`/rest/v1/remessas?id=eq.${id}&select=nome_arquivo,conteudo`) || [];
+  if (!data[0]) return;
+  const blob = new Blob([data[0].conteudo], {type:'text/plain;charset=utf-8'});
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a'); a.href=url; a.download=data[0].nome_arquivo; a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ── PROCESSAR RETORNO .RET ─────────────────────────────
+async function processarRetorno(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const el = document.getElementById('ret-resultado');
+  el.innerHTML = '<div class="empty">Processando retorno...</div>';
+  const txt = await file.text();
+  const linhas = txt.split(/
+?
+/).filter(l=>l.trim());
+
+  let pagosCount=0, errosCount=0, totalPago=0;
+  const resultados = [];
+
+  linhas.forEach(linha => {
+    if (linha.length < 10) return;
+    const tipo = linha[7];   // segmento A ou B
+    const reg  = linha.substring(7,8);
+    if (tipo !== 'A') return;
+    const ocorrencia = linha.substring(230,232)||'00';
+    const valor = parseInt(linha.substring(152,167)||'0')/100;
+    const favorecido = linha.substring(73,103)?.trim();
+    const dtPgto = linha.substring(143,151)||'';
+
+    const pago = ocorrencia === '00' || ocorrencia === '01';
+    if (pago) { pagosCount++; totalPago += valor; }
+    else errosCount++;
+    resultados.push({favorecido, valor, ocorrencia, pago, dtPgto});
+  });
+
+  if (!resultados.length) {
+    el.innerHTML = '<div class="card"><div class="empty">Arquivo não reconhecido ou sem registros do tipo A.</div></div>';
+    return;
+  }
+
+  // Atualizar status dos itens pagos
+  if (_fechAtivo && pagosCount > 0) {
+    // Marcar remessa como processada
+    await sb(`/rest/v1/remessas?fechamento_id=eq.${_fechAtivo.id}&order=criado_em.desc&limit=1`, {
+      method:'PATCH',
+      body: JSON.stringify({retorno_em: new Date().toISOString(), retorno_status:'processado'})
+    });
+    // Atualizar fechamento com total pago
+    const novoTotalPago = Math.min(totalPago, _fechAtivo.total_valor);
+    const novoStatus = novoTotalPago >= _fechAtivo.total_valor ? 'pago' : novoTotalPago > 0 ? 'parcial' : 'aberto';
+    await sb(`/rest/v1/fechamentos?id=eq.${_fechAtivo.id}`, {
+      method:'PATCH',
+      body: JSON.stringify({total_pago: novoTotalPago, status: novoStatus})
+    });
+    _fechAtivo.total_pago = novoTotalPago;
+    _fechAtivo.status = novoStatus;
+  }
+
+  el.innerHTML = `
+    <div class="metrics" style="margin-bottom:12px;">
+      <div class="metric"><div class="metric-label">Pagamentos confirmados</div><div class="metric-val" style="color:var(--green);">${pagosCount}</div></div>
+      <div class="metric"><div class="metric-label">Com ocorrência</div><div class="metric-val" style="color:${errosCount>0?'var(--red)':'var(--text)'};">${errosCount}</div></div>
+      <div class="metric"><div class="metric-label">Total confirmado</div><div class="metric-val">${fBRL(totalPago)}</div></div>
+    </div>
+    <div class="card"><table><thead><tr><th>Favorecido</th><th>Valor</th><th>Ocorrência</th><th>Status</th></tr></thead><tbody>` +
+    resultados.map(r=>`<tr>
+      <td>${r.favorecido||'—'}</td>
+      <td class="mono">${fBRL(r.valor)}</td>
+      <td class="mono">${r.ocorrencia}</td>
+      <td style="color:${r.pago?'var(--green)':'var(--amber)'};font-weight:600;">${r.pago?'✅ Confirmado':'⚠️ Ocorrência '+r.ocorrencia}</td>
+    </tr>`).join('') +
+    `</tbody></table></div>`;
+
+  event.target.value='';
+  toast(`✅ Retorno processado: ${pagosCount} pagamentos confirmados`);
+}
+
 
 // Inicia com Enter no login
 document.getElementById('l-email').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('l-senha').focus();});
