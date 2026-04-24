@@ -3721,9 +3721,8 @@ async function gerarRemessa() {
     ' '.repeat(6) + ' '.repeat(205)
   );
 
-  const conteudo = linhas.join('
-') + '
-';
+  const CRLF = '\r\n';
+  const conteudo = linhas.join(CRLF) + CRLF;
   const nomeArq = `Remessa_${agora.toISOString().replace(/[-:.TZ]/g,'').slice(0,14)}.rem`;
 
   // Salvar remessa no Supabase
@@ -3776,9 +3775,7 @@ async function processarRetorno(event) {
   const el = document.getElementById('ret-resultado');
   el.innerHTML = '<div class="empty">Processando retorno...</div>';
   const txt = await file.text();
-  const linhas = txt.split(/
-?
-/).filter(l=>l.trim());
+  const linhas = txt.split(/\r?\n/).filter(l=>l.trim());
 
   let pagosCount=0, errosCount=0, totalPago=0;
   const resultados = [];
