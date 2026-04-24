@@ -377,7 +377,16 @@ tr:hover td{background:var(--bg3);}
 
   <!-- MÉDICOS -->
   <div id="tab-medicos" class="section">
-    <div class="page-title">Médicos</div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+      <div class="page-title" style="margin-bottom:0;">Médicos</div>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-ghost btn-sm" onclick="exportarMedicosXLSX()">⬇ Exportar Excel</button>
+        <label class="btn btn-ghost btn-sm" style="cursor:pointer;" title="Importar médicos via Excel">
+          ⬆ Importar Excel
+          <input type="file" id="import-med-file" accept=".xlsx,.xls" style="display:none;" onchange="importarMedicosXLSX(event)">
+        </label>
+      </div>
+    </div>
     <div class="page-sub">Cadastro e links de acesso ao app</div>
     <div class="card">
       <div class="card-title">Novo médico</div>
@@ -397,7 +406,116 @@ tr:hover td{background:var(--bg3);}
         <div class="form-group"><label>Especialidade</label><input id="me" type="text" placeholder="Clínica Geral"></div>
         <div class="form-group"><label>Valor/hora (R$)</label><input id="mv" type="number" placeholder="150"></div>
       </div>
+      <!-- Especialidades múltiplas -->
       <div class="form-group" style="margin-top:10px;">
+        <label>Especialidades <span style="font-weight:400;font-size:11px;color:var(--text3);">(selecione todas que se aplicam)</span></label>
+        <div id="med-esp-check" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;">
+                  <label style="display:flex;align-items:center;gap:5px;font-size:12px;background:var(--bg3);padding:4px 10px;border-radius:99px;cursor:pointer;border:1px solid var(--border);">
+            <input type="checkbox" class="med-esp-chk" value="Clínica Geral / Emergência" style="accent-color:var(--blue);">Clínica Geral / Emergência
+          </label>
+          <label style="display:flex;align-items:center;gap:5px;font-size:12px;background:var(--bg3);padding:4px 10px;border-radius:99px;cursor:pointer;border:1px solid var(--border);">
+            <input type="checkbox" class="med-esp-chk" value="Anestesiologia" style="accent-color:var(--blue);">Anestesiologia
+          </label>
+          <label style="display:flex;align-items:center;gap:5px;font-size:12px;background:var(--bg3);padding:4px 10px;border-radius:99px;cursor:pointer;border:1px solid var(--border);">
+            <input type="checkbox" class="med-esp-chk" value="Cardiologia" style="accent-color:var(--blue);">Cardiologia
+          </label>
+          <label style="display:flex;align-items:center;gap:5px;font-size:12px;background:var(--bg3);padding:4px 10px;border-radius:99px;cursor:pointer;border:1px solid var(--border);">
+            <input type="checkbox" class="med-esp-chk" value="Cirurgia Geral" style="accent-color:var(--blue);">Cirurgia Geral
+          </label>
+          <label style="display:flex;align-items:center;gap:5px;font-size:12px;background:var(--bg3);padding:4px 10px;border-radius:99px;cursor:pointer;border:1px solid var(--border);">
+            <input type="checkbox" class="med-esp-chk" value="Cirurgia Vascular" style="accent-color:var(--blue);">Cirurgia Vascular
+          </label>
+          <label style="display:flex;align-items:center;gap:5px;font-size:12px;background:var(--bg3);padding:4px 10px;border-radius:99px;cursor:pointer;border:1px solid var(--border);">
+            <input type="checkbox" class="med-esp-chk" value="Dermatologia" style="accent-color:var(--blue);">Dermatologia
+          </label>
+          <label style="display:flex;align-items:center;gap:5px;font-size:12px;background:var(--bg3);padding:4px 10px;border-radius:99px;cursor:pointer;border:1px solid var(--border);">
+            <input type="checkbox" class="med-esp-chk" value="Endocrinologia" style="accent-color:var(--blue);">Endocrinologia
+          </label>
+          <label style="display:flex;align-items:center;gap:5px;font-size:12px;background:var(--bg3);padding:4px 10px;border-radius:99px;cursor:pointer;border:1px solid var(--border);">
+            <input type="checkbox" class="med-esp-chk" value="Gastroenterologia" style="accent-color:var(--blue);">Gastroenterologia
+          </label>
+          <label style="display:flex;align-items:center;gap:5px;font-size:12px;background:var(--bg3);padding:4px 10px;border-radius:99px;cursor:pointer;border:1px solid var(--border);">
+            <input type="checkbox" class="med-esp-chk" value="Geriatria" style="accent-color:var(--blue);">Geriatria
+          </label>
+          <label style="display:flex;align-items:center;gap:5px;font-size:12px;background:var(--bg3);padding:4px 10px;border-radius:99px;cursor:pointer;border:1px solid var(--border);">
+            <input type="checkbox" class="med-esp-chk" value="Ginecologia e Obstetrícia" style="accent-color:var(--blue);">Ginecologia e Obstetrícia
+          </label>
+          <label style="display:flex;align-items:center;gap:5px;font-size:12px;background:var(--bg3);padding:4px 10px;border-radius:99px;cursor:pointer;border:1px solid var(--border);">
+            <input type="checkbox" class="med-esp-chk" value="Hematologia" style="accent-color:var(--blue);">Hematologia
+          </label>
+          <label style="display:flex;align-items:center;gap:5px;font-size:12px;background:var(--bg3);padding:4px 10px;border-radius:99px;cursor:pointer;border:1px solid var(--border);">
+            <input type="checkbox" class="med-esp-chk" value="Infectologia" style="accent-color:var(--blue);">Infectologia
+          </label>
+          <label style="display:flex;align-items:center;gap:5px;font-size:12px;background:var(--bg3);padding:4px 10px;border-radius:99px;cursor:pointer;border:1px solid var(--border);">
+            <input type="checkbox" class="med-esp-chk" value="Medicina Intensiva (UTI)" style="accent-color:var(--blue);">Medicina Intensiva (UTI)
+          </label>
+          <label style="display:flex;align-items:center;gap:5px;font-size:12px;background:var(--bg3);padding:4px 10px;border-radius:99px;cursor:pointer;border:1px solid var(--border);">
+            <input type="checkbox" class="med-esp-chk" value="Medicina do Trabalho" style="accent-color:var(--blue);">Medicina do Trabalho
+          </label>
+          <label style="display:flex;align-items:center;gap:5px;font-size:12px;background:var(--bg3);padding:4px 10px;border-radius:99px;cursor:pointer;border:1px solid var(--border);">
+            <input type="checkbox" class="med-esp-chk" value="Nefrologia" style="accent-color:var(--blue);">Nefrologia
+          </label>
+          <label style="display:flex;align-items:center;gap:5px;font-size:12px;background:var(--bg3);padding:4px 10px;border-radius:99px;cursor:pointer;border:1px solid var(--border);">
+            <input type="checkbox" class="med-esp-chk" value="Neurologia" style="accent-color:var(--blue);">Neurologia
+          </label>
+          <label style="display:flex;align-items:center;gap:5px;font-size:12px;background:var(--bg3);padding:4px 10px;border-radius:99px;cursor:pointer;border:1px solid var(--border);">
+            <input type="checkbox" class="med-esp-chk" value="Neurocirurgia" style="accent-color:var(--blue);">Neurocirurgia
+          </label>
+          <label style="display:flex;align-items:center;gap:5px;font-size:12px;background:var(--bg3);padding:4px 10px;border-radius:99px;cursor:pointer;border:1px solid var(--border);">
+            <input type="checkbox" class="med-esp-chk" value="Oftalmologia" style="accent-color:var(--blue);">Oftalmologia
+          </label>
+          <label style="display:flex;align-items:center;gap:5px;font-size:12px;background:var(--bg3);padding:4px 10px;border-radius:99px;cursor:pointer;border:1px solid var(--border);">
+            <input type="checkbox" class="med-esp-chk" value="Oncologia" style="accent-color:var(--blue);">Oncologia
+          </label>
+          <label style="display:flex;align-items:center;gap:5px;font-size:12px;background:var(--bg3);padding:4px 10px;border-radius:99px;cursor:pointer;border:1px solid var(--border);">
+            <input type="checkbox" class="med-esp-chk" value="Ortopedia e Traumatologia" style="accent-color:var(--blue);">Ortopedia e Traumatologia
+          </label>
+          <label style="display:flex;align-items:center;gap:5px;font-size:12px;background:var(--bg3);padding:4px 10px;border-radius:99px;cursor:pointer;border:1px solid var(--border);">
+            <input type="checkbox" class="med-esp-chk" value="Otorrinolaringologia" style="accent-color:var(--blue);">Otorrinolaringologia
+          </label>
+          <label style="display:flex;align-items:center;gap:5px;font-size:12px;background:var(--bg3);padding:4px 10px;border-radius:99px;cursor:pointer;border:1px solid var(--border);">
+            <input type="checkbox" class="med-esp-chk" value="Pediatria" style="accent-color:var(--blue);">Pediatria
+          </label>
+          <label style="display:flex;align-items:center;gap:5px;font-size:12px;background:var(--bg3);padding:4px 10px;border-radius:99px;cursor:pointer;border:1px solid var(--border);">
+            <input type="checkbox" class="med-esp-chk" value="Pneumologia" style="accent-color:var(--blue);">Pneumologia
+          </label>
+          <label style="display:flex;align-items:center;gap:5px;font-size:12px;background:var(--bg3);padding:4px 10px;border-radius:99px;cursor:pointer;border:1px solid var(--border);">
+            <input type="checkbox" class="med-esp-chk" value="Psiquiatria" style="accent-color:var(--blue);">Psiquiatria
+          </label>
+          <label style="display:flex;align-items:center;gap:5px;font-size:12px;background:var(--bg3);padding:4px 10px;border-radius:99px;cursor:pointer;border:1px solid var(--border);">
+            <input type="checkbox" class="med-esp-chk" value="Radiologia" style="accent-color:var(--blue);">Radiologia
+          </label>
+          <label style="display:flex;align-items:center;gap:5px;font-size:12px;background:var(--bg3);padding:4px 10px;border-radius:99px;cursor:pointer;border:1px solid var(--border);">
+            <input type="checkbox" class="med-esp-chk" value="Reumatologia" style="accent-color:var(--blue);">Reumatologia
+          </label>
+          <label style="display:flex;align-items:center;gap:5px;font-size:12px;background:var(--bg3);padding:4px 10px;border-radius:99px;cursor:pointer;border:1px solid var(--border);">
+            <input type="checkbox" class="med-esp-chk" value="Urologia" style="accent-color:var(--blue);">Urologia
+          </label>
+        </div>
+      </div>
+      <!-- Dados bancários / PIX -->
+      <div style="border-top:1px solid var(--border);margin-top:12px;padding-top:12px;">
+        <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px;">Dados bancários</div>
+        <div class="form-row">
+          <div class="form-group"><label>Razão social <span style="font-weight:400;color:var(--text3);font-size:11px;">(se PJ)</span></label><input id="mn-razao" type="text" placeholder="Empresa LTDA"></div>
+          <div class="form-group"><label>CNPJ <span style="font-weight:400;color:var(--text3);font-size:11px;">(se PJ)</span></label><input id="mn-cnpj" type="text" placeholder="00.000.000/0000-00"></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>Tipo de chave PIX</label>
+            <select id="mn-pix-tipo">
+              <option value="">Sem PIX cadastrado</option>
+              <option value="CPF">CPF</option>
+              <option value="CNPJ">CNPJ</option>
+              <option value="EMAIL">E-mail</option>
+              <option value="TELEFONE">Telefone</option>
+              <option value="ALEATORIA">Chave aleatória</option>
+            </select>
+          </div>
+          <div class="form-group"><label>Chave PIX</label><input id="mn-pix-chave" type="text" placeholder="Digite a chave PIX"></div>
+        </div>
+      </div>
+      <!-- Projetos vinculados -->
+      <div class="form-group" style="margin-top:8px;">
         <label>Projetos vinculados <span style="font-weight:400;font-size:11px;color:var(--text3);">(médico verá plantões abertos destes projetos)</span></label>
         <div id="med-projetos-check" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;"></div>
       </div>
@@ -1012,7 +1130,39 @@ tr:hover td{background:var(--bg3);}
       <div class="mr-sucesso" id="mr-sucesso"></div>
       <div class="form-group" style="margin-bottom:10px;">
         <label>Médicos <span id="mr-med-count" style="color:var(--blue);font-weight:600;font-size:11px;"></span></label>
-        <input type="text" id="mr-med-busca" placeholder="🔍 Buscar médico..." oninput="filtrarMedMR()" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:var(--radius);font-size:13px;margin-bottom:6px;">
+        <div style="display:flex;gap:6px;margin-bottom:6px;">
+          <input type="text" id="mr-med-busca" placeholder="🔍 Buscar médico..." oninput="filtrarMedMR()" style="flex:1;padding:7px 10px;border:1px solid var(--border);border-radius:var(--radius);font-size:13px;">
+          <select id="mr-esp-filtro" onchange="filtrarMedMR()" style="padding:7px 10px;border:1px solid var(--border);border-radius:var(--radius);font-size:12px;max-width:160px;">
+            <option value="">Todas especialidades</option>
+            <option value="Clínica Geral / Emergência">Clínica Geral / Emergência</option>
+<option value="Anestesiologia">Anestesiologia</option>
+<option value="Cardiologia">Cardiologia</option>
+<option value="Cirurgia Geral">Cirurgia Geral</option>
+<option value="Cirurgia Vascular">Cirurgia Vascular</option>
+<option value="Dermatologia">Dermatologia</option>
+<option value="Endocrinologia">Endocrinologia</option>
+<option value="Gastroenterologia">Gastroenterologia</option>
+<option value="Geriatria">Geriatria</option>
+<option value="Ginecologia e Obstetrícia">Ginecologia e Obstetrícia</option>
+<option value="Hematologia">Hematologia</option>
+<option value="Infectologia">Infectologia</option>
+<option value="Medicina Intensiva (UTI)">Medicina Intensiva (UTI)</option>
+<option value="Medicina do Trabalho">Medicina do Trabalho</option>
+<option value="Nefrologia">Nefrologia</option>
+<option value="Neurologia">Neurologia</option>
+<option value="Neurocirurgia">Neurocirurgia</option>
+<option value="Oftalmologia">Oftalmologia</option>
+<option value="Oncologia">Oncologia</option>
+<option value="Ortopedia e Traumatologia">Ortopedia e Traumatologia</option>
+<option value="Otorrinolaringologia">Otorrinolaringologia</option>
+<option value="Pediatria">Pediatria</option>
+<option value="Pneumologia">Pneumologia</option>
+<option value="Psiquiatria">Psiquiatria</option>
+<option value="Radiologia">Radiologia</option>
+<option value="Reumatologia">Reumatologia</option>
+<option value="Urologia">Urologia</option>
+          </select>
+        </div>
         <div id="mr-med-lista" style="max-height:180px;overflow-y:auto;border:1px solid var(--border);border-radius:var(--radius);"></div>
       </div>
       <div class="form-group" style="margin-bottom:10px;">
@@ -1137,7 +1287,91 @@ tr:hover td{background:var(--bg3);}
     <div class="form-row four">
       <div class="form-group"><label>CRM</label><input id="em-crm" type="text"></div>
       <div class="form-group"><label>RQE</label><input id="em-rqe" type="text"></div>
-      <div class="form-group"><label>Especialidade</label><input id="em-esp" type="text"></div>
+      <div class="form-group"><label>Especialidade(s)</label>
+        <div id="em-esp-check" style="display:flex;flex-wrap:wrap;gap:5px;max-height:120px;overflow-y:auto;border:1px solid var(--border);border-radius:var(--radius);padding:8px;">
+                  <label style="display:flex;align-items:center;gap:4px;font-size:11px;cursor:pointer;white-space:nowrap;">
+            <input type="checkbox" class="em-esp-chk" value="Clínica Geral / Emergência" style="accent-color:var(--blue);">Clínica Geral / Emergência
+          </label>
+          <label style="display:flex;align-items:center;gap:4px;font-size:11px;cursor:pointer;white-space:nowrap;">
+            <input type="checkbox" class="em-esp-chk" value="Anestesiologia" style="accent-color:var(--blue);">Anestesiologia
+          </label>
+          <label style="display:flex;align-items:center;gap:4px;font-size:11px;cursor:pointer;white-space:nowrap;">
+            <input type="checkbox" class="em-esp-chk" value="Cardiologia" style="accent-color:var(--blue);">Cardiologia
+          </label>
+          <label style="display:flex;align-items:center;gap:4px;font-size:11px;cursor:pointer;white-space:nowrap;">
+            <input type="checkbox" class="em-esp-chk" value="Cirurgia Geral" style="accent-color:var(--blue);">Cirurgia Geral
+          </label>
+          <label style="display:flex;align-items:center;gap:4px;font-size:11px;cursor:pointer;white-space:nowrap;">
+            <input type="checkbox" class="em-esp-chk" value="Cirurgia Vascular" style="accent-color:var(--blue);">Cirurgia Vascular
+          </label>
+          <label style="display:flex;align-items:center;gap:4px;font-size:11px;cursor:pointer;white-space:nowrap;">
+            <input type="checkbox" class="em-esp-chk" value="Dermatologia" style="accent-color:var(--blue);">Dermatologia
+          </label>
+          <label style="display:flex;align-items:center;gap:4px;font-size:11px;cursor:pointer;white-space:nowrap;">
+            <input type="checkbox" class="em-esp-chk" value="Endocrinologia" style="accent-color:var(--blue);">Endocrinologia
+          </label>
+          <label style="display:flex;align-items:center;gap:4px;font-size:11px;cursor:pointer;white-space:nowrap;">
+            <input type="checkbox" class="em-esp-chk" value="Gastroenterologia" style="accent-color:var(--blue);">Gastroenterologia
+          </label>
+          <label style="display:flex;align-items:center;gap:4px;font-size:11px;cursor:pointer;white-space:nowrap;">
+            <input type="checkbox" class="em-esp-chk" value="Geriatria" style="accent-color:var(--blue);">Geriatria
+          </label>
+          <label style="display:flex;align-items:center;gap:4px;font-size:11px;cursor:pointer;white-space:nowrap;">
+            <input type="checkbox" class="em-esp-chk" value="Ginecologia e Obstetrícia" style="accent-color:var(--blue);">Ginecologia e Obstetrícia
+          </label>
+          <label style="display:flex;align-items:center;gap:4px;font-size:11px;cursor:pointer;white-space:nowrap;">
+            <input type="checkbox" class="em-esp-chk" value="Hematologia" style="accent-color:var(--blue);">Hematologia
+          </label>
+          <label style="display:flex;align-items:center;gap:4px;font-size:11px;cursor:pointer;white-space:nowrap;">
+            <input type="checkbox" class="em-esp-chk" value="Infectologia" style="accent-color:var(--blue);">Infectologia
+          </label>
+          <label style="display:flex;align-items:center;gap:4px;font-size:11px;cursor:pointer;white-space:nowrap;">
+            <input type="checkbox" class="em-esp-chk" value="Medicina Intensiva (UTI)" style="accent-color:var(--blue);">Medicina Intensiva (UTI)
+          </label>
+          <label style="display:flex;align-items:center;gap:4px;font-size:11px;cursor:pointer;white-space:nowrap;">
+            <input type="checkbox" class="em-esp-chk" value="Medicina do Trabalho" style="accent-color:var(--blue);">Medicina do Trabalho
+          </label>
+          <label style="display:flex;align-items:center;gap:4px;font-size:11px;cursor:pointer;white-space:nowrap;">
+            <input type="checkbox" class="em-esp-chk" value="Nefrologia" style="accent-color:var(--blue);">Nefrologia
+          </label>
+          <label style="display:flex;align-items:center;gap:4px;font-size:11px;cursor:pointer;white-space:nowrap;">
+            <input type="checkbox" class="em-esp-chk" value="Neurologia" style="accent-color:var(--blue);">Neurologia
+          </label>
+          <label style="display:flex;align-items:center;gap:4px;font-size:11px;cursor:pointer;white-space:nowrap;">
+            <input type="checkbox" class="em-esp-chk" value="Neurocirurgia" style="accent-color:var(--blue);">Neurocirurgia
+          </label>
+          <label style="display:flex;align-items:center;gap:4px;font-size:11px;cursor:pointer;white-space:nowrap;">
+            <input type="checkbox" class="em-esp-chk" value="Oftalmologia" style="accent-color:var(--blue);">Oftalmologia
+          </label>
+          <label style="display:flex;align-items:center;gap:4px;font-size:11px;cursor:pointer;white-space:nowrap;">
+            <input type="checkbox" class="em-esp-chk" value="Oncologia" style="accent-color:var(--blue);">Oncologia
+          </label>
+          <label style="display:flex;align-items:center;gap:4px;font-size:11px;cursor:pointer;white-space:nowrap;">
+            <input type="checkbox" class="em-esp-chk" value="Ortopedia e Traumatologia" style="accent-color:var(--blue);">Ortopedia e Traumatologia
+          </label>
+          <label style="display:flex;align-items:center;gap:4px;font-size:11px;cursor:pointer;white-space:nowrap;">
+            <input type="checkbox" class="em-esp-chk" value="Otorrinolaringologia" style="accent-color:var(--blue);">Otorrinolaringologia
+          </label>
+          <label style="display:flex;align-items:center;gap:4px;font-size:11px;cursor:pointer;white-space:nowrap;">
+            <input type="checkbox" class="em-esp-chk" value="Pediatria" style="accent-color:var(--blue);">Pediatria
+          </label>
+          <label style="display:flex;align-items:center;gap:4px;font-size:11px;cursor:pointer;white-space:nowrap;">
+            <input type="checkbox" class="em-esp-chk" value="Pneumologia" style="accent-color:var(--blue);">Pneumologia
+          </label>
+          <label style="display:flex;align-items:center;gap:4px;font-size:11px;cursor:pointer;white-space:nowrap;">
+            <input type="checkbox" class="em-esp-chk" value="Psiquiatria" style="accent-color:var(--blue);">Psiquiatria
+          </label>
+          <label style="display:flex;align-items:center;gap:4px;font-size:11px;cursor:pointer;white-space:nowrap;">
+            <input type="checkbox" class="em-esp-chk" value="Radiologia" style="accent-color:var(--blue);">Radiologia
+          </label>
+          <label style="display:flex;align-items:center;gap:4px;font-size:11px;cursor:pointer;white-space:nowrap;">
+            <input type="checkbox" class="em-esp-chk" value="Reumatologia" style="accent-color:var(--blue);">Reumatologia
+          </label>
+          <label style="display:flex;align-items:center;gap:4px;font-size:11px;cursor:pointer;white-space:nowrap;">
+            <input type="checkbox" class="em-esp-chk" value="Urologia" style="accent-color:var(--blue);">Urologia
+          </label>
+        </div>
+      </div>
       <div class="form-group"><label>Valor/hora (R$)</label><input id="em-valor" type="number" step="0.01"></div>
     </div>
     <div class="form-row">
@@ -1411,6 +1645,120 @@ async function addMedico() {
   } else toast('Erro ao cadastrar médico', true);
 }
 
+// ─── EXPORTAR / IMPORTAR MÉDICOS ─────────────────────
+function exportarMedicosXLSX() {
+  if (!medicos.length) { toast('Nenhum médico cadastrado', true); return; }
+  const wb = XLSX.utils.book_new();
+  const rows = [
+    ['Nome','CRM','RQE','Especialidade(s)','CPF','Tipo','Nascimento','Telefone','E-mail',
+     'Valor/Hora','Razão Social','CNPJ','Tipo PIX','Chave PIX','Projetos']
+  ];
+  medicos.sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR')).forEach(m => {
+    const nasc = m.data_nascimento
+      ? new Date(m.data_nascimento+'T12:00:00').toLocaleDateString('pt-BR') : '';
+    const projs = (m.projetos_vinculados||[]).map(pid => {
+      const p = projetos.find(x=>x.id===pid); return p?.nome||pid;
+    }).join('; ');
+    const esps = Array.isArray(m.especialidades) ? m.especialidades.join('; ') : (m.especialidade||'');
+    rows.push([
+      m.nome||'', m.crm||'', m.rqe||'', esps, m.cpf||'',
+      m.tipo||'', nasc, m.telefone||'', m.email||'',
+      m.valor_hora||0, m.razao_social||'', m.cnpj||'',
+      m.pix_tipo||'', m.pix_chave||'', projs
+    ]);
+  });
+  // Linha de instruções de importação
+  rows.push([]);
+  rows.push(['--- INSTRUÇÕES DE IMPORTAÇÃO ---']);
+  rows.push(['Para importar: edite as linhas acima, salve o Excel e use o botão "Importar Excel"']);
+  rows.push(['Não altere os cabeçalhos. Coluna CRM é obrigatória para identificar o médico.']);
+  rows.push(['Especialidades separadas por ponto-e-vírgula. Projetos: use o nome exato.']);
+  const ws = XLSX.utils.aoa_to_sheet(rows);
+  ws['!cols'] = [{wch:30},{wch:15},{wch:10},{wch:40},{wch:15},{wch:15},{wch:12},{wch:15},{wch:30},{wch:10},{wch:30},{wch:18},{wch:12},{wch:30},{wch:40}];
+  XLSX.utils.book_append_sheet(wb, ws, 'Médicos');
+  XLSX.writeFile(wb, 'medicos_plantaopro_'+new Date().toISOString().slice(0,10)+'.xlsx');
+  toast('Excel exportado!');
+}
+
+async function importarMedicosXLSX(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const buf = await file.arrayBuffer();
+  const wb  = XLSX.read(buf, {type:'array'});
+  const ws  = wb.Sheets[wb.SheetNames[0]];
+  const rows = XLSX.utils.sheet_to_json(ws, {header:1, defval:''});
+  if (rows.length < 2) { toast('Planilha vazia ou sem dados', true); return; }
+
+  // Cabeçalhos esperados
+  const header = rows[0].map(h=>String(h).trim());
+  const idx = (col) => header.findIndex(h=>h.toLowerCase().includes(col.toLowerCase()));
+  const iNome=idx('Nome'), iCRM=idx('CRM'), iRQE=idx('RQE'), iEsp=idx('Especialidade'),
+        iCPF=idx('CPF'), iTipo=idx('Tipo'), iNasc=idx('Nascimento'), iTel=idx('Telefone'),
+        iEmail=idx('E-mail'), iVH=idx('Valor'), iRazao=idx('Razão'), iCNPJ=idx('CNPJ'),
+        iPTipo=idx('Tipo PIX'), iPChave=idx('Chave PIX'), iProjs=idx('Projetos');
+
+  const dataRows = rows.slice(1).filter(r => r[iCRM] && !String(r[0]).startsWith('---'));
+  if (!dataRows.length) { toast('Nenhum médico encontrado na planilha', true); return; }
+
+  const confirmar = confirm(`Importar/atualizar ${dataRows.length} médico(s)? Médicos com mesmo CRM serão atualizados.`);
+  if (!confirmar) return;
+
+  let ok=0, erros=0;
+  for (const row of dataRows) {
+    const crm = String(row[iCRM]||'').trim();
+    if (!crm) continue;
+    const espsStr = String(row[iEsp]||'').trim();
+    const esps = espsStr ? espsStr.split(';').map(s=>s.trim()).filter(Boolean) : [];
+    const projsStr = String(row[iProjs]||'').trim();
+    const projsVinc = projsStr ? projsStr.split(';').map(s=>s.trim()).filter(Boolean)
+      .map(nome => projetos.find(p=>p.nome.toLowerCase()===nome.toLowerCase())?.id)
+      .filter(Boolean) : [];
+
+    const payload = {
+      nome: String(row[iNome]||'').trim(),
+      crm,
+      rqe: String(row[iRQE]||'').trim()||null,
+      especialidade: esps.join(', '),
+      especialidades: esps,
+      cpf: String(row[iCPF]||'').trim()||null,
+      tipo: String(row[iTipo]||'Plantonista').trim(),
+      data_nascimento: null,
+      telefone: String(row[iTel]||'').trim()||null,
+      email: String(row[iEmail]||'').trim()||null,
+      valor_hora: parseFloat(String(row[iVH]||'0').replace(',','.'))||0,
+      razao_social: String(row[iRazao]||'').trim()||null,
+      cnpj: String(row[iCNPJ]||'').trim()||null,
+      pix_tipo: String(row[iPTipo]||'').trim()||null,
+      pix_chave: String(row[iPChave]||'').trim()||null,
+      projetos_vinculados: projsVinc,
+    };
+
+    // Verificar se já existe pelo CRM
+    const existente = medicos.find(m=>m.crm===crm);
+    if (existente) {
+      // Atualizar
+      const res = await fetch(SUPABASE_URL+'/rest/v1/medicos?id=eq.'+existente.id, {
+        method:'PATCH',
+        headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},
+        body: JSON.stringify(payload)
+      });
+      if (res.ok||res.status===204) ok++; else erros++;
+    } else {
+      // Inserir novo
+      const res = await fetch(SUPABASE_URL+'/rest/v1/medicos', {
+        method:'POST',
+        headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},
+        body: JSON.stringify({...payload, ativo:true, token_acesso: crypto.randomUUID()})
+      });
+      if (res.ok||res.status===204||res.status===201) ok++; else erros++;
+    }
+  }
+
+  event.target.value='';
+  toast(`✅ Importação: ${ok} médico(s) atualizados${erros>0?' · '+erros+' erro(s)':''}`);
+  await carregarMedicos();
+}
+
 async function delMedico(id) {
   if (!confirm('Remover médico?')) return;
   await sb(`/rest/v1/medicos?id=eq.${id}`, { method:'DELETE' });
@@ -1433,7 +1781,9 @@ function abrirEditarMedico(id) {
   document.getElementById('em-tipo').value  = m.tipo || 'Plantonista';
   document.getElementById('em-crm').value   = m.crm || '';
   document.getElementById('em-rqe').value   = m.rqe || '';
-  document.getElementById('em-esp').value   = m.especialidade || '';
+  // Especialidades
+  const espsAtivas = m.especialidades || (m.especialidade ? m.especialidade.split(', ') : []);
+  document.querySelectorAll('.em-esp-chk').forEach(c => { c.checked = espsAtivas.includes(c.value); });
   document.getElementById('em-valor').value = m.valor_hora || '';
 
   // Projetos vinculados
@@ -1471,7 +1821,8 @@ async function salvarEdicaoMedico() {
     tipo:           document.getElementById('em-tipo').value,
     crm:            document.getElementById('em-crm').value.trim(),
     rqe:            document.getElementById('em-rqe').value.trim(),
-    especialidade:  document.getElementById('em-esp').value.trim(),
+    especialidades: [...document.querySelectorAll('.em-esp-chk:checked')].map(c=>c.value),
+    especialidade:  [...document.querySelectorAll('.em-esp-chk:checked')].map(c=>c.value).join(', '),
     valor_hora:     parseFloat(document.getElementById('em-valor').value) || 0,
     projetos_vinculados: projsVinc
   };
@@ -2417,10 +2768,19 @@ function verDetalhesSemana(lancId) {
 }
 
 // Modal de lançamento rápido a partir da escala semanal
-function renderMedListaMR(filtro='') {
+function renderMedListaMR(filtro='', espFiltro='') {
   const el = document.getElementById('mr-med-lista');
   if (!el) return;
-  const lista = sortedMedicos().filter(m => !filtro || m.nome.toLowerCase().includes(filtro.toLowerCase()) || (m.crm||'').toLowerCase().includes(filtro.toLowerCase()));
+  const tipoPlantao = document.getElementById('mr-tipo')?.value || '';
+  // Filtro de especialidade: se o plantão não for Clínica Geral/Emergência, filtrar por especialidade
+  const ehGeral = !espFiltro || espFiltro === '' || espFiltro === 'Clínica Geral / Emergência';
+  const lista = sortedMedicos().filter(m => {
+    const buscaOk = !filtro || m.nome.toLowerCase().includes(filtro.toLowerCase()) || (m.crm||'').toLowerCase().includes(filtro.toLowerCase());
+    if (!buscaOk) return false;
+    if (ehGeral) return true; // sem filtro de especialidade = todos podem
+    const esps = m.especialidades || (m.especialidade ? m.especialidade.split(', ') : []);
+    return esps.includes(espFiltro) || esps.includes('Clínica Geral / Emergência');
+  });
   if (!lista.length) { el.innerHTML='<div style="padding:10px;color:var(--text3);font-size:13px;">Nenhum médico encontrado</div>'; return; }
   el.innerHTML = lista.map(m => `
     <div class="mr-med-item" id="mrmi-${m.id}" onclick="toggleMedMR('${m.id}')">
@@ -2449,8 +2809,9 @@ function atualizarCountMR() {
 }
 
 function filtrarMedMR() {
-  const filtro = document.getElementById('mr-med-busca')?.value || '';
-  renderMedListaMR(filtro);
+  const filtro    = document.getElementById('mr-med-busca')?.value || '';
+  const espFiltro = document.getElementById('mr-esp-filtro')?.value || '';
+  renderMedListaMR(filtro, espFiltro);
 }
 
 function getMedsSelecionadosMR() {
@@ -3142,8 +3503,10 @@ async function addMedico() {
   const crm  = document.getElementById('mc').value.trim();
   if (!nome||!crm) { toast('Nome e CRM são obrigatórios', true); return; }
   const projsVinc = [...document.querySelectorAll('.med-proj-chk:checked')].map(c=>c.value);
+  const espsVinc  = [...document.querySelectorAll('.med-esp-chk:checked')].map(c=>c.value);
   const payload = { nome, crm,
-    especialidade: document.getElementById('me').value.trim(),
+    especialidade: espsVinc.join(', ') || document.getElementById('me').value.trim(),
+    especialidades: espsVinc,
     valor_hora: parseFloat(document.getElementById('mv').value)||0,
     tipo: document.getElementById('mt').value,
     cpf: document.getElementById('mcpf').value.trim(),
@@ -3151,6 +3514,10 @@ async function addMedico() {
     data_nascimento: document.getElementById('mnascimento').value || null,
     email: document.getElementById('memail').value.trim(),
     telefone: document.getElementById('mtel').value.trim(),
+    razao_social: document.getElementById('mn-razao')?.value.trim()||null,
+    cnpj: document.getElementById('mn-cnpj')?.value.trim()||null,
+    pix_tipo: document.getElementById('mn-pix-tipo')?.value||null,
+    pix_chave: document.getElementById('mn-pix-chave')?.value.trim()||null,
     ativo: true,
     projetos_vinculados: projsVinc
   };
@@ -3159,6 +3526,9 @@ async function addMedico() {
     toast('Médico cadastrado!');
     ['mn','mc','me','mv','mcpf','mrqe','memail','mtel','mnascimento'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
     document.querySelectorAll('.med-proj-chk').forEach(c=>c.checked=false);
+    document.querySelectorAll('.med-esp-chk').forEach(c=>c.checked=false);
+    ['mn-razao','mn-cnpj','mn-pix-chave'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+    const pt=document.getElementById('mn-pix-tipo');if(pt)pt.value='';
     await carregarMedicos();
   } else toast('Erro ao cadastrar médico', true);
 }
