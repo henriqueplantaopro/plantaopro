@@ -1379,7 +1379,7 @@ tr:hover td{background:var(--bg3);}
           </label>
         </div>
       </div>
-      <div class="form-group"><label>Valor/hora (R$)</label><input id="em-valor" type="number" step="0.01"></div>
+      <input type="hidden" id="em-valor" value="0">
     </div>
     <div class="form-row">
       <div class="form-group">
@@ -1809,9 +1809,13 @@ function abrirEditarMedico(id) {
   }
 
   document.getElementById('modal-editar-med').classList.add('open');
+  setTimeout(() => validarPixEdit(), 200);
 }
 
 function fecharEditarMedico() {
+  // Desbloquear campo PIX ao fechar
+  const ch = document.getElementById('em-pix-chave');
+  if (ch) { ch.readOnly=false; ch.style.background=''; ch.style.color=''; }
   document.getElementById('modal-editar-med').classList.remove('open');
   _editandoMedId = null;
 }
@@ -4236,12 +4240,18 @@ function autoPreencherPixEdit() {
     const cpf = document.getElementById('em-cpf')?.value?.trim();
     if (cpf) {
       chave.value = cpf;
-      mostrarAvisoPixEdit('✅ Preenchido com o CPF do cadastro — confirme se está correto.', 'green');
+      chave.readOnly = true;
+      chave.style.background = 'var(--bg3)';
+      chave.style.color = 'var(--text2)';
+      mostrarAvisoPixEdit('✅ Preenchido com o CPF do cadastro — campo bloqueado para evitar alterações.', 'green');
     } else {
       chave.value = '';
+      chave.readOnly = false;
+      chave.style.background = '';
       mostrarAvisoPixEdit('⚠️ CPF não cadastrado. Preencha o CPF do médico primeiro.', 'amber');
     }
   } else if (tipo === 'CNPJ') {
+    chave.readOnly = false; chave.style.background=''; chave.style.color='';
     const cnpj = document.getElementById('em-cnpj')?.value?.trim();
     if (cnpj) {
       chave.value = cnpj;
@@ -4251,9 +4261,10 @@ function autoPreencherPixEdit() {
       mostrarAvisoPixEdit('⚠️ CNPJ não cadastrado. Preencha o CNPJ do médico primeiro.', 'amber');
     }
   } else if (tipo === 'EMAIL') {
-    // Email pode ser diferente do cadastro — não preencher automaticamente
+    chave.readOnly = false; chave.style.background=''; chave.style.color='';
     mostrarAvisoPixEdit('ℹ️ Digite o e-mail cadastrado como chave PIX do médico.', 'blue');
   } else {
+    chave.readOnly = false; chave.style.background=''; chave.style.color='';
     chave.value = '';
     esconderAvisoPixEdit();
   }
@@ -4318,15 +4329,30 @@ function autoPreencherPixNovo() {
   if (!chave) return;
   if (tipo === 'CPF') {
     const cpf = document.getElementById('mcpf')?.value?.trim();
-    if (cpf) { chave.value = cpf; mostrarAvisoPixNovo('✅ Preenchido com o CPF do cadastro acima.', 'green'); }
-    else { chave.value=''; mostrarAvisoPixNovo('⚠️ Preencha o CPF do médico primeiro.', 'amber'); }
+    if (cpf) {
+      chave.value = cpf;
+      chave.readOnly = true;
+      chave.style.background = 'var(--bg3)';
+      chave.style.color = 'var(--text2)';
+      mostrarAvisoPixNovo('✅ Preenchido com o CPF do cadastro — campo bloqueado para evitar alterações.', 'green');
+    } else {
+      chave.value='';
+      chave.readOnly = false;
+      chave.style.background = '';
+      mostrarAvisoPixNovo('⚠️ Preencha o CPF do médico acima primeiro.', 'amber');
+    }
   } else if (tipo === 'CNPJ') {
+    chave.readOnly = false; chave.style.background=''; chave.style.color='';
     const cnpj = document.getElementById('mn-cnpj')?.value?.trim();
     if (cnpj) { chave.value = cnpj; mostrarAvisoPixNovo('✅ Preenchido com o CNPJ cadastrado.', 'green'); }
     else { chave.value=''; mostrarAvisoPixNovo('⚠️ Preencha o CNPJ do médico primeiro.', 'amber'); }
   } else if (tipo === 'EMAIL') {
+    chave.readOnly = false; chave.style.background=''; chave.style.color='';
     mostrarAvisoPixNovo('ℹ️ Digite o e-mail cadastrado como chave PIX do médico.', 'blue');
-  } else { chave.value=''; esconderAvisoPixNovo(); }
+  } else {
+    chave.readOnly = false; chave.style.background=''; chave.style.color='';
+    chave.value=''; esconderAvisoPixNovo();
+  }
   validarPixNovo();
 }
 
@@ -4368,12 +4394,7 @@ function mostrarAvisoPixNovo(msg, cor) {
 }
 function esconderAvisoPixNovo() { const el=document.getElementById('mn-pix-aviso'); if(el) el.style.display='none'; }
 
-// Ao abrir o modal de edição, disparar validação
-const _origAbrirEditarMedico = abrirEditarMedico;
-function abrirEditarMedico(id) {
-  _origAbrirEditarMedico(id);
-  setTimeout(() => validarPixEdit(), 200);
-}
+// Validação PIX é chamada diretamente no abrirEditarMedico (não precisa de wrapper)
 
 // ── FIM VALIDAÇÃO PIX ─────────────────────────────────
 
