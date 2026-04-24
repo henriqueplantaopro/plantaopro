@@ -403,8 +403,8 @@ tr:hover td{background:var(--bg3);}
       <div class="form-row four">
         <div class="form-group"><label>CRM</label><input id="mc" type="text" placeholder="CRM/RJ 000001"></div>
         <div class="form-group"><label>RQE</label><input id="mrqe" type="text" placeholder="RQE 00000"></div>
-        <div class="form-group"><label>Especialidade</label><input id="me" type="text" placeholder="Clínica Geral"></div>
-        <div class="form-group"><label>Valor/hora (R$)</label><input id="mv" type="number" placeholder="150"></div>
+        <input type="hidden" id="me" value="">
+        <input type="hidden" id="mv" value="0">
       </div>
       <!-- Especialidades múltiplas -->
       <div class="form-group" style="margin-top:10px;">
@@ -1809,7 +1809,30 @@ function abrirEditarMedico(id) {
   }
 
   document.getElementById('modal-editar-med').classList.add('open');
-  setTimeout(() => validarPixEdit(), 200);
+
+  // Resetar PIX (evita dados do médico anterior ficarem exibidos)
+  const pixTipo  = document.getElementById('em-pix-tipo');
+  const pixChave = document.getElementById('em-pix-chave');
+  const pixSt    = document.getElementById('em-pix-status');
+  if (pixTipo)  { pixTipo.value = ''; }
+  if (pixChave) { pixChave.value=''; pixChave.readOnly=false; pixChave.style.background=''; pixChave.style.color=''; }
+  if (pixSt)    { pixSt.style.display='none'; }
+  esconderAvisoPixEdit();
+
+  // Preencher dados bancários
+  document.getElementById('em-razao') && (document.getElementById('em-razao').value = m.razao_social || '');
+  document.getElementById('em-cnpj')  && (document.getElementById('em-cnpj').value  = m.cnpj || '');
+  if (pixTipo)  pixTipo.value  = m.pix_tipo  || '';
+  if (pixChave) pixChave.value = m.pix_chave || '';
+
+  // Se tipo for CPF, bloquear o campo
+  if (m.pix_tipo === 'CPF' && m.pix_chave) {
+    pixChave.readOnly = true;
+    pixChave.style.background = 'var(--bg3)';
+    pixChave.style.color = 'var(--text2)';
+  }
+
+  setTimeout(() => validarPixEdit(), 100);
 }
 
 function fecharEditarMedico() {
