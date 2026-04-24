@@ -291,6 +291,20 @@ tr:hover td{background:var(--bg3);}
   .ctx-item.danger{color:var(--red);}
   .ctx-item.danger:hover{background:var(--red-bg);}
   .ctx-sep{border-top:1px solid var(--border);margin:4px 0;}
+
+  /* Dropdown especialidades */
+  .esp-dropdown{position:relative;width:100%;}
+  .esp-trigger{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border:1px solid var(--border);border-radius:var(--radius);background:#fff;cursor:pointer;font-size:13px;color:var(--text);min-height:38px;user-select:none;}
+  .esp-trigger:hover{border-color:var(--blue);}
+  .esp-trigger.open{border-color:var(--blue);border-bottom-left-radius:0;border-bottom-right-radius:0;}
+  .esp-panel{display:none;position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid var(--blue);border-top:none;border-radius:0 0 var(--radius) var(--radius);max-height:220px;overflow-y:auto;z-index:300;box-shadow:0 4px 12px rgba(0,0,0,0.1);}
+  .esp-panel.open{display:block;}
+  .esp-panel-item{display:flex;align-items:center;gap:8px;padding:7px 12px;cursor:pointer;font-size:13px;transition:background 0.1s;}
+  .esp-panel-item:hover{background:var(--bg3);}
+  .esp-panel-item input{accent-color:var(--blue);width:15px;height:15px;flex-shrink:0;}
+  .esp-tags{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px;}
+  .esp-tag{display:inline-flex;align-items:center;gap:4px;background:var(--blue-light);color:var(--blue);border:1px solid #a8c4f0;padding:2px 8px;border-radius:99px;font-size:11px;font-weight:500;}
+  .esp-tag button{background:none;border:none;cursor:pointer;color:var(--blue);font-size:13px;line-height:1;padding:0;}
 </style>
 </head>
 <body>
@@ -397,7 +411,7 @@ tr:hover td{background:var(--bg3);}
       <div class="form-row four">
         <div class="form-group"><label>Telefone celular</label><input id="mtel" type="text" placeholder="(21) 99999-9999"></div>
         <div class="form-group"><label>Data de nascimento</label><input id="mnascimento" type="date"></div>
-        <div class="form-group"><label>CPF</label><input id="mcpf" type="text" placeholder="000.000.000-00"></div>
+        <div class="form-group"><label>CPF</label><input id="mcpf" type="text" placeholder="000.000.000-00" oninput="if(document.getElementById('mn-pix-tipo')?.value==='CPF') autoPreencherPixNovo()"></div>
         <div class="form-group"><label>Tipo</label><select id="mt"><option>Plantonista</option><option>Diarista</option><option>Coordenador</option><option>Residente</option></select></div>
       </div>
       <div class="form-row four">
@@ -406,92 +420,45 @@ tr:hover td{background:var(--bg3);}
         <input type="hidden" id="me" value="">
         <input type="hidden" id="mv" value="0">
       </div>
-      <!-- Especialidades múltiplas -->
+      <!-- Especialidades múltiplas — dropdown compacto -->
       <div class="form-group" style="margin-top:10px;">
         <label>Especialidades <span style="font-weight:400;font-size:11px;color:var(--text3);">(selecione todas que se aplicam)</span></label>
-        <div id="med-esp-check" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;">
-                  <label style="display:flex;align-items:center;gap:5px;font-size:12px;background:var(--bg3);padding:4px 10px;border-radius:99px;cursor:pointer;border:1px solid var(--border);">
-            <input type="checkbox" class="med-esp-chk" value="Clínica Geral / Emergência" style="accent-color:var(--blue);">Clínica Geral / Emergência
-          </label>
-          <label style="display:flex;align-items:center;gap:5px;font-size:12px;background:var(--bg3);padding:4px 10px;border-radius:99px;cursor:pointer;border:1px solid var(--border);">
-            <input type="checkbox" class="med-esp-chk" value="Anestesiologia" style="accent-color:var(--blue);">Anestesiologia
-          </label>
-          <label style="display:flex;align-items:center;gap:5px;font-size:12px;background:var(--bg3);padding:4px 10px;border-radius:99px;cursor:pointer;border:1px solid var(--border);">
-            <input type="checkbox" class="med-esp-chk" value="Cardiologia" style="accent-color:var(--blue);">Cardiologia
-          </label>
-          <label style="display:flex;align-items:center;gap:5px;font-size:12px;background:var(--bg3);padding:4px 10px;border-radius:99px;cursor:pointer;border:1px solid var(--border);">
-            <input type="checkbox" class="med-esp-chk" value="Cirurgia Geral" style="accent-color:var(--blue);">Cirurgia Geral
-          </label>
-          <label style="display:flex;align-items:center;gap:5px;font-size:12px;background:var(--bg3);padding:4px 10px;border-radius:99px;cursor:pointer;border:1px solid var(--border);">
-            <input type="checkbox" class="med-esp-chk" value="Cirurgia Vascular" style="accent-color:var(--blue);">Cirurgia Vascular
-          </label>
-          <label style="display:flex;align-items:center;gap:5px;font-size:12px;background:var(--bg3);padding:4px 10px;border-radius:99px;cursor:pointer;border:1px solid var(--border);">
-            <input type="checkbox" class="med-esp-chk" value="Dermatologia" style="accent-color:var(--blue);">Dermatologia
-          </label>
-          <label style="display:flex;align-items:center;gap:5px;font-size:12px;background:var(--bg3);padding:4px 10px;border-radius:99px;cursor:pointer;border:1px solid var(--border);">
-            <input type="checkbox" class="med-esp-chk" value="Endocrinologia" style="accent-color:var(--blue);">Endocrinologia
-          </label>
-          <label style="display:flex;align-items:center;gap:5px;font-size:12px;background:var(--bg3);padding:4px 10px;border-radius:99px;cursor:pointer;border:1px solid var(--border);">
-            <input type="checkbox" class="med-esp-chk" value="Gastroenterologia" style="accent-color:var(--blue);">Gastroenterologia
-          </label>
-          <label style="display:flex;align-items:center;gap:5px;font-size:12px;background:var(--bg3);padding:4px 10px;border-radius:99px;cursor:pointer;border:1px solid var(--border);">
-            <input type="checkbox" class="med-esp-chk" value="Geriatria" style="accent-color:var(--blue);">Geriatria
-          </label>
-          <label style="display:flex;align-items:center;gap:5px;font-size:12px;background:var(--bg3);padding:4px 10px;border-radius:99px;cursor:pointer;border:1px solid var(--border);">
-            <input type="checkbox" class="med-esp-chk" value="Ginecologia e Obstetrícia" style="accent-color:var(--blue);">Ginecologia e Obstetrícia
-          </label>
-          <label style="display:flex;align-items:center;gap:5px;font-size:12px;background:var(--bg3);padding:4px 10px;border-radius:99px;cursor:pointer;border:1px solid var(--border);">
-            <input type="checkbox" class="med-esp-chk" value="Hematologia" style="accent-color:var(--blue);">Hematologia
-          </label>
-          <label style="display:flex;align-items:center;gap:5px;font-size:12px;background:var(--bg3);padding:4px 10px;border-radius:99px;cursor:pointer;border:1px solid var(--border);">
-            <input type="checkbox" class="med-esp-chk" value="Infectologia" style="accent-color:var(--blue);">Infectologia
-          </label>
-          <label style="display:flex;align-items:center;gap:5px;font-size:12px;background:var(--bg3);padding:4px 10px;border-radius:99px;cursor:pointer;border:1px solid var(--border);">
-            <input type="checkbox" class="med-esp-chk" value="Medicina Intensiva (UTI)" style="accent-color:var(--blue);">Medicina Intensiva (UTI)
-          </label>
-          <label style="display:flex;align-items:center;gap:5px;font-size:12px;background:var(--bg3);padding:4px 10px;border-radius:99px;cursor:pointer;border:1px solid var(--border);">
-            <input type="checkbox" class="med-esp-chk" value="Medicina do Trabalho" style="accent-color:var(--blue);">Medicina do Trabalho
-          </label>
-          <label style="display:flex;align-items:center;gap:5px;font-size:12px;background:var(--bg3);padding:4px 10px;border-radius:99px;cursor:pointer;border:1px solid var(--border);">
-            <input type="checkbox" class="med-esp-chk" value="Nefrologia" style="accent-color:var(--blue);">Nefrologia
-          </label>
-          <label style="display:flex;align-items:center;gap:5px;font-size:12px;background:var(--bg3);padding:4px 10px;border-radius:99px;cursor:pointer;border:1px solid var(--border);">
-            <input type="checkbox" class="med-esp-chk" value="Neurologia" style="accent-color:var(--blue);">Neurologia
-          </label>
-          <label style="display:flex;align-items:center;gap:5px;font-size:12px;background:var(--bg3);padding:4px 10px;border-radius:99px;cursor:pointer;border:1px solid var(--border);">
-            <input type="checkbox" class="med-esp-chk" value="Neurocirurgia" style="accent-color:var(--blue);">Neurocirurgia
-          </label>
-          <label style="display:flex;align-items:center;gap:5px;font-size:12px;background:var(--bg3);padding:4px 10px;border-radius:99px;cursor:pointer;border:1px solid var(--border);">
-            <input type="checkbox" class="med-esp-chk" value="Oftalmologia" style="accent-color:var(--blue);">Oftalmologia
-          </label>
-          <label style="display:flex;align-items:center;gap:5px;font-size:12px;background:var(--bg3);padding:4px 10px;border-radius:99px;cursor:pointer;border:1px solid var(--border);">
-            <input type="checkbox" class="med-esp-chk" value="Oncologia" style="accent-color:var(--blue);">Oncologia
-          </label>
-          <label style="display:flex;align-items:center;gap:5px;font-size:12px;background:var(--bg3);padding:4px 10px;border-radius:99px;cursor:pointer;border:1px solid var(--border);">
-            <input type="checkbox" class="med-esp-chk" value="Ortopedia e Traumatologia" style="accent-color:var(--blue);">Ortopedia e Traumatologia
-          </label>
-          <label style="display:flex;align-items:center;gap:5px;font-size:12px;background:var(--bg3);padding:4px 10px;border-radius:99px;cursor:pointer;border:1px solid var(--border);">
-            <input type="checkbox" class="med-esp-chk" value="Otorrinolaringologia" style="accent-color:var(--blue);">Otorrinolaringologia
-          </label>
-          <label style="display:flex;align-items:center;gap:5px;font-size:12px;background:var(--bg3);padding:4px 10px;border-radius:99px;cursor:pointer;border:1px solid var(--border);">
-            <input type="checkbox" class="med-esp-chk" value="Pediatria" style="accent-color:var(--blue);">Pediatria
-          </label>
-          <label style="display:flex;align-items:center;gap:5px;font-size:12px;background:var(--bg3);padding:4px 10px;border-radius:99px;cursor:pointer;border:1px solid var(--border);">
-            <input type="checkbox" class="med-esp-chk" value="Pneumologia" style="accent-color:var(--blue);">Pneumologia
-          </label>
-          <label style="display:flex;align-items:center;gap:5px;font-size:12px;background:var(--bg3);padding:4px 10px;border-radius:99px;cursor:pointer;border:1px solid var(--border);">
-            <input type="checkbox" class="med-esp-chk" value="Psiquiatria" style="accent-color:var(--blue);">Psiquiatria
-          </label>
-          <label style="display:flex;align-items:center;gap:5px;font-size:12px;background:var(--bg3);padding:4px 10px;border-radius:99px;cursor:pointer;border:1px solid var(--border);">
-            <input type="checkbox" class="med-esp-chk" value="Radiologia" style="accent-color:var(--blue);">Radiologia
-          </label>
-          <label style="display:flex;align-items:center;gap:5px;font-size:12px;background:var(--bg3);padding:4px 10px;border-radius:99px;cursor:pointer;border:1px solid var(--border);">
-            <input type="checkbox" class="med-esp-chk" value="Reumatologia" style="accent-color:var(--blue);">Reumatologia
-          </label>
-          <label style="display:flex;align-items:center;gap:5px;font-size:12px;background:var(--bg3);padding:4px 10px;border-radius:99px;cursor:pointer;border:1px solid var(--border);">
-            <input type="checkbox" class="med-esp-chk" value="Urologia" style="accent-color:var(--blue);">Urologia
-          </label>
+        <div class="esp-dropdown" id="esp-dropdown-novo">
+          <div class="esp-trigger" onclick="toggleEspDropdown('novo')" id="esp-trigger-novo">
+            <span id="esp-label-novo" style="color:var(--text3);">Clique para selecionar...</span>
+            <span>▾</span>
+          </div>
+          <div class="esp-panel" id="esp-panel-novo">
+          <label class="esp-panel-item"><input type="checkbox" class="med-esp-chk" value="Clínica Geral / Emergência">Clínica Geral / Emergência</label>
+          <label class="esp-panel-item"><input type="checkbox" class="med-esp-chk" value="Anestesiologia">Anestesiologia</label>
+          <label class="esp-panel-item"><input type="checkbox" class="med-esp-chk" value="Cardiologia">Cardiologia</label>
+          <label class="esp-panel-item"><input type="checkbox" class="med-esp-chk" value="Cirurgia Geral">Cirurgia Geral</label>
+          <label class="esp-panel-item"><input type="checkbox" class="med-esp-chk" value="Cirurgia Vascular">Cirurgia Vascular</label>
+          <label class="esp-panel-item"><input type="checkbox" class="med-esp-chk" value="Dermatologia">Dermatologia</label>
+          <label class="esp-panel-item"><input type="checkbox" class="med-esp-chk" value="Endocrinologia">Endocrinologia</label>
+          <label class="esp-panel-item"><input type="checkbox" class="med-esp-chk" value="Gastroenterologia">Gastroenterologia</label>
+          <label class="esp-panel-item"><input type="checkbox" class="med-esp-chk" value="Geriatria">Geriatria</label>
+          <label class="esp-panel-item"><input type="checkbox" class="med-esp-chk" value="Ginecologia e Obstetrícia">Ginecologia e Obstetrícia</label>
+          <label class="esp-panel-item"><input type="checkbox" class="med-esp-chk" value="Hematologia">Hematologia</label>
+          <label class="esp-panel-item"><input type="checkbox" class="med-esp-chk" value="Infectologia">Infectologia</label>
+          <label class="esp-panel-item"><input type="checkbox" class="med-esp-chk" value="Medicina Intensiva (UTI)">Medicina Intensiva (UTI)</label>
+          <label class="esp-panel-item"><input type="checkbox" class="med-esp-chk" value="Medicina do Trabalho">Medicina do Trabalho</label>
+          <label class="esp-panel-item"><input type="checkbox" class="med-esp-chk" value="Nefrologia">Nefrologia</label>
+          <label class="esp-panel-item"><input type="checkbox" class="med-esp-chk" value="Neurologia">Neurologia</label>
+          <label class="esp-panel-item"><input type="checkbox" class="med-esp-chk" value="Neurocirurgia">Neurocirurgia</label>
+          <label class="esp-panel-item"><input type="checkbox" class="med-esp-chk" value="Oftalmologia">Oftalmologia</label>
+          <label class="esp-panel-item"><input type="checkbox" class="med-esp-chk" value="Oncologia">Oncologia</label>
+          <label class="esp-panel-item"><input type="checkbox" class="med-esp-chk" value="Ortopedia e Traumatologia">Ortopedia e Traumatologia</label>
+          <label class="esp-panel-item"><input type="checkbox" class="med-esp-chk" value="Otorrinolaringologia">Otorrinolaringologia</label>
+          <label class="esp-panel-item"><input type="checkbox" class="med-esp-chk" value="Pediatria">Pediatria</label>
+          <label class="esp-panel-item"><input type="checkbox" class="med-esp-chk" value="Pneumologia">Pneumologia</label>
+          <label class="esp-panel-item"><input type="checkbox" class="med-esp-chk" value="Psiquiatria">Psiquiatria</label>
+          <label class="esp-panel-item"><input type="checkbox" class="med-esp-chk" value="Radiologia">Radiologia</label>
+          <label class="esp-panel-item"><input type="checkbox" class="med-esp-chk" value="Reumatologia">Reumatologia</label>
+          <label class="esp-panel-item"><input type="checkbox" class="med-esp-chk" value="Urologia">Urologia</label>
+          </div>
         </div>
+        <div class="esp-tags" id="esp-tags-novo"></div>
       </div>
       <!-- Dados bancários / PIX -->
       <div style="border-top:1px solid var(--border);margin-top:12px;padding-top:12px;">
@@ -1795,6 +1762,7 @@ function abrirEditarMedico(id) {
   // Especialidades
   const espsAtivas = m.especialidades || (m.especialidade ? m.especialidade.split(', ') : []);
   document.querySelectorAll('.em-esp-chk').forEach(c => { c.checked = espsAtivas.includes(c.value); });
+  setTimeout(()=>atualizarTagsEsp('edit'), 50);
   document.getElementById('em-valor').value = m.valor_hora || '';
 
   // Projetos vinculados
@@ -3565,6 +3533,7 @@ async function addMedico() {
     ['mn','mc','me','mv','mcpf','mrqe','memail','mtel','mnascimento'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
     document.querySelectorAll('.med-proj-chk').forEach(c=>c.checked=false);
     document.querySelectorAll('.med-esp-chk').forEach(c=>c.checked=false);
+    atualizarTagsEsp('novo');
     ['mn-razao','mn-cnpj','mn-pix-chave'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
     const pt=document.getElementById('mn-pix-tipo');if(pt)pt.value='';
     await carregarMedicos();
@@ -4420,6 +4389,57 @@ function esconderAvisoPixNovo() { const el=document.getElementById('mn-pix-aviso
 // Validação PIX é chamada diretamente no abrirEditarMedico (não precisa de wrapper)
 
 // ── FIM VALIDAÇÃO PIX ─────────────────────────────────
+
+
+// ─── DROPDOWN DE ESPECIALIDADES ──────────────────────
+function toggleEspDropdown(ctx) {
+  const panel   = document.getElementById('esp-panel-'+ctx);
+  const trigger = document.getElementById('esp-trigger-'+ctx);
+  if (!panel) return;
+  const isOpen = panel.classList.contains('open');
+  // Fechar todos
+  document.querySelectorAll('.esp-panel').forEach(p=>p.classList.remove('open'));
+  document.querySelectorAll('.esp-trigger').forEach(t=>t.classList.remove('open'));
+  if (!isOpen) {
+    panel.classList.add('open');
+    trigger.classList.add('open');
+  }
+}
+
+// Fechar dropdown ao clicar fora
+document.addEventListener('click', e => {
+  if (!e.target.closest('.esp-dropdown')) {
+    document.querySelectorAll('.esp-panel').forEach(p=>p.classList.remove('open'));
+    document.querySelectorAll('.esp-trigger').forEach(t=>t.classList.remove('open'));
+  }
+});
+
+// Atualizar tags e label ao marcar/desmarcar
+document.addEventListener('change', e => {
+  if (e.target.classList.contains('med-esp-chk')) atualizarTagsEsp('novo');
+  if (e.target.classList.contains('em-esp-chk'))  atualizarTagsEsp('edit');
+});
+
+function atualizarTagsEsp(ctx) {
+  const chkClass = ctx==='novo' ? '.med-esp-chk' : '.em-esp-chk';
+  const sel = [...document.querySelectorAll(chkClass+':checked')].map(c=>c.value);
+  const label = document.getElementById('esp-label-'+ctx);
+  const tags  = document.getElementById('esp-tags-'+ctx);
+  if (label) label.textContent = sel.length ? sel.length+' especialidade(s) selecionada(s)' : 'Clique para selecionar...';
+  if (label) label.style.color = sel.length ? 'var(--text)' : 'var(--text3)';
+  if (tags)  tags.innerHTML = sel.map(e=>
+    `<span class="esp-tag">${e}<button onclick="desmarcarEsp('${ctx}','${e.replace(/'/g,'\\\'')}')">×</button></span>`
+  ).join('');
+}
+
+function desmarcarEsp(ctx, val) {
+  const chkClass = ctx==='novo' ? '.med-esp-chk' : '.em-esp-chk';
+  const chk = [...document.querySelectorAll(chkClass)].find(c=>c.value===val);
+  if (chk) { chk.checked=false; atualizarTagsEsp(ctx); }
+}
+
+// Ao abrir modal de edição, atualizar tags
+const _origAtualizarEspEdit = function() { atualizarTagsEsp('edit'); };
 
 // Inicia com Enter no login
 document.getElementById('l-email').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('l-senha').focus();});
