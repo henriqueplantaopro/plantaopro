@@ -4016,7 +4016,13 @@ async function gerarRemessa() {
   const dtGer   = dtFmt(agora);
   const hrGer   = hrFmt(agora);
   const nrArq   = String(Math.floor(Math.random()*99999)+1).padStart(6,'0');
-  const dtPag   = dtFmt(new Date(_fechAtivo.data_fim+'T12:00:00'));
+  const dtPag   = (() => {
+    // Data de pagamento: maior entre data_fim do fechamento e amanhã (D+1)
+    const fimFech = new Date(_fechAtivo.data_fim+'T12:00:00');
+    const amanha  = new Date(agora.getTime() + 86400000);
+    const dtBase  = fimFech > amanha ? fimFech : amanha;
+    return dtFmt(dtBase);
+  })();
 
   const linhas = [];
 
