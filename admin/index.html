@@ -4022,7 +4022,7 @@ async function gerarRemessa() {
     BANCO + '0001' + '1' +           // 001-008: banco, lote, tipo
     'C' +                            // 009: operação crédito
     '20' +                           // 010-011: tipo serviço = pagamento fornecedor
-    '45' +                           // 012-013: forma lançamento = PIX
+    '01' +                           // 012-013: forma lançamento = crédito conta corrente
     '045' +                          // 014-016: versão layout lote
     ' ' +                            // 017: Febraban exclusivo (branco)
     '2' + CNPJ +                     // 018-032: tipo inscrição + CNPJ
@@ -4034,8 +4034,10 @@ async function gerarRemessa() {
     dtGer + '00000000' +             // 143-158: data gravação + data crédito
     cents(totLote) +                 // 159-173: total valores
     String(qtRegsLote).padStart(6,'0') + // 174-179: qtd registros
-    ' '.repeat(33) +                 // 180-212: brancos
-    '01' + ' '.repeat(26),           // 213-240: nº aviso + brancos
+    ' '.repeat(31) +                 // 180-210: brancos
+    '01' +                           // 211-212: nº aviso débito
+    '01' +                           // 213-214: indicativo forma pagamento PIX
+    ' '.repeat(26),                  // 215-240: brancos
     'Header Lote'
   ));
 
@@ -4048,16 +4050,21 @@ async function gerarRemessa() {
     const chaveLimpa = (m.pix_chave||'').replace(/[\.\-\/]/g,'').trim();
     const tipoNum    = {CPF:'1',CNPJ:'2',EMAIL:'3',TELEFONE:'4',ALEATORIA:'5'}[m.pix_tipo||'CPF']||'1';
     const tipoInscr  = (m.pix_tipo==='CNPJ') ? '2' : '1';
-    const cpfCnpj    = padL(chaveLimpa, 14);
+    // CPF = 11 dígitos alinhado à direita em 14 chars (3 zeros à esquerda)
+    // CNPJ = 14 dígitos
+    const docDigits  = chaveLimpa.replace(/\D/g,'');
+    const cpfCnpj    = m.pix_tipo==='CNPJ'
+      ? docDigits.padStart(14,'0').slice(-14)      // CNPJ: 14 dígitos
+      : '   ' + docDigits.padStart(11,'0').slice(-11); // CPF: 3 espaços + 11 dígitos
 
     // Segmento A
     linhas.push(verif(
       BANCO + '0001' + '3' +             // 001-008
       String(nrSeqA).padStart(5,'0') +   // 009-013 seq
       'A' + '0' + '00' +                 // 014-017: segmento, movimento, instrução
-      '009' +                            // 018-020: câmara PIX
-      '000' +                            // 021-023: banco favorecido (0 para PIX)
-      '00000' + '0' +                    // 024-029: agência + DV
+      '000' +                            // 018-020: câmara = 000 (PIX via Seg B)
+      '000' +                            // 021-023: banco favorecido = 000 (PIX)
+      '00000' + '0' +                    // 024-029: agência favorecido + DV (zeros para PIX)
       '000000000000' + '0' + ' ' +       // 030-043: conta + DV + DAC
       padR(m.nome||'',30) +              // 044-073: nome favorecido
       padR(nrDoc,20) +                   // 074-093: nº doc empresa
@@ -4068,11 +4075,12 @@ async function gerarRemessa() {
       '00000000' +                       // 155-162: data real pgto
       '0'.repeat(15) +                   // 163-177: valor real pgto
       ' '.repeat(40) +                   // 178-217: informação 2
-      '01' +                             // 218-219: finalidade PIX
-      '00006' +                          // 220-224: complemento (honorários)
-      '0'.repeat(5) +                    // 225-229: nº NF
+      '03' +                             // 218-219: finalidade PIX (03=TED/PIX)
+      'CC' +                             // 220-221: conta corrente
+      ' '.repeat(3) +                    // 222-224: brancos
+      ' '.repeat(5) +                    // 225-229: brancos (sem complemento)
       '0' +                              // 230: código aviso favorecido
-      ' '.repeat(9),                     // 231-239: brancos (total = 240)
+      ' '.repeat(9),                     // 231-239: brancos
       'Segmento A'
     ));
 
@@ -4082,21 +4090,23 @@ async function gerarRemessa() {
       String(nrSeqB).padStart(5,'0') +   // 009-013 seq
       'B' +                              // 014: segmento B
       ' '.repeat(3) +                    // 015-017: Febraban exclusivo (brancos)
-      tipoInscr +                        // 018: tipo inscrição favorecido
-      cpfCnpj +                          // 019-032: CPF/CNPJ favorecido (14)
-      ' '.repeat(30) +                   // 033-062: nome favorecido (brancos para PIX)
-      ' '.repeat(30) +                   // 063-092: endereço
-      ' '.repeat(15) +                   // 093-107: bairro
-      ' '.repeat(20) +                   // 108-127: cidade
-      dtPag +                            // 128-135: data vencimento
-      cents(item.valor_total) +          // 136-150: valor documento
-      '0'.repeat(15) +                   // 151-165: valor abatimento
-      '0'.repeat(15) +                   // 166-180: valor desconto
-      '0'.repeat(15) +                   // 181-195: valor mora
-      '0'.repeat(15) +                   // 196-210: valor multa
-      tipoNum +                          // 211: tipo chave PIX
-      padR(chaveLimpa,14) +              // 212-225: chave PIX (14 chars)
-      '2' +                              // 226: código aviso (2=sem aviso)
+      tipoInscr +                        // 018: tipo inscrição (1=CPF, 2=CNPJ)
+      cpfCnpj +                          // 019-032: CPF/CNPJ só dígitos (14)
+      padR(m.nome||'',30) +              // 033-062: nome favorecido (30)
+      ' '.repeat(30) +                   // 063-092: logradouro (30) brancos
+      ' '.repeat(10) +                   // 093-102: número+complemento (10) brancos
+      ' '.repeat(15) +                   // 103-117: bairro (15) brancos
+      '00000000' +                       // 118-125: CEP (8) zeros
+      '  ' +                             // 126-127: UF (2) brancos
+      dtPag +                            // 128-135: data vencimento (8)
+      cents(item.valor_total) +          // 136-150: valor documento (15)
+      '0'.repeat(15) +                   // 151-165: valor abatimento (15)
+      '0'.repeat(15) +                   // 166-180: valor desconto (15)
+      '0'.repeat(15) +                   // 181-195: valor mora (15)
+      '0'.repeat(15) +                   // 196-210: valor multa (15)
+      tipoNum +                          // 211: tipo chave PIX (1)
+      padR(chaveLimpa,14) +              // 212-225: chave PIX (14)
+      '2' +                              // 226: código aviso (1)
       ' '.repeat(14),                    // 227-240: brancos (14)
       'Segmento B'
     ));
@@ -4104,16 +4114,16 @@ async function gerarRemessa() {
 
   // ── TRAILER LOTE ────────────────────────────────────────────────────
   linhas.push(verif(
-    BANCO + '0001' + '5' +               // 001-008
-    ' '.repeat(9) +                      // 009-017: brancos
-    String(qtRegsLote).padStart(6,'0') + // 018-023: qtd registros lote
-    String(0).padStart(6,'0') +          // 024-029: qtd débito
-    cents(0) +                           // 030-044: soma débito
-    String(itensValidos.length).padStart(6,'0') + // 045-050: qtd crédito
-    cents(totLote) +                     // 051-065: soma crédito
-    ' '.repeat(8) +                      // 066-073: brancos
-    '0'.repeat(6) +                      // 074-079: zeros (aviso débito)
-    ' '.repeat(161),                     // 080-240: brancos
+    BANCO + '0001' + '5' +               // 001-008  (8)
+    ' '.repeat(9) +                      // 009-017: brancos (9)
+    String(qtRegsLote).padStart(6,'0') + // 018-023: qtd registros (6)
+    '0'.repeat(6) +                      // 024-029: qtd débito zeros (6)
+    cents(0) +                           // 030-044: soma débito zeros (15)
+    String(itensValidos.length).padStart(6,'0') + // 045-050: qtd crédito (6)
+    cents(totLote) +                     // 051-065: soma crédito (15)
+    '0'.repeat(6) +                      // 066-071: nº aviso zeros (6)
+    ' '.repeat(159) +                    // 072-230: Febraban brancos (159)
+    ' '.repeat(10),                      // 231-240: ocorrências brancos (10)
     'Trailer Lote'
   ));
 
