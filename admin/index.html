@@ -3962,243 +3962,190 @@ async function gerarRemessa() {
   if (!_fechAtivo) return;
   const itensSemPix = _fechItens.filter(i => !i.medicos?.pix_chave);
   if (itensSemPix.length > 0) {
-    if (!confirm(`${itensSemPix.length} profissional(is) sem chave PIX serão pulados. Continuar?`)) return;
+    if (!confirm(itensSemPix.length + ' profissional(is) sem chave PIX serão pulados. Continuar?')) return;
   }
   const itensValidos = _fechItens.filter(i => i.medicos?.pix_chave && i.valor_total > 0);
   if (!itensValidos.length) { toast('Nenhum profissional com PIX cadastrado', true); return; }
 
-  const agora    = new Date();
-  const totLote  = itensValidos.reduce((s,i)=>s+i.valor_total, 0);
-  const qtRegsLote = itensValidos.length * 2 + 2; // header + trailer + A+B por item
+  const agora   = new Date();
+  const totLote = itensValidos.reduce((s,i) => s+i.valor_total, 0);
+  const qtRegsLote = itensValidos.length * 2 + 2;
 
-  // Helpers CNAB 240
-  // CNAB usa ASCII — remover acentos para garantir 1 char = 1 byte
-  const toAscii = (v) => String(v||'')
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g,'')  // remove diacríticos
-    .replace(/[^\x00-\x7F]/g,' ');  // substitui não-ASCII por espaço
+  // Helpers
+  const toAscii = v => String(v||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^\x00-\x7F]/g,' ');
   const padR = (v,n,c=' ') => toAscii(v).slice(0,n).padEnd(n,c);
-  const padL = (v,n,c='0') => toAscii(v).slice(0,n).padStart(n,c);
+  const padL = (v,n,c='0') => String(v||'').replace(/\D/g,'').padStart(n,'0').slice(-n);
   const cents = v => String(Math.round((parseFloat(v)||0)*100)).padStart(15,'0');
-  // Limpar chave PIX — remover pontos, traços, barras
-  const limparChave = (chave, tipo) => {
-    if (!chave) return '';
-    if (tipo === 'CPF' || tipo === 'CNPJ') return chave.replace(/[.\-\/]/g,'');
-    if (tipo === 'TELEFONE') return chave.replace(/[^0-9+]/g,'');
-    return chave.trim();
-  };
-  const dtFmt = (d) => { // retorna DDMMAAAA
-    const dt = d instanceof Date ? d : new Date(String(d)+'T12:00:00');
-    const dd = String(dt.getDate()).padStart(2,'0');
-    const mm = String(dt.getMonth()+1).padStart(2,'0');
-    const aa = String(dt.getFullYear());
-    return dd+mm+aa;
-  };
-  const hrFmt = (d) => {
-    const h = String(d.getHours()).padStart(2,'0');
-    const m = String(d.getMinutes()).padStart(2,'0');
-    const s = String(d.getSeconds()).padStart(2,'0');
-    return h+m+s;
-  };
   const verif = (linha, nome) => {
-    if (linha.length !== 240) console.error(`CNAB: ${nome} tem ${linha.length} chars (esperado 240)`);
-    return linha.slice(0,240).padEnd(240,' ');
+    const r = linha.slice(0,240).padEnd(240,' ');
+    if (r.length !== 240) console.error('CNAB ' + nome + ': ' + r.length);
+    return r;
   };
+  const dtFmt = d => {
+    const dt = d instanceof Date ? d : new Date(String(d)+'T12:00:00');
+    return String(dt.getDate()).padStart(2,'0') + String(dt.getMonth()+1).padStart(2,'0') + dt.getFullYear();
+  };
+  const hrFmt = d => String(d.getHours()).padStart(2,'0') + String(d.getMinutes()).padStart(2,'0') + String(d.getSeconds()).padStart(2,'0');
 
-  // Dados empresa pagadora
-  const BANCO     = '237';
-  const AG        = '01785'; const AG_DV  = '0';
-  const CC        = '0039464'; const CC_DV = '5';
-  const EMP_NOME  = padR('HJM GESTAO E SERVICOS LTDA',30);
-  const CNPJ_EMP  = '34958609000190';
-  const CONVENIO  = padR('472572',20);
-  const dtGer     = dtFmt(agora);
-  const hrGer     = hrFmt(agora);
-  const nrArq     = String(Math.floor(Math.random()*99999)+1).padStart(6,'0');
-  const dtPag     = dtFmt(new Date(_fechAtivo.data_fim+'T12:00:00'));
+  const BANCO   = '237';
+  const AG      = '01785'; const AG_DV = '0';
+  const CC      = '0039464'; const CC_DV = '5';
+  const CNPJ    = '34958609000190';
+  const CONV    = '472572';
+  const ENOME   = padR('HJM GESTAO E SERVICOS LTDA',30);
+  const dtGer   = dtFmt(agora);
+  const hrGer   = hrFmt(agora);
+  const nrArq   = String(Math.floor(Math.random()*99999)+1).padStart(6,'0');
+  const dtPag   = dtFmt(new Date(_fechAtivo.data_fim+'T12:00:00'));
 
   const linhas = [];
 
-  // ── HEADER ARQUIVO ────────────────────────────────────
-  const ha = verif(
-    BANCO +                   // 001-003 banco
-    '0000' +                  // 004-007 lote (0000 = arquivo)
-    '0' +                     // 008     tipo reg
-    ' '.repeat(9) +           // 009-017 brancos
-    '2' +                     // 018     tipo inscrição (2=CNPJ)
-    CNPJ_EMP +                // 019-032 CNPJ (14)
-    CONVENIO +                // 033-052 convênio (20)
-    padL(AG,5) +              // 053-057 agência (5)
-    AG_DV +                   // 058     DV agência
-    padL(CC,12) +             // 059-070 conta (12)
-    CC_DV +                   // 071     DV conta
-    ' ' +                     // 072     DAC
-    EMP_NOME +                // 073-102 nome empresa (30)
-    padR('BANCO BRADESCO SA',30) + // 103-132 nome banco (30)
-    ' '.repeat(10) +          // 133-142 brancos (10)
-    '1' +                     // 143     código remessa
-    dtGer +                   // 144-151 data geração (8)
-    hrGer +                   // 152-157 hora geração (6)
-    nrArq +                   // 158-163 n° arquivo (6)
-    '089' +                   // 164-166 versão layout
-    '01600' +                 // 167-171 densidade (5)
-    ' '.repeat(20) +          // 172-191 reservado banco (20)
-    ' '.repeat(20) +          // 192-211 reservado empresa (20)
-    ' '.repeat(29),           // 212-240 brancos (29)
+  // ── HEADER ARQUIVO ────────────────────────────────────────────────
+  linhas.push(verif(
+    BANCO + '0000' + '0' +          // 001-008: banco, lote, tipo
+    ' '.repeat(9) +                  // 009-017: brancos
+    '2' + CNPJ +                     // 018-032: tipo inscrição + CNPJ
+    padR(CONV,20) +                  // 033-052: convênio
+    padL(AG,5) + AG_DV +             // 053-058: agência + DV
+    padL(CC,12) + CC_DV + ' ' +      // 059-072: conta + DV + DAC
+    ENOME +                          // 073-102: nome empresa
+    padR('BANCO BRADESCO SA',30) +   // 103-132: nome banco
+    ' '.repeat(10) + '1' +           // 133-143: brancos + código remessa
+    dtGer + hrGer + nrArq +          // 144-163: data + hora + nº arquivo
+    '089' + '01600' +                // 164-171: versão + densidade
+    ' '.repeat(20) + ' '.repeat(20) + ' '.repeat(29), // 172-240: brancos
     'Header Arquivo'
-  );
-  linhas.push(ha);
+  ));
 
-  // ── HEADER LOTE ───────────────────────────────────────
-  const hl = verif(
-    BANCO +                   // 001-003
-    '0001' +                  // 004-007 lote 1
-    '1' +                     // 008     tipo reg header lote
-    'C' +                     // 009     operação crédito
-    ' ' +                     // 010     brancos
-    '45' +                    // 011-012 tipo serviço PIX
-    '030' +                   // 013-015 versão layout lote
-    ' ' +                     // 016     brancos
-    '2' +                     // 017     tipo inscrição empresa
-    CNPJ_EMP +                // 018-031 CNPJ (14)
-    CONVENIO +                // 032-051 convênio (20)
-    padL(AG,5) +              // 052-056 agência (5)
-    AG_DV +                   // 057     DV agência
-    padL(CC,12) +             // 058-069 conta (12)
-    CC_DV +                   // 070     DV conta
-    ' ' +                     // 071     DAC
-    EMP_NOME +                // 072-101 nome empresa (30)
-    ' '.repeat(40) +          // 102-141 mensagem (40)
-    dtGer +                   // 142-149 data gravação (8)
-    '00000000' +              // 150-157 data crédito (8)
-    cents(totLote) +          // 158-172 total valores (15)
-    String(qtRegsLote).padStart(6,'0') + // 173-178 qtd registros (6)
-    ' '.repeat(33) +          // 179-211 brancos (33)
-    ' '.repeat(10) +          // 212-221 ocorrências (10) — aqui começa info extra
-    ' '.repeat(19),           // 222-240 brancos (19)
+  // ── HEADER LOTE ────────────────────────────────────────────────────
+  linhas.push(verif(
+    BANCO + '0001' + '1' +           // 001-008: banco, lote, tipo
+    'C' +                            // 009: operação crédito
+    '20' +                           // 010-011: tipo serviço = pagamento fornecedor
+    '45' +                           // 012-013: forma lançamento = PIX
+    '045' +                          // 014-016: versão layout lote
+    ' ' +                            // 017: Febraban exclusivo (branco)
+    '2' + CNPJ +                     // 018-032: tipo inscrição + CNPJ
+    padR(CONV,6) + ' '.repeat(14) +  // 033-052: convênio alinhar esquerda (6) + brancos (14)
+    padL(AG,5) + AG_DV +             // 053-058: agência + DV
+    padL(CC,12) + CC_DV + ' ' +      // 059-072: conta + DV + DAC
+    ENOME +                          // 073-102: nome empresa
+    ' '.repeat(40) +                 // 103-142: mensagem
+    dtGer + '00000000' +             // 143-158: data gravação + data crédito
+    cents(totLote) +                 // 159-173: total valores
+    String(qtRegsLote).padStart(6,'0') + // 174-179: qtd registros
+    ' '.repeat(33) +                 // 180-212: brancos
+    '01' + ' '.repeat(26),           // 213-240: nº aviso + brancos
     'Header Lote'
-  );
-  linhas.push(hl);
+  ));
 
-  // ── DETALHE A + B por beneficiário ────────────────────
+  // ── DETALHE por beneficiário ────────────────────────────────────────
   itensValidos.forEach((item, idx) => {
-    const m = item.medicos||{};
-    const nrSeqA = (idx*2)+1;
-    const nrSeqB = (idx*2)+2;
-    const nrDoc  = String(idx+1).padStart(15,'0');
-    const tipoChave = {CPF:'1',CNPJ:'2',EMAIL:'3',TELEFONE:'4',ALEATORIA:'5'}[m.pix_tipo||'CPF']||'1';
-    const chaveLimpa = limparChave(m.pix_chave||'', m.pix_tipo||'');
+    const m          = item.medicos || {};
+    const nrSeqA     = (idx * 2) + 1;
+    const nrSeqB     = (idx * 2) + 2;
+    const nrDoc      = String(idx+1).padStart(15,'0');
+    const chaveLimpa = (m.pix_chave||'').replace(/[\.\-\/]/g,'').trim();
+    const tipoNum    = {CPF:'1',CNPJ:'2',EMAIL:'3',TELEFONE:'4',ALEATORIA:'5'}[m.pix_tipo||'CPF']||'1';
+    const tipoInscr  = (m.pix_tipo==='CNPJ') ? '2' : '1';
+    const cpfCnpj    = padL(chaveLimpa, 14);
 
     // Segmento A
-    const sa = verif(
-      BANCO +                 // 001-003
-      '0001' +                // 004-007 lote
-      '3' +                   // 008     tipo reg detalhe
-      String(nrSeqA).padStart(5,'0') + // 009-013 n° seq (5)
-      'A' +                   // 014     segmento
-      '0' +                   // 015     tipo movimento (0=inclusão)
-      '00' +                  // 016-017 instrução
-      '009' +                 // 018-020 câmara PIX
-      '000' +                 // 021-023 banco favorecido
-      '00000' +               // 024-028 agência favorecido
-      '0' +                   // 029     DV agência fav
-      '000000000000' +        // 030-041 conta favorecido (12)
-      '0' +                   // 042     DV conta fav
-      ' ' +                   // 043     DAC
-      padR(m.nome||'',30) +   // 044-073 nome favorecido (30)
-      padR(nrDoc,20) +        // 074-093 n° doc empresa (20)
-      dtPag +                 // 094-101 data pagamento (8)
-      'BRL' +                 // 102-104 moeda (3)
-      '0'.repeat(15) +        // 105-119 qtd moeda (15)
-      cents(item.valor_total) + // 120-134 valor pagamento (15)
-      ' '.repeat(20) +        // 135-154 n° doc banco (20)
-      '00000000' +            // 155-162 data real pgto (8)
-      '0'.repeat(15) +        // 163-177 valor real pgto (15)
-      ' '.repeat(40) +        // 178-217 informação 2 (40)
-      '01' +                  // 218-219 fin. TEF (PIX)
-      ' '.repeat(5) +         // 220-224 fins específicos
-      '0'.repeat(5) +         // 225-229 n° NF
-      ' '.repeat(9) +         // 230-238 brancos
-      '00',                   // 239-240 ocorrências
+    linhas.push(verif(
+      BANCO + '0001' + '3' +             // 001-008
+      String(nrSeqA).padStart(5,'0') +   // 009-013 seq
+      'A' + '0' + '00' +                 // 014-017: segmento, movimento, instrução
+      '009' +                            // 018-020: câmara PIX
+      '000' +                            // 021-023: banco favorecido (0 para PIX)
+      '00000' + '0' +                    // 024-029: agência + DV
+      '000000000000' + '0' + ' ' +       // 030-043: conta + DV + DAC
+      padR(m.nome||'',30) +              // 044-073: nome favorecido
+      padR(nrDoc,20) +                   // 074-093: nº doc empresa
+      dtPag + 'BRL' +                    // 094-104: data pagamento + moeda
+      '0'.repeat(15) +                   // 105-119: qtd moeda
+      cents(item.valor_total) +          // 120-134: valor pagamento
+      ' '.repeat(20) +                   // 135-154: nº doc banco
+      '00000000' +                       // 155-162: data real pgto
+      '0'.repeat(15) +                   // 163-177: valor real pgto
+      ' '.repeat(40) +                   // 178-217: informação 2
+      '01' +                             // 218-219: finalidade PIX
+      '00006' +                          // 220-224: complemento (honorários)
+      '0'.repeat(5) +                    // 225-229: nº NF
+      '0' +                              // 230: código aviso favorecido
+      ' '.repeat(9),                     // 231-239: brancos (total = 240)
       'Segmento A'
-    );
-    linhas.push(sa);
+    ));
 
-    // Segmento B (chave PIX)
-    const sb = verif(
-      BANCO +                 // 001-003
-      '0001' +                // 004-007 lote
-      '3' +                   // 008     tipo reg
-      String(nrSeqB).padStart(5,'0') + // 009-013 seq (5)
-      'B' +                   // 014     segmento B
-      ' ' +                   // 015     brancos
-      tipoChave +             // 016     tipo chave PIX
-      padR(chaveLimpa,77) +       // 017-093 chave PIX (77) — sem formatação
-      dtPag +                 // 094-101 data vencimento (8)
-      '0'.repeat(15) +        // 102-116 valor abatimento (15)
-      '0'.repeat(15) +        // 117-131 valor desconto (15)
-      '0'.repeat(15) +        // 132-146 valor mora (15)
-      '0'.repeat(15) +        // 147-161 valor multa (15)
-      ' '.repeat(30) +        // 162-191 id transação PIX (30)
-      ' '.repeat(40) +        // 192-231 informações PIX (40)
-      ' '.repeat(9),          // 232-240 brancos (9)
+    // Segmento B — layout Bradesco MULTIPAG com dados do favorecido
+    linhas.push(verif(
+      BANCO + '0001' + '3' +             // 001-008
+      String(nrSeqB).padStart(5,'0') +   // 009-013 seq
+      'B' +                              // 014: segmento B
+      ' '.repeat(3) +                    // 015-017: Febraban exclusivo (brancos)
+      tipoInscr +                        // 018: tipo inscrição favorecido
+      cpfCnpj +                          // 019-032: CPF/CNPJ favorecido (14)
+      ' '.repeat(30) +                   // 033-062: nome favorecido (brancos para PIX)
+      ' '.repeat(30) +                   // 063-092: endereço
+      ' '.repeat(15) +                   // 093-107: bairro
+      ' '.repeat(20) +                   // 108-127: cidade
+      dtPag +                            // 128-135: data vencimento
+      cents(item.valor_total) +          // 136-150: valor documento
+      '0'.repeat(15) +                   // 151-165: valor abatimento
+      '0'.repeat(15) +                   // 166-180: valor desconto
+      '0'.repeat(15) +                   // 181-195: valor mora
+      '0'.repeat(15) +                   // 196-210: valor multa
+      tipoNum +                          // 211: tipo chave PIX
+      padR(chaveLimpa,14) +              // 212-225: chave PIX (14 chars)
+      '2' +                              // 226: código aviso (2=sem aviso)
+      ' '.repeat(14),                    // 227-240: brancos (14)
       'Segmento B'
-    );
-    linhas.push(sb);
+    ));
   });
 
-  // ── TRAILER LOTE ──────────────────────────────────────
-  const tl = verif(
-    BANCO +                   // 001-003
-    '0001' +                  // 004-007 lote
-    '5' +                     // 008     tipo reg trailer lote
-    ' '.repeat(9) +           // 009-017 brancos (9)
-    String(qtRegsLote).padStart(6,'0') + // 018-023 qtd regs (6)
-    '0'.padStart(6,'0') +     // 024-029 qtd débito (6)
-    cents(0) +                // 030-044 soma débito (15)
-    String(itensValidos.length).padStart(6,'0') + // 045-050 qtd crédito (6)
-    cents(totLote) +          // 051-065 soma crédito (15)
-    ' '.repeat(165) +         // 066-230 brancos (165)
-    ' '.repeat(10),           // 231-240 ocorrências (10)
+  // ── TRAILER LOTE ────────────────────────────────────────────────────
+  linhas.push(verif(
+    BANCO + '0001' + '5' +               // 001-008
+    ' '.repeat(9) +                      // 009-017: brancos
+    String(qtRegsLote).padStart(6,'0') + // 018-023: qtd registros lote
+    String(0).padStart(6,'0') +          // 024-029: qtd débito
+    cents(0) +                           // 030-044: soma débito
+    String(itensValidos.length).padStart(6,'0') + // 045-050: qtd crédito
+    cents(totLote) +                     // 051-065: soma crédito
+    ' '.repeat(8) +                      // 066-073: brancos
+    '0'.repeat(6) +                      // 074-079: zeros (aviso débito)
+    ' '.repeat(161),                     // 080-240: brancos
     'Trailer Lote'
-  );
-  linhas.push(tl);
+  ));
 
-  // ── TRAILER ARQUIVO ───────────────────────────────────
+  // ── TRAILER ARQUIVO ────────────────────────────────────────────────
   const totalRegs = linhas.length + 1;
-  const ta = verif(
-    BANCO +                   // 001-003
-    '9999' +                  // 004-007
-    '9' +                     // 008     tipo reg trailer arquivo
-    ' '.repeat(9) +           // 009-017 brancos (9)
-    '1'.padStart(6,'0') +     // 018-023 qtd lotes (6)
-    String(totalRegs).padStart(6,'0') + // 024-029 qtd regs total (6)
-    ' '.repeat(6) +           // 030-035 qtd contas (6)
-    ' '.repeat(205),          // 036-240 brancos (205)
+  linhas.push(verif(
+    BANCO + '9999' + '9' +               // 001-008
+    ' '.repeat(9) +                      // 009-017: brancos
+    String(1).padStart(6,'0') +          // 018-023: qtd lotes
+    String(totalRegs).padStart(6,'0') +  // 024-029: qtd registros
+    '0'.repeat(6) +                      // 030-035: qtd contas (zeros)
+    ' '.repeat(205),                     // 036-240: brancos
     'Trailer Arquivo'
-  );
-  linhas.push(ta);
+  ));
 
   const CRLF = '\r\n';
   const conteudo = linhas.join(CRLF) + CRLF;
-  const nomeArq = 'Remessa_'+agora.toISOString().replace(/[-:.TZ]/g,'').slice(0,14)+'.rem';
+  const nomeArq  = 'Remessa_' + agora.toISOString().replace(/[-:.TZ]/g,'').slice(0,14) + '.rem';
 
-  // Salvar no Supabase
   await sb('/rest/v1/remessas', {
-    method:'POST',
-    body: JSON.stringify({fechamento_id:_fechAtivo.id, nome_arquivo:nomeArq, conteudo, total:totLote})
+    method: 'POST',
+    body: JSON.stringify({ fechamento_id: _fechAtivo.id, nome_arquivo: nomeArq, conteudo, total: totLote })
   });
 
-  // Download
   const blob = new Blob([conteudo], {type:'text/plain;charset=windows-1252'});
   const url  = URL.createObjectURL(blob);
   const a    = document.createElement('a'); a.href=url; a.download=nomeArq; a.click();
   URL.revokeObjectURL(url);
 
-  toast(`✅ Remessa CNAB 240 gerada: ${itensValidos.length} pagamentos — ${fBRL(totLote)}`);
+  toast('Remessa CNAB 240 gerada: ' + itensValidos.length + ' pagamentos PIX — ' + fBRL(totLote));
   mfechTab('remessa', document.querySelectorAll('.mfech-tab-btn')[1]);
 }
-
 
 // ── LISTAR REMESSAS ────────────────────────────────────
 async function carregarRemessas() {
