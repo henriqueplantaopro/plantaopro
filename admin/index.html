@@ -3901,7 +3901,7 @@ async function carregarItensFechamento() {
   const el = document.getElementById('mfech-tabela');
   el.innerHTML='<div class="empty">Carregando...</div>';
 
-  const itens = await sb(`/rest/v1/fechamento_itens?fechamento_id=eq.${_fechAtivo.id}&select=*,medicos(nome,crm,pix_tipo,pix_chave,razao_social,cnpj)&order=medicos(nome)`) || [];
+  const itens = await sb(`/rest/v1/fechamento_itens?fechamento_id=eq.${_fechAtivo.id}&select=*,medicos(nome,crm,cpf,cnpj,pix_tipo,pix_chave,razao_social)&order=medicos(nome)`) || [];
   _fechItens = itens;
 
   const totPlan = itens.reduce((s,i)=>s+i.plantoes,0);
@@ -4077,15 +4077,14 @@ async function gerarRemessa() {
     const chaveLimpa = (m.pix_chave||'').replace(/[\.\-\/]/g,'').trim();
     const tipoNum    = {CPF:'1',CNPJ:'2',EMAIL:'3',TELEFONE:'4',ALEATORIA:'5'}[m.pix_tipo||'CPF']||'1';
     const tipoInscr  = (m.pix_tipo==='CNPJ') ? '2' : '1';
-    // CPF = 11 dígitos alinhado à direita em 14 chars (3 zeros à esquerda)
-    // CNPJ = 14 dígitos
+    // Campo 019-032: usar CPF/CNPJ real do cadastro do médico (não a chave PIX)
+    // O Bradesco valida matematicamente — usa o CPF cadastrado, não a chave
+    const cpfReal    = (m.cpf||'').replace(/\D/g,'');
+    const cnpjReal   = (m.cnpj||'').replace(/\D/g,'');
     const docDigits  = chaveLimpa.replace(/\D/g,'');
-    // Bradesco CNAB 240: campo de 14 chars
-    // CPF (11 dígitos): 3 zeros à esquerda + 11 dígitos = '000' + CPF
-    // CNPJ (14 dígitos): 14 dígitos direto
     const cpfCnpj    = m.pix_tipo==='CNPJ'
-      ? docDigits.padStart(14,'0').slice(-14)           // CNPJ: 14 dígitos
-      : '000' + docDigits.padStart(11,'0').slice(-11); // CPF: 3 zeros + 11 dígitos
+      ? (cnpjReal || docDigits).padStart(14,'0').slice(-14)           // CNPJ: 14 dígitos
+      : '000' + (cpfReal || docDigits).padStart(11,'0').slice(-11);  // CPF: usa CPF cadastrado
 
     // Segmento A
     linhas.push(verif(
