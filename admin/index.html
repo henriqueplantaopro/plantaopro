@@ -4382,6 +4382,143 @@ async function processarRetorno(event) {
 document.getElementById('l-senha').addEventListener('keydown', e => { if(e.key==='Enter') fazerLogin(); });
 document.getElementById('l-email').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('l-senha').focus();});
 
+
+// ─── VALIDAÇÃO PIX ────────────────────────────────────
+function limparCpf(v) { return (v||'').replace(/\D/g,''); }
+function limparCnpj(v) { return (v||'').replace(/\D/g,''); }
+
+function autoPreencherPixEdit() {
+  const tipo  = document.getElementById('em-pix-tipo')?.value;
+  const chave = document.getElementById('em-pix-chave');
+  if (!chave) return;
+  if (tipo === 'CPF') {
+    const cpf = document.getElementById('em-cpf')?.value?.trim();
+    if (cpf) { chave.value=cpf; chave.readOnly=true; chave.style.background='var(--bg3)'; chave.style.color='var(--text2)'; mostrarAvisoPixEdit('✅ Preenchido com o CPF — campo bloqueado.','green'); }
+    else { chave.value=''; chave.readOnly=false; chave.style.background=''; mostrarAvisoPixEdit('⚠️ Preencha o CPF primeiro.','amber'); }
+  } else if (tipo === 'CNPJ') {
+    chave.readOnly=false; chave.style.background=''; chave.style.color='';
+    const cnpj = document.getElementById('em-cnpj')?.value?.trim();
+    if (cnpj) { chave.value=cnpj; mostrarAvisoPixEdit('✅ Preenchido com o CNPJ.','green'); }
+    else { chave.value=''; mostrarAvisoPixEdit('⚠️ Preencha o CNPJ primeiro.','amber'); }
+  } else if (tipo === 'EMAIL') {
+    chave.readOnly=false; chave.style.background=''; chave.style.color='';
+    mostrarAvisoPixEdit('ℹ️ Digite o e-mail da chave PIX.','blue');
+  } else { chave.readOnly=false; chave.style.background=''; chave.style.color=''; chave.value=''; esconderAvisoPixEdit(); }
+  validarPixEdit();
+}
+function validarPixEdit() {
+  const tipo  = document.getElementById('em-pix-tipo')?.value;
+  const chave = (document.getElementById('em-pix-chave')?.value||'').trim();
+  const cpfCad  = limparCpf(document.getElementById('em-cpf')?.value||'');
+  const cnpjCad = limparCnpj(document.getElementById('em-cnpj')?.value||'');
+  const st = document.getElementById('em-pix-status');
+  if (!chave||!tipo) { if(st) st.style.display='none'; esconderAvisoPixEdit(); return; }
+  if (tipo==='CPF') {
+    const cl=limparCpf(chave);
+    if (cpfCad&&cl!==cpfCad) { if(st){st.textContent='⚠️';st.style.display='inline';} mostrarAvisoPixEdit('⚠️ CPF da chave difere do CPF cadastrado.','red'); }
+    else if (cpfCad&&cl===cpfCad) { if(st){st.textContent='✅';st.style.display='inline';} mostrarAvisoPixEdit('✅ Chave confere com o CPF.','green'); }
+    else { if(st) st.style.display='none'; esconderAvisoPixEdit(); }
+  } else if (tipo==='CNPJ') {
+    const cl=limparCnpj(chave);
+    if (cnpjCad&&cl!==cnpjCad) { if(st){st.textContent='⚠️';st.style.display='inline';} mostrarAvisoPixEdit('⚠️ CNPJ da chave difere do cadastro.','red'); }
+    else if (cnpjCad&&cl===cnpjCad) { if(st){st.textContent='✅';st.style.display='inline';} mostrarAvisoPixEdit('✅ Confere com o CNPJ cadastrado.','green'); }
+    else { if(st) st.style.display='none'; esconderAvisoPixEdit(); }
+  } else if (tipo==='EMAIL') { if(st) st.style.display='none'; mostrarAvisoPixEdit('ℹ️ Use qualquer e-mail da chave PIX.','blue'); }
+  else { if(st) st.style.display='none'; mostrarAvisoPixEdit('ℹ️ Confirme a chave com o médico.','blue'); }
+}
+function mostrarAvisoPixEdit(msg,cor) {
+  const el=document.getElementById('em-pix-aviso'); if(!el) return;
+  const cores={green:'background:var(--green-bg);color:var(--green);',red:'background:var(--red-bg);color:var(--red);',amber:'background:var(--amber-bg);color:var(--amber);',blue:'background:var(--blue-light);color:var(--blue);'};
+  el.style.cssText=(cores[cor]||cores.blue)+'display:block;font-size:11px;margin-top:4px;padding:5px 9px;border-radius:4px;'; el.textContent=msg;
+}
+function esconderAvisoPixEdit() { const el=document.getElementById('em-pix-aviso'); if(el) el.style.display='none'; }
+
+function autoPreencherPixNovo() {
+  const tipo  = document.getElementById('mn-pix-tipo')?.value;
+  const chave = document.getElementById('mn-pix-chave');
+  if (!chave) return;
+  if (tipo==='CPF') {
+    const cpf=(document.getElementById('mcpf')?.value||'').trim();
+    if(cpf){chave.value=cpf;chave.readOnly=true;chave.style.background='var(--bg3)';chave.style.color='var(--text2)';mostrarAvisoPixNovo('✅ Preenchido com o CPF — campo bloqueado.','green');}
+    else{chave.value='';chave.readOnly=false;chave.style.background='';mostrarAvisoPixNovo('⚠️ Preencha o CPF acima primeiro.','amber');}
+  } else if (tipo==='CNPJ') {
+    chave.readOnly=false;chave.style.background='';chave.style.color='';
+    const cnpj=(document.getElementById('mn-cnpj')?.value||'').trim();
+    if(cnpj){chave.value=cnpj;mostrarAvisoPixNovo('✅ Preenchido com o CNPJ.','green');}
+    else{chave.value='';mostrarAvisoPixNovo('⚠️ Preencha o CNPJ primeiro.','amber');}
+  } else if (tipo==='EMAIL') {
+    chave.readOnly=false;chave.style.background='';chave.style.color='';
+    mostrarAvisoPixNovo('ℹ️ Digite o e-mail da chave PIX.','blue');
+  } else { chave.readOnly=false;chave.style.background='';chave.style.color='';chave.value='';esconderAvisoPixNovo(); }
+  validarPixNovo();
+}
+function validarPixNovo() {
+  const tipo=(document.getElementById('mn-pix-tipo')?.value||'');
+  const chave=(document.getElementById('mn-pix-chave')?.value||'').trim();
+  const cpfCad=limparCpf(document.getElementById('mcpf')?.value||'');
+  const cnpjCad=limparCnpj(document.getElementById('mn-cnpj')?.value||'');
+  const st=document.getElementById('mn-pix-status');
+  if(!chave||!tipo){if(st)st.style.display='none';esconderAvisoPixNovo();return;}
+  if(tipo==='CPF'){const cl=limparCpf(chave);if(cpfCad&&cl!==cpfCad){if(st){st.textContent='⚠️';st.style.display='inline';}mostrarAvisoPixNovo('⚠️ CPF difere do cadastro.','red');}else if(cpfCad&&cl===cpfCad){if(st){st.textContent='✅';st.style.display='inline';}mostrarAvisoPixNovo('✅ Confere com o CPF.','green');}else{if(st)st.style.display='none';esconderAvisoPixNovo();}}
+  else if(tipo==='CNPJ'){const cl=limparCnpj(chave);if(cnpjCad&&cl!==cnpjCad){if(st){st.textContent='⚠️';st.style.display='inline';}mostrarAvisoPixNovo('⚠️ CNPJ difere do cadastro.','red');}else if(cnpjCad&&cl===cnpjCad){if(st){st.textContent='✅';st.style.display='inline';}mostrarAvisoPixNovo('✅ Confere com o CNPJ.','green');}else{if(st)st.style.display='none';esconderAvisoPixNovo();}}
+  else if(tipo==='EMAIL'){if(st)st.style.display='none';mostrarAvisoPixNovo('ℹ️ Use qualquer e-mail da chave PIX.','blue');}
+  else{if(st)st.style.display='none';mostrarAvisoPixNovo('ℹ️ Confirme a chave com o médico.','blue');}
+}
+function mostrarAvisoPixNovo(msg,cor){const el=document.getElementById('mn-pix-aviso');if(!el)return;const cores={green:'background:var(--green-bg);color:var(--green);',red:'background:var(--red-bg);color:var(--red);',amber:'background:var(--amber-bg);color:var(--amber);',blue:'background:var(--blue-light);color:var(--blue);'};el.style.cssText=(cores[cor]||cores.blue)+'display:block;font-size:11px;margin-top:4px;padding:5px 9px;border-radius:4px;';el.textContent=msg;}
+function esconderAvisoPixNovo(){const el=document.getElementById('mn-pix-aviso');if(el)el.style.display='none';}
+
+// ─── DROPDOWN ESPECIALIDADES ──────────────────────────
+function toggleEspDropdown(ctx) {
+  const panel=document.getElementById('esp-panel-'+ctx), trigger=document.getElementById('esp-trigger-'+ctx);
+  if(!panel)return;
+  const isOpen=panel.classList.contains('open');
+  document.querySelectorAll('.esp-panel').forEach(p=>p.classList.remove('open'));
+  document.querySelectorAll('.esp-trigger').forEach(t=>t.classList.remove('open'));
+  if(!isOpen){panel.classList.add('open');trigger.classList.add('open');}
+}
+document.addEventListener('click',e=>{if(!e.target.closest('.esp-dropdown')){document.querySelectorAll('.esp-panel').forEach(p=>p.classList.remove('open'));document.querySelectorAll('.esp-trigger').forEach(t=>t.classList.remove('open'));}});
+document.addEventListener('change',e=>{if(e.target.classList.contains('med-esp-chk'))atualizarTagsEsp('novo');if(e.target.classList.contains('em-esp-chk'))atualizarTagsEsp('edit');});
+function atualizarTagsEsp(ctx){
+  const chkClass=ctx==='novo'?'.med-esp-chk':'.em-esp-chk';
+  const sel=[...document.querySelectorAll(chkClass+':checked')].map(c=>c.value);
+  const label=document.getElementById('esp-label-'+ctx),tags=document.getElementById('esp-tags-'+ctx);
+  if(label){label.textContent=sel.length?sel.length+' especialidade(s) selecionada(s)':'Clique para selecionar...';label.style.color=sel.length?'var(--text)':'var(--text3)';}
+  if(tags)tags.innerHTML=sel.map(e=>`<span class="esp-tag">${e}<button onclick="desmarcarEsp('${ctx}','${e.replace(/'/g,"\'")}')">×</button></span>`).join('');
+}
+function desmarcarEsp(ctx,val){const chkClass=ctx==='novo'?'.med-esp-chk':'.em-esp-chk';const chk=[...document.querySelectorAll(chkClass)].find(c=>c.value===val);if(chk){chk.checked=false;atualizarTagsEsp(ctx);}}
+
+// ─── FUROS DASHBOARD ──────────────────────────────────
+function calcularFurosDash(){
+  const agora=new Date(),em48h=new Date(agora.getTime()+48*3600000);
+  const furos=lancamentos.filter(l=>{if(!l.data||!l.hora_ini)return false;const ini=new Date(l.data+'T'+l.hora_ini);return ini>agora&&ini<=em48h&&!l.confirmado;});
+  const card=document.getElementById('dash-furos-card'),count=document.getElementById('dash-furos-count'),lista=document.getElementById('dash-furos-lista');
+  if(!card)return;
+  if(furos.length>0){card.style.display='block';count.textContent=furos.length;lista.innerHTML=furos.slice(0,5).map(l=>{const ini=new Date(l.data+'T'+l.hora_ini);const faltaH=Math.round((ini-agora)/3600000);return '<div style="font-size:12px;padding:4px 0;border-top:1px solid #f5c0c0;display:flex;justify-content:space-between;"><span><strong>'+(l.medico||'—')+'</strong> · '+(l.projeto||'—')+' · '+fDate(l.data)+' '+(l.hora_ini||'').slice(0,5)+'</span><span style="color:var(--red);font-weight:600;">em '+faltaH+'h</span></div>';}).join('')+(furos.length>5?'<div style="font-size:11px;color:var(--text3);margin-top:4px;">... e mais '+(furos.length-5)+' plantões</div>':'');}
+  else{card.style.display='none';}
+}
+
+// ─── RELATÓRIOS ───────────────────────────────────────
+let _relTipoAtivo='detalhado';
+function selecionarRelTipo(tipo,btn){_relTipoAtivo=tipo;document.querySelectorAll('.rel-tipo-btn').forEach(b=>{b.classList.remove('active');b.style.cssText='';});btn.classList.add('active');document.getElementById('rel-resultado').innerHTML='';}
+function filtrarDadosRel(){const pid=document.getElementById('rp').value,mid=document.getElementById('rm').value,d1=document.getElementById('rd1').value,d2=document.getElementById('rd2').value;let dados=[...lancamentos];if(pid)dados=dados.filter(l=>l.projeto_id===pid);if(mid)dados=dados.filter(l=>l.medico_id===mid);if(d1)dados=dados.filter(l=>l.data>=d1);if(d2)dados=dados.filter(l=>l.data<=d2);return dados;}
+function gerarRelatorio(){const el=document.getElementById('rel-resultado');switch(_relTipoAtivo){case'detalhado':gerarRelDetalhado(el);break;case'resumo':gerarRelResumo(el);break;case'horas':gerarRelHoras(el);break;case'faltas':gerarRelFaltas(el);break;case'atrasos':gerarRelAtrasos(el);break;case'checkins':gerarRelCheckinsForaTol(el);break;case'medicos':gerarRelMedicos(el);break;}}
+
+function gerarRelDetalhado(el){const dados=filtrarDadosRel();if(!dados.length){el.innerHTML='<div class="card"><div class="empty">Nenhum dado.</div></div>';return;}const tH=dados.reduce((s,l)=>s+(l.horas||0),0),tR=dados.reduce((s,l)=>s+(l.honorario||0),0),nMeds=new Set(dados.map(l=>l.medico_id)).size;let html=`<div class="metrics"><div class="metric"><div class="metric-label">Plantões</div><div class="metric-val">${dados.length}</div></div><div class="metric"><div class="metric-label">Horas totais</div><div class="metric-val">${Math.round(tH*10)/10}h</div></div><div class="metric"><div class="metric-label">Total honorários</div><div class="metric-val">${fBRL(tR)}</div></div><div class="metric"><div class="metric-label">Médicos</div><div class="metric-val">${nMeds}</div></div></div>`;const porProjeto={};dados.forEach(l=>{const p=l.projeto||'Sem projeto';if(!porProjeto[p])porProjeto[p]=[];porProjeto[p].push(l);});Object.entries(porProjeto).sort((a,b)=>a[0].localeCompare(b[0],'pt-BR')).forEach(([proj,lans])=>{const projH=lans.reduce((s,l)=>s+(l.horas||0),0),projR=lans.reduce((s,l)=>s+(l.honorario||0),0);const grupos={};lans.forEach(l=>{const turno=l.tipo?.includes('Noturno')?'Noturno':l.tipo?.includes('24')?'24h':'Diurno';const chave=`${l.medico}||${l.horas}||${turno}||${l.setor||''}`;if(!grupos[chave])grupos[chave]={medico:l.medico,crm:l.crm,horas:l.horas,turno,setor:l.setor||'',qtd:0,total:0};grupos[chave].qtd++;grupos[chave].total+=l.honorario||0;});const linhas=Object.values(grupos).sort((a,b)=>a.medico.localeCompare(b.medico,'pt-BR')).map(g=>{const badge=g.turno==='Noturno'?'badge-purple':g.turno==='24h'?'badge-amber':'badge-green';return `<tr><td>${g.medico}<br><span class="mono" style="font-size:11px;color:var(--text3);">${g.crm||''}</span></td><td class="mono">${g.horas}h</td><td><span class="badge ${badge}">${g.turno}</span></td><td>${g.setor||'—'}</td><td style="text-align:center;">${g.qtd}</td><td class="mono" style="color:var(--green);font-weight:600;">${fBRL(Math.round(g.total*100)/100)}</td></tr>`;}).join('');html+=`<div class="card" style="margin-bottom:12px;"><div style="display:flex;justify-content:space-between;margin-bottom:10px;"><div class="card-title" style="margin-bottom:0;">📁 ${proj}</div><div style="font-size:12px;color:var(--text2);">${lans.length} plantão(ões) · ${Math.round(projH*10)/10}h · <span style="color:var(--green);font-weight:600;">${fBRL(projR)}</span></div></div><table><thead><tr><th>Médico/CRM</th><th>Hrs/plantão</th><th>Turno</th><th>Setor</th><th style="text-align:center;">Qtd</th><th>Total</th></tr></thead><tbody>${linhas}</tbody><tfoot><tr style="border-top:1.5px solid var(--border2);"><td colspan="4" style="font-weight:600;padding:8px;font-size:12px;">Total</td><td style="text-align:center;font-weight:600;">${lans.length}</td><td class="mono" style="color:var(--green);font-weight:600;">${fBRL(projR)}</td></tr></tfoot></table></div>`;});el.innerHTML=html;}
+
+function gerarRelResumo(el){const dados=filtrarDadosRel();if(!dados.length){el.innerHTML='<div class="card"><div class="empty">Nenhum dado.</div></div>';return;}const porProjeto={};dados.forEach(l=>{const proj=l.projeto||'Sem projeto';if(!porProjeto[proj])porProjeto[proj]={};const chave=(l.tipo||'Diurno 12h')+'|||'+(l.setor||'(sem setor)');if(!porProjeto[proj][chave])porProjeto[proj][chave]={tipo:l.tipo||'Diurno 12h',setor:l.setor||'(sem setor)',qtd:0,horas:0,total:0};porProjeto[proj][chave].qtd++;porProjeto[proj][chave].horas+=l.horas||0;porProjeto[proj][chave].total+=l.honorario||0;});let html='';Object.entries(porProjeto).sort((a,b)=>a[0].localeCompare(b[0],'pt-BR')).forEach(([proj,grupos])=>{const itens=Object.values(grupos).sort((a,b)=>b.qtd-a.qtd);const totPlant=itens.reduce((s,g)=>s+g.qtd,0),totHoras=itens.reduce((s,g)=>s+g.horas,0),totVal=itens.reduce((s,g)=>s+g.total,0);const linhas=itens.map(g=>{const badge=g.tipo.includes('Noturno')?'badge-purple':g.tipo.includes('24')?'badge-amber':'badge-green';return `<tr><td><span class="badge ${badge}">${g.tipo}</span></td><td>${g.setor}</td><td style="text-align:center;font-size:18px;font-weight:700;color:var(--blue);">${g.qtd}</td><td class="mono">${Math.round(g.horas*10)/10}h</td><td class="mono" style="color:var(--green);font-weight:600;">${fBRL(g.total)}</td></tr>`;}).join('');html+=`<div class="card" style="margin-bottom:12px;"><div style="display:flex;justify-content:space-between;margin-bottom:10px;"><div class="card-title" style="margin-bottom:0;">📁 ${proj}</div><div style="font-size:12px;color:var(--text2);">${totPlant} plantões · ${Math.round(totHoras*10)/10}h · <span style="color:var(--green);font-weight:600;">${fBRL(totVal)}</span></div></div><table><thead><tr><th>Tipo</th><th>Setor</th><th style="text-align:center;">Qtd</th><th>Horas</th><th>Total</th></tr></thead><tbody>${linhas}</tbody></table></div>`;});el.innerHTML=html;}
+
+function gerarRelHoras(el){const dados=filtrarDadosRel();if(!dados.length){el.innerHTML='<div class="card"><div class="empty">Nenhum dado.</div></div>';return;}const porMed={};dados.forEach(l=>{const k=l.medico_id;if(!porMed[k])porMed[k]={nome:l.medico,crm:l.crm||'',h12:0,h24:0,hCustom:0,hTotal:0,plantoes:0,total:0};const h=l.horas||0,tipo=l.tipo||'';if(tipo.includes('24'))porMed[k].h24+=h;else if(tipo==='Personalizado')porMed[k].hCustom+=h;else porMed[k].h12+=h;porMed[k].hTotal+=h;porMed[k].plantoes++;porMed[k].total+=l.honorario||0;});const tTotal=Object.values(porMed).reduce((s,m)=>s+m.hTotal,0),tHon=Object.values(porMed).reduce((s,m)=>s+m.total,0);let html=`<div class="metrics"><div class="metric"><div class="metric-label">Profissionais</div><div class="metric-val">${Object.keys(porMed).length}</div></div><div class="metric"><div class="metric-label">Total horas</div><div class="metric-val">${Math.round(tTotal*10)/10}h</div></div><div class="metric"><div class="metric-label">Total honorários</div><div class="metric-val">${fBRL(tHon)}</div></div></div><div class="card"><table><thead><tr><th>Profissional</th><th>CRM</th><th style="text-align:center;">Plantões</th><th style="text-align:center;">Horas 12h</th><th style="text-align:center;">Horas 24h</th><th style="text-align:center;">Outros</th><th style="text-align:center;font-weight:700;">Total</th><th>Honorários</th></tr></thead><tbody>`;Object.values(porMed).sort((a,b)=>b.hTotal-a.hTotal).forEach(m=>{html+=`<tr><td><strong>${m.nome}</strong></td><td class="mono">${m.crm}</td><td style="text-align:center;">${m.plantoes}</td><td style="text-align:center;color:var(--green);">${Math.round(m.h12*10)/10}h</td><td style="text-align:center;color:var(--amber);">${Math.round(m.h24*10)/10}h</td><td style="text-align:center;color:var(--text3);">${Math.round(m.hCustom*10)/10}h</td><td style="text-align:center;font-weight:700;font-size:14px;">${Math.round(m.hTotal*10)/10}h</td><td class="mono" style="color:var(--green);font-weight:600;">${fBRL(m.total)}</td></tr>`;});html+='</tbody></table></div>';el.innerHTML=html;}
+
+async function gerarRelFaltas(el){el.innerHTML='<div class="card"><div class="empty">Carregando...</div></div>';const d1=document.getElementById('rd1').value,d2=document.getElementById('rd2').value;let pathCI='/rest/v1/checkins?aprovado=eq.true&select=medico_id,projeto_id,feito_em';if(d1)pathCI+=`&feito_em=gte.${d1}T00:00:00`;if(d2)pathCI+=`&feito_em=lte.${d2}T23:59:59`;const checkins=await sb(pathCI)||[];const ciKeys=new Set(checkins.map(c=>`${c.medico_id}_${c.projeto_id}_${c.feito_em?.slice(0,10)}`));let dados=filtrarDadosRel().filter(l=>{const ini=new Date(`${l.data}T${l.hora_ini||'00:00'}`);return ini<new Date();});const faltas=dados.filter(l=>!ciKeys.has(`${l.medico_id}_${l.projeto_id}_${l.data}`));if(!faltas.length){el.innerHTML='<div class="card"><div style="text-align:center;padding:24px;"><div style="font-size:40px;">✅</div><div style="font-size:14px;color:var(--green);font-weight:600;margin-top:8px;">Nenhuma falta!</div></div></div>';return;}let html=`<div class="card"><div style="margin-bottom:10px;font-size:13px;color:var(--red);font-weight:600;">❌ ${faltas.length} falta(s)</div><table><thead><tr><th>Médico</th><th>CRM</th><th>Projeto</th><th>Data</th><th>Horário</th><th>Tipo</th><th>Honorários perdidos</th></tr></thead><tbody>`;faltas.sort((a,b)=>b.data.localeCompare(a.data)).forEach(l=>{html+=`<tr><td><strong>${l.medico||'—'}</strong></td><td class="mono">${l.crm||''}</td><td>${l.projeto||'—'}</td><td class="mono">${fDate(l.data)}</td><td class="mono">${(l.hora_ini||'').slice(0,5)}–${(l.hora_fim||'').slice(0,5)}</td><td>${l.tipo||''}</td><td class="mono" style="color:var(--red);">${fBRL(l.honorario||0)}</td></tr>`;});const totFalta=faltas.reduce((s,l)=>s+(l.honorario||0),0);html+=`</tbody><tfoot><tr><td colspan="6" style="font-weight:600;padding:8px;">Total</td><td class="mono" style="color:var(--red);font-weight:600;">${fBRL(totFalta)}</td></tr></tfoot></table></div>`;el.innerHTML=html;}
+
+async function gerarRelAtrasos(el){el.innerHTML='<div class="card"><div class="empty">Carregando...</div></div>';const d1=document.getElementById('rd1').value,d2=document.getElementById('rd2').value;let pathCI='/rest/v1/checkins?aprovado=eq.true&select=*,medicos(nome,crm),projetos(nome)';if(d1)pathCI+=`&feito_em=gte.${d1}T00:00:00`;if(d2)pathCI+=`&feito_em=lte.${d2}T23:59:59`;const checkins=await sb(pathCI)||[];const atrasos=[];checkins.forEach(ci=>{const lanc=lancamentos.find(l=>l.medico_id===ci.medico_id&&l.projeto_id===ci.projeto_id&&l.data===ci.feito_em?.slice(0,10));if(!lanc)return;const diffMin=Math.round((new Date(ci.feito_em)-new Date(`${lanc.data}T${lanc.hora_ini||'00:00'}`))/60000);if(diffMin>15)atrasos.push({...ci,diffMin,lanc});});if(!atrasos.length){el.innerHTML='<div class="card"><div style="text-align:center;padding:24px;"><div style="font-size:40px;">✅</div><div style="font-size:14px;color:var(--green);font-weight:600;margin-top:8px;">Nenhum atraso acima de 15 minutos!</div></div></div>';return;}let html=`<div class="card"><table><thead><tr><th>Médico</th><th>Projeto</th><th>Data</th><th>Previsto</th><th>Check-in</th><th>Atraso</th></tr></thead><tbody>`;atrasos.sort((a,b)=>b.diffMin-a.diffMin).forEach(a=>{const horaReal=new Date(a.feito_em).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});html+=`<tr><td><strong>${a.medicos?.nome||'—'}</strong></td><td>${a.projetos?.nome||'—'}</td><td class="mono">${fDate(a.lanc?.data||'')}</td><td class="mono">${(a.lanc?.hora_ini||'').slice(0,5)}</td><td class="mono">${horaReal}</td><td style="color:var(--amber);font-weight:700;">+${a.diffMin}min</td></tr>`;});html+='</tbody></table></div>';el.innerHTML=html;}
+
+async function gerarRelCheckinsForaTol(el){el.innerHTML='<div class="card"><div class="empty">Carregando...</div></div>';const d1=document.getElementById('rd1').value,d2=document.getElementById('rd2').value;let pathCI='/rest/v1/checkins?select=*,medicos(nome,crm),projetos(nome)';if(d1)pathCI+=`&feito_em=gte.${d1}T00:00:00`;if(d2)pathCI+=`&feito_em=lte.${d2}T23:59:59`;const checkins=await sb(pathCI)||[];const fora=[];checkins.forEach(ci=>{const lanc=lancamentos.find(l=>l.medico_id===ci.medico_id&&l.projeto_id===ci.projeto_id&&l.data===ci.feito_em?.slice(0,10));if(!lanc)return;const diffMin=Math.round((new Date(ci.feito_em)-new Date(`${lanc.data}T${lanc.hora_ini||'00:00'}`))/60000);if(diffMin>15||!ci.aprovado)fora.push({...ci,diffMin,foraRaio:!ci.aprovado,lanc});});if(!fora.length){el.innerHTML='<div class="card"><div style="text-align:center;padding:24px;"><div style="font-size:40px;">✅</div><div style="font-size:14px;color:var(--green);font-weight:600;margin-top:8px;">Todos dentro da tolerância!</div></div></div>';return;}let html=`<div class="card"><table><thead><tr><th>Médico</th><th>Projeto</th><th>Data</th><th>Previsto</th><th>Check-in</th><th>Atraso</th><th>GPS</th></tr></thead><tbody>`;fora.forEach(c=>{const horaReal=new Date(c.feito_em).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});html+=`<tr><td><strong>${c.medicos?.nome||'—'}</strong></td><td>${c.projetos?.nome||'—'}</td><td class="mono">${fDate(c.lanc?.data||'')}</td><td class="mono">${(c.lanc?.hora_ini||'').slice(0,5)}</td><td class="mono">${horaReal}</td><td style="color:${c.diffMin>15?'var(--amber)':'var(--green)'};font-weight:600;">${c.diffMin>0?'+'+c.diffMin+'min':'no prazo'}</td><td>${c.foraRaio?'❌ Fora':'✅ Ok'}</td></tr>`;});html+='</tbody></table></div>';el.innerHTML=html;}
+
+function gerarRelMedicos(el){let lista=[...medicos];const mid=document.getElementById('rm').value;if(mid)lista=lista.filter(m=>m.id===mid);if(!lista.length){el.innerHTML='<div class="card"><div class="empty">Nenhum médico.</div></div>';return;}let html=`<div class="card"><table><thead><tr><th>Nome</th><th>CRM</th><th>Especialidade</th><th>Tipo</th><th>Telefone</th><th>E-mail</th><th>PIX</th><th>Dispositivo</th></tr></thead><tbody>`;lista.sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR')).forEach(m=>{const pix=m.pix_tipo&&m.pix_chave?`${m.pix_tipo}: ${m.pix_chave}`:'—';html+=`<tr><td><strong>${m.nome}</strong></td><td class="mono">${m.crm||'—'}</td><td>${m.especialidade||'—'}</td><td><span class="badge badge-blue">${m.tipo||''}</span></td><td>${m.telefone||'—'}</td><td>${m.email||'—'}</td><td style="font-size:11px;">${pix}</td><td>${m.device_id?'<span class="badge badge-green">✓ Vinculado</span>':'<span class="badge badge-amber">Sem vínculo</span>'}</td></tr>`;});html+='</tbody></table></div>';el.innerHTML=html;}
+
+function exportarRelXLSX(){const tipo=_relTipoAtivo,dados=filtrarDadosRel();if(!dados.length&&tipo!=='medicos'){toast('Nenhum dado',true);return;}const wb=XLSX.utils.book_new();if(tipo==='medicos'){const rows=[['Nome','CRM','Especialidade','Tipo','Telefone','E-mail']];medicos.sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR')).forEach(m=>rows.push([m.nome,m.crm||'',m.especialidade||'',m.tipo||'',m.telefone||'',m.email||'']));XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(rows),'Médicos');}else{const rows=[['Data','Médico','Projeto','Tipo','Horas','Honorários']];dados.sort((a,b)=>b.data.localeCompare(a.data)).forEach(l=>rows.push([fDate(l.data),l.medico,l.projeto,l.tipo||'',l.horas,l.honorario]));XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(rows),'Relatório');}XLSX.writeFile(wb,'relatorio_'+tipo+'_'+new Date().toISOString().slice(0,10)+'.xlsx');toast('XLSX exportado!');}
+
 </script>
 </body>
 </html>
