@@ -3975,7 +3975,8 @@ async function gerarRemessa() {
   const toAscii = v => String(v||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^\x00-\x7F]/g,' ');
   const padR = (v,n,c=' ') => toAscii(v).slice(0,n).padEnd(n,c);
   const padL = (v,n,c='0') => String(v||'').replace(/\D/g,'').padStart(n,'0').slice(-n);
-  const cents = v => String(Math.round((parseFloat(v)||0)*100)).padStart(15,'0');
+  const cents   = v => String(Math.round((parseFloat(v)||0)*100)).padStart(15,'0');
+  const cents18 = v => String(Math.round((parseFloat(v)||0)*100)).padStart(18,'0');
   const verif = (linha, nome) => {
     const r = linha.slice(0,240).padEnd(240,' ');
     if (r.length !== 240) console.error('CNAB ' + nome + ': ' + r.length);
@@ -4054,10 +4055,12 @@ async function gerarRemessa() {
     // CPF = 11 dígitos alinhado à direita em 14 chars (3 zeros à esquerda)
     // CNPJ = 14 dígitos
     const docDigits  = chaveLimpa.replace(/\D/g,'');
-    // Bradesco: CPF = 11 dígitos + 3 espaços à direita; CNPJ = 14 dígitos
+    // Bradesco CNAB 240: campo de 14 chars
+    // CPF (11 dígitos): 3 zeros à esquerda + 11 dígitos = '000' + CPF
+    // CNPJ (14 dígitos): 14 dígitos direto
     const cpfCnpj    = m.pix_tipo==='CNPJ'
       ? docDigits.padStart(14,'0').slice(-14)           // CNPJ: 14 dígitos
-      : docDigits.padStart(11,'0').slice(-11) + '   '; // CPF: 11 dígitos + 3 espaços
+      : '000' + docDigits.padStart(11,'0').slice(-11); // CPF: 3 zeros + 11 dígitos
 
     // Segmento A
     linhas.push(verif(
@@ -4118,13 +4121,11 @@ async function gerarRemessa() {
     BANCO + '0001' + '5' +               // 001-008  (8)
     ' '.repeat(9) +                      // 009-017: brancos (9)
     String(qtRegsLote).padStart(6,'0') + // 018-023: qtd registros (6)
-    '0'.repeat(6) +                      // 024-029: qtd débito zeros (6)
-    cents(0) +                           // 030-044: soma débito zeros (15)
-    String(itensValidos.length).padStart(6,'0') + // 045-050: qtd crédito (6)
-    cents(totLote) +                     // 051-065: soma crédito (15)
-    '0'.repeat(6) +                      // 066-071: nº aviso zeros (6)
-    ' '.repeat(159) +                    // 072-230: Febraban brancos (159)
-    ' '.repeat(10),                      // 231-240: ocorrências brancos (10)
+    cents18(totLote) +                   // 024-041: soma valores 18 chars
+    '0'.repeat(18) +                     // 042-059: soma moedas zeros (18)
+    '0'.repeat(6) +                      // 060-065: nº aviso zeros (6)
+    ' '.repeat(165) +                    // 066-230: Febraban brancos (165)
+    ' '.repeat(10),                      // 231-240: ocorrências (10)
     'Trailer Lote'
   ));
 
