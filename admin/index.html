@@ -2343,7 +2343,7 @@ function showTab(id,el){
   if(id==='lancamentos') popLancSelects();
   if(id==='checkins'){ popCiSelects(); popCiProjPresenca(); document.getElementById('ci-data-p').value=hoje_str(); carregarPresenca(); }
   if(id==='relatorios'){ popRelSelects(); }
-  if(id==='calendario'){ popCalSelects(); switchCalTab(_calTabAtiva||'mensal'); }
+  if(id==='calendario'){ popCalSelects(); switchCalTab(_calTabAtiva||'semanal'); }
   if(id==='exportar'){ renderLayoutPreview(); popExportSelects(); }
   if(id==='escala'){ initEscala(); }
   if(id==='importar') switchImpTab('med');
