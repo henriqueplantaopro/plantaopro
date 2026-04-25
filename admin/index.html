@@ -1468,6 +1468,7 @@ async function carregarMedicos() {
   medicos = data || [];
   renderMedicos();
   popLancSelects();
+  popCalSelects();
 }
 
 async function carregarProjetos() {
@@ -1476,6 +1477,7 @@ async function carregarProjetos() {
   renderProjetos();
   popLancSelects();
   popCiSelects();
+  popCalSelects();
 }
 
 async function carregarLancamentos(silencioso=false) {
