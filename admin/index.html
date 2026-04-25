@@ -4036,8 +4036,9 @@ async function gerarRemessa() {
     String(qtRegsLote).padStart(6,'0') + // 174-179: qtd registros
     ' '.repeat(31) +                 // 180-210: brancos
     '01' +                           // 211-212: nº aviso débito
-    '01' +                           // 213-214: indicativo forma pagamento PIX
-    ' '.repeat(26),                  // 215-240: brancos
+    ' '.repeat(10) +                 // 213-222: brancos (10)
+    '01' +                           // 223-224: indicativo forma pagamento PIX
+    ' '.repeat(16),                  // 225-240: brancos (16)
     'Header Lote'
   ));
 
@@ -4053,9 +4054,10 @@ async function gerarRemessa() {
     // CPF = 11 dígitos alinhado à direita em 14 chars (3 zeros à esquerda)
     // CNPJ = 14 dígitos
     const docDigits  = chaveLimpa.replace(/\D/g,'');
+    // Bradesco: CPF = 11 dígitos + 3 espaços à direita; CNPJ = 14 dígitos
     const cpfCnpj    = m.pix_tipo==='CNPJ'
-      ? docDigits.padStart(14,'0').slice(-14)      // CNPJ: 14 dígitos
-      : '   ' + docDigits.padStart(11,'0').slice(-11); // CPF: 3 espaços + 11 dígitos
+      ? docDigits.padStart(14,'0').slice(-14)           // CNPJ: 14 dígitos
+      : docDigits.padStart(11,'0').slice(-11) + '   '; // CPF: 11 dígitos + 3 espaços
 
     // Segmento A
     linhas.push(verif(
@@ -4063,8 +4065,8 @@ async function gerarRemessa() {
       String(nrSeqA).padStart(5,'0') +   // 009-013 seq
       'A' + '0' + '00' +                 // 014-017: segmento, movimento, instrução
       '000' +                            // 018-020: câmara = 000 (PIX via Seg B)
-      '000' +                            // 021-023: banco favorecido = 000 (PIX)
-      '00000' + '0' +                    // 024-029: agência favorecido + DV (zeros para PIX)
+      '237' +                            // 021-023: banco favorecido = 237 Bradesco
+      padL(AG,5) + AG_DV +              // 024-029: agência (usar agência da empresa)
       '000000000000' + '0' + ' ' +       // 030-043: conta + DV + DAC
       padR(m.nome||'',30) +              // 044-073: nome favorecido
       padR(nrDoc,20) +                   // 074-093: nº doc empresa
@@ -4075,10 +4077,9 @@ async function gerarRemessa() {
       '00000000' +                       // 155-162: data real pgto
       '0'.repeat(15) +                   // 163-177: valor real pgto
       ' '.repeat(40) +                   // 178-217: informação 2
-      '03' +                             // 218-219: finalidade PIX (03=TED/PIX)
-      'CC' +                             // 220-221: conta corrente
-      ' '.repeat(3) +                    // 222-224: brancos
-      ' '.repeat(5) +                    // 225-229: brancos (sem complemento)
+      ' '.repeat(2) +                    // 218-219: brancos (para forma 01, não informar)
+      ' '.repeat(5) +                    // 220-224: brancos (para forma 01, não informar)
+      ' '.repeat(5) +                    // 225-229: brancos
       '0' +                              // 230: código aviso favorecido
       ' '.repeat(9),                     // 231-239: brancos
       'Segmento A'
