@@ -2614,6 +2614,15 @@ function limparAgenda() {
 
 // ─── CALENDÁRIO — SUB-ABAS ──────────────────────────────
 let _calTabAtiva = 'mensal';
+function popCalSelects() {
+  const sp = document.getElementById('cal-proj');
+  const sm = document.getElementById('cal-med');
+  if (sp) sp.innerHTML = '<option value="">Todos os projetos</option>' +
+    sortedProjetos().map(p=>`<option value="${p.id}">${p.nome}</option>`).join('');
+  if (sm) sm.innerHTML = '<option value="">Todos os médicos</option>' +
+    sortedMedicos().map(m=>`<option value="${m.id}">${m.nome}</option>`).join('');
+}
+
 function switchCalTab(tab) {
   _calTabAtiva = tab;
   document.getElementById('cal-mensal').style.display  = tab==='mensal'  ? 'block' : 'none';
