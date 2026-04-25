@@ -4232,1447 +4232,164 @@ async function processarRetorno(event) {
   if (!file) return;
   const el = document.getElementById('ret-resultado');
   el.innerHTML = '<div class="empty">Processando retorno...</div>';
+
   const txt = await file.text();
-  const linhas = txt.split(/\r?\n/).filter(l=>l.trim());
+  // CNAB 240: cada linha tem exatamente 240 chars, separadas por CRLF ou LF
+  const linhas = txt.split(/\r?\n/).filter(l => l.length >= 240);
 
-  let pagosCount=0, errosCount=0, totalPago=0;
-  const resultados = [];
-
-  linhas.forEach(linha => {
-    if (linha.length < 10) return;
-    const tipo = linha[7];   // segmento A ou B
-    const reg  = linha.substring(7,8);
-    if (tipo !== 'A') return;
-    const ocorrencia = linha.substring(230,232)||'00';
-    const valor = parseInt(linha.substring(152,167)||'0')/100;
-    const favorecido = linha.substring(73,103)?.trim();
-    const dtPgto = linha.substring(143,151)||'';
-
-    const pago = ocorrencia === '00' || ocorrencia === '01';
-    if (pago) { pagosCount++; totalPago += valor; }
-    else errosCount++;
-    resultados.push({favorecido, valor, ocorrencia, pago, dtPgto});
-  });
-
-  if (!resultados.length) {
-    el.innerHTML = '<div class="card"><div class="empty">Arquivo não reconhecido ou sem registros do tipo A.</div></div>';
+  if (!linhas.length) {
+    el.innerHTML = '<div class="card"><div class="empty">⚠️ Arquivo não reconhecido. Verifique se é um arquivo de retorno CNAB 240 do Bradesco.</div></div>';
     return;
   }
 
-  // Atualizar status dos itens pagos
+  // Tabela de ocorrências Bradesco
+  const OCORRENCIAS = {
+    '00': { ok: true,  txt: 'Crédito/Débito efetivado com sucesso' },
+    '03': { ok: true,  txt: 'Débito autorizado pela agência — efetuado' },
+    '01': { ok: false, txt: 'Saldo insuficiente — débito não efetuado' },
+    '02': { ok: false, txt: 'Cancelado pelo pagador/credor' },
+    'AA': { ok: false, txt: 'Controle inválido (arquivo com data/hora duplicada)' },
+    'AB': { ok: false, txt: 'Tipo de operação inválida' },
+    'AC': { ok: false, txt: 'Tipo de serviço inválido' },
+    'AD': { ok: false, txt: 'Forma de lançamento inválida' },
+    'AE': { ok: false, txt: 'Tipo/número de inscrição inválido' },
+    'AF': { ok: false, txt: 'Código de convênio inválido' },
+    'AG': { ok: false, txt: 'Agência/conta corrente/DV inválidos' },
+    'AH': { ok: false, txt: 'N° sequencial do registro no lote inválido' },
+    'AI': { ok: false, txt: 'Código de segmento de detalhe inválido' },
+    'AJ': { ok: false, txt: 'Tipo de movimento inválido' },
+    'AK': { ok: false, txt: 'Código de câmara de compensação inválido' },
+    'AL': { ok: false, txt: 'Código do banco favorecido/depositário inválido' },
+    'AM': { ok: false, txt: 'Agência/conta corrente/DV do favorecido inválidos' },
+    'AN': { ok: false, txt: 'Nome do favorecido não informado' },
+    'AO': { ok: false, txt: 'Data de lançamento inválida' },
+    'AP': { ok: false, txt: 'Tipo/quantidade de moeda inválidos' },
+    'AQ': { ok: false, txt: 'Valor do lançamento inválido' },
+    'AR': { ok: false, txt: 'Aviso ao favorecido inválido' },
+    'AS': { ok: false, txt: 'Tipo/número de inscrição do favorecido inválidos' },
+    'AT': { ok: false, txt: 'Logradouro do favorecido não informado' },
+    'AU': { ok: false, txt: 'N° do local do favorecido não informado' },
+    'AV': { ok: false, txt: 'Cidade do favorecido não informada' },
+    'AW': { ok: false, txt: 'CEP/complemento do favorecido inválidos' },
+    'AX': { ok: false, txt: 'Sigla do estado do favorecido inválida' },
+    'AY': { ok: false, txt: 'Código/nome do banco depositário inválidos' },
+    'AZ': { ok: false, txt: 'Seu número inválido' },
+    'H4': { ok: false, txt: 'Crédito não pago — estornado pelo banco do favorecido' },
+    'TA': { ok: false, txt: 'Lote não aceito (verifique totais no trailer)' },
+    'YA': { ok: false, txt: 'Título não encontrado na CIP' },
+    'ZA': { ok: false, txt: 'Agência/conta do favorecido substituída' },
+    'ZB': { ok: false, txt: 'Divergência no nome vs Receita Federal' },
+    'ZE': { ok: false, txt: 'Título bloqueado na base' },
+    'ZK': { ok: false, txt: 'Boleto já liquidado anteriormente' },
+    // Ocorrências PIX
+    'PA': { ok: false, txt: 'PIX não efetivado — tente mais tarde' },
+    'PB': { ok: false, txt: 'PIX: erro no PSP do recebedor' },
+    'PC': { ok: false, txt: 'PIX: conta encerrada no PSP do recebedor' },
+    'PD': { ok: false, txt: 'PIX: tipo incorreto para a conta' },
+    'PE': { ok: false, txt: 'PIX: transação não suportada na conta' },
+    'PF': { ok: false, txt: 'PIX: CPF/CNPJ do recebedor não confere com a conta' },
+    'PG': { ok: false, txt: 'PIX: CPF/CNPJ do recebedor incorreto' },
+    'PH': { ok: false, txt: 'PIX: ordem rejeitada pelo PSP do recebedor' },
+    'PI': { ok: false, txt: 'PIX: ISPB do PSP do pagador inválido' },
+    'PJ': { ok: false, txt: 'PIX: chave não cadastrada no DICT' },
+    'PK': { ok: false, txt: 'PIX: QR Code inválido ou vencido' },
+    'PL': { ok: false, txt: 'PIX: forma de iniciação inválida' },
+    'PM': { ok: false, txt: 'PIX: chave de pagamento inválida' },
+    'PN': { ok: false, txt: 'PIX: chave de pagamento não informada' },
+  };
+
+  const getOcorrencia = (cod) => {
+    if (!cod || cod.trim() === '' || cod === '  ') return { ok: true, txt: 'Sem ocorrência' };
+    const oc = OCORRENCIAS[cod.toUpperCase()];
+    return oc || { ok: false, txt: 'Ocorrência: ' + cod };
+  };
+
+  // Processar segmentos A (pagamentos)
+  const resultados = [];
+  let pagosCount = 0, errosCount = 0, totalPago = 0;
+
+  linhas.forEach(linha => {
+    const tipoReg = linha[7];   // posição 8 (0-indexed: 7)
+    const segmento = linha[13]; // posição 14
+    if (tipoReg !== '3' || segmento !== 'A') return;
+
+    // Segmento A — posições CNAB 240 (0-indexed)
+    const favorecido  = linha.substring(43, 73).trim();  // pos 44-73
+    const nrDoc       = linha.substring(73, 93).trim();  // pos 74-93
+    const dtPgtoReal  = linha.substring(154, 162).trim(); // pos 155-162
+    const valorReal   = parseInt(linha.substring(162, 177) || '0') / 100; // pos 163-177
+    const valorPrev   = parseInt(linha.substring(119, 134) || '0') / 100; // pos 120-134
+    const ocorrStr    = linha.substring(230, 240).trim(); // pos 231-240 (até 5 ocorrências de 2 chars)
+
+    // Extrair primeira ocorrência significativa (primeiros 2 chars não brancos)
+    let ocorrPrincipal = '  ';
+    for (let i = 0; i < ocorrStr.length; i += 2) {
+      const oc = ocorrStr.substring(i, i+2);
+      if (oc.trim()) { ocorrPrincipal = oc; break; }
+    }
+
+    const oc = getOcorrencia(ocorrPrincipal);
+    const valor = valorReal > 0 ? valorReal : valorPrev;
+
+    if (oc.ok) { pagosCount++; totalPago += valor; }
+    else errosCount++;
+
+    resultados.push({ favorecido, nrDoc, valor, ocorrPrincipal, oc, dtPgtoReal, ocorrStr });
+  });
+
+  if (!resultados.length) {
+    el.innerHTML = '<div class="card"><div class="empty">Nenhum segmento A encontrado. Verifique se o arquivo é um retorno CNAB 240 válido.</div></div>';
+    event.target.value = '';
+    return;
+  }
+
+  // Atualizar fechamento no Supabase se tiver dados
   if (_fechAtivo && pagosCount > 0) {
-    // Marcar remessa como processada
-    await sb(`/rest/v1/remessas?fechamento_id=eq.${_fechAtivo.id}&order=criado_em.desc&limit=1`, {
-      method:'PATCH',
-      body: JSON.stringify({retorno_em: new Date().toISOString(), retorno_status:'processado'})
-    });
-    // Atualizar fechamento com total pago
     const novoTotalPago = Math.min(totalPago, _fechAtivo.total_valor);
-    const novoStatus = novoTotalPago >= _fechAtivo.total_valor ? 'pago' : novoTotalPago > 0 ? 'parcial' : 'aberto';
-    await sb(`/rest/v1/fechamentos?id=eq.${_fechAtivo.id}`, {
-      method:'PATCH',
-      body: JSON.stringify({total_pago: novoTotalPago, status: novoStatus})
+    const novoStatus = novoTotalPago >= _fechAtivo.total_valor ? 'pago'
+                     : novoTotalPago > 0 ? 'parcial' : 'aberto';
+    await sb('/rest/v1/fechamentos?id=eq.'+_fechAtivo.id, {
+      method: 'PATCH',
+      body: JSON.stringify({ total_pago: novoTotalPago, status: novoStatus })
+    });
+    await sb('/rest/v1/remessas?fechamento_id=eq.'+_fechAtivo.id+'&order=criado_em.desc&limit=1', {
+      method: 'PATCH',
+      body: JSON.stringify({ retorno_em: new Date().toISOString(), retorno_status: 'processado' })
     });
     _fechAtivo.total_pago = novoTotalPago;
     _fechAtivo.status = novoStatus;
   }
 
+  // Renderizar resultado
   el.innerHTML = `
     <div class="metrics" style="margin-bottom:12px;">
-      <div class="metric"><div class="metric-label">Pagamentos confirmados</div><div class="metric-val" style="color:var(--green);">${pagosCount}</div></div>
-      <div class="metric"><div class="metric-label">Com ocorrência</div><div class="metric-val" style="color:${errosCount>0?'var(--red)':'var(--text)'};">${errosCount}</div></div>
-      <div class="metric"><div class="metric-label">Total confirmado</div><div class="metric-val">${fBRL(totalPago)}</div></div>
+      <div class="metric"><div class="metric-label">✅ Pagamentos confirmados</div><div class="metric-val" style="color:var(--green);">${pagosCount}</div></div>
+      <div class="metric"><div class="metric-label">❌ Com ocorrência</div><div class="metric-val" style="color:${errosCount>0?'var(--red)':'var(--text)'};">${errosCount}</div></div>
+      <div class="metric"><div class="metric-label">Total pago</div><div class="metric-val">${fBRL(totalPago)}</div></div>
     </div>
-    <div class="card"><table><thead><tr><th>Favorecido</th><th>Valor</th><th>Ocorrência</th><th>Status</th></tr></thead><tbody>` +
-    resultados.map(r=>`<tr>
-      <td>${r.favorecido||'—'}</td>
-      <td class="mono">${fBRL(r.valor)}</td>
-      <td class="mono">${r.ocorrencia}</td>
-      <td style="color:${r.pago?'var(--green)':'var(--amber)'};font-weight:600;">${r.pago?'✅ Confirmado':'⚠️ Ocorrência '+r.ocorrencia}</td>
-    </tr>`).join('') +
-    `</tbody></table></div>`;
+    <div class="card">
+      <table>
+        <thead><tr>
+          <th>Favorecido</th>
+          <th>Valor</th>
+          <th>Ocorrência</th>
+          <th>Status</th>
+        </tr></thead>
+        <tbody>
+          ${resultados.map(r => `<tr>
+            <td><strong>${r.favorecido||'—'}</strong></td>
+            <td class="mono">${fBRL(r.valor)}</td>
+            <td class="mono" style="font-size:11px;">${r.ocorrPrincipal||'—'}</td>
+            <td style="color:${r.oc.ok?'var(--green)':'var(--red)'};font-weight:600;font-size:12px;">
+              ${r.oc.ok?'✅':'❌'} ${r.oc.txt}
+            </td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>`;
 
-  event.target.value='';
-  toast(`✅ Retorno processado: ${pagosCount} pagamentos confirmados`);
+  event.target.value = '';
+  toast(`✅ Retorno processado: ${pagosCount} confirmados, ${errosCount} com ocorrência`);
 }
 
 
-
-// ─── VALIDAÇÃO PIX ───────────────────────────────────────
-
-function limparCpf(v) { return (v||'').replace(/\D/g,''); }
-function limparCnpj(v) { return (v||'').replace(/\D/g,''); }
-
-// Modal de EDIÇÃO — ao selecionar CPF como tipo PIX, preencher com CPF do médico
-function autoPreencherPixEdit() {
-  const tipo  = document.getElementById('em-pix-tipo')?.value;
-  const chave = document.getElementById('em-pix-chave');
-  if (!chave) return;
-
-  if (tipo === 'CPF') {
-    const cpf = document.getElementById('em-cpf')?.value?.trim();
-    if (cpf) {
-      chave.value = cpf;
-      chave.readOnly = true;
-      chave.style.background = 'var(--bg3)';
-      chave.style.color = 'var(--text2)';
-      mostrarAvisoPixEdit('✅ Preenchido com o CPF do cadastro — campo bloqueado para evitar alterações.', 'green');
-    } else {
-      chave.value = '';
-      chave.readOnly = false;
-      chave.style.background = '';
-      mostrarAvisoPixEdit('⚠️ CPF não cadastrado. Preencha o CPF do médico primeiro.', 'amber');
-    }
-  } else if (tipo === 'CNPJ') {
-    chave.readOnly = false; chave.style.background=''; chave.style.color='';
-    const cnpj = document.getElementById('em-cnpj')?.value?.trim();
-    if (cnpj) {
-      chave.value = cnpj;
-      mostrarAvisoPixEdit('✅ Preenchido com o CNPJ do cadastro.', 'green');
-    } else {
-      chave.value = '';
-      mostrarAvisoPixEdit('⚠️ CNPJ não cadastrado. Preencha o CNPJ do médico primeiro.', 'amber');
-    }
-  } else if (tipo === 'EMAIL') {
-    chave.readOnly = false; chave.style.background=''; chave.style.color='';
-    mostrarAvisoPixEdit('ℹ️ Digite o e-mail cadastrado como chave PIX do médico.', 'blue');
-  } else {
-    chave.readOnly = false; chave.style.background=''; chave.style.color='';
-    chave.value = '';
-    esconderAvisoPixEdit();
-  }
-  validarPixEdit();
-}
-
-// Validar chave PIX no modal de edição
-function validarPixEdit() {
-  const tipo  = document.getElementById('em-pix-tipo')?.value;
-  const chave = (document.getElementById('em-pix-chave')?.value||'').trim();
-  const cpfCad  = limparCpf(document.getElementById('em-cpf')?.value||'');
-  const cnpjCad = limparCnpj(document.getElementById('em-cnpj')?.value||'');
-  const emailCad = (document.getElementById('em-email')?.value||'').trim().toLowerCase();
-  const st = document.getElementById('em-pix-status');
-
-  if (!chave || !tipo) { if(st) st.style.display='none'; esconderAvisoPixEdit(); return; }
-
-  if (tipo === 'CPF') {
-    const chaveLimpa = limparCpf(chave);
-    if (cpfCad && chaveLimpa !== cpfCad) {
-      if(st){ st.textContent='⚠️'; st.style.display='inline'; }
-      mostrarAvisoPixEdit('⚠️ A chave PIX (CPF) é diferente do CPF cadastrado. Confirme se está correto.', 'red');
-    } else if (cpfCad && chaveLimpa === cpfCad) {
-      if(st){ st.textContent='✅'; st.style.display='inline'; }
-      mostrarAvisoPixEdit('✅ Chave PIX confere com o CPF cadastrado.', 'green');
-    } else {
-      if(st) st.style.display='none'; esconderAvisoPixEdit();
-    }
-  } else if (tipo === 'CNPJ') {
-    const chaveLimpa = limparCnpj(chave);
-    if (cnpjCad && chaveLimpa !== cnpjCad) {
-      if(st){ st.textContent='⚠️'; st.style.display='inline'; }
-      mostrarAvisoPixEdit('⚠️ A chave PIX (CNPJ) é diferente do CNPJ cadastrado.', 'red');
-    } else if (cnpjCad && chaveLimpa === cnpjCad) {
-      if(st){ st.textContent='✅'; st.style.display='inline'; }
-      mostrarAvisoPixEdit('✅ Chave PIX confere com o CNPJ cadastrado.', 'green');
-    } else {
-      if(st) st.style.display='none'; esconderAvisoPixEdit();
-    }
-  } else if (tipo === 'EMAIL') {
-    if(st) st.style.display='none';
-    mostrarAvisoPixEdit('ℹ️ Use qualquer e-mail vinculado à chave PIX do médico.', 'blue');
-  } else {
-    if(st) st.style.display='none';
-    mostrarAvisoPixEdit('ℹ️ Chave aleatória/telefone: confirme com o médico se a conta está correta.', 'blue');
-  }
-}
-
-function mostrarAvisoPixEdit(msg, cor) {
-  const el = document.getElementById('em-pix-aviso');
-  if (!el) return;
-  const cores = { green:'background:var(--green-bg);color:var(--green);', red:'background:var(--red-bg);color:var(--red);', amber:'background:var(--amber-bg);color:var(--amber);', blue:'background:var(--blue-light);color:var(--blue);' };
-  el.style.cssText = (cores[cor]||cores.blue) + 'display:block;font-size:11px;margin-top:4px;padding:5px 9px;border-radius:4px;';
-  el.textContent = msg;
-}
-function esconderAvisoPixEdit() { const el=document.getElementById('em-pix-aviso'); if(el) el.style.display='none'; }
-
-// ── Mesmo para formulário de NOVO médico ──────────────
-function autoPreencherPixNovo() {
-  const tipo  = document.getElementById('mn-pix-tipo')?.value;
-  const chave = document.getElementById('mn-pix-chave');
-  if (!chave) return;
-  if (tipo === 'CPF') {
-    const cpf = document.getElementById('mcpf')?.value?.trim();
-    if (cpf) {
-      chave.value = cpf;
-      chave.readOnly = true;
-      chave.style.background = 'var(--bg3)';
-      chave.style.color = 'var(--text2)';
-      mostrarAvisoPixNovo('✅ Preenchido com o CPF do cadastro — campo bloqueado para evitar alterações.', 'green');
-    } else {
-      chave.value='';
-      chave.readOnly = false;
-      chave.style.background = '';
-      mostrarAvisoPixNovo('⚠️ Preencha o CPF do médico acima primeiro.', 'amber');
-    }
-  } else if (tipo === 'CNPJ') {
-    chave.readOnly = false; chave.style.background=''; chave.style.color='';
-    const cnpj = document.getElementById('mn-cnpj')?.value?.trim();
-    if (cnpj) { chave.value = cnpj; mostrarAvisoPixNovo('✅ Preenchido com o CNPJ cadastrado.', 'green'); }
-    else { chave.value=''; mostrarAvisoPixNovo('⚠️ Preencha o CNPJ do médico primeiro.', 'amber'); }
-  } else if (tipo === 'EMAIL') {
-    chave.readOnly = false; chave.style.background=''; chave.style.color='';
-    mostrarAvisoPixNovo('ℹ️ Digite o e-mail cadastrado como chave PIX do médico.', 'blue');
-  } else {
-    chave.readOnly = false; chave.style.background=''; chave.style.color='';
-    chave.value=''; esconderAvisoPixNovo();
-  }
-  validarPixNovo();
-}
-
-function validarPixNovo() {
-  const tipo  = document.getElementById('mn-pix-tipo')?.value;
-  const chave = (document.getElementById('mn-pix-chave')?.value||'').trim();
-  const cpfCad   = limparCpf(document.getElementById('mcpf')?.value||'');
-  const cnpjCad  = limparCnpj(document.getElementById('mn-cnpj')?.value||'');
-  const emailCad = (document.getElementById('memail')?.value||'').trim().toLowerCase();
-  const st = document.getElementById('mn-pix-status');
-
-  if (!chave || !tipo) { if(st) st.style.display='none'; esconderAvisoPixNovo(); return; }
-
-  if (tipo==='CPF') {
-    const cl = limparCpf(chave);
-    if (cpfCad && cl!==cpfCad) { if(st){st.textContent='⚠️';st.style.display='inline';} mostrarAvisoPixNovo('⚠️ CPF da chave PIX difere do CPF cadastrado acima.','red'); }
-    else if (cpfCad && cl===cpfCad) { if(st){st.textContent='✅';st.style.display='inline';} mostrarAvisoPixNovo('✅ Chave confere com o CPF cadastrado.','green'); }
-    else { if(st) st.style.display='none'; esconderAvisoPixNovo(); }
-  } else if (tipo==='CNPJ') {
-    const cl = limparCnpj(chave);
-    if (cnpjCad && cl!==cnpjCad) { if(st){st.textContent='⚠️';st.style.display='inline';} mostrarAvisoPixNovo('⚠️ CNPJ da chave PIX difere do CNPJ cadastrado.','red'); }
-    else if (cnpjCad && cl===cnpjCad) { if(st){st.textContent='✅';st.style.display='inline';} mostrarAvisoPixNovo('✅ Confere com o CNPJ cadastrado.','green'); }
-    else { if(st) st.style.display='none'; esconderAvisoPixNovo(); }
-  } else if (tipo==='EMAIL') {
-    if(st) st.style.display='none';
-    mostrarAvisoPixNovo('ℹ️ Use qualquer e-mail vinculado à chave PIX do médico.','blue');
-  } else {
-    if(st) st.style.display='none';
-    mostrarAvisoPixNovo('ℹ️ Chave aleatória/telefone: confirme com o médico se a conta está correta.','blue');
-  }
-}
-
-function mostrarAvisoPixNovo(msg, cor) {
-  const el = document.getElementById('mn-pix-aviso');
-  if (!el) return;
-  const cores = { green:'background:var(--green-bg);color:var(--green);', red:'background:var(--red-bg);color:var(--red);', amber:'background:var(--amber-bg);color:var(--amber);', blue:'background:var(--blue-light);color:var(--blue);' };
-  el.style.cssText = (cores[cor]||cores.blue) + 'display:block;font-size:11px;margin-top:4px;padding:5px 9px;border-radius:4px;';
-  el.textContent = msg;
-}
-function esconderAvisoPixNovo() { const el=document.getElementById('mn-pix-aviso'); if(el) el.style.display='none'; }
-
-// Validação PIX é chamada diretamente no abrirEditarMedico (não precisa de wrapper)
-
-// ── FIM VALIDAÇÃO PIX ─────────────────────────────────
-
-
-// ─── DROPDOWN DE ESPECIALIDADES ──────────────────────
-function toggleEspDropdown(ctx) {
-  const panel   = document.getElementById('esp-panel-'+ctx);
-  const trigger = document.getElementById('esp-trigger-'+ctx);
-  if (!panel) return;
-  const isOpen = panel.classList.contains('open');
-  // Fechar todos
-  document.querySelectorAll('.esp-panel').forEach(p=>p.classList.remove('open'));
-  document.querySelectorAll('.esp-trigger').forEach(t=>t.classList.remove('open'));
-  if (!isOpen) {
-    panel.classList.add('open');
-    trigger.classList.add('open');
-  }
-}
-
-// Fechar dropdown ao clicar fora
-document.addEventListener('click', e => {
-  if (!e.target.closest('.esp-dropdown')) {
-    document.querySelectorAll('.esp-panel').forEach(p=>p.classList.remove('open'));
-    document.querySelectorAll('.esp-trigger').forEach(t=>t.classList.remove('open'));
-  }
-});
-
-// Atualizar tags e label ao marcar/desmarcar
-document.addEventListener('change', e => {
-  if (e.target.classList.contains('med-esp-chk')) atualizarTagsEsp('novo');
-  if (e.target.classList.contains('em-esp-chk'))  atualizarTagsEsp('edit');
-});
-
-function atualizarTagsEsp(ctx) {
-  const chkClass = ctx==='novo' ? '.med-esp-chk' : '.em-esp-chk';
-  const sel = [...document.querySelectorAll(chkClass+':checked')].map(c=>c.value);
-  const label = document.getElementById('esp-label-'+ctx);
-  const tags  = document.getElementById('esp-tags-'+ctx);
-  if (label) label.textContent = sel.length ? sel.length+' especialidade(s) selecionada(s)' : 'Clique para selecionar...';
-  if (label) label.style.color = sel.length ? 'var(--text)' : 'var(--text3)';
-  if (tags)  tags.innerHTML = sel.map(e=>
-    `<span class="esp-tag">${e}<button onclick="desmarcarEsp('${ctx}','${e.replace(/'/g,'\\\'')}')">×</button></span>`
-  ).join('');
-}
-
-function desmarcarEsp(ctx, val) {
-  const chkClass = ctx==='novo' ? '.med-esp-chk' : '.em-esp-chk';
-  const chk = [...document.querySelectorAll(chkClass)].find(c=>c.value===val);
-  if (chk) { chk.checked=false; atualizarTagsEsp(ctx); }
-}
-
-// Ao abrir modal de edição, atualizar tags
-const _origAtualizarEspEdit = function() { atualizarTagsEsp('edit'); };
-
-// Inicia com Enter no login
-document.getElementById('l-email').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('l-senha').focus();});
-
-// ─── LANÇAMENTO EM LOTE ─────────────────────────────────
-function initLote() {
-  const sp = document.getElementById('lote-proj');
-  if (sp) {
-    sp.innerHTML = '<option value="">Selecione...</option>' +
-      sortedProjetos().map(p=>`<option value="${p.id}">${p.nome}</option>`).join('');
-    sp.addEventListener('change', preencherValorPadraoLote);
-  }
-  const dl = document.getElementById('lote-data');
-  if (dl && !dl.value) dl.value = new Date().toISOString().slice(0,10);
-  // Preencher valor ao mudar tipo
-  const tp = document.getElementById('lote-tipo');
-  if (tp) tp.addEventListener('change', preencherValorPadraoLote);
-  renderMedicosLote();
-  atualizarDuracaoLote();
-}
-
-function preencherValorPadraoLote() {
-  const projId = document.getElementById('lote-proj')?.value;
-  const tipo   = document.getElementById('lote-tipo')?.value || '';
-  const campo  = document.getElementById('lote-valor');
-  if (!campo || !projId) return;
-  const proj = projetos.find(p => p.id === projId);
-  if (!proj) return;
-  let val = null;
-  if (tipo.includes('24'))           val = proj.valor_padrao_24h;
-  else if (tipo.includes('Noturno')) val = proj.valor_padrao_noturno;
-  else if (tipo.includes('Sobre'))   val = proj.valor_padrao_sobreaviso;
-  else                               val = proj.valor_padrao_12h;
-  if (val) {
-    campo.value = val.toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2});
-    atualizarResumoLote();
-    // Badge informativo
-    const badge = document.getElementById('lote-valor-badge');
-    if (badge) { badge.textContent = '✓ Valor padrão do projeto'; badge.style.display='inline'; }
-  } else {
-    const badge = document.getElementById('lote-valor-badge');
-    if (badge) badge.style.display='none';
-  }
-}
-
-function renderMedicosLote(filtro='') {
-  const el = document.getElementById('lote-medicos-lista');
-  if (!el) return;
-  const lista = sortedMedicos().filter(m =>
-    !filtro || m.nome.toLowerCase().includes(filtro.toLowerCase()) || m.crm.toLowerCase().includes(filtro.toLowerCase())
-  );
-  if (!lista.length) { el.innerHTML = '<div class="empty">Nenhum médico encontrado.</div>'; return; }
-  el.innerHTML = lista.map(m => `
-    <div class="medico-row" id="row-${m.id}">
-      <div>
-        <input type="checkbox" class="medico-check" id="chk-${m.id}" onchange="onCheckMedico('${m.id}')">
-        <label for="chk-${m.id}" style="cursor:pointer;">
-          <span class="medico-nome-lote">${m.nome}</span>
-          <span class="medico-crm-lote"> · ${m.crm}</span>
-        </label>
-      </div>
-      <div><input class="lote-input" id="lote-data-${m.id}" type="date" value="${document.getElementById('lote-data')?.value||''}" style="display:none;"></div>
-      <div><input class="lote-input" id="lote-ini-${m.id}" type="time" value="${document.getElementById('lote-ini')?.value||'07:00'}" style="display:none;"></div>
-      <div><input class="lote-input" id="lote-fim-${m.id}" type="time" value="${document.getElementById('lote-fim')?.value||'19:00'}" style="display:none;"></div>
-      <div></div>
-    </div>`).join('');
-}
-
-function filtrarMedicosLote() {
-  const filtro = document.getElementById('lote-busca')?.value || '';
-  renderMedicosLote(filtro);
-  atualizarContadorLote();
-}
-
-function onCheckMedico(id) {
-  const chk = document.getElementById('chk-'+id);
-  const row = document.getElementById('row-'+id);
-  if (!chk || !row) return;
-  row.classList.toggle('selecionado', chk.checked);
-  // Mostrar/esconder campos individuais de data/hora (para override)
-  atualizarContadorLote();
-}
-
-function selecionarTodosLote(val) {
-  document.querySelectorAll('[id^="chk-"]').forEach(chk => {
-    chk.checked = val;
-    const id = chk.id.replace('chk-','');
-    const row = document.getElementById('row-'+id);
-    if (row) row.classList.toggle('selecionado', val);
-  });
-  atualizarContadorLote();
-}
-
-function atualizarContadorLote() {
-  const sel = document.querySelectorAll('[id^="chk-"]:checked').length;
-  const el = document.getElementById('lote-contador');
-  if (el) el.textContent = sel + ' selecionado(s)';
-  // Atualizar resumo
-  atualizarResumoLote();
-}
-
-function atualizarDuracaoLote() {
-  const ini = document.getElementById('lote-ini')?.value || '07:00';
-  const fim = document.getElementById('lote-fim')?.value || '19:00';
-  const [hi,mi] = ini.split(':').map(Number), [hf,mf] = fim.split(':').map(Number);
-  let diff = (hf*60+mf)-(hi*60+mi); if(diff<0) diff+=1440;
-  const h = Math.round(diff/60*10)/10;
-  const el = document.getElementById('lote-duracao-label');
-  if (el) el.textContent = `· Duração: ${h}h`;
-  atualizarResumoLote();
-}
-
-function atualizarResumoLote() {
-  const sel = document.querySelectorAll('[id^="chk-"]:checked').length;
-  const valor = parseBRL(document.getElementById('lote-valor')?.value||'');
-  const el = document.getElementById('lote-resumo-config');
-  if (!el) return;
-  if (sel > 0 && valor > 0) {
-    el.style.display = 'block';
-    el.textContent = `${sel} médico(s) × ${fBRL(valor)} = Total: ${fBRL(sel * valor)}`;
-  } else {
-    el.style.display = 'none';
-  }
-}
-
-function gerarPreviewLote() {
-  const projId = document.getElementById('lote-proj')?.value;
-  const data   = document.getElementById('lote-data')?.value;
-  const ini    = document.getElementById('lote-ini')?.value;
-  const fim    = document.getElementById('lote-fim')?.value;
-  const tipo   = document.getElementById('lote-tipo')?.value;
-  const setor  = document.getElementById('lote-setor')?.value.trim();
-  const obs    = document.getElementById('lote-obs')?.value.trim();
-  const valor  = parseBRL(document.getElementById('lote-valor')?.value||'');
-
-  if (!projId) { toast('Selecione um projeto', true); return; }
-  if (!data)   { toast('Informe a data', true); return; }
-  if (!ini||!fim) { toast('Informe horário de início e fim', true); return; }
-
-  const selecionados = [...document.querySelectorAll('[id^="chk-"]:checked')].map(chk => {
-    const id = chk.id.replace('chk-','');
-    return medicos.find(m => m.id === id || m.id == id);
-  }).filter(Boolean);
-
-  if (!selecionados.length) { toast('Selecione ao menos um médico', true); return; }
-
-  const proj = projetos.find(p => p.id === projId);
-  const [hi,mi] = ini.split(':').map(Number), [hf,mf] = fim.split(':').map(Number);
-  let diff = (hf*60+mf)-(hi*60+mi); if(diff<0) diff+=1440;
-  const horas = Math.round(diff/60*10)/10;
-  const totalGeral = selecionados.length * valor;
-
-  // Montar pré-visualização
-  const card = document.getElementById('lote-preview-card');
-  const tabela = document.getElementById('lote-preview-tabela');
-  const totalLabel = document.getElementById('lote-total-label');
-  const turno = tipo.includes('Noturno')?'purple':tipo.includes('24')?'amber':'green';
-
-  tabela.innerHTML = `
-    <div style="display:flex;gap:16px;font-size:13px;margin-bottom:14px;flex-wrap:wrap;">
-      <span>📁 <strong>${proj?.nome||''}</strong></span>
-      <span>📅 <strong>${fDate(data)}</strong></span>
-      <span>🕐 <strong>${ini}–${fim} (${horas}h)</strong></span>
-      ${setor?`<span>🏥 <strong>${setor}</strong></span>`:''}
-    </div>
-    <table><thead><tr>
-      <th>Médico</th><th>CRM</th><th>Tipo</th><th>Horas</th><th>Honorários</th>
-    </tr></thead><tbody>
-      ${selecionados.map(m => {
-        const hon = valor || Math.round(horas*(m.valor_hora||0)*100)/100;
-        return `<tr>
-          <td><strong>${m.nome}</strong></td>
-          <td class="mono">${m.crm}</td>
-          <td><span class="badge badge-${turno}">${tipo}</span></td>
-          <td class="mono">${horas}h</td>
-          <td class="mono" style="color:var(--green);font-weight:600;">${fBRL(hon)}</td>
-        </tr>`;
-      }).join('')}
-    </tbody>
-    <tfoot><tr style="border-top:2px solid var(--border2);">
-      <td colspan="3" style="font-weight:600;padding:8px;">Total</td>
-      <td class="mono" style="font-weight:600;">${Math.round(horas*selecionados.length*10)/10}h</td>
-      <td class="mono" style="font-weight:600;color:var(--green);">${fBRL(totalGeral)}</td>
-    </tr></tfoot></table>`;
-
-  totalLabel.textContent = `${selecionados.length} lançamento(s) · Total: ${fBRL(totalGeral)}`;
-  card.style.display = 'block';
-  card.scrollIntoView({behavior:'smooth',block:'nearest'});
-
-  // Guardar dados para confirmar
-  window._loteData = { projId, proj:proj?.nome, projetoCod:proj?.codigo_cc||'', data, ini, fim, horas, tipo, setor, obs, valor, selecionados };
-}
-
-async function confirmarLote() {
-  const d = window._loteData;
-  if (!d) return;
-  const btn = document.getElementById('lote-confirmar-btn');
-  btn.disabled = true; btn.textContent = 'Registrando...';
-
-  let ok = 0, erros = 0;
-  for (const m of d.selecionados) {
-    const hon = d.valor || Math.round(d.horas*(m.valor_hora||0)*100)/100;
-    const reg = {
-      medico_id: m.id,
-      projeto_id: d.projId,
-      data: d.data,
-      hora_ini: d.ini,
-      hora_fim: d.fim,
-      horas: d.horas,
-      tipo: d.tipo,
-      setor: d.setor || null,
-      honorario: hon,
-      valor_hora: d.horas>0 ? Math.round(hon/d.horas*100)/100 : (m.valor_hora||0),
-      obs: d.obs || null,
-      codigo_totvs: null
-    };
-    try {
-      const res = await fetch(SUPABASE_URL + '/rest/v1/lancamentos', {
-        method: 'POST',
-        headers: {
-          'apikey': SUPABASE_KEY,
-          'Authorization': 'Bearer ' + SUPABASE_KEY,
-          'Content-Type': 'application/json',
-          'Prefer': 'return=minimal'
-        },
-        body: JSON.stringify(reg)
-      });
-      if (res.ok) ok++;
-      else {
-        const err = await res.text();
-        console.error('Erro lançamento:', err);
-        erros++;
-      }
-    } catch(e) { console.error(e); erros++; }
-  }
-
-  if (ok > 0) {
-    toast(`✅ ${ok} lançamento(s) registrado(s)!${erros>0?' · '+erros+' com erro':''}`);
-    limparLote();
-    await carregarLancamentos();
-    carregarDashboard();
-  } else {
-    toast('Erro ao registrar. Verifique o console (F12).', true);
-    btn.disabled = false;
-    btn.textContent = '✓ Confirmar e registrar';
-  }
-}
-
-function limparLote() {
-  document.getElementById('lote-preview-card').style.display = 'none';
-  document.querySelectorAll('[id^="chk-"]').forEach(c=>c.checked=false);
-  document.querySelectorAll('[id^="row-"]').forEach(r=>r.classList.remove('selecionado'));
-  document.getElementById('lote-sel-all').checked = false;
-  document.getElementById('lote-contador').textContent = '0 selecionados';
-  document.getElementById('lote-resumo-config').style.display = 'none';
-  window._loteData = null;
-  const btn = document.getElementById('lote-confirmar-btn');
-  if (btn) { btn.disabled=false; btn.textContent='✓ Confirmar e registrar'; }
-}
-
-
-// ─── ESTADO EXTRA ───────────────────────────────────────
-let calYear = new Date().getFullYear(), calMonth = new Date().getMonth();
-let selectedLayout = 1;
-const meses = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
-const layouts = {
-  1:{nome:'RH — Folha de pagamento',cols:['COMPETENCIA','CPF','NOME','CRM','VERBA','REFERENCIA','VALOR','CENTRO_CUSTO','OBSERVACAO']},
-  2:{nome:'Financeiro — Contas a pagar',cols:['EMISSAO','VENCIMENTO','FORNECEDOR','CPF_CNPJ','VALOR','CENTRO_CUSTO','HISTORICO','CODIGO']},
-  3:{nome:'Obras — Apontamento de horas',cols:['DATA','FUNCIONARIO','CPF','CENTRO_CUSTO','HORAS','TIPO_HORA','VALOR_HORA','TOTAL']},
-  4:{nome:'Personalizado',cols:['DATA','MEDICO','CRM','CPF','PROJETO','CODIGO_CC','TIPO_PLANTAO','HORA_INI','HORA_FIM','HORAS','VALOR_HORA','HONORARIO','OBS']}
-};
-
-// ─── HELPERS EXTRA ──────────────────────────────────────
-function fNum(v) { return (Math.round(v*100)/100).toString().replace('.',','); }
-function sortedMedicos() { return [...medicos].sort((a,b) => a.nome.localeCompare(b.nome,'pt-BR')); }
-function sortedProjetos() { return [...projetos].sort((a,b) => a.nome.localeCompare(b.nome,'pt-BR')); }
-
-// ─── CALENDÁRIO ─────────────────────────────────────────
-function navCal(d) { calMonth+=d; if(calMonth>11){calMonth=0;calYear++;} if(calMonth<0){calMonth=11;calYear--;} renderCal(); }
-
-function popCalSelects() {
-  const sp=document.getElementById('cal-proj'), sm=document.getElementById('cal-med');
-  if(!sp||!sm) return;
-  const selP=sp.value, selM=sm.value;
-  sp.innerHTML='<option value="">Todos os projetos</option>'+sortedProjetos().map(p=>`<option value="${p.id}">${p.nome}</option>`).join('');
-  sm.innerHTML='<option value="">Todos os médicos</option>'+sortedMedicos().map(m=>`<option value="${m.id}">${m.nome}</option>`).join('');
-  sp.value=selP; sm.value=selM;
-}
-
-function limparFiltrosCal() {
-  document.getElementById('cal-proj').value='';
-  document.getElementById('cal-med').value='';
-  renderCal();
-}
-
-function getLancsCal(ds) {
-  const pid=document.getElementById('cal-proj')?.value||'';
-  const mid=document.getElementById('cal-med')?.value||'';
-  // No Supabase, lancamentos já tem medico_id e projeto_id
-  let evts=lancamentos.filter(l=>l.data===ds);
-  if(pid) evts=evts.filter(l=>l.projeto_id===pid);
-  if(mid) evts=evts.filter(l=>l.medico_id===mid);
-  return evts;
-}
-
-function renderCal() {
-  const labelEl=document.getElementById('cal-label');
-  if(!labelEl) return;
-  labelEl.textContent=meses[calMonth]+' '+calYear;
-  const grid=document.getElementById('cal-grid');
-  const primeiro=new Date(calYear,calMonth,1).getDay(), dias=new Date(calYear,calMonth+1,0).getDate();
-  const pid=document.getElementById('cal-proj')?.value||'';
-  const mid=document.getElementById('cal-med')?.value||'';
-  const badge=document.getElementById('cal-filtro-badge');
-  if(badge){
-    const parts=[];
-    if(pid){const p=projetos.find(x=>x.id===pid);if(p)parts.push('Projeto: '+p.nome);}
-    if(mid){const m=medicos.find(x=>x.id===mid);if(m)parts.push('Médico: '+m.nome);}
-    if(parts.length){badge.textContent='● Filtro ativo: '+parts.join(' · ');badge.style.display='block';}
-    else badge.style.display='none';
-  }
-  const hj=new Date();
-  let html='';
-  for(let i=0;i<primeiro;i++) html+='<div class="cal-day empty"></div>';
-  for(let d=1;d<=dias;d++){
-    const ds=`${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-    const isToday=d===hj.getDate()&&calMonth===hj.getMonth()&&calYear===hj.getFullYear();
-    const evts=getLancsCal(ds);
-    let ev=evts.slice(0,3).map(l=>{
-      const c=l.tipo?.includes('Noturno')?'noturno':l.tipo?.includes('24')?'h24':'diurno';
-      return `<div class="cal-event ${c}" title="${l.medico||''}">${(l.medico||'').split(' ')[0]}</div>`;
-    }).join('');
-    if(evts.length>3) ev+=`<div style="font-size:10px;color:var(--text3);">+${evts.length-3} mais</div>`;
-    html+=`<div class="cal-day${isToday?' today':''}${evts.length?' has-events':''}" onclick="showDayDetailCal('${ds}')"><div class="cal-day-num">${d}</div>${ev}</div>`;
-  }
-  grid.innerHTML=html;
-  if(document.getElementById('cal-detail')) document.getElementById('cal-detail').style.display='none';
-}
-
-function showDayDetailCal(ds) {
-  const pid=document.getElementById('cal-proj')?.value||'';
-  const mid=document.getElementById('cal-med')?.value||'';
-  let evts=lancamentos.filter(l=>l.data===ds);
-  if(pid) evts=evts.filter(l=>l.projeto_id===pid);
-  if(mid) evts=evts.filter(l=>l.medico_id===mid);
-  if(!evts.length) return;
-  const d=document.getElementById('cal-detail');
-  document.getElementById('cal-detail-title').textContent='Plantões em '+fDate(ds);
-  document.getElementById('cal-detail-body').innerHTML='<table><thead><tr><th>Médico</th><th>Projeto</th><th>Setor</th><th>Tipo</th><th>Horário</th><th>Horas</th><th>Honorários</th></tr></thead><tbody>'+
-    evts.map(l=>`<tr><td>${l.medico||''}</td><td>${l.projeto||''}</td><td>${l.setor||'—'}</td><td>${l.tipo||''}</td><td class="mono">${(l.hora_ini||'').slice(0,5)}–${(l.hora_fim||'').slice(0,5)}</td><td class="mono">${l.horas}h</td><td class="mono">${fBRL(l.honorario)}</td></tr>`).join('')+'</tbody></table>';
-  d.style.display='block';
-  d.scrollIntoView({behavior:'smooth',block:'nearest'});
-}
-
-// ─── RELATÓRIO AVANÇADO ─────────────────────────────────
-function filtrarDadosRel() {
-  const pid=document.getElementById('rp').value, mid=document.getElementById('rm').value;
-  const d1=document.getElementById('rd1').value, d2=document.getElementById('rd2').value;
-  let dados=[...lancamentos];
-  if(pid) dados=dados.filter(l=>l.projeto_id===pid);
-  if(mid) dados=dados.filter(l=>l.medico_id===mid);
-  if(d1) dados=dados.filter(l=>l.data>=d1);
-  if(d2) dados=dados.filter(l=>l.data<=d2);
-  return dados;
-}
-
-let _relTipoAtivo = 'detalhado';
-
-function selecionarRelTipo(tipo, btn) {
-  _relTipoAtivo = tipo;
-  document.querySelectorAll('.rel-tipo-btn').forEach(b=>{
-    b.classList.remove('active');
-    b.style.cssText='';
-  });
-  btn.classList.add('active');
-  document.getElementById('rel-resultado').innerHTML='';
-}
-
-function filtrarDadosRel() {
-  const pid=document.getElementById('rp').value, mid=document.getElementById('rm').value;
-  const d1=document.getElementById('rd1').value, d2=document.getElementById('rd2').value;
-  let dados=[...lancamentos];
-  if(pid) dados=dados.filter(l=>l.projeto_id===pid);
-  if(mid) dados=dados.filter(l=>l.medico_id===mid);
-  if(d1) dados=dados.filter(l=>l.data>=d1);
-  if(d2) dados=dados.filter(l=>l.data<=d2);
-  return dados;
-}
-
-function gerarRelatorio() {
-  const el = document.getElementById('rel-resultado');
-  switch (_relTipoAtivo) {
-    case 'detalhado':  gerarRelDetalhado(el); break;
-    case 'resumo':     gerarRelResumo(el); break;
-    case 'horas':      gerarRelHoras(el); break;
-    case 'faltas':     gerarRelFaltas(el); break;
-    case 'atrasos':    gerarRelAtrasos(el); break;
-    case 'checkins':   gerarRelCheckinsForaTol(el); break;
-    case 'medicos':    gerarRelMedicos(el); break;
-  }
-}
-
-// ── DETALHADO POR PROJETO ─────────────────────────────
-function gerarRelDetalhado(el) {
-  const dados=filtrarDadosRel();
-  if(!dados.length){el.innerHTML='<div class="card"><div class="empty">Nenhum dado para os filtros selecionados.</div></div>';return;}
-  const tH=dados.reduce((s,l)=>s+(l.horas||0),0), tR=dados.reduce((s,l)=>s+(l.honorario||0),0);
-  const nMeds=new Set(dados.map(l=>l.medico_id)).size;
-  let html=`<div class="metrics">
-    <div class="metric"><div class="metric-label">Plantões</div><div class="metric-val">${dados.length}</div></div>
-    <div class="metric"><div class="metric-label">Horas totais</div><div class="metric-val">${Math.round(tH*10)/10}h</div></div>
-    <div class="metric"><div class="metric-label">Total honorários</div><div class="metric-val">${fBRL(tR)}</div></div>
-    <div class="metric"><div class="metric-label">Médicos</div><div class="metric-val">${nMeds}</div></div>
-  </div>`;
-  const porProjeto={};
-  dados.forEach(l=>{const p=l.projeto||'Sem projeto';if(!porProjeto[p])porProjeto[p]=[];porProjeto[p].push(l);});
-  Object.entries(porProjeto).sort((a,b)=>a[0].localeCompare(b[0],'pt-BR')).forEach(([proj,lans])=>{
-    const projH=lans.reduce((s,l)=>s+(l.horas||0),0), projR=lans.reduce((s,l)=>s+(l.honorario||0),0);
-    const grupos={};
-    lans.forEach(l=>{
-      const turno=l.tipo?.includes('Noturno')?'Noturno':l.tipo?.includes('24')?'24h':'Diurno';
-      const chave=`${l.medico}||${l.horas}||${turno}||${l.setor||''}`;
-      if(!grupos[chave]) grupos[chave]={medico:l.medico,crm:l.crm,horas:l.horas,turno,setor:l.setor||'',qtd:0,total:0};
-      grupos[chave].qtd++; grupos[chave].total+=l.honorario||0;
-    });
-    const linhas=Object.values(grupos).sort((a,b)=>a.medico.localeCompare(b.medico,'pt-BR')).map(g=>{
-      const badge=g.turno==='Noturno'?'badge-purple':g.turno==='24h'?'badge-amber':'badge-green';
-      return `<tr><td>${g.medico}<br><span class="mono" style="font-size:11px;color:var(--text3);">${g.crm||''}</span></td>
-        <td class="mono">${g.horas}h</td><td><span class="badge ${badge}">${g.turno}</span></td>
-        <td>${g.setor||'—'}</td><td style="text-align:center;">${g.qtd}</td>
-        <td class="mono" style="color:var(--green);font-weight:600;">${fBRL(Math.round(g.total*100)/100)}</td></tr>`;
-    }).join('');
-    html+=`<div class="card" style="margin-bottom:12px;">
-      <div style="display:flex;justify-content:space-between;margin-bottom:10px;">
-        <div class="card-title" style="margin-bottom:0;">📁 ${proj}</div>
-        <div style="font-size:12px;color:var(--text2);">${lans.length} plantão(ões) · ${Math.round(projH*10)/10}h · <span style="color:var(--green);font-weight:600;">${fBRL(projR)}</span></div>
-      </div>
-      <table><thead><tr><th>Médico/CRM</th><th>Hrs/plantão</th><th>Turno</th><th>Setor</th><th style="text-align:center;">Qtd</th><th>Total</th></tr></thead>
-      <tbody>${linhas}</tbody>
-      <tfoot><tr style="border-top:1.5px solid var(--border2);"><td colspan="4" style="font-weight:600;padding:8px;font-size:12px;">Total</td>
-        <td style="text-align:center;font-weight:600;">${lans.length}</td>
-        <td class="mono" style="color:var(--green);font-weight:600;">${fBRL(projR)}</td></tr></tfoot>
-      </table></div>`;
-  });
-  el.innerHTML=html;
-}
-
-// ── PLANTÕES POR PROJETO (resumo sem profissional) ────
-function gerarRelResumo(el) {
-  const dados=filtrarDadosRel();
-  if(!dados.length){el.innerHTML='<div class="card"><div class="empty">Nenhum dado.</div></div>';return;}
-  const porProjeto={};
-  dados.forEach(l=>{
-    const proj=l.projeto||'Sem projeto';
-    if(!porProjeto[proj]) porProjeto[proj]={};
-    const turno=l.tipo||'Diurno 12h';
-    const setor=l.setor||'(sem setor)';
-    const chave=`${turno}|||${setor}`;
-    if(!porProjeto[proj][chave]) porProjeto[proj][chave]={tipo:turno,setor,qtd:0,horas:0,total:0};
-    porProjeto[proj][chave].qtd++;
-    porProjeto[proj][chave].horas+=l.horas||0;
-    porProjeto[proj][chave].total+=l.honorario||0;
-  });
-  let html='';
-  Object.entries(porProjeto).sort((a,b)=>a[0].localeCompare(b[0],'pt-BR')).forEach(([proj,grupos])=>{
-    const itens=Object.values(grupos).sort((a,b)=>b.qtd-a.qtd);
-    const totPlant=itens.reduce((s,g)=>s+g.qtd,0);
-    const totHoras=itens.reduce((s,g)=>s+g.horas,0);
-    const totVal=itens.reduce((s,g)=>s+g.total,0);
-    const linhas=itens.map(g=>{
-      const badge=g.tipo.includes('Noturno')?'badge-purple':g.tipo.includes('24')?'badge-amber':g.tipo.includes('Fim de Semana')?'badge-red':'badge-green';
-      return `<tr>
-        <td><span class="badge ${badge}">${g.tipo}</span></td>
-        <td>${g.setor}</td>
-        <td style="text-align:center;font-size:18px;font-weight:700;color:var(--blue);">${g.qtd}</td>
-        <td class="mono">${Math.round(g.horas*10)/10}h</td>
-        <td class="mono" style="color:var(--green);font-weight:600;">${fBRL(g.total)}</td>
-      </tr>`;
-    }).join('');
-    html+=`<div class="card" style="margin-bottom:12px;">
-      <div style="display:flex;justify-content:space-between;margin-bottom:10px;">
-        <div class="card-title" style="margin-bottom:0;">📁 ${proj}</div>
-        <div style="font-size:12px;color:var(--text2);">${totPlant} plantões · ${Math.round(totHoras*10)/10}h · <span style="color:var(--green);font-weight:600;">${fBRL(totVal)}</span></div>
-      </div>
-      <table><thead><tr><th>Tipo de plantão</th><th>Setor</th><th style="text-align:center;">Qtd plantões</th><th>Total horas</th><th>Total honorários</th></tr></thead>
-      <tbody>${linhas}</tbody></table></div>`;
-  });
-  el.innerHTML=html;
-}
-
-// ── HORAS POR PROFISSIONAL ────────────────────────────
-function gerarRelHoras(el) {
-  const dados=filtrarDadosRel();
-  if(!dados.length){el.innerHTML='<div class="card"><div class="empty">Nenhum dado.</div></div>';return;}
-  const porMed={};
-  dados.forEach(l=>{
-    const k=l.medico_id;
-    if(!porMed[k]) porMed[k]={nome:l.medico,crm:l.crm||'',h12:0,h24:0,hCustom:0,hTotal:0,plantoes:0,total:0};
-    const h=l.horas||0;
-    const tipo=l.tipo||'';
-    if(tipo.includes('24')) porMed[k].h24+=h;
-    else if(tipo==='Personalizado'||(!tipo.includes('12')&&!tipo.includes('24'))) porMed[k].hCustom+=h;
-    else porMed[k].h12+=h;
-    porMed[k].hTotal+=h; porMed[k].plantoes++; porMed[k].total+=l.honorario||0;
-  });
-  const tTotal=Object.values(porMed).reduce((s,m)=>s+m.hTotal,0);
-  const tHon=Object.values(porMed).reduce((s,m)=>s+m.total,0);
-  let html=`<div class="metrics">
-    <div class="metric"><div class="metric-label">Profissionais</div><div class="metric-val">${Object.keys(porMed).length}</div></div>
-    <div class="metric"><div class="metric-label">Total horas</div><div class="metric-val">${Math.round(tTotal*10)/10}h</div></div>
-    <div class="metric"><div class="metric-label">Total honorários</div><div class="metric-val">${fBRL(tHon)}</div></div>
-  </div>
-  <div class="card"><table><thead><tr>
-    <th>Profissional</th><th>CRM</th><th style="text-align:center;">Plantões</th>
-    <th style="text-align:center;">Horas 12h</th><th style="text-align:center;">Horas 24h</th><th style="text-align:center;">Horas outros</th>
-    <th style="text-align:center;font-weight:700;">Total horas</th><th>Honorários</th>
-  </tr></thead><tbody>`;
-  Object.values(porMed).sort((a,b)=>b.hTotal-a.hTotal).forEach(m=>{
-    html+=`<tr>
-      <td><strong>${m.nome}</strong></td><td class="mono">${m.crm}</td>
-      <td style="text-align:center;">${m.plantoes}</td>
-      <td style="text-align:center;color:var(--green);">${Math.round(m.h12*10)/10}h</td>
-      <td style="text-align:center;color:var(--amber);">${Math.round(m.h24*10)/10}h</td>
-      <td style="text-align:center;color:var(--text3);">${Math.round(m.hCustom*10)/10}h</td>
-      <td style="text-align:center;font-weight:700;font-size:14px;">${Math.round(m.hTotal*10)/10}h</td>
-      <td class="mono" style="color:var(--green);font-weight:600;">${fBRL(m.total)}</td>
-    </tr>`;
-  });
-  html+='</tbody></table></div>';
-  el.innerHTML=html;
-}
-
-// ── FALTAS ────────────────────────────────────────────
-async function gerarRelFaltas(el) {
-  el.innerHTML='<div class="card"><div class="empty">Carregando check-ins...</div></div>';
-  const d1=document.getElementById('rd1').value, d2=document.getElementById('rd2').value;
-  const pid=document.getElementById('rp').value, mid=document.getElementById('rm').value;
-  // Buscar check-ins aprovados no período
-  let pathCI='/rest/v1/checkins?aprovado=eq.true&select=medico_id,projeto_id,feito_em';
-  if(d1) pathCI+=`&feito_em=gte.${d1}T00:00:00`;
-  if(d2) pathCI+=`&feito_em=lte.${d2}T23:59:59`;
-  const checkins=await sb(pathCI)||[];
-  const ciKeys=new Set(checkins.map(c=>`${c.medico_id}_${c.projeto_id}_${c.feito_em?.slice(0,10)}`));
-  // Lançamentos sem check-in
-  let dados=filtrarDadosRel().filter(l=>{
-    const ds=l.data; const ini=new Date(`${ds}T${l.hora_ini||'00:00'}`);
-    return ini < new Date(); // plantão já aconteceu
-  });
-  const faltas=dados.filter(l=>!ciKeys.has(`${l.medico_id}_${l.projeto_id}_${l.data}`));
-  if(!faltas.length){el.innerHTML='<div class="card"><div style="text-align:center;padding:24px;"><div style="font-size:40px;">✅</div><div style="font-size:14px;color:var(--green);font-weight:600;margin-top:8px;">Nenhuma falta registrada no período!</div></div></div>';return;}
-  let html=`<div class="card"><div style="margin-bottom:10px;font-size:13px;color:var(--red);font-weight:600;">❌ ${faltas.length} falta(s) encontrada(s)</div>
-    <table><thead><tr><th>Médico</th><th>CRM</th><th>Projeto</th><th>Data</th><th>Horário</th><th>Tipo</th><th>Honorários perdidos</th></tr></thead><tbody>`;
-  faltas.sort((a,b)=>b.data.localeCompare(a.data)).forEach(l=>{
-    html+=`<tr>
-      <td><strong>${l.medico||'—'}</strong></td><td class="mono">${l.crm||''}</td>
-      <td>${l.projeto||'—'}</td><td class="mono">${fDate(l.data)}</td>
-      <td class="mono">${(l.hora_ini||'').slice(0,5)}–${(l.hora_fim||'').slice(0,5)}</td>
-      <td>${l.tipo||''}</td>
-      <td class="mono" style="color:var(--red);">${fBRL(l.honorario||0)}</td></tr>`;
-  });
-  const totFalta=faltas.reduce((s,l)=>s+(l.honorario||0),0);
-  html+=`</tbody><tfoot><tr style="border-top:1.5px solid var(--border2);">
-    <td colspan="6" style="font-weight:600;padding:8px;">Total honorários perdidos</td>
-    <td class="mono" style="color:var(--red);font-weight:600;">${fBRL(totFalta)}</td></tr></tfoot>
-  </table></div>`;
-  el.innerHTML=html;
-}
-
-// ── ATRASOS ───────────────────────────────────────────
-async function gerarRelAtrasos(el) {
-  el.innerHTML='<div class="card"><div class="empty">Carregando...</div></div>';
-  const d1=document.getElementById('rd1').value, d2=document.getElementById('rd2').value;
-  let pathCI='/rest/v1/checkins?aprovado=eq.true&select=*,medicos(nome,crm),projetos(nome)';
-  if(d1) pathCI+=`&feito_em=gte.${d1}T00:00:00`;
-  if(d2) pathCI+=`&feito_em=lte.${d2}T23:59:59`;
-  const checkins=await sb(pathCI)||[];
-  const atrasos=[];
-  checkins.forEach(ci=>{
-    const lanc=lancamentos.find(l=>l.medico_id===ci.medico_id&&l.projeto_id===ci.projeto_id&&l.data===ci.feito_em?.slice(0,10));
-    if(!lanc) return;
-    const iniPlan=new Date(`${lanc.data}T${lanc.hora_ini||'00:00'}`);
-    const iniReal=new Date(ci.feito_em);
-    const diffMin=Math.round((iniReal-iniPlan)/60000);
-    if(diffMin>15) atrasos.push({...ci, diffMin, lanc});
-  });
-  if(!atrasos.length){el.innerHTML='<div class="card"><div style="text-align:center;padding:24px;"><div style="font-size:40px;">✅</div><div style="font-size:14px;color:var(--green);font-weight:600;margin-top:8px;">Nenhum atraso acima de 15 minutos!</div></div></div>';return;}
-  let html=`<div class="card"><div style="margin-bottom:10px;font-size:13px;color:var(--amber);font-weight:600;">⚠️ ${atrasos.length} atraso(s) acima de 15 minutos</div>
-    <table><thead><tr><th>Médico</th><th>CRM</th><th>Projeto</th><th>Data</th><th>Início previsto</th><th>Check-in</th><th>Atraso</th></tr></thead><tbody>`;
-  atrasos.sort((a,b)=>b.diffMin-a.diffMin).forEach(a=>{
-    const horaReal=new Date(a.feito_em).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
-    html+=`<tr>
-      <td><strong>${a.medicos?.nome||'—'}</strong></td><td class="mono">${a.medicos?.crm||''}</td>
-      <td>${a.projetos?.nome||'—'}</td><td class="mono">${fDate(a.lanc?.data||'')}</td>
-      <td class="mono">${(a.lanc?.hora_ini||'').slice(0,5)}</td><td class="mono">${horaReal}</td>
-      <td style="color:var(--amber);font-weight:700;">+${a.diffMin}min</td></tr>`;
-  });
-  html+='</tbody></table></div>';
-  el.innerHTML=html;
-}
-
-// ── CHECK-INS FORA DA TOLERÂNCIA ─────────────────────
-async function gerarRelCheckinsForaTol(el) {
-  el.innerHTML='<div class="card"><div class="empty">Carregando...</div></div>';
-  const d1=document.getElementById('rd1').value, d2=document.getElementById('rd2').value;
-  let pathCI='/rest/v1/checkins?select=*,medicos(nome,crm),projetos(nome)';
-  if(d1) pathCI+=`&feito_em=gte.${d1}T00:00:00`;
-  if(d2) pathCI+=`&feito_em=lte.${d2}T23:59:59`;
-  const checkins=await sb(pathCI)||[];
-  const fora=[];
-  checkins.forEach(ci=>{
-    const lanc=lancamentos.find(l=>l.medico_id===ci.medico_id&&l.projeto_id===ci.projeto_id&&l.data===ci.feito_em?.slice(0,10));
-    if(!lanc) return;
-    const iniPlan=new Date(`${lanc.data}T${lanc.hora_ini||'00:00'}`);
-    const iniReal=new Date(ci.feito_em);
-    const diffMin=Math.round((iniReal-iniPlan)/60000);
-    const foraRaio=!ci.aprovado;
-    if(diffMin>15||foraRaio) fora.push({...ci, diffMin, foraRaio, lanc});
-  });
-  if(!fora.length){el.innerHTML='<div class="card"><div style="text-align:center;padding:24px;"><div style="font-size:40px;">✅</div><div style="font-size:14px;color:var(--green);font-weight:600;margin-top:8px;">Todos os check-ins dentro da tolerância!</div></div></div>';return;}
-  let html=`<div class="card"><div style="margin-bottom:10px;font-size:13px;font-weight:600;">${fora.length} check-in(s) fora da tolerância</div>
-    <table><thead><tr><th>Médico</th><th>Projeto</th><th>Data</th><th>Hora prevista</th><th>Check-in</th><th>Atraso</th><th>GPS</th><th>Obs</th></tr></thead><tbody>`;
-  fora.sort((a,b)=>new Date(b.feito_em)-new Date(a.feito_em)).forEach(c=>{
-    const horaReal=new Date(c.feito_em).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
-    html+=`<tr>
-      <td><strong>${c.medicos?.nome||'—'}</strong><br><span class="mono" style="font-size:10px;">${c.medicos?.crm||''}</span></td>
-      <td>${c.projetos?.nome||'—'}</td><td class="mono">${fDate(c.lanc?.data||'')}</td>
-      <td class="mono">${(c.lanc?.hora_ini||'').slice(0,5)}</td><td class="mono">${horaReal}</td>
-      <td style="color:${c.diffMin>15?'var(--amber)':'var(--green)'};font-weight:600;">${c.diffMin>0?'+'+c.diffMin+'min':'no prazo'}</td>
-      <td>${c.foraRaio?'❌ Fora':'✅ Ok'}</td>
-      <td style="font-size:11px;color:var(--text3);">${c.obs||''}</td></tr>`;
-  });
-  html+='</tbody></table></div>';
-  el.innerHTML=html;
-}
-
-// ── MÉDICOS CADASTRADOS ───────────────────────────────
-function gerarRelMedicos(el) {
-  let lista=[...medicos];
-  const mid=document.getElementById('rm').value;
-  if(mid) lista=lista.filter(m=>m.id===mid);
-  if(!lista.length){el.innerHTML='<div class="card"><div class="empty">Nenhum médico encontrado.</div></div>';return;}
-  let html=`<div class="card">
-    <div style="margin-bottom:10px;font-size:13px;color:var(--text2);">${lista.length} profissional(is) cadastrado(s)</div>
-    <table><thead><tr><th>Nome</th><th>CRM</th><th>RQE</th><th>Especialidade</th><th>Tipo</th><th>Nascimento</th><th>Telefone</th><th>E-mail</th><th>Dispositivo</th></tr></thead><tbody>`;
-  lista.sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR')).forEach(m=>{
-    const nasc=m.data_nascimento?new Date(m.data_nascimento+'T12:00:00').toLocaleDateString('pt-BR'):'—';
-    html+=`<tr>
-      <td><strong>${m.nome}</strong></td><td class="mono">${m.crm||'—'}</td>
-      <td class="mono">${m.rqe||'—'}</td><td>${m.especialidade||'—'}</td>
-      <td><span class="badge badge-blue">${m.tipo||''}</span></td>
-      <td>${nasc}</td><td>${m.telefone||'—'}</td><td>${m.email||'—'}</td>
-      <td>${m.device_id?'<span class="badge badge-green">✓ Vinculado</span>':'<span class="badge badge-amber">Sem vínculo</span>'}</td>
-    </tr>`;
-  });
-  html+='</tbody></table></div>';
-  el.innerHTML=html;
-}
-
-// ── EXPORTAR XLSX/PDF (usa o relatório atual) ─────────
-function exportarRelXLSX() {
-  const tipo=_relTipoAtivo;
-  const dados=filtrarDadosRel();
-  if(!dados.length&&tipo!=='medicos'){toast('Nenhum dado no período',true);return;}
-  const wb=XLSX.utils.book_new();
-  if(tipo==='medicos'){
-    const rows=[['Nome','CRM','RQE','Especialidade','Tipo','Nascimento','Telefone','E-mail']];
-    medicos.sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR')).forEach(m=>{
-      const nasc=m.data_nascimento?new Date(m.data_nascimento+'T12:00:00').toLocaleDateString('pt-BR'):'';
-      rows.push([m.nome,m.crm||'',m.rqe||'',m.especialidade||'',m.tipo||'',nasc,m.telefone||'',m.email||'']);
-    });
-    XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(rows),'Médicos');
-  } else if(tipo==='horas'){
-    const rows=[['Médico','CRM','Plantões','Horas 12h','Horas 24h','Outros','Total horas','Honorários']];
-    const porMed={};
-    dados.forEach(l=>{
-      if(!porMed[l.medico_id]) porMed[l.medico_id]={nome:l.medico,crm:l.crm||'',h12:0,h24:0,hC:0,hT:0,n:0,tot:0};
-      const h=l.horas||0; const t=l.tipo||'';
-      if(t.includes('24')) porMed[l.medico_id].h24+=h;
-      else if(t==='Personalizado') porMed[l.medico_id].hC+=h;
-      else porMed[l.medico_id].h12+=h;
-      porMed[l.medico_id].hT+=h; porMed[l.medico_id].n++; porMed[l.medico_id].tot+=l.honorario||0;
-    });
-    Object.values(porMed).sort((a,b)=>b.hT-a.hT).forEach(m=>rows.push([m.nome,m.crm,m.n,m.h12,m.h24,m.hC,m.hT,m.tot]));
-    XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(rows),'Horas por Profissional');
-  } else {
-    const rows=[['Data','Médico','CRM','Projeto','Setor','Tipo','Início','Fim','Horas','Honorários']];
-    dados.sort((a,b)=>b.data.localeCompare(a.data)).forEach(l=>rows.push([fDate(l.data),l.medico,l.crm||'',l.projeto,l.setor||'',l.tipo||'',(l.hora_ini||'').slice(0,5),(l.hora_fim||'').slice(0,5),l.horas,l.honorario]));
-    XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(rows),'Relatório');
-  }
-  XLSX.writeFile(wb,'relatorio_'+tipo+'_'+new Date().toISOString().slice(0,10)+'.xlsx');
-  toast('XLSX exportado!');
-}
-
-function exportarRelPDF() {
-  gerarRelatorio();
-  setTimeout(()=>window.print(),500);
-}
-
-
-function switchImpTab(tab){
-  ['med','proj','lanc'].forEach(t=>{
-    const el=document.getElementById('imp-'+t);
-    if(el) el.style.display=t===tab?'block':'none';
-    const btn=document.getElementById('imp-tab-'+t);
-    if(btn) btn.className='btn '+(t===tab?'btn-primary':'btn-ghost');
-  });
-}
-
-function parseCSV(text){
-  text=text.replace(/^\uFEFF/,'').replace(/\r\n/g,'\n').replace(/\r/g,'\n');
-  const lines=text.split('\n').filter(l=>l.trim());
-  if(!lines.length) return[];
-  const cntSemi=(lines[0].match(/;/g)||[]).length, cntComma=(lines[0].match(/,/g)||[]).length;
-  const sep=cntSemi>=cntComma?';':',';
-  return lines.map(l=>{
-    const fields=[];let cur='',inQ=false;
-    for(let i=0;i<l.length;i++){const ch=l[i];if(ch==='"'){inQ=!inQ;}else if(ch===sep&&!inQ){fields.push(cur.trim());cur='';}else{cur+=ch;}}
-    fields.push(cur.trim());
-    return fields.map(f=>f.replace(/^["']|["']$/g,'').trim());
-  });
-}
-
-function detectEncoding(buffer){
-  const bytes=new Uint8Array(buffer);
-  if(bytes[0]===0xEF&&bytes[1]===0xBB&&bytes[2]===0xBF) return 'UTF-8';
-  try{new TextDecoder('UTF-8',{fatal:true}).decode(buffer);return 'UTF-8';}
-  catch(e){return 'windows-1252';}
-}
-
-function handleUploadMed(input){
-  const file=input.files[0];if(!file) return;
-  const reader=new FileReader();
-  reader.onload=async e=>{
-    const enc=detectEncoding(e.target.result);
-    const text=new TextDecoder(enc).decode(e.target.result);
-    const rows=parseCSV(text);
-    if(rows.length<2){toast('Arquivo inválido',true);return;}
-    const hdr=rows[0].map(h=>h.toLowerCase());
-    const nI=hdr.findIndex(h=>h.includes('nome')),cI=hdr.findIndex(h=>h.includes('crm'));
-    const eI=hdr.findIndex(h=>h.includes('esp')),vI=hdr.findIndex(h=>h.includes('valor'));
-    const tI=hdr.findIndex(h=>h.includes('tipo')),cpfI=hdr.findIndex(h=>h.includes('cpf'));
-    if(nI<0||cI<0){toast('Colunas nome e crm não encontradas',true);return;}
-    const novos=[];
-    for(let i=1;i<rows.length;i++){
-      const c=rows[i];if(!c[nI]) continue;
-      novos.push({nome:c[nI],crm:c[cI]||'',especialidade:eI>=0?c[eI]:'',valor_hora:vI>=0?parseFloat(c[vI].replace(',','.'))||0:0,tipo:tI>=0?c[tI]:'Plantonista',cpf:cpfI>=0?c[cpfI]:'',ativo:true});
-    }
-    const prev=document.getElementById('import-preview-med');
-    prev.innerHTML=`<div class="card"><div class="card-title">Pré-visualização — ${novos.length} médico(s)</div>
-      <table><thead><tr><th>Nome</th><th>CRM</th><th>Especialidade</th><th>Tipo</th><th>Valor/h</th></tr></thead><tbody>
-      ${novos.slice(0,6).map(m=>`<tr><td>${m.nome}</td><td class="mono">${m.crm}</td><td>${m.especialidade||'—'}</td><td>${m.tipo}</td><td class="mono">${fBRL(m.valor_hora)}</td></tr>`).join('')}
-      ${novos.length>6?`<tr><td colspan="5" style="color:var(--text3);font-size:12px;">... e mais ${novos.length-6}</td></tr>`:''}
-      </tbody></table>
-      <div style="margin-top:12px;display:flex;gap:8px;">
-        <button class="btn btn-primary" id="imp-med-btn">Importar ${novos.length} médico(s) para Supabase</button>
-        <button class="btn btn-ghost" onclick="document.getElementById('import-preview-med').innerHTML='';document.getElementById('file-upload-med').value='';">Cancelar</button>
-      </div></div>`;
-    document.getElementById('imp-med-btn').onclick=()=>importarMedicosSupabase(novos);
-  };
-  reader.readAsArrayBuffer(file);
-}
-
-async function importarMedicosSupabase(novos){
-  const existCRMs=medicos.map(m=>m.crm);
-  const filtrados=novos.filter(m=>!existCRMs.includes(m.crm));
-  const dup=novos.length-filtrados.length;
-  let ok=0;
-  for(const m of filtrados){
-    const res=await sb('/rest/v1/medicos',{method:'POST',body:JSON.stringify(m)});
-    if(res) ok++;
-  }
-  toast(`${ok} médico(s) importado(s) para Supabase${dup>0?' · '+dup+' duplicado(s) ignorado(s)':''}`);
-  document.getElementById('import-preview-med').innerHTML='';
-  document.getElementById('file-upload-med').value='';
-  await carregarMedicos();
-}
-
-function handleUploadProj(input){
-  const file=input.files[0];if(!file) return;
-  const reader=new FileReader();
-  reader.onload=async e=>{
-    const enc=detectEncoding(e.target.result);
-    const text=new TextDecoder(enc).decode(e.target.result);
-    const rows=parseCSV(text);
-    if(rows.length<2){toast('Arquivo inválido',true);return;}
-    const hdr=rows[0].map(h=>h.toLowerCase());
-    const nI=hdr.findIndex(h=>h.includes('nome'));
-    const ccI=hdr.findIndex(h=>h.includes('codigo')||h.includes('cc'));
-    const coI=hdr.findIndex(h=>h.includes('contratante'));
-    const stI=hdr.findIndex(h=>h.includes('status'));
-    const cnI=hdr.findIndex(h=>h.includes('cnpj'));
-    const ctI=hdr.findIndex(h=>h.includes('contrato'));
-    if(nI<0){toast('Coluna nome não encontrada',true);return;}
-    const novos=[];
-    for(let i=1;i<rows.length;i++){
-      const c=rows[i];if(!c[nI]) continue;
-      const st=stI>=0?c[stI]:'Ativo';
-      novos.push({nome:c[nI],codigo_cc:ccI>=0?c[ccI]:'',contratante:coI>=0?c[coI]:'',status:['Ativo','Encerrado','Em negociação'].includes(st)?st:'Ativo',cnpj:cnI>=0?c[cnI]:'',contrato:ctI>=0?c[ctI]:''});
-    }
-    const prev=document.getElementById('import-preview-proj');
-    prev.innerHTML=`<div class="card"><div class="card-title">Pré-visualização — ${novos.length} projeto(s)</div>
-      <table><thead><tr><th>Nome</th><th>Cód. CC</th><th>Contratante</th><th>Status</th></tr></thead><tbody>
-      ${novos.slice(0,6).map(p=>`<tr><td>${p.nome}</td><td class="mono">${p.codigo_cc||'—'}</td><td>${p.contratante||'—'}</td><td><span class="badge badge-${p.status==='Ativo'?'green':p.status==='Encerrado'?'red':'amber'}">${p.status}</span></td></tr>`).join('')}
-      ${novos.length>6?`<tr><td colspan="4" style="color:var(--text3);font-size:12px;">... e mais ${novos.length-6}</td></tr>`:''}
-      </tbody></table>
-      <div style="margin-top:12px;display:flex;gap:8px;">
-        <button class="btn btn-primary" id="imp-proj-btn">Importar ${novos.length} projeto(s)</button>
-        <button class="btn btn-ghost" onclick="document.getElementById('import-preview-proj').innerHTML='';document.getElementById('file-upload-proj').value='';">Cancelar</button>
-      </div></div>`;
-    document.getElementById('imp-proj-btn').onclick=()=>importarProjetosSupabase(novos);
-  };
-  reader.readAsArrayBuffer(file);
-}
-
-async function importarProjetosSupabase(novos){
-  const existNomes=projetos.map(p=>p.nome.toLowerCase());
-  const filtrados=novos.filter(p=>!existNomes.includes(p.nome.toLowerCase()));
-  const dup=novos.length-filtrados.length;
-  let ok=0;
-  for(const p of filtrados){
-    const res=await sb('/rest/v1/projetos',{method:'POST',body:JSON.stringify(p)});
-    if(res) ok++;
-  }
-  toast(`${ok} projeto(s) importado(s)${dup>0?' · '+dup+' duplicado(s) ignorado(s)':''}`);
-  document.getElementById('import-preview-proj').innerHTML='';
-  document.getElementById('file-upload-proj').value='';
-  await carregarProjetos();
-}
-
-// ─── IMPORTAR LANÇAMENTOS ────────────────────────────────
-function handleUploadLanc(input){
-  const file=input.files[0]; if(!file) return;
-  const reader=new FileReader();
-  reader.onload=async e=>{
-    const enc=detectEncoding(e.target.result);
-    const text=new TextDecoder(enc).decode(e.target.result);
-    const rows=parseCSV(text);
-    if(rows.length<2){toast('Arquivo inválido',true);return;}
-    const hdr=rows[0].map(h=>h.toLowerCase().trim());
-
-    // Mapear colunas
-    const mI=hdr.findIndex(h=>h.includes('medico')||h.includes('médico'));
-    const pI=hdr.findIndex(h=>h.includes('projeto'));
-    const dI=hdr.findIndex(h=>h.includes('data'));
-    const iniI=hdr.findIndex(h=>h.includes('hora_ini')||h.includes('inicio')||h.includes('início'));
-    const fimI=hdr.findIndex(h=>h.includes('hora_fim')||h.includes('fim'));
-    const valI=hdr.findIndex(h=>h.includes('valor'));
-    const tipI=hdr.findIndex(h=>h.includes('tipo'));
-    const setI=hdr.findIndex(h=>h.includes('setor'));
-    const obsI=hdr.findIndex(h=>h.includes('obs'));
-    const codI=hdr.findIndex(h=>h.includes('totvs')||h.includes('codigo'));
-
-    if(mI<0||pI<0||dI<0||iniI<0||fimI<0){
-      toast('Colunas obrigatórias não encontradas: medico, projeto, data, hora_ini, hora_fim',true);return;
-    }
-
-    const novos=[], erros=[];
-    for(let i=1;i<rows.length;i++){
-      const c=rows[i]; if(!c[mI]&&!c[dI]) continue;
-      const nomeMed=(c[mI]||'').trim();
-      const nomeProj=(c[pI]||'').trim();
-
-      // Buscar médico pelo nome (case insensitive)
-      const med=medicos.find(m=>m.nome.toLowerCase()===nomeMed.toLowerCase());
-      const proj=projetos.find(p=>p.nome.toLowerCase()===nomeProj.toLowerCase());
-
-      if(!med){ erros.push(`Linha ${i+1}: médico "${nomeMed}" não encontrado`); continue; }
-      if(!proj){ erros.push(`Linha ${i+1}: projeto "${nomeProj}" não encontrado`); continue; }
-
-      // Normalizar data (aceita dd/mm/aaaa ou aaaa-mm-dd)
-      let data=c[dI]||'';
-      if(data.includes('/')) {
-        const p=data.split('/');
-        if(p.length===3) data=p[2].length===4?`${p[2]}-${p[1].padStart(2,'0')}-${p[0].padStart(2,'0')}`:data;
-      }
-
-      const ini=(c[iniI]||'07:00').slice(0,5);
-      const fim=(c[fimI]||'19:00').slice(0,5);
-      const [hi,mi]=ini.split(':').map(Number),[hf,mf]=fim.split(':').map(Number);
-      let diffMin=(hf*60+mf)-(hi*60+mi);if(diffMin<0)diffMin+=1440;
-      const horas=Math.round(diffMin/60*10)/10;
-
-      const valorStr=(c[valI]||'').replace(/\./g,'').replace(',','.');
-      const honorario=parseFloat(valorStr)||Math.round(horas*(med.valor_hora||0)*100)/100;
-      const valorH=horas>0&&honorario>0?Math.round(honorario/horas*100)/100:(med.valor_hora||0);
-
-      const tipo=tipI>=0&&c[tipI]?c[tipI]:'Diurno 12h';
-
-      novos.push({
-        medico_id:med.id, projeto_id:proj.id,
-        medico:med.nome, crm:med.crm, projeto:proj.nome, projetoCod:proj.codigo_cc||'',
-        data, hora_ini:ini, hora_fim:fim, horas, tipo,
-        setor:setI>=0?c[setI]||'':'',
-        honorario, valor_hora:valorH,
-        obs:obsI>=0?c[obsI]||'':'',
-        codigo_totvs:codI>=0?c[codI]||'':''
-      });
-    }
-
-    const prev=document.getElementById('import-preview-lanc');
-    let html=`<div class="card">
-      <div class="card-title">Pré-visualização — ${novos.length} lançamento(s)</div>`;
-
-    if(erros.length){
-      html+=`<div style="background:var(--red-bg);border:1px solid #e8b8b8;border-radius:var(--radius);padding:10px 12px;margin-bottom:12px;">
-        <div style="font-size:12px;font-weight:600;color:var(--red);margin-bottom:6px;">⚠️ ${erros.length} linha(s) com erro (serão ignoradas):</div>
-        ${erros.slice(0,5).map(e=>`<div style="font-size:11px;color:var(--red);">${e}</div>`).join('')}
-        ${erros.length>5?`<div style="font-size:11px;color:var(--red);">... e mais ${erros.length-5} erros</div>`:''}
-      </div>`;
-    }
-
-    if(novos.length){
-      const tTotal=novos.reduce((s,l)=>s+(l.honorario||0),0);
-      html+=`<div style="display:flex;gap:16px;font-size:13px;color:var(--text2);margin-bottom:12px;">
-        <span>Plantões: <strong>${novos.length}</strong></span>
-        <span>Total honorários: <strong style="color:var(--green);">${fBRL(tTotal)}</strong></span>
-      </div>
-      <div style="overflow-x:auto;">
-      <table><thead><tr><th>Data</th><th>Médico</th><th>Projeto</th><th>Setor</th><th>Tipo</th><th>Horário</th><th>Horas</th><th>Honorários</th></tr></thead><tbody>
-        ${novos.slice(0,10).map(l=>`<tr>
-          <td class="mono">${fDate(l.data)}</td>
-          <td>${l.medico}</td><td>${l.projeto}</td><td>${l.setor||'—'}</td>
-          <td><span class="badge badge-${l.tipo.includes('Noturno')?'purple':l.tipo.includes('24')?'amber':'green'}">${l.tipo}</span></td>
-          <td class="mono">${l.hora_ini}–${l.hora_fim}</td>
-          <td class="mono">${l.horas}h</td>
-          <td class="mono" style="color:var(--green);font-weight:600;">${fBRL(l.honorario)}</td>
-        </tr>`).join('')}
-        ${novos.length>10?`<tr><td colspan="8" style="color:var(--text3);font-size:12px;text-align:center;">... e mais ${novos.length-10} lançamentos</td></tr>`:''}
-      </tbody></table></div>
-      <div style="margin-top:14px;display:flex;gap:8px;align-items:center;">
-        <button class="btn btn-primary" id="imp-lanc-btn">✓ Confirmar e importar ${novos.length} lançamento(s)</button>
-        <button class="btn btn-ghost" onclick="document.getElementById('import-preview-lanc').innerHTML='';document.getElementById('file-upload-lanc').value='';">Cancelar</button>
-      </div>`;
-    } else {
-      html+=`<div class="empty">Nenhum lançamento válido encontrado.</div>`;
-    }
-
-    html+='</div>';
-    prev.innerHTML=html;
-    if(novos.length) document.getElementById('imp-lanc-btn').onclick=()=>importarLancamentosSupabase(novos);
-  };
-  reader.readAsArrayBuffer(file);
-}
-
-async function importarLancamentosSupabase(novos){
-  const btn=document.getElementById('imp-lanc-btn');
-  if(btn){btn.disabled=true;btn.textContent='Importando...';}
-  let ok=0, erros=0;
-  // Envia em lotes de 10 para não sobrecarregar
-  for(let i=0;i<novos.length;i+=10){
-    const lote=novos.slice(i,i+10).map(l=>({
-      medico_id:l.medico_id, projeto_id:l.projeto_id,
-      data:l.data, hora_ini:l.hora_ini, hora_fim:l.hora_fim,
-      horas:l.horas, tipo:l.tipo, setor:l.setor,
-      honorario:l.honorario, valor_hora:l.valor_hora,
-      obs:l.obs, codigo_totvs:l.codigo_totvs
-    }));
-    const res=await sb('/rest/v1/lancamentos',{method:'POST',body:JSON.stringify(lote),headers:{'Prefer':'return=minimal'}});
-    if(res!==null) ok+=lote.length; else erros+=lote.length;
-  }
-  toast(`${ok} lançamento(s) importado(s)!${erros>0?' · '+erros+' com erro':''}`);
-  document.getElementById('import-preview-lanc').innerHTML='';
-  document.getElementById('file-upload-lanc').value='';
-  await carregarLancamentos();
-  carregarDashboard();
-}
-
-// ─── MODELO EXCEL ─────────────────────────────────────────
-function downloadModeloExcel(){
-  const wb=XLSX.utils.book_new();
-  const wsMed=XLSX.utils.aoa_to_sheet([['nome','crm','especialidade','valor_hora','tipo','cpf'],['Dr. João Silva','CRM/RJ 000001','Clínica Geral',150,'Plantonista','000.000.000-00'],['Dra. Maria Santos','CRM/RJ 000002','Pediatria',180,'Plantonista','111.111.111-11']]);
-  wsMed['!cols']=[{wch:30},{wch:20},{wch:20},{wch:12},{wch:14},{wch:18}];
-  XLSX.utils.book_append_sheet(wb,wsMed,'Médicos');
-  const wsProj=XLSX.utils.aoa_to_sheet([['nome','codigo_cc','contratante','status','cnpj','contrato'],['UPA Centro','CC-001','Secretaria Municipal de Saúde','Ativo','00.000.000/0001-00','CTR-2024-001'],['Hospital Regional','CC-002','Governo do Estado','Ativo','11.111.111/0001-11','CTR-2024-002']]);
-  wsProj['!cols']=[{wch:30},{wch:12},{wch:35},{wch:16},{wch:22},{wch:18}];
-  XLSX.utils.book_append_sheet(wb,wsProj,'Projetos');
-  const wsInst=XLSX.utils.aoa_to_sheet([['INSTRUÇÕES'],[''],['ABA MÉDICOS — Obrigatórios: nome, crm'],['ABA PROJETOS — Obrigatório: nome'],[''],['Como importar: salve cada aba como CSV e use a aba Importar CSV']]);
-  XLSX.utils.book_append_sheet(wb,wsInst,'Instruções');
-  // Aba Lançamentos
-  const wsLanc=XLSX.utils.aoa_to_sheet([
-    ['medico','projeto','data','hora_ini','hora_fim','valor_total','tipo','setor','obs','codigo_totvs'],
-    ['Dr. João Silva','UPA Centro','15/04/2026','07:00','19:00',1800,'Diurno 12h','Emergência','','PLANT-MED'],
-    ['Dra. Maria Santos','Hospital Regional','15/04/2026','19:00','07:00',1800,'Noturno 12h','UTI','',''],
-    ['Dr. Carlos Lima','UPA Centro','16/04/2026','07:00','07:00',3600,'24h','Clínica Médica','Plantão duplo',''],
-  ]);
-  wsLanc['!cols']=[{wch:28},{wch:25},{wch:14},{wch:10},{wch:10},{wch:14},{wch:14},{wch:18},{wch:20},{wch:14}];
-  XLSX.utils.book_append_sheet(wb,wsLanc,'Lançamentos');
-
-  // Aba instruções lançamentos
-  const wsInstL=XLSX.utils.aoa_to_sheet([
-    ['INSTRUÇÕES — LANÇAMENTOS'],[''],
-    ['Campo','Obrigatório','Formato / Valores aceitos'],
-    ['medico','SIM','Nome exato do médico cadastrado no sistema'],
-    ['projeto','SIM','Nome exato do projeto cadastrado no sistema'],
-    ['data','SIM','DD/MM/AAAA ou AAAA-MM-DD'],
-    ['hora_ini','SIM','HH:MM (ex: 07:00)'],
-    ['hora_fim','SIM','HH:MM (ex: 19:00)'],
-    ['valor_total','SIM','Valor em reais (ex: 1800 ou 1.800,00)'],
-    ['tipo','não','Diurno 12h · Noturno 12h · 24h · Sobreaviso · Personalizado'],
-    ['setor','não','Texto livre (ex: Emergência, UTI)'],
-    ['obs','não','Texto livre'],
-    ['codigo_totvs','não','Código do lançamento no TOTVS'],
-    [''],
-    ['ATENÇÃO: O nome do médico e do projeto deve ser idêntico ao cadastrado no sistema.'],
-    ['Se não encontrar, o lançamento será ignorado e aparecerá como erro na pré-visualização.'],
-  ]);
-  wsInstL['!cols']=[{wch:18},{wch:12},{wch:55}];
-  XLSX.utils.book_append_sheet(wb,wsInstL,'Instruções Lançamentos');
-
-  XLSX.writeFile(wb,'modelo_importacao_plantaoplus.xlsx');
-  toast('Modelo Excel baixado!');
-}
-
-// ─── EXPORTAR TOTVS ─────────────────────────────────────
-function selectLayout(n){
-  selectedLayout=n;[1,2,3,4].forEach(i=>document.getElementById('lay-'+i).classList.remove('selected'));
-  document.getElementById('lay-'+n).classList.add('selected');renderLayoutPreview();
-}
-function renderLayoutPreview(){
-  const el=document.getElementById('layout-preview');
-  if(el) el.textContent=layouts[selectedLayout].cols.join('  ·  ');
-}
-function filtrarDados(){
-  const d1=document.getElementById('ex-d1').value, d2=document.getElementById('ex-d2').value;
-  const pid=document.getElementById('ex-proj')?.value||'';
-  const mid=document.getElementById('ex-med')?.value||'';
-  let d=[...lancamentos];
-  if(d1)d=d.filter(l=>l.data>=d1);
-  if(d2)d=d.filter(l=>l.data<=d2);
-  if(pid)d=d.filter(l=>l.projeto_id===pid);
-  if(mid)d=d.filter(l=>l.medico_id===mid);
-  return d;
-}
-function popExportSelects(){
-  const sp=document.getElementById('ex-proj'), sm=document.getElementById('ex-med');
-  if(sp)sp.innerHTML='<option value="">Todos os projetos</option>'+sortedProjetos().map(p=>`<option value="${p.id}">${p.nome}</option>`).join('');
-  if(sm)sm.innerHTML='<option value="">Todos os médicos</option>'+sortedMedicos().map(m=>`<option value="${m.id}">${m.nome}</option>`).join('');
-}
-function agruparParaExport(dados){
-  const porProjeto={};
-  dados.forEach(l=>{
-    const proj=l.projeto||'Sem projeto';
-    if(!porProjeto[proj]) porProjeto[proj]={cod:l.projetoCod||'',grupos:{}};
-    const turno=l.tipo?.includes('Noturno')?'Noturno':l.tipo?.includes('24')?'24h':'Diurno';
-    const chave=`${l.medico}||${l.crm||''}||${l.horas}||${turno}||${l.setor||''}`;
-    if(!porProjeto[proj].grupos[chave]) porProjeto[proj].grupos[chave]={medico:l.medico,crm:l.crm||'',cpf:l.cpf||'',horas:l.horas,turno,setor:l.setor||'',qtd:0,total:0};
-    porProjeto[proj].grupos[chave].qtd++;
-    porProjeto[proj].grupos[chave].total+=l.honorario||0;
-  });
-  return porProjeto;
-}
-function buildRowExport(l,n){
-  const comp=(l.data||'').slice(0,7).replace('-','/');
-  const turno=l.tipo?.includes('Noturno')?'Noturno':l.tipo?.includes('24')?'24h':'Diurno';
-  if(n===1)return[comp,l.cpf||'',l.medico,l.crm||'','PLANTAO',l.horas,l.honorario,l.projetoCod||'',l.obs||''];
-  if(n===2)return[fDate(l.data),fDate(l.data),l.medico,l.cpf||'',l.honorario,l.projetoCod||'',l.tipo+' - '+l.projeto,l.code||''];
-  if(n===3)return[fDate(l.data),l.medico,l.cpf||'',l.projetoCod||'',l.horas,'NORMAL',l.valorH||0,l.honorario];
-  return[fDate(l.data),l.medico,l.crm||'',l.cpf||'',l.projeto,l.projetoCod||'',l.tipo,(l.hora_ini||'').slice(0,5),(l.hora_fim||'').slice(0,5),l.horas,l.valorH||0,l.honorario,l.obs||''];
-}
-function exportarXLSX(){
-  const dados=filtrarDados();if(!dados.length){toast('Nenhum dado no período',true);return;}
-  const porProjeto=agruparParaExport(dados);
-  const wb=XLSX.utils.book_new();
-  const rows=[['PROJETO','MÉDICO','CRM','HORAS/PLANTÃO','TURNO','SETOR','QTD_PLANTÕES','TOTAL_HONORÁRIOS']];
-  let totalGeral=0,totalPlantoes=0;
-  Object.entries(porProjeto).sort((a,b)=>a[0].localeCompare(b[0],'pt-BR')).forEach(([proj,pd])=>{
-    const grupos=Object.values(pd.grupos).sort((a,b)=>a.medico.localeCompare(b.medico,'pt-BR'));
-    const projTotal=grupos.reduce((s,g)=>s+g.total,0), projQtd=grupos.reduce((s,g)=>s+g.qtd,0);
-    grupos.forEach(g=>rows.push([proj,g.medico,g.crm,g.horas+'h',g.turno,g.setor||'',g.qtd,Math.round(g.total*100)/100]));
-    rows.push(['TOTAL — '+proj.toUpperCase(),'','','','','',projQtd,Math.round(projTotal*100)/100]);
-    rows.push([]);totalGeral+=projTotal;totalPlantoes+=projQtd;
-  });
-  rows.push(['TOTAL GERAL','','','','','',totalPlantoes,Math.round(totalGeral*100)/100]);
-  const ws=XLSX.utils.aoa_to_sheet(rows);
-  ws['!cols']=[{wch:28},{wch:28},{wch:18},{wch:14},{wch:10},{wch:18},{wch:14},{wch:18}];
-  XLSX.utils.book_append_sheet(wb,ws,'Relatório Agrupado');
-  const rowsDet=[['DATA','MÉDICO','CRM','PROJETO','SETOR','TURNO','HORA INI','HORA FIM','HORAS','HONORÁRIOS']];
-  dados.sort((a,b)=>(a.projeto||'').localeCompare(b.projeto||'')||b.data.localeCompare(a.data)).forEach(l=>{
-    const turno=l.tipo?.includes('Noturno')?'Noturno':l.tipo?.includes('24')?'24h':'Diurno';
-    rowsDet.push([fDate(l.data),l.medico,l.crm||'',l.projeto,l.setor||'',turno,(l.hora_ini||'').slice(0,5),(l.hora_fim||'').slice(0,5),l.horas,l.honorario]);
-  });
-  const wsDet=XLSX.utils.aoa_to_sheet(rowsDet);
-  wsDet['!cols']=[{wch:12},{wch:28},{wch:18},{wch:28},{wch:18},{wch:10},{wch:8},{wch:8},{wch:7},{wch:14}];
-  XLSX.utils.book_append_sheet(wb,wsDet,'Lançamentos Detalhados');
-  XLSX.writeFile(wb,'relatorio_'+new Date().toISOString().slice(0,10)+'.xlsx');
-  toast('XLSX exportado com 2 abas!');
-}
-function exportarCSV(){
-  const dados=filtrarDados();if(!dados.length){toast('Nenhum dado no período',true);return;}
-  const porProjeto=agruparParaExport(dados);
-  const rows=[['PROJETO','MÉDICO','CRM','HORAS/PLANTÃO','TURNO','SETOR','QTD_PLANTÕES','TOTAL_HONORÁRIOS']];
-  Object.entries(porProjeto).sort((a,b)=>a[0].localeCompare(b[0],'pt-BR')).forEach(([proj,pd])=>{
-    Object.values(pd.grupos).sort((a,b)=>a.medico.localeCompare(b.medico,'pt-BR')).forEach(g=>{
-      rows.push([proj,g.medico,g.crm,g.horas+'h',g.turno,g.setor||'',g.qtd,fNum(g.total)]);
-    });
-    const t=Object.values(pd.grupos).reduce((s,g)=>s+g.total,0),q=Object.values(pd.grupos).reduce((s,g)=>s+g.qtd,0);
-    rows.push(['TOTAL — '+proj,'','','','','',q,fNum(t)]);rows.push([]);
-  });
-  const csv=rows.map(r=>r.map(v=>`"${v??''}"`).join(';')).join('\n');
-  const blob=new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8;'});
-  const url=URL.createObjectURL(blob),a=document.createElement('a');
-  a.href=url;a.download='relatorio_'+new Date().toISOString().slice(0,10)+'.csv';a.click();URL.revokeObjectURL(url);
-  toast('CSV exportado!');
-}
-function exportarPDF(){
-  const dados=filtrarDados();if(!dados.length){toast('Nenhum dado no período',true);return;}
-  const porProjeto=agruparParaExport(dados);
-  const d1=document.getElementById('ex-d1').value,d2=document.getElementById('ex-d2').value;
-  const periodo=d1&&d2?fDate(d1)+' a '+fDate(d2):'Todos os períodos';
-  const tR=dados.reduce((s,l)=>s+(l.honorario||0),0);
-  const blocos=Object.entries(porProjeto).sort((a,b)=>a[0].localeCompare(b[0],'pt-BR')).map(([proj,pd])=>{
-    const grupos=Object.values(pd.grupos).sort((a,b)=>a.medico.localeCompare(b.medico,'pt-BR'));
-    const projTotal=grupos.reduce((s,g)=>s+g.total,0),projQtd=grupos.reduce((s,g)=>s+g.qtd,0),projH=grupos.reduce((s,g)=>s+g.horas*g.qtd,0);
-    return `<div class="proj-block"><div class="proj-header"><span class="proj-nome">📁 ${proj.toUpperCase()}</span><span class="proj-meta">${projQtd} plantão(ões) · ${Math.round(projH*10)/10}h · <strong>${fBRL(projTotal)}</strong></span></div>
-      <table><thead><tr><th>Médico / CRM</th><th>Horas/plantão</th><th>Turno</th><th>Setor</th><th>Qtd</th><th>Total</th></tr></thead>
-      <tbody>${grupos.map(g=>`<tr><td><strong>${g.medico}</strong><br><span style="font-size:9px;color:#999;">${g.crm}</span></td><td>${g.horas}h</td><td><span class="badge badge-${g.turno==='Noturno'?'p':g.turno==='24h'?'a':'g'}">${g.turno}</span></td><td>${g.setor||'—'}</td><td style="text-align:center;">${g.qtd}</td><td style="text-align:right;color:#2d7a3a;font-weight:700;">${fBRL(Math.round(g.total*100)/100)}</td></tr>`).join('')}</tbody>
-      <tfoot><tr><td colspan="4"><strong>Total do projeto</strong></td><td style="text-align:center;"><strong>${projQtd}</strong></td><td style="text-align:right;color:#2d7a3a;font-weight:700;"><strong>${fBRL(projTotal)}</strong></td></tr></tfoot>
-      </table></div>`;
-  }).join('');
-  const html=`<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>Relatório PlantãoPro</title>
-  <style>*{box-sizing:border-box;margin:0;padding:0;}body{font-family:Arial,sans-serif;font-size:11px;padding:24px;}h1{font-size:16px;font-weight:700;margin-bottom:3px;}.sub{font-size:10px;color:#777;margin-bottom:16px;}.summary{background:#f5f5f5;padding:10px 14px;border-radius:6px;margin-bottom:18px;font-size:12px;}.proj-block{margin-bottom:18px;page-break-inside:avoid;}.proj-header{display:flex;justify-content:space-between;background:#fdf6e3;border-left:4px solid #e6a817;padding:8px 12px;border-radius:4px 4px 0 0;}.proj-nome{font-size:12px;font-weight:700;}.proj-meta{font-size:11px;color:#555;}table{width:100%;border-collapse:collapse;}th{background:#1a5fad;color:#fff;font-size:9px;padding:5px 8px;text-align:left;}td{padding:6px 8px;border-bottom:0.5px solid #e0e0e0;font-size:10px;}tfoot td{border-top:2px solid #ccc;background:#f5f5f5;font-weight:700;}.badge{display:inline-block;padding:1px 6px;border-radius:10px;font-size:9px;font-weight:700;}.badge-g{background:#e8f5eb;color:#2d7a3a;}.badge-p{background:#f0eeff;color:#5040a0;}.badge-a{background:#fdf3e0;color:#8a5500;}.footer{margin-top:18px;font-size:9px;color:#aaa;border-top:0.5px solid #e0e0e0;padding-top:8px;text-align:right;}@page{margin:1.5cm;}</style>
-  </head><body>
-  <h1>Relatório de Produção Médica — PlantãoPro</h1>
-  <div class="sub">Período: ${periodo} · Gerado em: ${new Date().toLocaleString('pt-BR')}</div>
-  <div class="summary">Total geral: <strong>${fBRL(tR)}</strong> · ${dados.length} lançamento(s)</div>
-  ${blocos}
-  <div class="footer">PlantãoPro · ${new Date().toLocaleString('pt-BR')}</div>
-  </body></html>`;
-  const win=window.open('','_blank');
-  if(win){win.document.write(html);win.document.close();setTimeout(()=>{win.focus();win.print();},500);toast('PDF aberto!');}
-}
-function previewExport(){
-  const dados=filtrarDados(), el=document.getElementById('export-preview-area');
-  if(!dados.length){el.innerHTML='<div class="card"><div class="empty">Nenhum dado no período.</div></div>';return;}
-  const porProjeto=agruparParaExport(dados);
-  let html='';
-  Object.entries(porProjeto).sort((a,b)=>a[0].localeCompare(b[0],'pt-BR')).forEach(([proj,pd])=>{
-    const grupos=Object.values(pd.grupos).sort((a,b)=>a.medico.localeCompare(b.medico,'pt-BR'));
-    const projTotal=grupos.reduce((s,g)=>s+g.total,0),projQtd=grupos.reduce((s,g)=>s+g.qtd,0);
-    html+=`<div class="card" style="margin-bottom:12px;">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
-        <div class="card-title" style="margin-bottom:0;">📁 ${proj}</div>
-        <div style="font-size:12px;color:var(--text2);">${projQtd} plantão(ões) · <span class="mono" style="color:var(--green);font-weight:600;">${fBRL(projTotal)}</span></div>
-      </div>
-      <table><thead><tr><th>Médico / CRM</th><th>Horas/plantão</th><th>Turno</th><th>Setor</th><th style="text-align:center;">Qtd</th><th>Total</th></tr></thead><tbody>
-        ${grupos.map(g=>`<tr><td>${g.medico}<br><span class="mono" style="font-size:11px;color:var(--text3);">${g.crm}</span></td><td class="mono">${g.horas}h</td><td><span class="badge badge-${g.turno==='Noturno'?'purple':g.turno==='24h'?'amber':'green'}">${g.turno}</span></td><td>${g.setor||'—'}</td><td class="mono" style="text-align:center;">${g.qtd}</td><td class="mono" style="color:var(--green);font-weight:600;">${fBRL(Math.round(g.total*100)/100)}</td></tr>`).join('')}
-        <tr style="border-top:1.5px solid var(--border2);"><td colspan="4" style="font-size:12px;font-weight:600;color:var(--text2);">Total do projeto</td><td class="mono" style="text-align:center;font-weight:600;">${projQtd}</td><td class="mono" style="color:var(--green);font-weight:600;">${fBRL(projTotal)}</td></tr>
-      </tbody></table></div>`;
-  });
-  el.innerHTML=html;
-}
-
-</script>
-</body>
-</html>
