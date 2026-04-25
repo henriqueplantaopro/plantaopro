@@ -3967,6 +3967,25 @@ async function gerarRemessa() {
   const itensValidos = _fechItens.filter(i => i.medicos?.pix_chave && i.valor_total > 0);
   if (!itensValidos.length) { toast('Nenhum profissional com PIX cadastrado', true); return; }
 
+  // Validar CPFs matematicamente antes de gerar
+  const cpfInvalidos = itensValidos.filter(i => {
+    if (i.medicos?.pix_tipo !== 'CPF') return false;
+    const cpf = (i.medicos?.pix_chave||'').replace(/\D/g,'');
+    if (cpf.length !== 11 || new Set(cpf).size === 1) return true;
+    let soma = 0;
+    for (let j = 0; j < 9; j++) soma += parseInt(cpf[j]) * (10 - j);
+    let d1 = (soma * 10) % 11; if (d1 === 10) d1 = 0;
+    soma = 0;
+    for (let j = 0; j < 10; j++) soma += parseInt(cpf[j]) * (11 - j);
+    let d2 = (soma * 10) % 11; if (d2 === 10) d2 = 0;
+    return cpf[9] !== String(d1) || cpf[10] !== String(d2);
+  });
+
+  if (cpfInvalidos.length > 0) {
+    const nomes = cpfInvalidos.map(i => i.medicos?.nome + ' (CPF: ' + i.medicos?.pix_chave + ')').join('\n');
+    if (!confirm('⚠️ ' + cpfInvalidos.length + ' médico(s) com CPF inválido — o Bradesco irá rejeitar:\n\n' + nomes + '\n\nContinuar assim mesmo?')) return;
+  }
+
   const agora   = new Date();
   const totLote = itensValidos.reduce((s,i) => s+i.valor_total, 0);
   const qtRegsLote = itensValidos.length * 2 + 2;
