@@ -2999,7 +2999,7 @@ function renderMedListaMR(filtro='', espFiltro='') {
   if (!lista.length) { el.innerHTML='<div style="padding:10px;color:var(--text3);font-size:13px;">Nenhum médico encontrado</div>'; return; }
   el.innerHTML = lista.map(m => `
     <div class="mr-med-item" id="mrmi-${m.id}" onclick="toggleMedMR('${m.id}')">
-      <input type="checkbox" id="mrchk-${m.id}" value="${m.id}" onclick="event.stopPropagation()" onchange="toggleMedMR('${m.id}')">
+      <input type="checkbox" id="mrchk-${m.id}" value="${m.id}" onclick="event.stopPropagation()" onchange="toggleMedMR('${m.id}', this.checked)">
       <div>
         <div style="font-weight:500;">${m.nome}</div>
         <div style="font-size:11px;color:var(--text3);font-family:monospace;">${m.crm||''}</div>
@@ -3008,11 +3008,12 @@ function renderMedListaMR(filtro='', espFiltro='') {
   atualizarCountMR();
 }
 
-function toggleMedMR(id) {
+function toggleMedMR(id, forcarEstado) {
   const chk = document.getElementById('mrchk-'+id);
   const row = document.getElementById('mrmi-'+id);
   if (!chk || !row) return;
-  chk.checked = !chk.checked;
+  // Se chamado pelo div (click), inverter. Se chamado pelo checkbox (onchange), usar estado atual
+  if (forcarEstado === undefined) chk.checked = !chk.checked;
   row.classList.toggle('selecionado', chk.checked);
   atualizarCountMR();
 }
