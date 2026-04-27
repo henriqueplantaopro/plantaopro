@@ -595,27 +595,23 @@ tr:hover td{background:var(--bg3);}
 
   <!-- LANÇAMENTOS -->
   <div id="tab-lancamentos" class="section">
-    <div class="page-title">Lançamentos</div>
-    <div class="page-sub">Registro de plantões</div>
-    <div class="card">
-      <div class="card-title">Novo lançamento</div>
-      <div class="form-row"><div class="form-group"><label>Médico</label><select id="lm"><option value="">Selecione...</option></select></div><div class="form-group"><label>Projeto</label><select id="lp"><option value="">Selecione...</option></select></div></div>
-      <div class="form-row four">
-        <div class="form-group"><label>Data</label><input id="ld" type="date"></div>
-        <div class="form-group"><label>Início</label><input id="li" type="time" value="07:00"></div>
-        <div class="form-group"><label>Fim</label><input id="lf" type="time" value="19:00"></div>
-        <div class="form-group"><label>Tipo</label><select id="lt"><option>Diurno 12h</option><option>Noturno 12h</option><option>24h</option><option>Fim de Semana Diurno</option><option>Fim de Semana Noturno</option><option>Rotina Manhã</option><option>Rotina Tarde</option><option>Sobreaviso</option><option>Plantão 4 Semanas</option><option>Plantão 5 Semanas</option><option>Personalizado</option></select></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+      <div>
+        <div class="page-title" style="margin-bottom:0;">Lançamentos</div>
+        <div class="page-sub">Registro de plantões</div>
       </div>
-      <div class="form-row four">
-        <div class="form-group"><label>Valor total (R$)</label><input id="lval" type="text" placeholder="1.800,00" oninput="updatePreviewLanc()"></div>
-        <div class="form-group"><label>Setor</label><input id="lsetor" type="text" placeholder="Emergência"></div>
-        <div class="form-group"><label>Observações</label><input id="lo" type="text" placeholder="Opcional"></div>
-        <div class="form-group"><label>Código TOTVS</label><input id="lcode" type="text" placeholder="PLANT-MED"></div>
-      </div>
-      <div id="l-preview" style="font-size:13px;color:var(--text2);padding:8px 12px;background:var(--bg3);border-radius:var(--radius);margin-bottom:10px;display:none;"></div>
-      <button class="btn btn-primary" onclick="addLancamento()">+ Registrar plantão</button>
+      <button class="btn btn-primary" onclick="abrirLancamentoRapido(new Date().toISOString().slice(0,10),'')">+ Novo plantão</button>
     </div>
-    <div class="card"><div class="card-title">Plantões registrados</div><div id="lanc-lista"><div class="empty">Carregando...</div></div></div>
+    <div class="card" style="padding:12px 16px;margin-bottom:12px;">
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;">
+        <div class="form-group" style="margin:0;flex:1;min-width:160px;"><label>Médico</label><select id="lf-med" onchange="filtrarLancamentos()"><option value="">Todos</option></select></div>
+        <div class="form-group" style="margin:0;flex:1;min-width:160px;"><label>Projeto</label><select id="lf-proj" onchange="filtrarLancamentos()"><option value="">Todos</option></select></div>
+        <div class="form-group" style="margin:0;"><label>De</label><input id="lf-d1" type="date" onchange="filtrarLancamentos()"></div>
+        <div class="form-group" style="margin:0;"><label>Até</label><input id="lf-d2" type="date" onchange="filtrarLancamentos()"></div>
+        <button class="btn btn-ghost btn-sm" onclick="limparFiltrosLanc()">Limpar</button>
+      </div>
+    </div>
+    <div class="card"><div id="lanc-lista"><div class="empty">Carregando...</div></div></div>
   </div>
 
   <!-- LANÇAMENTO EM LOTE -->
@@ -1557,6 +1553,7 @@ async function carregarLancamentos(silencioso=false) {
     projeto: l.projetos?.nome || '',
   }));
   if (!silencioso) renderLancamentos();
+  else { const el=document.getElementById('lanc-lista'); if(el&&lancamentos.length) renderLancamentos(); }
   // Carregar nomes dos aprovados para plantões abertos
   carregarNomesAprovados();
 }
@@ -2067,10 +2064,14 @@ async function delProjeto(id) {
 
 // ── SELECTS ───────────────────────────────────────────
 function popLancSelects() {
+  // selects antigos (mantidos por compatibilidade)
   const sm = document.getElementById('lm'), sp = document.getElementById('lp');
-  if(!sm||!sp) return;
-  sm.innerHTML = '<option value="">Selecione...</option>' + [...medicos].sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR')).map(m=>`<option value="${m.id}">${m.nome}</option>`).join('');
-  sp.innerHTML = '<option value="">Selecione...</option>' + [...projetos].sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR')).map(p=>`<option value="${p.id}">${p.nome}</option>`).join('');
+  if(sm) sm.innerHTML = '<option value="">Selecione...</option>' + sortedMedicos().map(m=>`<option value="${m.id}">${m.nome}</option>`).join('');
+  if(sp) sp.innerHTML = '<option value="">Selecione...</option>' + sortedProjetos().map(p=>`<option value="${p.id}">${p.nome}</option>`).join('');
+  // filtros da nova aba
+  const fm = document.getElementById('lf-med'), fp = document.getElementById('lf-proj');
+  if(fm) fm.innerHTML = '<option value="">Todos os médicos</option>' + sortedMedicos().map(m=>`<option value="${m.id}">${m.nome}</option>`).join('');
+  if(fp) fp.innerHTML = '<option value="">Todos os projetos</option>' + sortedProjetos().map(p=>`<option value="${p.id}">${p.nome}</option>`).join('');
 }
 function popCiSelects() {
   const sp = document.getElementById('ci-proj'), sm = document.getElementById('ci-med');
@@ -2447,7 +2448,7 @@ function showTab(id,el){
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
   document.getElementById('tab-'+id).classList.add('active');
   if(el) el.classList.add('active');
-  if(id==='lancamentos') popLancSelects();
+  if(id==='lancamentos') initLancamentos();
   if(id==='checkins'){ popCiSelects(); popCiProjPresenca(); document.getElementById('ci-data-p').value=hoje_str(); carregarPresenca(); }
   if(id==='relatorios'){ popRelSelects(); }
   if(id==='calendario'){ popCalSelects(); switchCalTab(_calTabAtiva||'semanal'); }
@@ -2802,7 +2803,15 @@ function renderCal() {
       return `<div class="cal-event ${cls}" title="${l.medico||''} · ${l.projeto||''}">${(l.medico||'').split(' ')[0]}</div>`;
     }).join('');
     if (evts.length > 3) ev += `<div style="font-size:10px;color:var(--text3);">+${evts.length - 3} mais</div>`;
-    html += `<div class="cal-day${isToday?' today':''}${evts.length?' has-events':''}" onclick="showDayDetailCal('${ds}')"><div class="cal-day-num">${d}</div>${ev}</div>`;
+    html += `<div class="cal-day${isToday?' today':''}${evts.length?' has-events':''}" onclick="showDayDetailCal('${ds}')">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <div class="cal-day-num">${d}</div>
+          <button onclick="event.stopPropagation();abrirLancamentoRapido('${ds}','')" title="Adicionar plantão"
+            style="background:none;border:none;cursor:pointer;color:var(--text3);font-size:16px;line-height:1;padding:0 2px;border-radius:4px;opacity:0.6;"
+            onmouseenter="this.style.opacity='1';this.style.color='var(--blue)'"
+            onmouseleave="this.style.opacity='0.6';this.style.color='var(--text3)'">+</button>
+        </div>
+        ${ev}</div>`;
   }
   if (grid) grid.innerHTML = html;
   const det = document.getElementById('cal-detail');
@@ -2818,9 +2827,8 @@ function showDayDetailCal(ds) {
   if (!evts.length) return;
   const det = document.getElementById('cal-detail');
   document.getElementById('cal-detail-title').textContent = 'Plantões em ' + fDate(ds);
-  document.getElementById('cal-detail-body').innerHTML = '<table><thead><tr><th>Médico</th><th>Projeto</th><th>Setor</th><th>Tipo</th><th>Horário</th><th>Horas</th><th>Honorários</th></tr></thead><tbody>' +
-    evts.map(l => `<tr><td>${l.medico||''}</td><td>${l.projeto||''}</td><td>${l.setor||'—'}</td><td>${l.tipo||''}</td><td class="mono">${(l.hora_ini||'').slice(0,5)}–${(l.hora_fim||'').slice(0,5)}</td><td class="mono">${l.horas}h</td><td class="mono">${fBRL(l.honorario)}</td></tr>`).join('') +
-    '</tbody></table>';
+  const rowsDetail = evts.map(l => '<tr><td>'+l.medico+'</td><td>'+l.projeto+'</td><td>'+(l.setor||'—')+'</td><td>'+(l.tipo||'')+'</td><td class="mono">'+((l.hora_ini||'').slice(0,5))+'–'+((l.hora_fim||'').slice(0,5))+'</td><td class="mono">'+l.horas+'h</td><td class="mono">'+fBRL(l.honorario||0)+'</td></tr>').join('');
+  document.getElementById('cal-detail-body').innerHTML = '<table><thead><tr><th>Médico</th><th>Projeto</th><th>Setor</th><th>Tipo</th><th>Horário</th><th>Horas</th><th>Honorários</th></tr></thead><tbody>' + rowsDetail + '</tbody></table>';
   det.style.display = 'block';
   det.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
@@ -5404,6 +5412,74 @@ async function renderGrafStatus() {
       <span style="color:var(--text3);font-size:11px;">(${pct(val)}%)</span>
     </div>`
   ).join('') + `<div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);font-size:11px;color:var(--text3);">Total: ${total} plantões · ${d1} a ${d2}</div>`;
+}
+
+
+// ─── ABA LANÇAMENTOS (novo visual) ───────────────────
+function initLancamentos() {
+  // Popular selects de filtro
+  const sm = document.getElementById('lf-med');
+  const sp = document.getElementById('lf-proj');
+  if (sm) sm.innerHTML = '<option value="">Todos os médicos</option>' +
+    sortedMedicos().map(m=>`<option value="${m.id}">${m.nome}</option>`).join('');
+  if (sp) sp.innerHTML = '<option value="">Todos os projetos</option>' +
+    sortedProjetos().map(p=>`<option value="${p.id}">${p.nome}</option>`).join('');
+  renderLancamentos();
+}
+
+function filtrarLancamentos() {
+  renderLancamentos();
+}
+
+function limparFiltrosLanc() {
+  ['lf-med','lf-proj','lf-d1','lf-d2'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  renderLancamentos();
+}
+
+function renderLancamentos() {
+  const el = document.getElementById('lanc-lista');
+  if (!el) return;
+  const mid  = document.getElementById('lf-med')?.value  || '';
+  const pid  = document.getElementById('lf-proj')?.value || '';
+  const d1   = document.getElementById('lf-d1')?.value   || '';
+  const d2   = document.getElementById('lf-d2')?.value   || '';
+  let lista = [...lancamentos];
+  if (mid) lista = lista.filter(l => l.medico_id === mid);
+  if (pid) lista = lista.filter(l => l.projeto_id === pid);
+  if (d1)  lista = lista.filter(l => l.data >= d1);
+  if (d2)  lista = lista.filter(l => l.data <= d2);
+  lista = lista.sort((a,b) => b.data.localeCompare(a.data));
+  if (!lista.length) { el.innerHTML = '<div class="empty">Nenhum lançamento encontrado.</div>'; return; }
+  el.innerHTML = `<table><thead><tr>
+    <th>Data</th><th>Médico</th><th>Projeto</th><th>Tipo</th><th>Horário</th><th>Horas</th><th>Honorários</th><th>Setor</th><th></th>
+  </tr></thead><tbody>` +
+  lista.map(l => `<tr>
+    <td class="mono">${fDate(l.data)}</td>
+    <td><strong>${l.medico||'—'}</strong><br><span style="font-size:11px;color:var(--text3);">${l.crm||''}</span></td>
+    <td>${l.projeto||'—'}</td>
+    <td><span class="badge ${l.tipo?.includes('Noturno')?'badge-purple':l.tipo?.includes('24')?'badge-amber':'badge-green'}">${l.tipo||'—'}</span></td>
+    <td class="mono">${(l.hora_ini||'').slice(0,5)}–${(l.hora_fim||'').slice(0,5)}</td>
+    <td class="mono">${l.horas}h</td>
+    <td class="mono" style="color:var(--green);font-weight:600;">${fBRL(l.honorario||0)}</td>
+    <td style="font-size:12px;">${l.setor||'—'}</td>
+    <td><button class="btn btn-danger btn-sm" onclick="delLanc('${l.id}')">✕</button></td>
+  </tr>`).join('') + '</tbody></table>';
+}
+
+async function delLanc(id) {
+  if (!confirm('Remover este lançamento?')) return;
+  const res = await fetch(SUPABASE_URL+'/rest/v1/lancamentos?id=eq.'+id, {
+    method:'DELETE',
+    headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Prefer':'return=minimal'}
+  });
+  if (res.ok||res.status===204) {
+    lancamentos = lancamentos.filter(l=>l.id!==id&&l.id!=id);
+    renderLancamentos();
+    toast('Lançamento removido!');
+  } else toast('Erro ao remover', true);
 }
 
 </script>
