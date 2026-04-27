@@ -5311,9 +5311,9 @@ async function renderGrafPontual(d1, d2) {
   // Legenda customizada
   const leg = document.getElementById('graf-pontual-legend');
   if (leg) leg.innerHTML = [
-    {label:'✅ No horário', val:noHorario, cor:'#2ecc71'},
-    {label:'⏰ Atrasados',  val:atrasados, cor:'#f39c12'},
-    {label:'❌ Faltas',     val:faltas,    cor:'#e74c3c'},
+    {label:'No horário', val:noHorario, cor:'#2ecc71'},
+    {label:'Atrasados',  val:atrasados, cor:'#f39c12'},
+    {label:'Faltas',     val:faltas,    cor:'#e74c3c'},
   ].map(({label, val, cor}) =>
     `<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
       <span style="width:12px;height:12px;border-radius:50%;background:${cor};flex-shrink:0;display:inline-block;"></span>
@@ -5368,9 +5368,9 @@ async function renderGrafStatus() {
 
   const leg = document.getElementById('graf-status-legend');
   if (leg) leg.innerHTML = [
-    {label:'✅ Confirmados',       val:confirmados, cor:'#1a5fad'},
-    {label:'⏳ Não confirmados',   val:naoConfirm,  cor:'#f39c12'},
-    {label:'🔓 Vagas abertas',     val:comVaga,     cor:'#9b59b6'},
+    {label:'Confirmados',       val:confirmados, cor:'#1a5fad'},
+    {label:'Não confirmados',   val:naoConfirm,  cor:'#f39c12'},
+    {label:'Vagas abertas',     val:comVaga,     cor:'#9b59b6'},
   ].map(({label, val, cor}) =>
     `<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
       <span style="width:12px;height:12px;border-radius:50%;background:${cor};flex-shrink:0;display:inline-block;"></span>
