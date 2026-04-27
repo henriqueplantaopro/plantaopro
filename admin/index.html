@@ -1394,7 +1394,10 @@ tr:hover td{background:var(--bg3);}
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
-// ── CONFIG ─────────────────────────────────────────────
+// ── HELPERS ──────────────────────────────────────────
+function sortedMedicos()  { return [...medicos].sort((a,b)  => a.nome.localeCompare(b.nome,  'pt-BR')); }
+function sortedProjetos() { return [...projetos].sort((a,b) => a.nome.localeCompare(b.nome, 'pt-BR')); }
+
 const SUPABASE_URL = 'https://hqtnnadzwtfyfkunwfcy.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhxdG5uYWR6d3RmeWZrdW53ZmN5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYzMTM1MzcsImV4cCI6MjA5MTg4OTUzN30.j2qpn6JJZQ5QcB5j0eWtNV1EfqEz7DfTE-tQbW_WEGw';
 const BASE_URL = window.location.origin; // URL do site após o deploy
