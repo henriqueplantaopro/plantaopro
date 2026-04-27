@@ -2641,7 +2641,87 @@ function renderCalAtual() {
   if (_calTabAtiva==='semanal') renderSemana(); else renderCal();
 }
 
-// ─── ESCALA SEMANAL ──────────────────────────────────────
+// ─── CALENDÁRIO MENSAL ───────────────────────────────────
+let calYear = new Date().getFullYear(), calMonth = new Date().getMonth();
+const meses = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+
+function navCal(d) {
+  calMonth += d;
+  if (calMonth > 11) { calMonth = 0; calYear++; }
+  if (calMonth < 0)  { calMonth = 11; calYear--; }
+  renderCal();
+}
+
+function limparFiltrosCal() {
+  const cp = document.getElementById('cal-proj');
+  const cm = document.getElementById('cal-med');
+  if (cp) cp.value = '';
+  if (cm) cm.value = '';
+  renderCalAtual();
+}
+
+function getLancsCal(ds) {
+  const pid = document.getElementById('cal-proj')?.value || '';
+  const mid = document.getElementById('cal-med')?.value  || '';
+  let evts = lancamentos.filter(l => l.data === ds);
+  if (pid) evts = evts.filter(l => l.projeto_id === pid);
+  if (mid) evts = evts.filter(l => l.medico_id  === mid);
+  return evts;
+}
+
+function renderCal() {
+  const labelEl = document.getElementById('cal-label');
+  if (!labelEl) return;
+  labelEl.textContent = meses[calMonth] + ' ' + calYear;
+  const grid    = document.getElementById('cal-grid');
+  const primeiro = new Date(calYear, calMonth, 1).getDay();
+  const dias     = new Date(calYear, calMonth + 1, 0).getDate();
+  const pid = document.getElementById('cal-proj')?.value || '';
+  const mid = document.getElementById('cal-med')?.value  || '';
+  const badge = document.getElementById('cal-filtro-badge');
+  if (badge) {
+    const parts = [];
+    if (pid) { const p = projetos.find(x => x.id === pid); if (p) parts.push('Projeto: ' + p.nome); }
+    if (mid) { const m = medicos.find(x  => x.id === mid); if (m) parts.push('Médico: '  + m.nome); }
+    badge.textContent = parts.length ? '● Filtro ativo: ' + parts.join(' · ') : '';
+    badge.style.display = parts.length ? 'block' : 'none';
+  }
+  const hj = new Date();
+  let html = '';
+  for (let i = 0; i < primeiro; i++) html += '<div class="cal-day empty"></div>';
+  for (let d = 1; d <= dias; d++) {
+    const ds = `${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const isToday = d === hj.getDate() && calMonth === hj.getMonth() && calYear === hj.getFullYear();
+    const evts = getLancsCal(ds);
+    let ev = evts.slice(0, 3).map(l => {
+      const cls = l.tipo?.includes('Noturno') ? 'noturno' : l.tipo?.includes('24') ? 'h24' : 'diurno';
+      return `<div class="cal-event ${cls}" title="${l.medico||''} · ${l.projeto||''}">${(l.medico||'').split(' ')[0]}</div>`;
+    }).join('');
+    if (evts.length > 3) ev += `<div style="font-size:10px;color:var(--text3);">+${evts.length - 3} mais</div>`;
+    html += `<div class="cal-day${isToday?' today':''}${evts.length?' has-events':''}" onclick="showDayDetailCal('${ds}')"><div class="cal-day-num">${d}</div>${ev}</div>`;
+  }
+  if (grid) grid.innerHTML = html;
+  const det = document.getElementById('cal-detail');
+  if (det) det.style.display = 'none';
+}
+
+function showDayDetailCal(ds) {
+  const pid = document.getElementById('cal-proj')?.value || '';
+  const mid = document.getElementById('cal-med')?.value  || '';
+  let evts = lancamentos.filter(l => l.data === ds);
+  if (pid) evts = evts.filter(l => l.projeto_id === pid);
+  if (mid) evts = evts.filter(l => l.medico_id  === mid);
+  if (!evts.length) return;
+  const det = document.getElementById('cal-detail');
+  document.getElementById('cal-detail-title').textContent = 'Plantões em ' + fDate(ds);
+  document.getElementById('cal-detail-body').innerHTML = '<table><thead><tr><th>Médico</th><th>Projeto</th><th>Setor</th><th>Tipo</th><th>Horário</th><th>Horas</th><th>Honorários</th></tr></thead><tbody>' +
+    evts.map(l => `<tr><td>${l.medico||''}</td><td>${l.projeto||''}</td><td>${l.setor||'—'}</td><td>${l.tipo||''}</td><td class="mono">${(l.hora_ini||'').slice(0,5)}–${(l.hora_fim||'').slice(0,5)}</td><td class="mono">${l.horas}h</td><td class="mono">${fBRL(l.honorario)}</td></tr>`).join('') +
+    '</tbody></table>';
+  det.style.display = 'block';
+  det.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+
 let semOffset = 0; // semanas a partir da semana atual
 
 function getSegundaDaSemana(offset) {
