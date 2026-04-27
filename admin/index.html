@@ -591,6 +591,28 @@ tr:hover td{background:var(--bg3);}
       <button class="btn btn-primary" onclick="addProjeto()">+ Adicionar projeto</button>
     </div>
     <div class="card"><div class="card-title">Projetos cadastrados</div><div id="projetos-lista"><div class="empty">Carregando...</div></div></div>
+
+    <!-- TIPOS DE PLANTÃO -->
+    <div class="card" style="margin-top:16px;">
+      <div class="card-title">⚙️ Tipos de plantão</div>
+      <div style="font-size:13px;color:var(--text3);margin-top:-8px;margin-bottom:14px;">Configure tipos com horário, valor e setor pré-definidos por projeto</div>
+      <div style="background:var(--bg2);border-radius:var(--radius);padding:14px;margin-bottom:14px;">
+        <div style="font-size:12px;font-weight:700;color:var(--text2);text-transform:uppercase;margin-bottom:10px;">Novo tipo</div>
+        <div class="form-row">
+          <div class="form-group"><label>Projeto</label><select id="tp-proj" onchange="carregarTiposLista()"><option value="">Selecione...</option></select></div>
+          <div class="form-group"><label>Nome</label><input id="tp-nome" type="text" placeholder="Ex: Diurno 12h — Emergência"></div>
+          <div class="form-group"><label>Setor</label><input id="tp-setor" type="text" placeholder="Ex: Emergência, UTI"></div>
+        </div>
+        <div class="form-row four">
+          <div class="form-group"><label>Início</label><input id="tp-ini" type="time" value="07:00" oninput="calcDuracaoTipo()"></div>
+          <div class="form-group"><label>Fim</label><input id="tp-fim" type="time" value="19:00" oninput="calcDuracaoTipo()"></div>
+          <div class="form-group"><label>Duração</label><input id="tp-horas" type="text" value="12h" readonly style="background:var(--bg3);color:var(--text2);"></div>
+          <div class="form-group"><label>Valor (R$)</label><input id="tp-valor" type="text" placeholder="1.800,00"></div>
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="salvarTipoPlantao()">+ Adicionar tipo</button>
+      </div>
+      <div id="tipos-lista"><div class="empty">Selecione um projeto para ver os tipos cadastrados</div></div>
+    </div>
   </div>
 
   <!-- LANÇAMENTOS -->
@@ -1208,10 +1230,20 @@ tr:hover td{background:var(--bg3);}
       <div class="form-group" style="margin-bottom:10px;">
         <label>Tipo de plantão</label>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:6px;" id="mr-tipo-grid">
-          <button type="button" id="mr-btn-diurno" data-tipo="Diurno 12h" data-horas="12" data-ini="07:00" onclick="selecionarTipoRapido(this)">☀️ Diurno 12h</button>
-          <button type="button" id="mr-btn-noturno" data-tipo="Noturno 12h" data-horas="12" data-ini="19:00" onclick="selecionarTipoRapido(this)">🌙 Noturno 12h</button>
-          <button type="button" id="mr-btn-24h" data-tipo="24h" data-horas="24" data-ini="07:00" onclick="selecionarTipoRapido(this)">🔄 Plantão 24h</button>
-          <button type="button" id="mr-btn-custom" data-tipo="Personalizado" data-horas="0" data-ini="" onclick="selecionarTipoRapido(this)">✏️ Personalizado</button>
+          <!-- Select de tipos cadastrados (aparece quando há tipos para o projeto) -->
+          <div id="mr-tipos-select-wrap" style="display:none;grid-column:1/-1;margin-bottom:6px;">
+            <select id="mr-tipo-select" onchange="selecionarTipoCadastrado()"
+              style="width:100%;padding:10px 12px;border:2px solid var(--blue);border-radius:var(--radius);font-size:14px;font-weight:500;background:#fff;cursor:pointer;">
+              <option value="">— Selecione o tipo de plantão —</option>
+            </select>
+          </div>
+          <!-- Botões padrão (fallback quando não há tipos cadastrados) -->
+          <div id="mr-tipos-btns-wrap" style="display:contents;">
+            <button type="button" id="mr-btn-diurno" data-tipo="Diurno 12h" data-horas="12" data-ini="07:00" onclick="selecionarTipoRapido(this)">☀️ Diurno 12h</button>
+            <button type="button" id="mr-btn-noturno" data-tipo="Noturno 12h" data-horas="12" data-ini="19:00" onclick="selecionarTipoRapido(this)">🌙 Noturno 12h</button>
+            <button type="button" id="mr-btn-24h" data-tipo="24h" data-horas="24" data-ini="07:00" onclick="selecionarTipoRapido(this)">🔄 Plantão 24h</button>
+            <button type="button" id="mr-btn-custom" data-tipo="Personalizado" data-horas="0" data-ini="" onclick="selecionarTipoRapido(this)">✏️ Personalizado</button>
+          </div>
         </div>
         <input type="hidden" id="mr-tipo" value="Diurno 12h">
       </div>
@@ -1520,7 +1552,7 @@ document.getElementById('l-senha').addEventListener('keydown', e => { if(e.key==
 // ── CARREGAR DADOS ─────────────────────────────────────
 async function carregarTudo() {
   await Promise.all([carregarMedicos(), carregarProjetos()]);
-  await carregarLancamentos();
+  await Promise.all([carregarLancamentos(), carregarTiposPlantao()]);
   carregarDashboard();
   carregarCheckins();
   popRelSelects();
@@ -2449,6 +2481,7 @@ function showTab(id,el){
   document.getElementById('tab-'+id).classList.add('active');
   if(el) el.classList.add('active');
   if(id==='lancamentos') initLancamentos();
+  if(id==='projetos'){ popTpProj(); }
   if(id==='checkins'){ popCiSelects(); popCiProjPresenca(); document.getElementById('ci-data-p').value=hoje_str(); carregarPresenca(); }
   if(id==='relatorios'){ popRelSelects(); }
   if(id==='calendario'){ popCalSelects(); switchCalTab(_calTabAtiva||'semanal'); }
@@ -5480,6 +5513,180 @@ async function delLanc(id) {
     renderLancamentos();
     toast('Lançamento removido!');
   } else toast('Erro ao remover', true);
+}
+
+
+// ─── TIPOS DE PLANTÃO ─────────────────────────────────────
+let tiposPlantao = []; // cache global
+
+async function carregarTiposPlantao() {
+  const data = await sb('/rest/v1/tipos_plantao?ativo=eq.true&order=nome&select=*');
+  tiposPlantao = data || [];
+}
+
+function popTpProj() {
+  const el = document.getElementById('tp-proj');
+  if (!el) return;
+  el.innerHTML = '<option value="">Selecione...</option>' +
+    sortedProjetos().map(p => `<option value="${p.id}">${p.nome}</option>`).join('');
+}
+
+function calcDuracaoTipo() {
+  const ini = document.getElementById('tp-ini')?.value || '07:00';
+  const fim = document.getElementById('tp-fim')?.value || '19:00';
+  const [hi,mi] = ini.split(':').map(Number);
+  const [hf,mf] = fim.split(':').map(Number);
+  let diff = (hf*60+mf) - (hi*60+mi);
+  if (diff < 0) diff += 1440;
+  document.getElementById('tp-horas').value = Math.round(diff/60*10)/10 + 'h';
+}
+
+async function carregarTiposLista() {
+  const projId = document.getElementById('tp-proj')?.value;
+  const el = document.getElementById('tipos-lista');
+  if (!el) return;
+  if (!projId) { el.innerHTML = '<div class="empty">Selecione um projeto para ver os tipos cadastrados</div>'; return; }
+
+  const data = await sb(`/rest/v1/tipos_plantao?projeto_id=eq.${projId}&ativo=eq.true&order=nome`) || [];
+  if (!data.length) {
+    el.innerHTML = '<div class="empty">Nenhum tipo cadastrado para este projeto. Adicione acima!</div>';
+    return;
+  }
+  el.innerHTML = `<table><thead><tr>
+    <th>Nome</th><th>Horário</th><th>Horas</th><th>Valor</th><th>Setor</th><th></th>
+  </tr></thead><tbody>` +
+  data.map(t => `<tr>
+    <td><strong>${t.nome}</strong></td>
+    <td class="mono">${(t.hora_ini||'').slice(0,5)} – ${(t.hora_fim||'').slice(0,5)}</td>
+    <td class="mono">${t.horas}h</td>
+    <td class="mono">${t.valor ? fBRL(t.valor) : '<span style="color:var(--text3)">Padrão do projeto</span>'}</td>
+    <td>${t.setor || '—'}</td>
+    <td><button class="btn btn-danger btn-sm" onclick="deletarTipoPlantao('${t.id}')">✕</button></td>
+  </tr>`).join('') + '</tbody></table>';
+
+  // Atualizar cache
+  await carregarTiposPlantao();
+}
+
+async function salvarTipoPlantao() {
+  const projId = document.getElementById('tp-proj')?.value;
+  const nome   = document.getElementById('tp-nome')?.value.trim();
+  const setor  = document.getElementById('tp-setor')?.value.trim();
+  const ini    = document.getElementById('tp-ini')?.value || '07:00';
+  const fim    = document.getElementById('tp-fim')?.value || '19:00';
+  const valorStr = document.getElementById('tp-valor')?.value || '';
+  const valor  = valorStr ? parseBRL(valorStr) : null;
+
+  if (!projId) { toast('Selecione um projeto', true); return; }
+  if (!nome)   { toast('Informe o nome do tipo', true); return; }
+
+  const [hi,mi] = ini.split(':').map(Number);
+  const [hf,mf] = fim.split(':').map(Number);
+  let diff = (hf*60+mf) - (hi*60+mi);
+  if (diff < 0) diff += 1440;
+  const horas = Math.round(diff/60*100)/100;
+
+  const res = await sb('/rest/v1/tipos_plantao', {
+    method: 'POST',
+    body: JSON.stringify({ projeto_id: projId, nome, hora_ini: ini, hora_fim: fim, horas, valor, setor: setor||null, ativo: true })
+  });
+  if (res) {
+    toast('Tipo de plantão criado!');
+    ['tp-nome','tp-setor','tp-valor'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
+    document.getElementById('tp-ini').value = '07:00';
+    document.getElementById('tp-fim').value = '19:00';
+    calcDuracaoTipo();
+    carregarTiposLista();
+  } else toast('Erro ao criar tipo', true);
+}
+
+async function deletarTipoPlantao(id) {
+  if (!confirm('Remover este tipo de plantão?')) return;
+  await fetch(SUPABASE_URL+'/rest/v1/tipos_plantao?id=eq.'+id, {
+    method: 'PATCH',
+    headers: {'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},
+    body: JSON.stringify({ ativo: false })
+  });
+  carregarTiposLista();
+  await carregarTiposPlantao();
+  toast('Tipo removido!');
+}
+
+// ─── INTEGRAÇÃO NO MODAL RÁPIDO ────────────────────────────
+// Quando o projeto muda no modal, carregar tipos cadastrados
+function atualizarTiposNoModal() {
+  const projId = document.getElementById('mr-proj')?.value;
+  const selectWrap = document.getElementById('mr-tipos-select-wrap');
+  const btnsWrap   = document.getElementById('mr-tipos-btns-wrap');
+  const select     = document.getElementById('mr-tipo-select');
+  if (!selectWrap || !btnsWrap || !select) return;
+
+  const tiposDoProjeto = tiposPlantao.filter(t => t.projeto_id === projId);
+
+  if (tiposDoProjeto.length > 0) {
+    // Mostrar select, esconder botões
+    selectWrap.style.display = 'block';
+    btnsWrap.style.display = 'none';
+    select.innerHTML = '<option value="">— Selecione o tipo de plantão —</option>' +
+      tiposDoProjeto.map(t => {
+        const horario = (t.hora_ini||'').slice(0,5) + '–' + (t.hora_fim||'').slice(0,5);
+        const valor = t.valor ? ' · ' + fBRL(t.valor) : '';
+        return `<option value="${t.id}" data-ini="${t.hora_ini}" data-fim="${t.hora_fim}" data-horas="${t.horas}" data-valor="${t.valor||''}" data-setor="${t.setor||''}" data-nome="${t.nome}">${t.nome} (${horario}${valor})</option>`;
+      }).join('');
+  } else {
+    // Esconder select, mostrar botões padrão
+    selectWrap.style.display = 'none';
+    btnsWrap.style.display = 'contents';
+    select.innerHTML = '<option value="">— Selecione o tipo de plantão —</option>';
+  }
+}
+
+function selecionarTipoCadastrado() {
+  const select = document.getElementById('mr-tipo-select');
+  const opt = select?.selectedOptions[0];
+  if (!opt || !opt.value) return;
+
+  const ini   = opt.dataset.ini || '07:00';
+  const fim   = opt.dataset.fim || '19:00';
+  const horas = parseFloat(opt.dataset.horas) || 12;
+  const valor = opt.dataset.valor ? parseFloat(opt.dataset.valor) : null;
+  const setor = opt.dataset.setor || '';
+  const nome  = opt.dataset.nome || '';
+
+  // Preencher campos do modal
+  document.getElementById('mr-tipo').value = nome;
+  const iniEl = document.getElementById('mr-ini-custom');
+  if (iniEl) iniEl.value = ini;
+
+  // Setor
+  const setorEl = document.getElementById('mr-setor-custom') || document.getElementById('mr-setor');
+  if (setorEl) setorEl.value = setor;
+
+  // Valor
+  if (valor) {
+    const vEl = document.getElementById('mr-valor');
+    if (vEl) {
+      vEl.value = valor.toLocaleString('pt-BR', {minimumFractionDigits:2});
+      vEl.dataset.manual = '1';
+    }
+  } else {
+    // Buscar valor padrão do projeto
+    atualizarValorRapido();
+  }
+
+  // Mostrar resumo
+  const calc = document.getElementById('mr-horario-calc');
+  if (calc) {
+    calc.textContent = `Início: ${ini.slice(0,5)} · Fim: ${fim.slice(0,5)} · ${horas}h`;
+    calc.style.display = 'block';
+  }
+
+  // Atualizar preview
+  const prev = document.getElementById('mr-preview');
+  if (prev) {
+    prev.textContent = `${nome} · ${ini.slice(0,5)}–${fim.slice(0,5)} · ${horas}h`;
+    prev.style.display = 'block';
+  }
 }
 
 </script>
