@@ -2999,7 +2999,7 @@ function renderMedListaMR(filtro='', espFiltro='') {
   if (!lista.length) { el.innerHTML='<div style="padding:10px;color:var(--text3);font-size:13px;">Nenhum médico encontrado</div>'; return; }
   el.innerHTML = lista.map(m => `
     <div class="mr-med-item" id="mrmi-${m.id}" onclick="toggleMedMR('${m.id}')">
-      <input type="checkbox" id="mrchk-${m.id}" value="${m.id}" onclick="event.stopPropagation();toggleMedMR('${m.id}')">
+      <input type="checkbox" id="mrchk-${m.id}" value="${m.id}" onclick="event.stopPropagation()" onchange="toggleMedMR('${m.id}')">
       <div>
         <div style="font-weight:500;">${m.nome}</div>
         <div style="font-size:11px;color:var(--text3);font-family:monospace;">${m.crm||''}</div>
@@ -3243,6 +3243,34 @@ async function salvarLancamentoRapido() {
   })();
   const obs   = document.getElementById('mr-obs').value.trim();
   const valor = parseBRL(document.getElementById('mr-valor').value);
+
+  // Verificar se é plantão aberto (sem médico vinculado)
+  const ehAberto = document.getElementById('mr-aberto')?.checked || false;
+  const vagas    = parseInt(document.getElementById('mr-vagas')?.value||'1');
+
+  if (ehAberto) {
+    // Plantão aberto: sem médico selecionado
+    if (!projId) { toast('Selecione um projeto', true); return; }
+    if (!ds)     { toast('Data inválida', true); return; }
+    if (horas <= 0) { toast('Informe a duração', true); return; }
+    const btn2 = document.querySelector('#modal-rapido .btn-primary');
+    if (btn2) { btn2.disabled=true; btn2.textContent='Publicando...'; }
+    try {
+      const res = await fetch(SUPABASE_URL+'/rest/v1/lancamentos', {
+        method:'POST',
+        headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},
+        body: JSON.stringify({projeto_id:projId,data:ds,hora_ini:ini,hora_fim:fim,horas,tipo,setor:setor||null,honorario:valor||0,valor_hora:horas>0&&valor>0?Math.round(valor/horas*100)/100:0,obs:obs||null,aberto:true,vagas,vagas_preenchidas:0})
+      });
+      if (res.ok || res.status===204 || res.status===201) {
+        toast('✅ Plantão publicado! Médicos podem se candidatar.');
+        fecharModalRapido();
+        await carregarLancamentos(true);
+        renderSemana();
+      } else { toast('Erro ao publicar', true); }
+    } catch(e) { toast('Erro de conexão', true); }
+    if (btn2) { btn2.disabled=false; btn2.textContent='+ Registrar plantão'; }
+    return;
+  }
 
   if (!medsSel.length) { toast('Selecione ao menos um médico',true); return; }
   if (!projId) { toast('Selecione um projeto',true); return; }
@@ -3747,63 +3775,6 @@ async function addMedico() {
     const pt=document.getElementById('mn-pix-tipo');if(pt)pt.value='';
     await carregarMedicos();
   } else toast('Erro ao cadastrar médico', true);
-}
-
-// Salvar lançamento aberto a partir do modal rápido
-const _origSalvar = salvarLancamentoRapido;
-async function salvarLancamentoRapido() {
-  const aberto = document.getElementById('mr-aberto')?.checked || false;
-  const vagas  = parseInt(document.getElementById('mr-vagas')?.value||'1');
-
-  if (aberto) {
-    // Lançamento sem médico — criar diretamente
-    const overlay = document.getElementById('modal-rapido');
-    const ds    = overlay.dataset.ds;
-    const projId= document.getElementById('mr-proj').value;
-    const ini   = getIniRapido();
-    const tipo  = document.getElementById('mr-tipo').value;
-    const horas = getHorasRapido();
-    const fim   = calcFimRapido(ini, horas);
-    const setor = (() => {
-      const sCustom = document.getElementById('mr-setor-custom');
-      const sFix    = document.getElementById('mr-setor');
-      const sCustomRow = document.getElementById('mr-setor-custom-row');
-      if (sCustomRow && sCustomRow.style.display !== 'none' && sCustom) return sCustom.value.trim();
-      return (sFix?.value||'').trim();
-    })();
-    const obs   = document.getElementById('mr-obs')?.value.trim()||'';
-    const valor = parseBRL(document.getElementById('mr-valor')?.value||'');
-
-    if (!projId) { toast('Selecione um projeto', true); return; }
-    if (horas <= 0) { toast('Informe a duração', true); return; }
-
-    const btn = document.querySelector('#modal-rapido .btn-primary');
-    if (btn) { btn.disabled=true; btn.textContent='Publicando...'; }
-
-    const reg = {
-      projeto_id: projId, data: ds, hora_ini: ini, hora_fim: fim,
-      horas, tipo, setor: setor||null, honorario: valor||0,
-      valor_hora: horas>0&&valor>0?Math.round(valor/horas*100)/100:0,
-      obs: obs||null, aberto: true, vagas, vagas_preenchidas: 0
-    };
-    try {
-      const res = await fetch(SUPABASE_URL+'/rest/v1/lancamentos', {
-        method:'POST',
-        headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},
-        body: JSON.stringify(reg)
-      });
-      if (res.ok || res.status===204) {
-        toast('✅ Plantão publicado! Médicos podem se candidatar.');
-        fecharModalRapido();
-        await carregarLancamentos(true);
-        renderSemana();
-      } else { toast('Erro ao publicar', true); }
-    } catch(e) { toast('Erro de conexão', true); }
-    if (btn) { btn.disabled=false; btn.textContent='+ Registrar plantão'; }
-  } else {
-    // Fluxo normal
-    await _origSalvar();
-  }
 }
 
 // ─── CANDIDATURAS — ADMIN ─────────────────────────────
