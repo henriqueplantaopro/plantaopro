@@ -5,146 +5,170 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="PlantãoPlus">
+<meta name="apple-mobile-web-app-title" content="PlantaoPlus">
 <meta name="theme-color" content="#1a5fad">
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon-192.png">
-<title>PlantãoPlus — Médico</title>
+<title>PlantaoPlus - Medico</title>
 <style>
-  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
-  :root{
-    --blue:#1a5fad;--blue-dark:#0f3d7a;--blue-light:#e8f0fb;
-    --green:#2d7a3a;--green-light:#e8f5eb;
-    --red:#b03030;--red-light:#fdf0f0;
-    --amber:#8a5500;--amber-light:#fdf3e0;
-    --gray:#f5f5f5;--border:#e0e0e0;
-    --text:#1a1a1a;--text2:#555;--text3:#999;
-    --radius:12px;--radius-sm:8px;
-  }
-  html,body{height:100%;background:#f0f4f8;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;}
-
-  /* TELA DE CARREGAMENTO */
-  #splash{position:fixed;inset:0;background:var(--blue);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:999;transition:opacity 0.4s;}
-  #splash.hide{opacity:0;pointer-events:none;}
-  .splash-logo{font-size:48px;margin-bottom:12px;}
-  .splash-title{color:#fff;font-size:22px;font-weight:700;letter-spacing:-0.5px;}
-  .splash-sub{color:rgba(255,255,255,0.7);font-size:14px;margin-top:4px;}
-
-  /* HEADER */
-  .header{background:var(--blue);color:#fff;padding:16px 20px 12px;position:sticky;top:0;z-index:10;}
-  .header-top{display:flex;align-items:center;justify-content:space-between;}
-  .header-nome{font-size:16px;font-weight:600;}
-  .header-crm{font-size:12px;opacity:0.75;margin-top:2px;}
-  .header-avatar{width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;}
-
-  /* ABAS */
-  .tabs{display:flex;background:#fff;border-bottom:1px solid var(--border);position:sticky;top:73px;z-index:9;}
-  .tab{flex:1;padding:12px 4px;text-align:center;font-size:12px;font-weight:500;color:var(--text3);border-bottom:2px solid transparent;cursor:pointer;transition:all 0.15s;}
-  .tab.active{color:var(--blue);border-bottom-color:var(--blue);}
-  .tab-icon{font-size:18px;display:block;margin-bottom:2px;}
-
-  /* CONTEÚDO */
-  .content{padding:16px;max-width:480px;margin:0 auto;padding-bottom:32px;}
-  .page{display:none;}.page.active{display:block;}
-
-  /* CARDS */
-  .card{background:#fff;border-radius:var(--radius);padding:16px;margin-bottom:12px;box-shadow:0 1px 4px rgba(0,0,0,0.08);}
-  .card-title{font-size:13px;font-weight:600;color:var(--text);margin-bottom:12px;text-transform:uppercase;letter-spacing:0.5px;}
-
-  /* CHECKIN */
-  .checkin-status{text-align:center;padding:24px 16px;}
-  .checkin-icon{font-size:64px;margin-bottom:12px;display:block;}
-  .checkin-title{font-size:18px;font-weight:700;color:var(--text);margin-bottom:6px;}
-  .checkin-sub{font-size:14px;color:var(--text2);line-height:1.5;}
-  .checkin-dist{font-size:13px;margin-top:8px;padding:6px 14px;border-radius:99px;display:inline-block;}
-  .dist-ok{background:var(--green-light);color:var(--green);}
-  .dist-far{background:var(--red-light);color:var(--red);}
-  .dist-loading{background:var(--gray);color:var(--text3);}
-
-  /* BOTÃO CHECKIN */
-  .btn-checkin{width:100%;padding:18px;font-size:16px;font-weight:700;border-radius:var(--radius);border:none;cursor:pointer;transition:all 0.2s;margin-top:16px;letter-spacing:0.3px;}
-  .btn-checkin.ok{background:var(--green);color:#fff;}
-  .btn-checkin.ok:active{transform:scale(0.97);background:#236130;}
-  .btn-checkin.far{background:var(--border);color:var(--text3);cursor:not-allowed;}
-  .btn-checkin.loading{background:var(--blue);color:#fff;opacity:0.7;cursor:wait;}
-
-  /* SELETOR DE PROJETO */
-  .proj-select{width:100%;padding:10px 12px;font-size:14px;border:1px solid var(--border);border-radius:var(--radius-sm);background:#fff;color:var(--text);margin-bottom:12px;-webkit-appearance:none;appearance:none;}
-
-  /* HISTÓRICO DE CHECK-INS */
-  .checkin-item{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border);}
-  .checkin-item:last-child{border-bottom:none;}
-  .checkin-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
-  .dot-ok{background:var(--green);}
-  .dot-fail{background:var(--red);}
-  .checkin-info{flex:1;}
-  .checkin-info-proj{font-size:13px;font-weight:500;color:var(--text);}
-  .checkin-info-meta{font-size:11px;color:var(--text3);margin-top:2px;}
-  .checkin-info-dist{font-size:11px;padding:2px 8px;border-radius:99px;margin-top:3px;display:inline-block;}
-
-  /* PLANTÕES */
-  .plantao-card{background:#fff;border-radius:var(--radius);margin-bottom:10px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.08);}
-  .plantao-header{padding:12px 16px;display:flex;align-items:center;justify-content:space-between;}
-  .plantao-data{font-size:13px;font-weight:700;color:var(--blue);}
-  .plantao-proj{font-size:12px;color:var(--text2);margin-top:1px;}
-  .badge{display:inline-block;font-size:10px;font-weight:600;padding:3px 8px;border-radius:99px;}
-  .badge-green{background:var(--green-light);color:var(--green);}
-  .badge-purple{background:#f0eeff;color:#5040a0;}
-  .badge-amber{background:var(--amber-light);color:var(--amber);}
-  .plantao-body{padding:8px 16px 14px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;border-top:1px solid var(--gray);}
-  .plantao-info-label{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.3px;}
-  .plantao-info-val{font-size:13px;font-weight:600;color:var(--text);margin-top:2px;}
-
-  /* HISTÓRICO DE PLANTÕES */
-  .plantao-valor{text-align:right;}
-  .plantao-valor-val{font-size:15px;font-weight:700;color:var(--green);}
-
-  /* EMPTY */
-  .empty{text-align:center;padding:40px 20px;color:var(--text3);font-size:14px;}
-  .empty-icon{font-size:40px;margin-bottom:8px;}
-
-  /* TOAST */
-  #toast-med{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#333;color:#fff;padding:10px 18px;border-radius:99px;font-size:13px;display:none;z-index:999;white-space:nowrap;box-shadow:0 4px 12px rgba(0,0,0,0.2);}
-
-  /* SPINNER */
-  .spinner{width:20px;height:20px;border:2px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:spin 0.8s linear infinite;display:inline-block;vertical-align:middle;margin-right:8px;}
-  /* FILTROS PLANTÕES */
-  .btn-filtro-plantao{flex:1;padding:8px 4px;font-size:11px;font-weight:600;border-radius:var(--radius-sm);border:1.5px solid var(--border);background:#fff;color:var(--text2);cursor:pointer;transition:all 0.15s;}
-  .btn-filtro-plantao.active{background:var(--blue);color:#fff;border-color:var(--blue);}
-  @keyframes spin{to{transform:rotate(360deg);}}
-
-  /* PULL TO REFRESH hint */
-  .refresh-hint{text-align:center;font-size:11px;color:var(--text3);padding:8px;margin-bottom:4px;}
-  /* Plantões disponíveis */
-  .plantao-aberto-card{background:#fff;border-radius:var(--radius);margin-bottom:10px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.08);border:2px dashed var(--amber);}
-  .plantao-aberto-header{padding:12px 16px;background:var(--amber-light);}
-  .plantao-aberto-proj{font-size:14px;font-weight:700;color:var(--amber);}
-  .plantao-aberto-data{font-size:12px;color:var(--text2);margin-top:2px;}
-  .btn-candidatar{width:100%;padding:12px;font-size:14px;font-weight:700;border-radius:0;border:none;cursor:pointer;transition:all 0.2s;letter-spacing:0.2px;}
-  .btn-candidatar.disponivel{background:var(--amber);color:#fff;}
-  .btn-candidatar.disponivel:active{background:#6e4400;}
-  .btn-candidatar.inscrito{background:var(--green-light);color:var(--green);cursor:default;}
-  .btn-candidatar.recusado{background:var(--red-light);color:var(--red);cursor:default;}
-  .conflito-aviso{background:var(--red-light);border-radius:var(--radius-sm);padding:8px 12px;font-size:12px;color:var(--red);margin:0 16px 10px;}
-  /* CONFIRMAÇÃO DE PLANTÃO */
-  .btn-confirmar{width:100%;padding:12px;font-size:13px;font-weight:700;border-radius:var(--radius-sm);border:none;cursor:pointer;transition:all 0.2s;margin-top:10px;letter-spacing:0.2px;}
-  .btn-confirmar.pendente{background:#fff;color:var(--blue);border:2px solid var(--blue);}
-  .btn-confirmar.pendente:active{background:var(--blue-light);}
-  .btn-confirmar.confirmado{background:var(--green-light);color:var(--green);border:2px solid var(--green);cursor:default;}
-  .confirmado-badge{display:inline-flex;align-items:center;gap:4px;background:var(--green-light);color:var(--green);font-size:11px;font-weight:600;padding:3px 10px;border-radius:99px;margin-top:6px;}
-  .pendente-badge{display:inline-flex;align-items:center;gap:4px;background:var(--amber-light);color:var(--amber);font-size:11px;font-weight:600;padding:3px 10px;border-radius:99px;margin-top:6px;}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+:root{
+  --blue:#1a5fad;--blue-dark:#0f3d7a;--blue-light:#e8f0fb;
+  --green:#2d7a3a;--green-light:#e8f5eb;
+  --red:#b03030;--red-light:#fdf0f0;
+  --amber:#8a5500;--amber-light:#fdf3e0;
+  --gray:#f5f5f5;--border:#e0e0e0;
+  --text:#1a1a1a;--text2:#555;--text3:#999;
+  --radius:12px;--radius-sm:8px;
+}
+html,body{height:100%;background:#f0f4f8;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;}
+#splash{position:fixed;inset:0;background:var(--blue);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:999;transition:opacity 0.4s;}
+#splash.hide{opacity:0;pointer-events:none;}
+.splash-logo{font-size:48px;margin-bottom:12px;}
+.splash-title{color:#fff;font-size:22px;font-weight:700;letter-spacing:-0.5px;}
+.splash-sub{color:rgba(255,255,255,0.7);font-size:14px;margin-top:4px;}
+.header{background:var(--blue);color:#fff;padding:16px 20px 12px;position:sticky;top:0;z-index:10;}
+.header-top{display:flex;align-items:center;justify-content:space-between;}
+.header-nome{font-size:16px;font-weight:600;}
+.header-crm{font-size:12px;opacity:0.75;margin-top:2px;}
+.header-avatar{width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;}
+.tabs{display:flex;background:#fff;border-bottom:1px solid var(--border);position:sticky;top:73px;z-index:9;}
+.tab{flex:1;padding:12px 4px;text-align:center;font-size:11px;font-weight:500;color:var(--text3);border-bottom:2px solid transparent;cursor:pointer;transition:all 0.15s;}
+.tab.active{color:var(--blue);border-bottom-color:var(--blue);}
+.tab-icon{font-size:18px;display:block;margin-bottom:2px;}
+.content{padding:16px;max-width:480px;margin:0 auto;padding-bottom:32px;}
+.page{display:none;}.page.active{display:block;}
+.card{background:#fff;border-radius:var(--radius);padding:16px;margin-bottom:12px;box-shadow:0 1px 4px rgba(0,0,0,0.08);}
+.card-title{font-size:13px;font-weight:600;color:var(--text);margin-bottom:12px;text-transform:uppercase;letter-spacing:0.5px;}
+.checkin-status{text-align:center;padding:24px 16px;}
+.checkin-icon{font-size:64px;margin-bottom:12px;display:block;}
+.checkin-title{font-size:18px;font-weight:700;color:var(--text);margin-bottom:6px;}
+.checkin-sub{font-size:14px;color:var(--text2);line-height:1.5;}
+.checkin-dist{font-size:13px;margin-top:8px;padding:6px 14px;border-radius:99px;display:inline-block;}
+.dist-ok{background:var(--green-light);color:var(--green);}
+.dist-far{background:var(--red-light);color:var(--red);}
+.dist-loading{background:var(--gray);color:var(--text3);}
+.btn-checkin{width:100%;padding:18px;font-size:16px;font-weight:700;border-radius:var(--radius);border:none;cursor:pointer;transition:all 0.2s;margin-top:16px;letter-spacing:0.3px;}
+.btn-checkin.ok{background:var(--green);color:#fff;}
+.btn-checkin.ok:active{transform:scale(0.97);background:#236130;}
+.btn-checkin.far{background:var(--border);color:var(--text3);cursor:not-allowed;}
+.btn-checkin.loading{background:var(--blue);color:#fff;opacity:0.7;cursor:wait;}
+.proj-select{width:100%;padding:10px 12px;font-size:14px;border:1px solid var(--border);border-radius:var(--radius-sm);background:#fff;color:var(--text);margin-bottom:12px;-webkit-appearance:none;appearance:none;}
+.checkin-item{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border);}
+.checkin-item:last-child{border-bottom:none;}
+.checkin-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+.dot-ok{background:var(--green);}.dot-fail{background:var(--red);}
+.checkin-info{flex:1;}
+.checkin-info-proj{font-size:13px;font-weight:500;color:var(--text);}
+.checkin-info-meta{font-size:11px;color:var(--text3);margin-top:2px;}
+.checkin-info-dist{font-size:11px;padding:2px 8px;border-radius:99px;margin-top:3px;display:inline-block;}
+.plantao-card{background:#fff;border-radius:var(--radius);margin-bottom:10px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.08);}
+.plantao-header{padding:12px 16px;display:flex;align-items:center;justify-content:space-between;}
+.plantao-data{font-size:13px;font-weight:700;color:var(--blue);}
+.plantao-proj{font-size:12px;color:var(--text2);margin-top:1px;}
+.badge{display:inline-block;font-size:10px;font-weight:600;padding:3px 8px;border-radius:99px;}
+.badge-green{background:var(--green-light);color:var(--green);}
+.badge-purple{background:#f0eeff;color:#5040a0;}
+.badge-amber{background:var(--amber-light);color:var(--amber);}
+.plantao-body{padding:8px 16px 14px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;border-top:1px solid var(--gray);}
+.plantao-info-label{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.3px;}
+.plantao-info-val{font-size:13px;font-weight:600;color:var(--text);margin-top:2px;}
+.plantao-valor{text-align:right;}
+.plantao-valor-val{font-size:15px;font-weight:700;color:var(--green);}
+/* ACOES PLANTAO CONFIRMADO */
+.plantao-acoes{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:0 16px 14px;}
+.btn-acao{padding:10px 6px;font-size:12px;font-weight:600;border-radius:var(--radius-sm);border:none;cursor:pointer;transition:all 0.15s;display:flex;align-items:center;justify-content:center;gap:5px;width:100%;}
+.btn-acao-transferir{background:var(--blue-light);color:var(--blue);border:1.5px solid #a0c4f0;}
+.btn-acao-transferir:active{background:#c8dcf8;}
+.btn-acao-ausencia{background:var(--red-light);color:var(--red);border:1.5px solid #f0b8b8;}
+.btn-acao-ausencia:active{background:#f8d8d8;}
+.confirmado-badge{display:inline-flex;align-items:center;gap:4px;background:var(--green-light);color:var(--green);font-size:11px;font-weight:600;padding:3px 10px;border-radius:99px;margin-top:6px;}
+.pendente-badge{display:inline-flex;align-items:center;gap:4px;background:var(--amber-light);color:var(--amber);font-size:11px;font-weight:600;padding:3px 10px;border-radius:99px;margin-top:6px;}
+.ausencia-badge{display:inline-flex;align-items:center;gap:4px;background:var(--red-light);color:var(--red);font-size:11px;font-weight:600;padding:3px 10px;border-radius:99px;margin:4px 0 0;}
+.transf-badge{display:inline-flex;align-items:center;gap:4px;background:var(--amber-light);color:var(--amber);font-size:11px;font-weight:600;padding:3px 10px;border-radius:99px;margin:4px 0 0;}
+.btn-confirmar{width:100%;padding:12px;font-size:13px;font-weight:700;border-radius:var(--radius-sm);border:none;cursor:pointer;transition:all 0.2s;letter-spacing:0.2px;}
+.btn-confirmar.pendente{background:#fff;color:var(--blue);border:2px solid var(--blue);}
+.btn-confirmar.pendente:active{background:var(--blue-light);}
+.empty{text-align:center;padding:40px 20px;color:var(--text3);font-size:14px;}
+.empty-icon{font-size:40px;margin-bottom:8px;}
+#toast-med{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#333;color:#fff;padding:10px 18px;border-radius:99px;font-size:13px;display:none;z-index:9999;white-space:nowrap;box-shadow:0 4px 12px rgba(0,0,0,0.2);}
+.spinner{width:20px;height:20px;border:2px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:spin 0.8s linear infinite;display:inline-block;vertical-align:middle;margin-right:8px;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.btn-filtro-plantao{flex:1;padding:8px 4px;font-size:11px;font-weight:600;border-radius:var(--radius-sm);border:1.5px solid var(--border);background:#fff;color:var(--text2);cursor:pointer;transition:all 0.15s;}
+.btn-filtro-plantao.active{background:var(--blue);color:#fff;border-color:var(--blue);}
+.refresh-hint{text-align:center;font-size:11px;color:var(--text3);padding:8px;margin-bottom:4px;}
+.plantao-aberto-card{background:#fff;border-radius:var(--radius);margin-bottom:10px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.08);border:2px dashed var(--amber);}
+.plantao-aberto-header{padding:12px 16px;background:var(--amber-light);}
+.plantao-aberto-proj{font-size:14px;font-weight:700;color:var(--amber);}
+.plantao-aberto-data{font-size:12px;color:var(--text2);margin-top:2px;}
+.btn-candidatar{width:100%;padding:12px;font-size:14px;font-weight:700;border-radius:0;border:none;cursor:pointer;transition:all 0.2s;letter-spacing:0.2px;}
+.btn-candidatar.disponivel{background:var(--amber);color:#fff;}
+.btn-candidatar.disponivel:active{background:#6e4400;}
+.btn-candidatar.inscrito{background:var(--green-light);color:var(--green);cursor:default;}
+.btn-candidatar.recusado{background:var(--red-light);color:var(--red);cursor:default;}
+.conflito-aviso{background:var(--red-light);border-radius:var(--radius-sm);padding:8px 12px;font-size:12px;color:var(--red);margin:0 16px 10px;}
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:200;display:flex;align-items:flex-end;justify-content:center;animation:fadeIn 0.2s;}
+.modal-overlay.oculto{display:none;}
+@keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
+.modal-sheet{background:#fff;border-radius:20px 20px 0 0;width:100%;max-width:480px;max-height:88vh;overflow-y:auto;animation:slideUp 0.25s ease-out;}
+@keyframes slideUp{from{transform:translateY(40px);opacity:0;}to{transform:translateY(0);opacity:1;}}
+.modal-handle{width:40px;height:4px;background:#ddd;border-radius:99px;margin:12px auto 0;}
+.modal-header{padding:16px 20px 12px;border-bottom:1px solid var(--border);}
+.modal-title{font-size:17px;font-weight:700;color:var(--text);}
+.modal-sub{font-size:13px;color:var(--text2);margin-top:4px;line-height:1.4;}
+.modal-body{padding:16px 20px;}
+.modal-label{font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:0.4px;margin-bottom:6px;display:block;}
+.modal-select{width:100%;padding:10px 12px;font-size:14px;border:1.5px solid var(--border);border-radius:var(--radius-sm);background:#fff;color:var(--text);margin-bottom:14px;-webkit-appearance:none;font-family:inherit;}
+.modal-select:focus{border-color:var(--blue);outline:none;}
+.modal-textarea{width:100%;padding:10px 12px;font-size:14px;border:1.5px solid var(--border);border-radius:var(--radius-sm);background:#fff;color:var(--text);resize:none;font-family:inherit;line-height:1.5;}
+.modal-textarea:focus{border-color:var(--blue);outline:none;}
+.modal-footer{padding:12px 20px 28px;display:flex;flex-direction:column;gap:8px;}
+.btn-modal{width:100%;padding:14px;font-size:15px;font-weight:700;border-radius:var(--radius-sm);border:none;cursor:pointer;transition:all 0.15s;}
+.btn-modal.azul{background:var(--blue);color:#fff;}
+.btn-modal.azul:active{background:var(--blue-dark);}
+.btn-modal.azul:disabled{opacity:0.45;cursor:not-allowed;}
+.btn-modal.vermelho{background:var(--red);color:#fff;}
+.btn-modal.vermelho:active{background:#8b2020;}
+.btn-modal.vermelho:disabled{opacity:0.45;cursor:not-allowed;}
+.btn-modal.cancel{background:#fff;color:var(--text2);border:1.5px solid var(--border);}
+.busca-med{width:100%;padding:9px 12px;font-size:13px;border:1.5px solid var(--border);border-radius:var(--radius-sm);margin-bottom:8px;font-family:inherit;}
+.busca-med:focus{border-color:var(--blue);outline:none;}
+.med-lista{border:1.5px solid var(--border);border-radius:var(--radius-sm);overflow:hidden;margin-bottom:14px;max-height:200px;overflow-y:auto;}
+.med-item{display:flex;align-items:center;gap:12px;padding:10px 12px;cursor:pointer;border-bottom:1px solid var(--border);transition:background 0.1s;}
+.med-item:last-child{border-bottom:none;}
+.med-item:hover{background:var(--blue-light);}
+.med-item.selecionado{background:var(--blue-light);border-left:3px solid var(--blue);}
+.med-avatar-mini{width:34px;height:34px;border-radius:50%;background:var(--blue-light);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:var(--blue);flex-shrink:0;}
+.med-item-nome{font-size:13px;font-weight:600;color:var(--text);}
+.med-item-crm{font-size:11px;color:var(--text3);}
+/* NOTIFICACOES */
+.notif-card{background:#fff;border-radius:var(--radius);margin-bottom:10px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.08);border-left:4px solid var(--green);}
+.notif-card.pendente{border-left-color:var(--amber);}
+.notif-card.recusado{border-left-color:var(--red);}
+.notif-header{padding:14px 16px 10px;}
+.notif-tipo{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.4px;color:var(--text3);margin-bottom:3px;}
+.notif-desc{font-size:14px;font-weight:700;color:var(--text);line-height:1.3;}
+.notif-meta{font-size:12px;color:var(--text2);margin-top:5px;line-height:1.4;}
+.notif-msg{font-size:12px;color:var(--text2);font-style:italic;margin-top:6px;padding:6px 10px;background:var(--gray);border-radius:6px;}
+.notif-status{font-size:12px;font-weight:700;margin-top:6px;padding:4px 0;}
+.notif-acoes{display:flex;gap:8px;padding:0 16px 14px;}
+.btn-notif{flex:1;padding:10px 8px;font-size:13px;font-weight:700;border-radius:var(--radius-sm);border:none;cursor:pointer;transition:all 0.15s;}
+.btn-notif-aceitar{background:var(--green);color:#fff;}
+.btn-notif-aceitar:active{background:#236130;}
+.btn-notif-recusar{background:#fff;color:var(--red);border:1.5px solid #f0b8b8;}
+.btn-notif-recusar:active{background:var(--red-light);}
+.btn-notif:disabled{opacity:0.5;cursor:not-allowed;}
 </style>
 </head>
 <body>
 
-<!-- SPLASH -->
 <div id="splash">
-  <div class="splash-logo">🏥</div>
-  <div class="splash-title">PlantãoPlus</div>
+  <div class="splash-logo">&#127973;</div>
+  <div class="splash-title">PlantaoPlus</div>
   <div class="splash-sub">Carregando...</div>
 </div>
 
-<!-- HEADER -->
 <div class="header" id="header" style="display:none;">
   <div class="header-top">
     <div>
@@ -155,28 +179,29 @@
   </div>
 </div>
 
-<!-- ABAS -->
 <div class="tabs" id="tabs" style="display:none;">
   <div class="tab active" onclick="showPage('checkin',this)">
-    <span class="tab-icon">📍</span>Check-in
+    <span class="tab-icon">&#128205;</span>Check-in
   </div>
   <div class="tab" onclick="showPage('plantoes',this)">
-    <span class="tab-icon">📅</span>Plantões
+    <span class="tab-icon">&#128197;</span>Plantoes
     <span id="badge-confirmacao" style="display:none;background:var(--amber);color:#fff;font-size:9px;font-weight:700;border-radius:99px;padding:1px 5px;margin-left:2px;vertical-align:top;margin-top:2px;"></span>
   </div>
   <div class="tab" onclick="showPage('disponiveis',this)">
-    <span class="tab-icon">📢</span>Disponíveis
+    <span class="tab-icon">&#128226;</span>Disponiveis
     <span id="badge-disp" style="display:none;background:var(--amber);color:#fff;font-size:9px;font-weight:700;border-radius:99px;padding:1px 5px;margin-left:2px;vertical-align:top;margin-top:2px;"></span>
   </div>
   <div class="tab" onclick="showPage('historico',this)">
-    <span class="tab-icon">📊</span>Histórico
+    <span class="tab-icon">&#128202;</span>Historico
+  </div>
+  <div class="tab" onclick="showPage('notificacoes',this)">
+    <span class="tab-icon">&#128276;</span>Notif.
+    <span id="badge-notif" style="display:none;background:var(--red);color:#fff;font-size:9px;font-weight:700;border-radius:99px;padding:1px 5px;margin-left:2px;vertical-align:top;margin-top:2px;"></span>
   </div>
 </div>
 
-<!-- CONTEÚDO -->
 <div class="content" id="main-content" style="display:none;">
 
-  <!-- CHECK-IN -->
   <div id="page-checkin" class="page active">
     <div class="card">
       <div class="card-title">Selecionar local</div>
@@ -184,753 +209,501 @@
         <option value="">Carregando projetos...</option>
       </select>
     </div>
-
     <div class="card">
       <div class="checkin-status">
-        <span class="checkin-icon" id="ci-icon">📍</span>
-        <div class="checkin-title" id="ci-title">Verificando localização...</div>
-        <div class="checkin-sub" id="ci-sub">Aguarde enquanto obtemos sua posição</div>
+        <span class="checkin-icon" id="ci-icon">&#128205;</span>
+        <div class="checkin-title" id="ci-title">Verificando localizacao...</div>
+        <div class="checkin-sub" id="ci-sub">Aguarde enquanto obtemos sua posicao</div>
         <div class="checkin-dist dist-loading" id="ci-dist" style="display:none;"></div>
       </div>
       <button class="btn-checkin loading" id="btn-ci" disabled onclick="fazerCheckin()">
         <span class="spinner"></span> Verificando...
       </button>
     </div>
-
     <div class="card" id="card-checkins-hoje">
       <div class="card-title">Check-ins de hoje</div>
-      <div id="checkins-hoje-lista"><div class="empty"><div class="empty-icon">✅</div>Nenhum check-in hoje</div></div>
+      <div id="checkins-hoje-lista"><div class="empty"><div class="empty-icon">&#9989;</div>Nenhum check-in hoje</div></div>
     </div>
   </div>
 
-  <!-- PLANTÕES -->
   <div id="page-plantoes" class="page">
-    <!-- Filtro de período -->
     <div style="display:flex;gap:6px;margin-bottom:12px;">
-      <button class="btn-filtro-plantao active" id="fp-prox" onclick="filtrarPlantoes('proximos',this)">Próximos</button>
-      <button class="btn-filtro-plantao" id="fp-pend" onclick="filtrarPlantoes('pendentes',this)">⚠️ Pendentes</button>
-      <button class="btn-filtro-plantao" id="fp-conf" onclick="filtrarPlantoes('confirmados',this)">✅ Confirmados</button>
+      <button class="btn-filtro-plantao active" id="fp-prox" onclick="filtrarPlantoes('proximos',this)">Proximos</button>
+      <button class="btn-filtro-plantao" id="fp-pend" onclick="filtrarPlantoes('pendentes',this)">&#9888;&#65039; Pendentes</button>
+      <button class="btn-filtro-plantao" id="fp-conf" onclick="filtrarPlantoes('confirmados',this)">&#9989; Confirmados</button>
     </div>
-    <div class="refresh-hint" id="plantoes-hint">Toque em um plantão para confirmar sua presença</div>
-    <div id="plantoes-lista"><div class="empty"><div class="empty-icon">📅</div>Carregando...</div></div>
+    <div class="refresh-hint" id="plantoes-hint">Toque em um plantao confirmado para gerencia-lo</div>
+    <div id="plantoes-lista"><div class="empty"><div class="empty-icon">&#128197;</div>Carregando...</div></div>
   </div>
 
-  <!-- PLANTÕES DISPONÍVEIS -->
   <div id="page-disponiveis" class="page">
-    <div class="refresh-hint">Plantões abertos nos seus hospitais — toque para se candidatar</div>
-    <div id="disponiveis-lista"><div class="empty"><div class="empty-icon">📢</div>Carregando...</div></div>
+    <div class="refresh-hint">Plantoes abertos nos seus hospitais</div>
+    <div id="disponiveis-lista"><div class="empty"><div class="empty-icon">&#128226;</div>Carregando...</div></div>
   </div>
 
-  <!-- HISTÓRICO -->
   <div id="page-historico" class="page">
     <div class="card">
       <div style="display:flex;justify-content:space-between;align-items:center;">
         <div>
-          <div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:0.4px;">Total do mês</div>
+          <div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:0.4px;">Total do mes</div>
           <div style="font-size:24px;font-weight:700;color:var(--green);margin-top:2px;" id="hist-total">R$ 0,00</div>
         </div>
         <div style="text-align:right;">
-          <div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:0.4px;">Plantões</div>
+          <div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:0.4px;">Plantoes</div>
           <div style="font-size:24px;font-weight:700;color:var(--text);margin-top:2px;" id="hist-qtd">0</div>
         </div>
       </div>
     </div>
     <div class="card">
-      <div class="card-title">Plantões realizados</div>
-      <div id="historico-lista"><div class="empty"><div class="empty-icon">📊</div>Nenhum registro</div></div>
+      <div class="card-title">Plantoes realizados</div>
+      <div id="historico-lista"><div class="empty"><div class="empty-icon">&#128202;</div>Nenhum registro</div></div>
     </div>
   </div>
 
-</div><!-- /content -->
+  <div id="page-notificacoes" class="page">
+    <div class="refresh-hint">Solicitacoes de transferencia recebidas de colegas</div>
+    <div id="notif-lista"><div class="empty"><div class="empty-icon">&#128276;</div>Carregando...</div></div>
+  </div>
 
-<!-- TELA DE ERRO -->
+</div>
+
 <div id="tela-erro" style="display:none;text-align:center;padding:60px 24px;">
-  <div style="font-size:48px;margin-bottom:12px;">🔒</div>
-  <div style="font-size:18px;font-weight:700;margin-bottom:8px;">Link inválido</div>
-  <div style="font-size:14px;color:#666;line-height:1.6;">Este link de acesso não é válido ou expirou.<br>Solicite um novo link ao administrador.</div>
+  <div style="font-size:48px;margin-bottom:12px;">&#128274;</div>
+  <div style="font-size:18px;font-weight:700;margin-bottom:8px;">Link invalido</div>
+  <div style="font-size:14px;color:#666;line-height:1.6;">Este link nao e valido ou expirou. Solicite um novo link ao administrador.</div>
 </div>
-
-<!-- TELA DE DISPOSITIVO BLOQUEADO -->
 <div id="tela-device" style="display:none;text-align:center;padding:48px 24px;">
-  <div style="font-size:56px;margin-bottom:16px;">📵</div>
+  <div style="font-size:56px;margin-bottom:16px;">&#128245;</div>
   <div style="font-size:19px;font-weight:700;margin-bottom:10px;color:#1a1a1a;">Acesso negado</div>
-  <div style="font-size:14px;color:#555;line-height:1.7;margin-bottom:24px;">
-    Este app já está vinculado a outro dispositivo.<br>
-    Por segurança, o check-in só pode ser feito<br>
-    pelo celular registrado originalmente.
-  </div>
-  <div style="background:#fff3cd;border:1px solid #ffc107;border-radius:10px;padding:14px 18px;font-size:13px;color:#856404;line-height:1.6;">
-    Se você trocou de celular, solicite ao administrador<br>
-    que redefina o vínculo do seu dispositivo.
+  <div style="font-size:14px;color:#555;line-height:1.7;margin-bottom:24px;">Este app ja esta vinculado a outro dispositivo. Por seguranca, o check-in so pode ser feito pelo celular registrado originalmente.</div>
+  <div style="background:#fff3cd;border:1px solid #ffc107;border-radius:10px;padding:14px 18px;font-size:13px;color:#856404;line-height:1.6;">Se voce trocou de celular, solicite ao administrador que redefina o vinculo do seu dispositivo.</div>
+</div>
+<div id="tela-primeiro-acesso" style="display:none;text-align:center;padding:48px 24px;">
+  <div style="font-size:56px;margin-bottom:16px;">&#128241;</div>
+  <div style="font-size:19px;font-weight:700;margin-bottom:10px;color:#1a1a1a;">Vincular este celular</div>
+  <div style="font-size:14px;color:#555;line-height:1.7;margin-bottom:24px;">Este e o primeiro acesso. Seu celular sera vinculado a sua conta para garantir a seguranca do check-in.</div>
+  <div style="font-size:13px;color:#888;margin-bottom:28px;">Apos vincular, o app so funcionara neste dispositivo.</div>
+  <button onclick="vincularDispositivo()" style="background:#1a5fad;color:#fff;border:none;padding:16px 40px;border-radius:12px;font-size:16px;font-weight:700;cursor:pointer;width:100%;max-width:280px;">Vincular este celular</button>
+</div>
+
+<!-- MODAL TRANSFERIR -->
+<div class="modal-overlay oculto" id="modal-transferir" onclick="if(event.target===this)fecharModal('modal-transferir')">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <div class="modal-title">&#128260; Transferir plantao</div>
+      <div class="modal-sub" id="modal-transf-info">-</div>
+    </div>
+    <div class="modal-body">
+      <label class="modal-label">Selecionar colega</label>
+      <input class="busca-med" id="busca-med-transf" type="text" placeholder="Buscar por nome ou CRM..." oninput="filtrarMedTransf()">
+      <div class="med-lista" id="med-lista-transf">
+        <div style="padding:16px;text-align:center;color:var(--text3);font-size:13px;">Carregando medicos...</div>
+      </div>
+      <label class="modal-label">Mensagem para o colega (opcional)</label>
+      <textarea class="modal-textarea" id="transf-msg" rows="2" placeholder="Ex: Tenho um compromisso familiar esse dia..."></textarea>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-modal azul" id="btn-enviar-transf" onclick="confirmarTransferencia()" disabled>Solicitar transferencia</button>
+      <button class="btn-modal cancel" onclick="fecharModal('modal-transferir')">Cancelar</button>
+    </div>
   </div>
 </div>
 
-<!-- TELA DE PRIMEIRO ACESSO -->
-<div id="tela-primeiro-acesso" style="display:none;text-align:center;padding:48px 24px;">
-  <div style="font-size:56px;margin-bottom:16px;">📱</div>
-  <div style="font-size:19px;font-weight:700;margin-bottom:10px;color:#1a1a1a;">Vincular este celular</div>
-  <div style="font-size:14px;color:#555;line-height:1.7;margin-bottom:24px;">
-    Este é o primeiro acesso.<br>
-    Seu celular será vinculado à sua conta para garantir a segurança do check-in.
+<!-- MODAL AUSENCIA -->
+<div class="modal-overlay oculto" id="modal-ausencia" onclick="if(event.target===this)fecharModal('modal-ausencia')">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <div class="modal-title">&#9888;&#65039; Avisar ausencia</div>
+      <div class="modal-sub" id="modal-ausencia-info">-</div>
+    </div>
+    <div class="modal-body">
+      <label class="modal-label">Motivo</label>
+      <select class="modal-select" id="ausencia-motivo">
+        <option value="">Selecione um motivo...</option>
+        <option value="Problema de saude">Problema de saude</option>
+        <option value="Emergencia familiar">Emergencia familiar</option>
+        <option value="Imprevisto pessoal">Imprevisto pessoal</option>
+        <option value="Problema de transporte">Problema de transporte</option>
+        <option value="Outro">Outro motivo</option>
+      </select>
+      <label class="modal-label">Detalhes adicionais (opcional)</label>
+      <textarea class="modal-textarea" id="ausencia-obs" rows="3" placeholder="Descreva brevemente o que aconteceu..."></textarea>
+      <div style="margin-top:14px;background:var(--red-light);border-radius:var(--radius-sm);padding:12px;border:1px solid #f0b8b8;">
+        <div style="font-size:12px;font-weight:700;color:var(--red);margin-bottom:4px;">Atencao</div>
+        <div style="font-size:12px;color:var(--red);line-height:1.5;">A empresa gestora sera notificada imediatamente e buscara um substituto para o seu plantao.</div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-modal vermelho" id="btn-confirmar-ausencia" onclick="confirmarAusencia()">Confirmar ausencia</button>
+      <button class="btn-modal cancel" onclick="fecharModal('modal-ausencia')">Cancelar</button>
+    </div>
   </div>
-  <div style="font-size:13px;color:#888;margin-bottom:28px;">
-    ⚠️ Após vincular, o app só funcionará neste dispositivo.
-  </div>
-  <button onclick="vincularDispositivo()" style="background:#1a5fad;color:#fff;border:none;padding:16px 40px;border-radius:12px;font-size:16px;font-weight:700;cursor:pointer;width:100%;max-width:280px;">
-    ✓ Vincular este celular
-  </button>
 </div>
 
 <div id="toast-med"></div>
 
 <script>
-// ── CONFIG ────────────────────────────────────────────────
 const SUPABASE_URL = 'https://hqtnnadzwtfyfkunwfcy.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhxdG5uYWR6d3RmeWZrdW53ZmN5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYzMTM1MzcsImV4cCI6MjA5MTg4OTUzN30.j2qpn6JJZQ5QcB5j0eWtNV1EfqEz7DfTE-tQbW_WEGw';
-const RAIO_CHECKIN = 100; // metros
+const RAIO_CHECKIN = 100;
 
-// ── ESTADO ───────────────────────────────────────────────
-let medico = null;
-let projetos = [];
-let posAtual = null;
-let watchId = null;
+let medico = null, projetos = [], posAtual = null;
+let todosMedicos = [], _lancAtivo = null, _medSel = null;
+let _plantoesCache = [], _filtroAtivo = 'proximos';
+let _transfersPend = new Set(), _ausenciasInf = new Set();
 
-// ── INIT ─────────────────────────────────────────────────
-// ── DEVICE ID ────────────────────────────────────────────
+async function sb(path, opts={}) {
+  try {
+    const r = await fetch(SUPABASE_URL+path, {
+      headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json','Prefer':'return=representation',...(opts.headers||{})},
+      ...opts
+    });
+    if(!r.ok){const e=await r.text();console.error('SB',r.status,e);return null;}
+    if(r.status===204)return true;
+    const ct=r.headers.get('content-type');
+    return ct&&ct.includes('json')?r.json():true;
+  } catch(e){console.error(e);return null;}
+}
+
 function getDeviceId() {
-  // Gera ou recupera um ID único e persistente para este dispositivo
-  let did = localStorage.getItem('plantaopro_device_id');
-  if (!did) {
-    // Gera ID único baseado em dados do navegador + random
-    const nav = navigator.userAgent + navigator.language + screen.width + screen.height + screen.colorDepth;
-    const rand = Math.random().toString(36).substring(2);
-    const time = Date.now().toString(36);
-    did = btoa(nav).substring(0, 16) + '_' + rand + '_' + time;
-    localStorage.setItem('plantaopro_device_id', did);
-  }
-  return did;
+  let d=localStorage.getItem('plantaopro_device_id');
+  if(!d){d=btoa(navigator.userAgent+screen.width).slice(0,16)+'_'+Math.random().toString(36).slice(2)+'_'+Date.now().toString(36);localStorage.setItem('plantaopro_device_id',d);}
+  return d;
 }
 
 async function vincularDispositivo() {
-  const btn = document.querySelector('#tela-primeiro-acesso button');
-  if (btn) { btn.disabled = true; btn.textContent = 'Vinculando...'; }
-
-  // Verificar se medico está carregado
-  if (!medico || !medico.id) {
-    alert('Sessão expirada. Feche e abra o link novamente.');
-    if (btn) { btn.disabled = false; btn.textContent = '✓ Vincular este celular'; }
-    return;
-  }
-
-  const deviceId = getDeviceId();
-  const url = SUPABASE_URL + '/rest/v1/medicos?id=eq.' + medico.id;
-
+  const btn=document.querySelector('#tela-primeiro-acesso button');
+  if(btn){btn.disabled=true;btn.textContent='Vinculando...';}
+  if(!medico?.id){alert('Sessao expirada.');if(btn){btn.disabled=false;btn.textContent='Vincular este celular';}return;}
   try {
-    const res = await fetch(url, {
-      method: 'PATCH',
-      headers: {
-        'apikey': SUPABASE_KEY,
-        'Authorization': 'Bearer ' + SUPABASE_KEY,
-        'Content-Type': 'application/json',
-        'Prefer': 'return=minimal'
-      },
-      body: JSON.stringify({
-        device_id: deviceId,
-        device_registrado_em: new Date().toISOString()
-      })
-    });
-
-    if (res.ok || res.status === 204) {
-      localStorage.setItem('plantaopro_device_vinculado', '1');
-      document.getElementById('tela-primeiro-acesso').style.display = 'none';
-      mostrarApp();
-    } else {
-      const errTxt = await res.text().catch(()=>'');
-      alert('Erro ' + res.status + ': ' + errTxt.slice(0, 120));
-      if (btn) { btn.disabled = false; btn.textContent = '✓ Vincular este celular'; }
-    }
-  } catch(e) {
-    // Erro de rede — mostrar detalhes
-    alert('Erro de rede: ' + (e.message || String(e)));
-    if (btn) { btn.disabled = false; btn.textContent = '✓ Vincular este celular'; }
-  }
+    const r=await fetch(SUPABASE_URL+'/rest/v1/medicos?id=eq.'+medico.id,{method:'PATCH',headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify({device_id:getDeviceId(),device_registrado_em:new Date().toISOString()})});
+    if(r.ok||r.status===204){localStorage.setItem('plantaopro_device_vinculado','1');document.getElementById('tela-primeiro-acesso').style.display='none';mostrarApp();}
+    else{alert('Erro '+r.status);if(btn){btn.disabled=false;btn.textContent='Vincular este celular';}}
+  } catch(e){alert('Erro: '+e.message);if(btn){btn.disabled=false;btn.textContent='Vincular este celular';}}
 }
 
 async function init() {
-  // Timeout global — garante que o splash some em qualquer cenário
-  setTimeout(() => {
-    const s = document.getElementById('splash');
-    if (s && !s.classList.contains('hide')) {
-      s.classList.add('hide');
-      // Se nada foi mostrado, exibir erro genérico
-      const telaErro = document.getElementById('tela-erro');
-      const header   = document.getElementById('header');
-      if (!header || header.style.display === 'none') {
-        if (telaErro) telaErro.style.display = 'block';
-      }
-    }
-  }, 8000);
-
-  // Pega token da URL ou localStorage
-  const params = new URLSearchParams(window.location.search);
-  let token = params.get('token');
-
-  if (token) {
-    localStorage.setItem('plantaopro_token', token);
-  } else {
-    token = localStorage.getItem('plantaopro_token');
-  }
-
-  if (!token) { mostrarErro(); return; }
-
-  // Busca médico pelo token
-  const med = await supabaseFetch(`/rest/v1/medicos?token_acesso=eq.${token}&select=*`);
-  if (!med || !med.length) {
-    localStorage.removeItem('plantaopro_token');
-    mostrarErro();
-    return;
-  }
-  medico = med[0];
-
-  // ── Verificação de dispositivo ────────────────────────
-  const deviceId = getDeviceId();
-
-  if (!medico.device_id) {
-    document.getElementById('splash').classList.add('hide');
-    document.getElementById('tela-primeiro-acesso').style.display = 'block';
-    return;
-  }
-
-  if (medico.device_id !== deviceId) {
-    document.getElementById('splash').classList.add('hide');
-    document.getElementById('tela-device').style.display = 'block';
-    return;
-  }
-
-  // Dispositivo correto — abre o app
+  setTimeout(()=>{const s=document.getElementById('splash');if(s&&!s.classList.contains('hide')){s.classList.add('hide');if(document.getElementById('header').style.display==='none')document.getElementById('tela-erro').style.display='block';}},8000);
+  const params=new URLSearchParams(window.location.search);
+  let token=params.get('token')||localStorage.getItem('plantaopro_token');
+  if(token)localStorage.setItem('plantaopro_token',token);
+  if(!token){mostrarErro();return;}
+  const med=await sb('/rest/v1/medicos?token_acesso=eq.'+token+'&select=*');
+  if(!med?.length){localStorage.removeItem('plantaopro_token');mostrarErro();return;}
+  medico=med[0];
+  const did=getDeviceId();
+  if(!medico.device_id){document.getElementById('splash').classList.add('hide');document.getElementById('tela-primeiro-acesso').style.display='block';return;}
+  if(medico.device_id!==did){document.getElementById('splash').classList.add('hide');document.getElementById('tela-device').style.display='block';return;}
   mostrarApp();
 }
 
 function mostrarApp() {
-  // Preenche header
-  document.getElementById('hdr-nome').textContent = medico.nome;
-  document.getElementById('hdr-crm').textContent = medico.crm;
-  document.getElementById('hdr-avatar').textContent = medico.nome.split(' ').slice(0,2).map(n=>n[0]).join('');
-
-  // Mostrar UI imediatamente — sem esperar nada
-  const splash = document.getElementById('splash');
-  if (splash) splash.classList.add('hide');
-  const header = document.getElementById('header');
-  if (header) header.style.display = 'block';
-  const tabs = document.getElementById('tabs');
-  if (tabs) tabs.style.display = 'flex';
-  const main = document.getElementById('main-content');
-  if (main) main.style.display = 'block';
-
-  // Timeout de segurança — garante que o splash some mesmo se algo falhar
-  setTimeout(() => {
-    const s = document.getElementById('splash');
-    if (s) { s.style.display = 'none'; }
-  }, 3000);
-
-  // Carregar dados de forma independente
-  try { carregarProjetos(); } catch(e) { console.error(e); }
-  try { iniciarGPS(); } catch(e) { console.error(e); }
-  try { carregarPlantoes(); } catch(e) { console.error(e); }
-  try { carregarHistorico(); } catch(e) { console.error(e); }
-  try { carregarCheckinsHoje(); } catch(e) { console.error(e); }
-  try { carregarDisponiveis(); } catch(e) { console.error(e); }
+  document.getElementById('hdr-nome').textContent=medico.nome;
+  document.getElementById('hdr-crm').textContent=medico.crm;
+  document.getElementById('hdr-avatar').textContent=medico.nome.split(' ').slice(0,2).map(n=>n[0]).join('');
+  ['splash','tela-primeiro-acesso','tela-device','tela-erro'].forEach(id=>{const el=document.getElementById(id);if(el){el.style.display='none';el.classList.add('hide');}});
+  document.getElementById('header').style.display='block';
+  document.getElementById('tabs').style.display='flex';
+  document.getElementById('main-content').style.display='block';
+  carregarProjetos();
+  iniciarGPS();
+  carregarPlantoes();
+  carregarHistorico();
+  carregarCheckinsHoje();
+  carregarDisponiveis();
+  carregarMedicos();
+  carregarNotificacoes();
 }
 
+function mostrarErro(){document.getElementById('splash').classList.add('hide');document.getElementById('tela-erro').style.display='block';}
 
-
-function mostrarErro() {
-  document.getElementById('splash').classList.add('hide');
-  document.getElementById('tela-erro').style.display = 'block';
-}
-
-// ── SUPABASE FETCH ────────────────────────────────────────
-async function supabaseFetch(path, options = {}) {
-  try {
-    const res = await fetch(SUPABASE_URL + path, {
-      headers: {
-        'apikey': SUPABASE_KEY,
-        'Authorization': 'Bearer ' + SUPABASE_KEY,
-        'Content-Type': 'application/json',
-        'Prefer': 'return=representation',
-        ...options.headers
-      },
-      ...options
-    });
-    if (!res.ok) {
-      const err = await res.text();
-      console.error('Supabase erro:', res.status, err);
-      return null;
-    }
-    // 204 No Content = sucesso sem body (PATCH/DELETE com return=minimal)
-    if (res.status === 204) return true;
-    const ct = res.headers.get('content-type');
-    if (ct && ct.includes('json')) return res.json();
-    return true;
-  } catch(e) { console.error(e); return null; }
-}
-
-// ── PROJETOS ─────────────────────────────────────────────
 async function carregarProjetos() {
-  const data = await supabaseFetch('/rest/v1/projetos?status=eq.Ativo&select=*&order=nome');
-  projetos = data || [];
-  const sel = document.getElementById('sel-projeto');
-  sel.innerHTML = '<option value="">Selecione o local do plantão...</option>' +
-    projetos.map(p => `<option value="${p.id}">${p.nome}</option>`).join('');
-  sel.addEventListener('change', atualizarStatusCheckin);
+  const d=await sb('/rest/v1/projetos?status=eq.Ativo&select=*&order=nome');
+  projetos=d||[];
+  const sel=document.getElementById('sel-projeto');
+  sel.innerHTML='<option value="">Selecione o local do plantao...</option>'+projetos.map(p=>'<option value="'+p.id+'">'+p.nome+'</option>').join('');
+  sel.addEventListener('change',atualizarStatusCheckin);
 }
 
-// ── GPS ───────────────────────────────────────────────────
+async function carregarMedicos() {
+  const d=await sb('/rest/v1/medicos?ativo=eq.true&select=id,nome,crm&order=nome');
+  todosMedicos=(d||[]).filter(m=>m.id!==medico.id);
+}
+
 function iniciarGPS() {
-  if (!navigator.geolocation) {
-    setCheckinUI('erro', '❌', 'GPS não disponível', 'Seu navegador não suporta geolocalização.');
-    return;
-  }
-  watchId = navigator.geolocation.watchPosition(
-    pos => {
-      posAtual = pos.coords;
-      atualizarStatusCheckin();
-    },
-    err => {
-      setCheckinUI('erro', '📵', 'Sem acesso à localização', 'Por favor, permita o acesso à localização nas configurações do seu celular.');
-    },
-    { enableHighAccuracy: true, timeout: 15000, maximumAge: 5000 }
-  );
+  if(!navigator.geolocation){setCheckinUI('erro','X','GPS nao disponivel','Seu navegador nao suporta geolocalizacao.');return;}
+  navigator.geolocation.watchPosition(pos=>{posAtual=pos.coords;atualizarStatusCheckin();},()=>setCheckinUI('erro','!','Sem acesso a localizacao','Permita o acesso a localizacao nas configuracoes.'),{enableHighAccuracy:true,timeout:15000,maximumAge:5000});
 }
 
-function calcularDistancia(lat1, lon1, lat2, lon2) {
-  const R = 6371000;
-  const dLat = (lat2-lat1) * Math.PI/180;
-  const dLon = (lon2-lon1) * Math.PI/180;
-  const a = Math.sin(dLat/2)*Math.sin(dLat/2) +
-    Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)*Math.sin(dLon/2);
-  return Math.round(R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)));
-}
+function calcDist(a,b,c,d){const R=6371000,dL=(c-a)*Math.PI/180,dO=(d-b)*Math.PI/180,x=Math.sin(dL/2)**2+Math.cos(a*Math.PI/180)*Math.cos(c*Math.PI/180)*Math.sin(dO/2)**2;return Math.round(R*2*Math.atan2(Math.sqrt(x),Math.sqrt(1-x)));}
 
 function atualizarStatusCheckin() {
-  const projId = document.getElementById('sel-projeto').value;
-  const proj = projetos.find(p => p.id === projId);
-
-  if (!proj) {
-    setCheckinUI('idle', '📍', 'Selecione o local', 'Escolha o hospital ou unidade onde está.');
-    return;
-  }
-  if (!posAtual) {
-    setCheckinUI('loading', '🔄', 'Obtendo localização...', 'Aguarde enquanto o GPS localiza você.');
-    return;
-  }
-  if (!proj.latitude || !proj.longitude) {
-    setCheckinUI('ok', '✅', 'Localização do projeto não configurada', 'Peça ao administrador para configurar as coordenadas do projeto.');
-    return;
-  }
-
-  const dist = calcularDistancia(posAtual.latitude, posAtual.longitude, proj.latitude, proj.longitude);
-  const raio = proj.raio_checkin || RAIO_CHECKIN;
-  const dentro = dist <= raio;
-
-  if (dentro) {
-    setCheckinUI('ok', '✅', 'Você está no local!', `Check-in disponível para ${proj.nome}`, dist, true);
-  } else {
-    setCheckinUI('far', '📍', 'Você está fora do raio', `Aproxime-se do hospital para fazer o check-in`, dist, false);
-  }
+  const pid=document.getElementById('sel-projeto').value,proj=projetos.find(p=>p.id===pid);
+  if(!proj){setCheckinUI('idle','P','Selecione o local','Escolha o hospital ou unidade onde esta.');return;}
+  if(!posAtual){setCheckinUI('loading','~','Obtendo localizacao...','Aguarde...');return;}
+  if(!proj.latitude||!proj.longitude){setCheckinUI('ok','OK','Local sem GPS','O administrador precisa configurar as coordenadas.');return;}
+  const dist=calcDist(posAtual.latitude,posAtual.longitude,proj.latitude,proj.longitude),raio=proj.raio_checkin||RAIO_CHECKIN;
+  if(dist<=raio)setCheckinUI('ok','OK','Voce esta no local!','Check-in disponivel para '+proj.nome,dist,true);
+  else setCheckinUI('far','!','Voce esta fora do raio','Aproxime-se do hospital',dist,false);
 }
 
-function setCheckinUI(estado, icon, title, sub, dist, podeCheckin) {
-  document.getElementById('ci-icon').textContent = icon;
-  document.getElementById('ci-title').textContent = title;
-  document.getElementById('ci-sub').textContent = sub;
-  const distEl = document.getElementById('ci-dist');
-  const btn = document.getElementById('btn-ci');
-  if (dist !== undefined) {
-    distEl.style.display = 'inline-block';
-    const raio = parseInt(document.getElementById('sel-projeto').value ?
-      (projetos.find(p=>p.id===document.getElementById('sel-projeto').value)||{}).raio_checkin||100 : 100);
-    distEl.textContent = dist + 'm do hospital (raio: ' + raio + 'm)';
-    distEl.className = 'checkin-dist ' + (podeCheckin ? 'dist-ok' : 'dist-far');
-  } else { distEl.style.display = 'none'; }
-  if (estado === 'ok') {
-    btn.className = 'btn-checkin ok'; btn.disabled = false;
-    btn.innerHTML = '✅ Fazer Check-in';
-  } else if (estado === 'far') {
-    btn.className = 'btn-checkin far'; btn.disabled = true;
-    btn.innerHTML = '📍 Fora do raio permitido';
-  } else if (estado === 'loading') {
-    btn.className = 'btn-checkin loading'; btn.disabled = true;
-    btn.innerHTML = '<span class="spinner"></span> Verificando...';
-  } else {
-    btn.className = 'btn-checkin far'; btn.disabled = true;
-    btn.innerHTML = '📍 Selecione o local';
-  }
+function setCheckinUI(estado,icon,title,sub,dist,pode) {
+  document.getElementById('ci-icon').textContent=icon;
+  document.getElementById('ci-title').textContent=title;
+  document.getElementById('ci-sub').textContent=sub;
+  const de=document.getElementById('ci-dist'),btn=document.getElementById('btn-ci');
+  if(dist!==undefined){const raio=projetos.find(p=>p.id===document.getElementById('sel-projeto').value)?.raio_checkin||100;de.style.display='inline-block';de.textContent=dist+'m (raio: '+raio+'m)';de.className='checkin-dist '+(pode?'dist-ok':'dist-far');}else de.style.display='none';
+  if(estado==='ok'){btn.className='btn-checkin ok';btn.disabled=false;btn.innerHTML='Check-in';}
+  else if(estado==='far'){btn.className='btn-checkin far';btn.disabled=true;btn.innerHTML='Fora do raio';}
+  else if(estado==='loading'){btn.className='btn-checkin loading';btn.disabled=true;btn.innerHTML='<span class="spinner"></span> Verificando...';}
+  else{btn.className='btn-checkin far';btn.disabled=true;btn.innerHTML='Selecione o local';}
 }
 
-// ── CHECK-IN ─────────────────────────────────────────────
 async function fazerCheckin() {
-  const projId = document.getElementById('sel-projeto').value;
-  const proj = projetos.find(p => p.id === projId);
-  if (!proj || !posAtual || !medico) return;
-
-  const btn = document.getElementById('btn-ci');
-  btn.disabled = true;
-  btn.innerHTML = '<span class="spinner"></span> Registrando...';
-
-  const dist = proj.latitude ? calcularDistancia(posAtual.latitude, posAtual.longitude, proj.latitude, proj.longitude) : 0;
-  const aprovado = !proj.latitude || dist <= (proj.raio_checkin || RAIO_CHECKIN);
-
-  const payload = {
-    medico_id: medico.id,
-    projeto_id: projId,
-    latitude: posAtual.latitude,
-    longitude: posAtual.longitude,
-    distancia_metros: dist,
-    aprovado,
-    tipo: 'entrada'
-  };
-
-  const res = await supabaseFetch('/rest/v1/checkins', {
-    method: 'POST',
-    body: JSON.stringify(payload)
-  });
-
-  if (res) {
-    toast('✅ Check-in registrado com sucesso!');
-    carregarCheckinsHoje();
-  } else {
-    toast('❌ Erro ao registrar. Tente novamente.');
-  }
-
-  // Reativa botão após 3s
-  setTimeout(() => atualizarStatusCheckin(), 3000);
+  const pid=document.getElementById('sel-projeto').value,proj=projetos.find(p=>p.id===pid);
+  if(!proj||!posAtual||!medico)return;
+  const btn=document.getElementById('btn-ci');btn.disabled=true;btn.innerHTML='<span class="spinner"></span> Registrando...';
+  const dist=proj.latitude?calcDist(posAtual.latitude,posAtual.longitude,proj.latitude,proj.longitude):0;
+  const aprovado=!proj.latitude||dist<=(proj.raio_checkin||RAIO_CHECKIN);
+  const r=await sb('/rest/v1/checkins',{method:'POST',body:JSON.stringify({medico_id:medico.id,projeto_id:pid,latitude:posAtual.latitude,longitude:posAtual.longitude,distancia_metros:dist,aprovado,tipo:'entrada'})});
+  if(r)toastMed('Check-in registrado!');else toastMed('Erro ao registrar.',false);
+  setTimeout(()=>atualizarStatusCheckin(),3000);
+  carregarCheckinsHoje();
 }
 
-// ── PLANTÕES ─────────────────────────────────────────────
+async function carregarCheckinsHoje() {
+  const hoje=new Date().toISOString().slice(0,10);
+  const d=await sb('/rest/v1/checkins?medico_id=eq.'+medico.id+'&feito_em=gte.'+hoje+'T00:00:00&select=*,projetos(nome)&order=feito_em.desc');
+  const el=document.getElementById('checkins-hoje-lista');
+  if(!d?.length){el.innerHTML='<div class="empty"><div class="empty-icon">OK</div>Nenhum check-in hoje</div>';return;}
+  el.innerHTML=d.map(c=>{const hora=new Date(c.feito_em).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});return '<div class="checkin-item"><div class="checkin-dot '+(c.aprovado?'dot-ok':'dot-fail')+'"></div><div class="checkin-info"><div class="checkin-info-proj">'+(c.projetos?.nome||'')+'</div><div class="checkin-info-meta">'+hora+' - '+(c.aprovado?'Aprovado':'Fora do raio')+'</div><span class="checkin-info-dist '+(c.aprovado?'dist-ok':'dist-far')+'">'+c.distancia_metros+'m</span></div></div>';}).join('');
+}
+
 async function carregarPlantoes() {
-  const hoje = new Date().toISOString().slice(0,10);
-  const data = await supabaseFetch(
-    `/rest/v1/lancamentos?medico_id=eq.${medico.id}&data=gte.${hoje}&select=*,projetos(nome)&order=data.asc&limit=20`
-  );
-  const el = document.getElementById('plantoes-lista');
-  if (!data || !data.length) { el.innerHTML = '<div class="empty"><div class="empty-icon">📅</div>Nenhum plantão escalado</div>'; return; }
+  const hoje=new Date().toISOString().slice(0,10);
+  const d=await sb('/rest/v1/lancamentos?medico_id=eq.'+medico.id+'&data=gte.'+hoje+'&select=*,projetos(nome)&order=data.asc&limit=30');
+  _plantoesCache=d||[];
+  const tr=await sb('/rest/v1/transferencias?medico_origem_id=eq.'+medico.id+'&status=eq.pendente&select=lancamento_id');
+  _transfersPend=new Set((tr||[]).map(t=>t.lancamento_id));
+  const au=await sb('/rest/v1/ausencias?medico_id=eq.'+medico.id+'&select=lancamento_id');
+  _ausenciasInf=new Set((au||[]).map(a=>a.lancamento_id));
+  const pend=_plantoesCache.filter(l=>!l.confirmado).length;
+  const b=document.getElementById('badge-confirmacao');
+  if(b){b.textContent=pend;b.style.display=pend>0?'inline':'none';}
+  renderPlantoes();
+}
 
-  el.innerHTML = data.map(l => {
-    const turno = l.tipo && l.tipo.includes('Noturno') ? 'Noturno' : l.tipo && l.tipo.includes('24') ? '24h' : 'Diurno';
-    const badge = turno==='Noturno'?'badge-purple':turno==='24h'?'badge-amber':'badge-green';
-    const proj = l.projetos ? l.projetos.nome : '';
-    const d = new Date(l.data+'T12:00:00');
-    const dataFmt = d.toLocaleDateString('pt-BR', {weekday:'short', day:'2-digit', month:'short'});
-    return `<div class="plantao-card">
-      <div class="plantao-header">
-        <div>
-          <div class="plantao-data">${dataFmt}</div>
-          <div class="plantao-proj">${proj}${l.setor?' · '+l.setor:''}</div>
-        </div>
-        <span class="badge ${badge}">${turno}</span>
-      </div>
-      <div class="plantao-body">
-        <div><div class="plantao-info-label">Horário</div><div class="plantao-info-val">${l.hora_ini?.slice(0,5)}–${l.hora_fim?.slice(0,5)}</div></div>
-        <div><div class="plantao-info-label">Horas</div><div class="plantao-info-val">${l.horas}h</div></div>
-        <div class="plantao-valor"><div class="plantao-info-label">Honorários</div><div class="plantao-valor-val">${fBRL(l.honorario)}</div></div>
-      </div>
-    </div>`;
+function filtrarPlantoes(tipo,btn) {
+  _filtroAtivo=tipo;
+  document.querySelectorAll('.btn-filtro-plantao').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderPlantoes();
+}
+
+function fmtData(ds){const d=new Date(ds+'T12:00:00');return d.toLocaleDateString('pt-BR',{weekday:'short',day:'2-digit',month:'short'});}
+function fBRL(v){return 'R$ '+Number(v||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});}
+
+function renderPlantoes() {
+  const el=document.getElementById('plantoes-lista');
+  const hint=document.getElementById('plantoes-hint');
+  let lista=[..._plantoesCache];
+  if(_filtroAtivo==='pendentes')lista=lista.filter(l=>!l.confirmado);
+  if(_filtroAtivo==='confirmados')lista=lista.filter(l=>l.confirmado);
+  if(hint)hint.textContent=_filtroAtivo==='confirmados'?'Toque em um plantao para transferir ou avisar ausencia':'Toque em um plantao para confirmar sua presenca';
+  if(!lista.length){el.innerHTML='<div class="empty"><div class="empty-icon">&#128197;</div>'+(_filtroAtivo==='pendentes'?'Nenhum plantao pendente':_filtroAtivo==='confirmados'?'Nenhum plantao confirmado':'Nenhum plantao escalado')+'</div>';return;}
+  el.innerHTML=lista.map(l=>{
+    const turno=l.tipo?.includes('Noturno')?'Noturno':l.tipo?.includes('24')?'24h':'Diurno';
+    const bc=turno==='Noturno'?'badge-purple':turno==='24h'?'badge-amber':'badge-green';
+    const proj=l.projetos?.nome||'';
+    const temTP=_transfersPend.has(l.id),temAU=_ausenciasInf.has(l.id);
+    const acoes=l.confirmado
+      ? '<div class="plantao-acoes"><button class="btn-acao btn-acao-transferir" onclick="abrirTransferir(\''+l.id+'\')">&#128260; Transferir plantao</button><button class="btn-acao btn-acao-ausencia" onclick="abrirAusencia(\''+l.id+'\')">&#9888;&#65039; Nao vou comparecer</button></div>'
+      : '<div style="padding:0 16px 14px;"><button class="btn-confirmar pendente" onclick="confirmarPresenca(\''+l.id+'\',this)">Confirmar presenca</button></div>';
+    return '<div class="plantao-card"><div class="plantao-header"><div><div class="plantao-data">'+fmtData(l.data)+'</div><div class="plantao-proj">'+proj+(l.setor?' - '+l.setor:'')+'</div>'+(l.confirmado?'<span class="confirmado-badge">Confirmado</span>':'<span class="pendente-badge">Aguardando confirmacao</span>')+(temTP?'<br><span class="transf-badge">Transferencia aguardando resposta</span>':'')+(temAU?'<br><span class="ausencia-badge">Ausencia informada a empresa</span>':'')+'</div><span class="badge '+bc+'">'+turno+'</span></div><div class="plantao-body"><div><div class="plantao-info-label">Horario</div><div class="plantao-info-val">'+(l.hora_ini||'').slice(0,5)+'-'+(l.hora_fim||'').slice(0,5)+'</div></div><div><div class="plantao-info-label">Horas</div><div class="plantao-info-val">'+l.horas+'h</div></div><div class="plantao-valor"><div class="plantao-info-label">Honorarios</div><div class="plantao-valor-val">'+fBRL(l.honorario)+'</div></div></div>'+acoes+'</div>';
   }).join('');
 }
 
-// ── PLANTÕES DISPONÍVEIS ─────────────────────────────────
+async function confirmarPresenca(lancId,btn) {
+  btn.disabled=true;btn.textContent='Confirmando...';
+  const r=await fetch(SUPABASE_URL+'/rest/v1/lancamentos?id=eq.'+lancId,{method:'PATCH',headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify({confirmado:true})});
+  if(r.ok||r.status===204){toastMed('Presenca confirmada!');await carregarPlantoes();}
+  else{btn.disabled=false;btn.textContent='Confirmar presenca';toastMed('Erro ao confirmar',false);}
+}
+
+function abrirTransferir(lancId) {
+  _lancAtivo=_plantoesCache.find(l=>l.id===lancId);_medSel=null;
+  if(!_lancAtivo)return;
+  const d=new Date(_lancAtivo.data+'T12:00:00');
+  document.getElementById('modal-transf-info').textContent=(_lancAtivo.projetos?.nome||'')+' - '+d.toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'long'})+' - '+(_lancAtivo.hora_ini||'').slice(0,5)+'-'+(_lancAtivo.hora_fim||'').slice(0,5);
+  document.getElementById('busca-med-transf').value='';
+  document.getElementById('transf-msg').value='';
+  document.getElementById('btn-enviar-transf').disabled=true;
+  renderMedLista(todosMedicos);
+  document.getElementById('modal-transferir').classList.remove('oculto');
+}
+
+function filtrarMedTransf() {
+  const q=document.getElementById('busca-med-transf').value.toLowerCase();
+  renderMedLista(todosMedicos.filter(m=>m.nome.toLowerCase().includes(q)||(m.crm||'').toLowerCase().includes(q)));
+}
+
+function renderMedLista(lista) {
+  const el=document.getElementById('med-lista-transf');
+  if(!lista.length){el.innerHTML='<div style="padding:16px;text-align:center;color:var(--text3);font-size:13px;">Nenhum medico encontrado</div>';return;}
+  el.innerHTML=lista.map(m=>'<div class="med-item'+(_medSel?.id===m.id?' selecionado':'')+'" onclick="selecionarMed(\''+m.id+'\')" ><div class="med-avatar-mini">'+m.nome.split(' ').slice(0,2).map(n=>n[0]).join('')+'</div><div><div class="med-item-nome">'+m.nome+'</div><div class="med-item-crm">'+(m.crm||'')+'</div></div></div>').join('');
+}
+
+function selecionarMed(id) {
+  _medSel=todosMedicos.find(m=>m.id===id);
+  document.getElementById('btn-enviar-transf').disabled=!_medSel;
+  const q=document.getElementById('busca-med-transf').value.toLowerCase();
+  renderMedLista(todosMedicos.filter(m=>!q||m.nome.toLowerCase().includes(q)||(m.crm||'').toLowerCase().includes(q)));
+}
+
+async function confirmarTransferencia() {
+  if(!_medSel||!_lancAtivo)return;
+  const btn=document.getElementById('btn-enviar-transf');
+  btn.disabled=true;btn.textContent='Enviando...';
+  const msg=document.getElementById('transf-msg').value.trim();
+  const r=await sb('/rest/v1/transferencias',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify({lancamento_id:_lancAtivo.id,medico_origem_id:medico.id,medico_destino_id:_medSel.id,status:'pendente',mensagem:msg||null,criado_em:new Date().toISOString()})});
+  if(r!==null){toastMed('Solicitacao enviada para '+_medSel.nome.split(' ')[0]+'!');fecharModal('modal-transferir');await carregarPlantoes();await carregarNotificacoes();}
+  else{btn.disabled=false;btn.textContent='Solicitar transferencia';toastMed('Erro ao enviar',false);}
+}
+
+function abrirAusencia(lancId) {
+  _lancAtivo=_plantoesCache.find(l=>l.id===lancId);if(!_lancAtivo)return;
+  const d=new Date(_lancAtivo.data+'T12:00:00');
+  document.getElementById('modal-ausencia-info').textContent=(_lancAtivo.projetos?.nome||'')+' - '+d.toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'long'})+' - '+(_lancAtivo.hora_ini||'').slice(0,5)+'-'+(_lancAtivo.hora_fim||'').slice(0,5);
+  document.getElementById('ausencia-motivo').value='';
+  document.getElementById('ausencia-obs').value='';
+  document.getElementById('modal-ausencia').classList.remove('oculto');
+}
+
+async function confirmarAusencia() {
+  if(!_lancAtivo)return;
+  const motivo=document.getElementById('ausencia-motivo').value;
+  if(!motivo){toastMed('Selecione um motivo',false);return;}
+  const btn=document.getElementById('btn-confirmar-ausencia');
+  btn.disabled=true;btn.textContent='Registrando...';
+  const obs=document.getElementById('ausencia-obs').value.trim();
+  const r=await sb('/rest/v1/ausencias',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify({lancamento_id:_lancAtivo.id,medico_id:medico.id,motivo,obs:obs||null,criado_em:new Date().toISOString(),status:'pendente_substituto'})});
+  if(r!==null){
+    await fetch(SUPABASE_URL+'/rest/v1/lancamentos?id=eq.'+_lancAtivo.id,{method:'PATCH',headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify({ausencia_informada:true})});
+    toastMed('Ausencia informada! A empresa sera notificada.');fecharModal('modal-ausencia');await carregarPlantoes();
+  } else{btn.disabled=false;btn.textContent='Confirmar ausencia';toastMed('Erro ao registrar',false);}
+}
+
+async function carregarNotificacoes() {
+  const el=document.getElementById('notif-lista');if(!el||!medico)return;
+  const d=await sb('/rest/v1/transferencias?medico_destino_id=eq.'+medico.id+'&select=*,medicos!transferencias_medico_origem_id_fkey(nome,crm),lancamentos(data,hora_ini,hora_fim,horas,honorario,projetos(nome))&order=criado_em.desc&limit=20');
+  const lista=d||[];
+  const pend=lista.filter(t=>t.status==='pendente').length;
+  const b=document.getElementById('badge-notif');
+  if(b){b.textContent=pend;b.style.display=pend>0?'inline':'none';}
+  if(!lista.length){el.innerHTML='<div class="empty"><div class="empty-icon">&#128276;</div>Nenhuma solicitacao recebida</div>';return;}
+  el.innerHTML=lista.map(t=>{
+    const origem=t.medicos?.nome||'Colega';
+    const lanc=t.lancamentos;
+    const proj=lanc?.projetos?.nome||'';
+    const dt=lanc?.data?new Date(lanc.data+'T12:00:00').toLocaleDateString('pt-BR',{weekday:'short',day:'2-digit',month:'short'}):'';
+    const hr=lanc?((lanc.hora_ini||'').slice(0,5)+'-'+(lanc.hora_fim||'').slice(0,5)):'';
+    const val=lanc?.honorario?fBRL(lanc.honorario):'';
+    const stC=t.status==='pendente'?'pendente':t.status==='recusado'?'recusado':'';
+    const stT=t.status==='pendente'?'Aguardando sua resposta':t.status==='aceito'?'Voce aceitou':'Voce recusou';
+    const stColor=t.status==='pendente'?'var(--amber)':t.status==='aceito'?'var(--green)':'var(--red)';
+    const acoes=t.status==='pendente'?'<div class="notif-acoes"><button class="btn-notif btn-notif-aceitar" onclick="responderTransf(\''+t.id+'\',\''+t.lancamento_id+'\',\'aceito\')">Aceitar plantao</button><button class="btn-notif btn-notif-recusar" onclick="responderTransf(\''+t.id+'\',\''+t.lancamento_id+'\',\'recusado\')">Recusar</button></div>':'';
+    return '<div class="notif-card '+stC+'"><div class="notif-header"><div class="notif-tipo">Solicitacao de transferencia</div><div class="notif-desc">'+origem+' quer te transferir um plantao</div><div class="notif-meta">'+proj+' - '+dt+' - '+hr+(val?' - '+val:'')+'</div>'+(t.mensagem?'<div class="notif-msg">"'+t.mensagem+'"</div>':'')+'<div class="notif-status" style="color:'+stColor+';">'+stT+'</div></div>'+acoes+'</div>';
+  }).join('');
+}
+
+async function responderTransf(transId, lancId, resp) {
+  const btns=document.querySelectorAll('[onclick*="\''+transId+'\'"]');
+  btns.forEach(b=>{b.disabled=true;});
+  const r=await fetch(SUPABASE_URL+'/rest/v1/transferencias?id=eq.'+transId,{method:'PATCH',headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify({status:resp,respondido_em:new Date().toISOString()})});
+  if(r.ok||r.status===204){
+    if(resp==='aceito'){
+      await fetch(SUPABASE_URL+'/rest/v1/lancamentos?id=eq.'+lancId,{method:'PATCH',headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify({medico_id:medico.id,confirmado:false})});
+      toastMed('Plantao transferido para voce!');
+    } else toastMed('Transferencia recusada.');
+    await carregarNotificacoes();await carregarPlantoes();
+  } else{toastMed('Erro ao responder',false);btns.forEach(b=>{b.disabled=false;});}
+}
+
 async function carregarDisponiveis() {
-  const el = document.getElementById('disponiveis-lista');
-  if (!el || !medico) return;
-  el.innerHTML = '<div class="empty"><div class="empty-icon">📢</div>Carregando...</div>';
-
-  // Buscar projetos vinculados ao médico (pode ser array de UUIDs ou vazio)
-  const projVinc = medico.projetos_vinculados || [];
-
-  // Buscar plantões abertos — se não tiver projetos vinculados, busca todos
-  const hoje = new Date().toISOString().slice(0,10);
-  let pathLanc = `/rest/v1/lancamentos?aberto=eq.true&data=gte.${hoje}&select=*,projetos(nome)&order=data,hora_ini`;
-  if (projVinc.length > 0) {
-    pathLanc += `&projeto_id=in.(${projVinc.join(',')})`;
-  }
-
-  let abertos = [];
-  try {
-    const res = await supabaseFetch(pathLanc);
-    abertos = Array.isArray(res) ? res : [];
-  } catch(e) {
-    console.error('Erro ao buscar plantões:', e);
-  }
-
-  // Buscar minhas candidaturas
-  let minhasCand = [];
-  try {
-    const r = await supabaseFetch(`/rest/v1/candidaturas?medico_id=eq.${medico.id}&select=*`);
-    minhasCand = Array.isArray(r) ? r : [];
-  } catch(e) {}
-
-  // Buscar meus plantões para verificar conflito de horário
-  let meusPlantoes = [];
-  try {
-    const r = await supabaseFetch(`/rest/v1/lancamentos?medico_id=eq.${medico.id}&data=gte.${hoje}&select=data,hora_ini,hora_fim,horas,tipo,projeto_id,projetos(nome)`);
-    meusPlantoes = Array.isArray(r) ? r : [];
-  } catch(e) {}
-
-  el.innerHTML = abertos.map(l => {
-    const d = new Date(l.data+'T12:00:00');
-    const dataFmt = d.toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'long'});
-    const proj = l.projetos?.nome || '';
-    const vagas = (l.vagas||1) - (l.vagas_preenchidas||0);
-    const cheia = vagas <= 0;
-
-    // Verificar minha candidatura
-    const minhaCand = minhasCand.find(c=>c.lancamento_id===l.id);
-
-    // Verificar conflito/alerta de horário
-    const conflito = verificarConflito(l, meusPlantoes);
-
-    let btnHtml = '';
-    if (minhaCand) {
-      if (minhaCand.status==='aprovado') btnHtml = `<button class="btn-candidatar inscrito" disabled>✅ Aprovado — você está escalado</button>`;
-      else if (minhaCand.status==='recusado') btnHtml = `<button class="btn-candidatar recusado" disabled>❌ Candidatura recusada</button>`;
-      else btnHtml = `<button class="btn-candidatar inscrito" disabled>⏳ Candidatura enviada — aguardando aprovação</button>`;
-    } else if (cheia) {
-      btnHtml = `<button class="btn-candidatar inscrito" disabled>🔒 Vagas preenchidas</button>`;
-    } else if (conflito && conflito.bloqueio) {
-      // Bloqueio total — não pode se candidatar
-      btnHtml = `<div class="conflito-aviso">🚫 ${conflito.msg}</div>
-                 <button class="btn-candidatar recusado" disabled>Não é possível se candidatar</button>`;
-    } else if (conflito && !conflito.bloqueio) {
-      // Apenas aviso — pode se candidatar mas com alerta
-      // Guardar msg no window para evitar problema de escape no onclick
-      const alertKey = 'alerta_' + l.id;
-      window[alertKey] = conflito.msg;
-      btnHtml = `<div class="conflito-aviso" style="background:#fff3e0;border-color:#ffb74d;color:#e65100;">${conflito.msg}</div>
-                 <button class="btn-candidatar disponivel" onclick="candidatar('${l.id}', this, window['${alertKey}'])">📋 Estou ciente — me candidatar assim mesmo</button>`;
-    } else {
-      btnHtml = `<button class="btn-candidatar disponivel" onclick="candidatar('${l.id}', this, null)">📋 Me candidatar para este plantão</button>`;
-    }
-
-    const turno = l.tipo?.includes('Noturno')?'badge-purple':l.tipo?.includes('24')?'badge-amber':'badge-green';
-
-    return `<div class="plantao-aberto-card">
-      <div class="plantao-aberto-header">
-        <div class="plantao-aberto-proj">📢 ${proj}</div>
-        <div class="plantao-aberto-data" style="text-transform:capitalize;">${dataFmt}</div>
-      </div>
-      <div class="plantao-body">
-        <div><div class="plantao-info-label">Horário</div><div class="plantao-info-val">${(l.hora_ini||'').slice(0,5)}–${(l.hora_fim||'').slice(0,5)}</div></div>
-        <div><div class="plantao-info-label">Horas</div><div class="plantao-info-val">${l.horas}h</div></div>
-        <div><div class="plantao-info-label">Vagas</div><div class="plantao-info-val" style="color:${cheia?'var(--green)':'var(--amber)'};">${cheia?'Preenchido':vagas+' disponível(is)'}</div></div>
-      </div>
-      ${l.setor?`<div style="padding:0 16px 8px;font-size:12px;color:var(--text2);">🏥 ${l.setor}</div>`:''}
-      ${l.honorario?`<div style="padding:0 16px 8px;font-size:13px;font-weight:700;color:var(--green);">${fBRL(l.honorario)}</div>`:''}
-      <span class="badge ${turno}" style="margin:0 16px 10px;display:inline-block;">${l.tipo||''}</span>
-      ${btnHtml}
-    </div>`;
+  const el=document.getElementById('disponiveis-lista');if(!el||!medico)return;
+  el.innerHTML='<div class="empty"><div class="empty-icon">&#128226;</div>Carregando...</div>';
+  const projVinc=medico.projetos_vinculados||[];
+  const hoje=new Date().toISOString().slice(0,10);
+  let path='/rest/v1/lancamentos?aberto=eq.true&data=gte.'+hoje+'&select=*,projetos(nome)&order=data,hora_ini';
+  if(projVinc.length>0)path+='&projeto_id=in.('+projVinc.join(',')+')';
+  let abertos=[],cands=[],meus=[];
+  try{abertos=(await sb(path))||[];}catch(e){}
+  try{cands=(await sb('/rest/v1/candidaturas?medico_id=eq.'+medico.id+'&select=*'))||[];}catch(e){}
+  try{meus=(await sb('/rest/v1/lancamentos?medico_id=eq.'+medico.id+'&data=gte.'+hoje+'&select=data,hora_ini,hora_fim,horas,tipo,projeto_id,projetos(nome)'))||[];}catch(e){}
+  const bdDisp=document.getElementById('badge-disp');
+  if(bdDisp){bdDisp.textContent=abertos.length;bdDisp.style.display=abertos.length>0?'inline':'none';}
+  if(!abertos.length){el.innerHTML='<div class="empty"><div class="empty-icon">&#128226;</div>Nenhum plantao disponivel agora</div>';return;}
+  el.innerHTML=abertos.map(l=>{
+    const d=new Date(l.data+'T12:00:00');
+    const dataFmt=d.toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'long'});
+    const proj=l.projetos?.nome||'';
+    const vagas=(l.vagas||1)-(l.vagas_preenchidas||0),cheia=vagas<=0;
+    const mc=cands.find(c=>c.lancamento_id===l.id);
+    const conf=verificarConflito(l,meus);
+    let btnH='';
+    if(mc){if(mc.status==='aprovado')btnH='<button class="btn-candidatar inscrito" disabled>Aprovado - voce esta escalado</button>';else if(mc.status==='recusado')btnH='<button class="btn-candidatar recusado" disabled>Candidatura recusada</button>';else btnH='<button class="btn-candidatar inscrito" disabled>Candidatura enviada - aguardando</button>';}
+    else if(cheia)btnH='<button class="btn-candidatar inscrito" disabled>Vagas preenchidas</button>';
+    else if(conf?.bloqueio)btnH='<div class="conflito-aviso">'+conf.msg+'</div><button class="btn-candidatar recusado" disabled>Nao e possivel se candidatar</button>';
+    else if(conf&&!conf.bloqueio){const ak='alerta_'+l.id;window[ak]=conf.msg;btnH='<div class="conflito-aviso" style="background:#fff3e0;border-color:#ffb74d;color:#e65100;">'+conf.msg+'</div><button class="btn-candidatar disponivel" onclick="candidatar(\''+l.id+'\',this,window[\''+ak+'\'])">Estou ciente - me candidatar</button>';}
+    else btnH='<button class="btn-candidatar disponivel" onclick="candidatar(\''+l.id+'\',this,null)">Me candidatar para este plantao</button>';
+    const turno=l.tipo?.includes('Noturno')?'badge-purple':l.tipo?.includes('24')?'badge-amber':'badge-green';
+    return '<div class="plantao-aberto-card"><div class="plantao-aberto-header"><div class="plantao-aberto-proj">'+proj+'</div><div class="plantao-aberto-data" style="text-transform:capitalize;">'+dataFmt+'</div></div><div class="plantao-body"><div><div class="plantao-info-label">Horario</div><div class="plantao-info-val">'+(l.hora_ini||'').slice(0,5)+'-'+(l.hora_fim||'').slice(0,5)+'</div></div><div><div class="plantao-info-label">Horas</div><div class="plantao-info-val">'+l.horas+'h</div></div><div><div class="plantao-info-label">Vagas</div><div class="plantao-info-val" style="color:'+(cheia?'var(--green)':'var(--amber)')+';">'+(cheia?'Preenchido':vagas+' disponivel(is)')+'</div></div></div>'+(l.setor?'<div style="padding:0 16px 8px;font-size:12px;color:var(--text2);">'+l.setor+'</div>':'')+(l.honorario?'<div style="padding:0 16px 8px;font-size:13px;font-weight:700;color:var(--green);">'+fBRL(l.honorario)+'</div>':'')+'<span class="badge '+turno+'" style="margin:0 16px 10px;display:inline-block;">'+(l.tipo||'')+'</span>'+btnH+'</div>';
   }).join('');
 }
 
-// Retorna: null (sem aviso) | { bloqueio: true, msg } | { bloqueio: false, msg }
-function verificarConflito(plantao, meusPlantoes) {
-  const iniNovo = new Date(`${plantao.data}T${plantao.hora_ini||'00:00'}`);
-  const fimNovo = new Date(iniNovo.getTime() + (plantao.horas||0)*3600000);
-  const projNovo = plantao.projeto_id;
-
-  for (const p of meusPlantoes) {
-    const iniExist = new Date(`${p.data}T${p.hora_ini||'00:00'}`);
-    const fimExist = new Date(iniExist.getTime() + (p.horas||0)*3600000);
-    const mesmoProjeto = p.projeto_id === projNovo;
-
-    // 1. Sobreposição direta — único bloqueio real
-    if (iniNovo < fimExist && fimNovo > iniExist) {
-      return { bloqueio: true, msg: 'Você já tem um plantão neste mesmo horário.' };
-    }
-
-    // 2. Calcular se há sequência (gap < 60 min = considera consecutivo)
-    const gapApos  = iniNovo - fimExist;  // ms após plantão existente
-    const gapAntes = iniExist - fimNovo;  // ms antes do plantão existente
-    const emSequencia = (gapApos >= 0 && gapApos < 3600000) || (gapAntes >= 0 && gapAntes < 3600000);
-
-    if (emSequencia) {
-      // Calcular total de horas consecutivas acumuladas
-      const iniTotal = gapApos >= 0 ? iniExist : iniNovo;
-      const fimTotal = gapApos >= 0 ? fimNovo  : fimExist;
-      const hTotal   = Math.round((fimTotal - iniTotal) / 3600000* 10) / 10;
-
-      // Verificar se já passou de 36h consecutivas (único caso de bloqueio por horas)
-      if (hTotal > 36) {
-        return { bloqueio: true, msg: `Limite de 36h consecutivas atingido (${hTotal}h total). É necessário descanso de 12h.` };
-      }
-
-      // Aviso informativo — nunca bloqueia
-      const horaIni = gapApos >= 0 ? (p.hora_ini||'').slice(0,5) : (plantao.hora_ini||'').slice(0,5);
-      const horaFim = gapApos >= 0 ? (plantao.hora_fim||'').slice(0,5) : (p.hora_fim||'').slice(0,5);
-      const nomeLocal = mesmoProjeto
-        ? (p.projetos?.nome || 'mesmo hospital')
-        : `hospitais diferentes (${p.projetos?.nome||'hospital 1'} → ${plantao.projetos?.nome||'hospital 2'})`;
-      return {
-        bloqueio: false,
-        msg: `Sequência de ${hTotal}h em ${nomeLocal} (${horaIni}→${horaFim}). O administrador será informado ao aprovar.`
-      };
-    }
-
-    // 3. Descanso insuficiente SOMENTE se há jornada acumulada ≥ 36h
-    // (calcular total de horas consecutivas já acumuladas antes deste plantão)
-    const horasAcum = calcularHorasConsecutivas(p, meusPlantoes);
-    if (horasAcum >= 36) {
-      const gapMin = Math.min(
-        gapApos  >= 0 ? gapApos  : Infinity,
-        gapAntes >= 0 ? gapAntes : Infinity
-      );
-      if (gapMin < 12*3600000 && gapMin > 0) {
-        const hFalta = Math.round((12*3600000 - gapMin) / 3600000);
-        return { bloqueio: true, msg: `Descanso obrigatório: após 36h de jornada, é necessário 12h de descanso. Faltam ${hFalta}h.` };
-      }
-    }
-  }
+function verificarConflito(p,meus) {
+  const iN=new Date(p.data+'T'+(p.hora_ini||'00:00')),fN=new Date(iN.getTime()+(p.horas||0)*3600000);
+  for(const m of meus){const iE=new Date(m.data+'T'+(m.hora_ini||'00:00')),fE=new Date(iE.getTime()+(m.horas||0)*3600000);if(iN<fE&&fN>iE)return{bloqueio:true,msg:'Voce ja tem um plantao neste mesmo horario.'};const gA=iN-fE,gB=iE-fN,seq=(gA>=0&&gA<3600000)||(gB>=0&&gB<3600000);if(seq){const iT=gA>=0?iE:iN,fT=gA>=0?fN:fE,h=Math.round((fT-iT)/3600000*10)/10;if(h>36)return{bloqueio:true,msg:'Limite de 36h consecutivas atingido.'};return{bloqueio:false,msg:'Sequencia de '+h+'h. O administrador sera informado.'};}}
   return null;
 }
 
-function calcularHorasConsecutivas(plantaoRef, todosPlantoes) {
-  // Soma as horas de plantões consecutivos que incluem o plantaoRef
-  let iniTotal = new Date(`${plantaoRef.data}T${plantaoRef.hora_ini||'00:00'}`);
-  let fimTotal = new Date(iniTotal.getTime() + (plantaoRef.horas||0)*3600000);
-  let mudou = true;
-  while (mudou) {
-    mudou = false;
-    for (const p of todosPlantoes) {
-      if (p === plantaoRef) continue;
-      const iniP = new Date(`${p.data}T${p.hora_ini||'00:00'}`);
-      const fimP = new Date(iniP.getTime() + (p.horas||0)*3600000);
-      const gapA = iniTotal - fimP;
-      const gapB = iniP - fimTotal;
-      if ((gapA >= 0 && gapA < 3600000) || (gapB >= 0 && gapB < 3600000)) {
-        if (iniP < iniTotal) { iniTotal = iniP; mudou = true; }
-        if (fimP > fimTotal) { fimTotal = fimP; mudou = true; }
-      }
-    }
-  }
-  return (fimTotal - iniTotal) / 3600000;
+async function candidatar(lancId,btn,alerta=null) {
+  if(btn){btn.disabled=true;btn.textContent='Enviando...';}
+  try{
+    const r=await fetch(SUPABASE_URL+'/rest/v1/candidaturas',{method:'POST',headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify({lancamento_id:lancId,medico_id:medico.id,status:'pendente',criado_em:new Date().toISOString(),obs:alerta?'ALERTA: '+alerta:null})});
+    if(r.ok||r.status===204){if(btn){btn.className='btn-candidatar inscrito';btn.textContent='Candidatura enviada - aguardando';btn.disabled=true;}toastMed('Candidatura enviada!');}
+    else{if(btn){btn.disabled=false;btn.textContent='Me candidatar para este plantao';}toastMed('Erro ao enviar',false);}
+  }catch(e){if(btn)btn.disabled=false;toastMed('Erro de conexao',false);}
 }
 
-async function candidatar(lancId, btn, alertaMsg=null) {
-  if (btn) { btn.disabled=true; btn.textContent='Enviando...'; }
-  const obs = alertaMsg ? `ALERTA: ${alertaMsg}` : null;
-  try {
-    const res = await fetch(SUPABASE_URL+'/rest/v1/candidaturas', {
-      method:'POST',
-      headers:{
-        'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,
-        'Content-Type':'application/json','Prefer':'return=minimal'
-      },
-      body: JSON.stringify({
-        lancamento_id: lancId,
-        medico_id: medico.id,
-        status: 'pendente',
-        criado_em: new Date().toISOString(),
-        obs: obs
-      })
-    });
-    if (res.ok || res.status===204) {
-      if (btn) { btn.className='btn-candidatar inscrito'; btn.textContent='⏳ Candidatura enviada — aguardando aprovação'; btn.disabled=true; }
-      toastMed('✅ Candidatura enviada! Aguarde aprovação.');
-    } else {
-      if (btn) { btn.disabled=false; btn.textContent='📋 Me candidatar para este plantão'; }
-      toastMed('Erro ao enviar candidatura', false);
-    }
-  } catch(e) {
-    if (btn) { btn.disabled=false; btn.textContent='📋 Me candidatar para este plantão'; }
-    toastMed('Erro de conexão', false);
-  }
-}
-
-// ── HISTÓRICO ────────────────────────────────────────────
 async function carregarHistorico() {
-  const hoje = new Date();
-  const d1 = new Date(hoje.getFullYear(), hoje.getMonth(), 1).toISOString().slice(0,10);
-  const d2 = new Date(hoje.getFullYear(), hoje.getMonth()+1, 0).toISOString().slice(0,10);
-
-  const data = await supabaseFetch(
-    `/rest/v1/lancamentos?medico_id=eq.${medico.id}&data=gte.${d1}&data=lte.${d2}&select=*,projetos(nome)&order=data.desc`
-  );
-
-  const total = (data||[]).reduce((s,l)=>s+(l.honorario||0),0);
-  document.getElementById('hist-total').textContent = fBRL(total);
-  document.getElementById('hist-qtd').textContent = (data||[]).length;
-
-  const el = document.getElementById('historico-lista');
-  if (!data || !data.length) { el.innerHTML = '<div class="empty"><div class="empty-icon">📊</div>Nenhum plantão este mês</div>'; return; }
-
-  el.innerHTML = data.map(l => {
-    const turno = l.tipo && l.tipo.includes('Noturno') ? 'Noturno' : l.tipo && l.tipo.includes('24') ? '24h' : 'Diurno';
-    const badge = turno==='Noturno'?'badge-purple':turno==='24h'?'badge-amber':'badge-green';
-    const proj = l.projetos ? l.projetos.nome : '';
-    const d = new Date(l.data+'T12:00:00');
-    return `<div class="checkin-item">
-      <div>
-        <div style="font-size:13px;font-weight:600;color:var(--blue);">${d.toLocaleDateString('pt-BR',{day:'2-digit',month:'short'})}</div>
-        <span class="badge ${badge}" style="margin-top:3px;">${turno}</span>
-      </div>
-      <div class="checkin-info">
-        <div class="checkin-info-proj">${proj}</div>
-        <div class="checkin-info-meta">${l.hora_ini?.slice(0,5)}–${l.hora_fim?.slice(0,5)} · ${l.horas}h${l.setor?' · '+l.setor:''}</div>
-      </div>
-      <div style="text-align:right;font-size:13px;font-weight:700;color:var(--green);">${fBRL(l.honorario)}</div>
-    </div>`;
-  }).join('');
+  const hoje=new Date(),d1=new Date(hoje.getFullYear(),hoje.getMonth(),1).toISOString().slice(0,10),d2=new Date(hoje.getFullYear(),hoje.getMonth()+1,0).toISOString().slice(0,10);
+  const d=await sb('/rest/v1/lancamentos?medico_id=eq.'+medico.id+'&data=gte.'+d1+'&data=lte.'+d2+'&select=*,projetos(nome)&order=data.desc');
+  const total=(d||[]).reduce((s,l)=>s+(l.honorario||0),0);
+  document.getElementById('hist-total').textContent=fBRL(total);
+  document.getElementById('hist-qtd').textContent=(d||[]).length;
+  const el=document.getElementById('historico-lista');
+  if(!d?.length){el.innerHTML='<div class="empty"><div class="empty-icon">&#128202;</div>Nenhum plantao este mes</div>';return;}
+  el.innerHTML=d.map(l=>{const turno=l.tipo?.includes('Noturno')?'Noturno':l.tipo?.includes('24')?'24h':'Diurno';const bc=turno==='Noturno'?'badge-purple':turno==='24h'?'badge-amber':'badge-green';const dd=new Date(l.data+'T12:00:00');return '<div class="checkin-item"><div><div style="font-size:13px;font-weight:600;color:var(--blue);">'+dd.toLocaleDateString('pt-BR',{day:'2-digit',month:'short'})+'</div><span class="badge '+bc+'" style="margin-top:3px;">'+turno+'</span></div><div class="checkin-info"><div class="checkin-info-proj">'+(l.projetos?.nome||'')+'</div><div class="checkin-info-meta">'+(l.hora_ini||'').slice(0,5)+'-'+(l.hora_fim||'').slice(0,5)+' - '+l.horas+'h'+(l.setor?' - '+l.setor:'')+'</div></div><div style="text-align:right;font-size:13px;font-weight:700;color:var(--green);">'+fBRL(l.honorario)+'</div></div>';}).join('');
 }
 
-// ── CHECK-INS DE HOJE ────────────────────────────────────
-async function carregarCheckinsHoje() {
-  const hoje = new Date().toISOString().slice(0,10);
-  const data = await supabaseFetch(
-    `/rest/v1/checkins?medico_id=eq.${medico.id}&feito_em=gte.${hoje}T00:00:00&select=*,projetos(nome)&order=feito_em.desc`
-  );
-  const el = document.getElementById('checkins-hoje-lista');
-  if (!data || !data.length) { el.innerHTML = '<div class="empty"><div class="empty-icon">✅</div>Nenhum check-in hoje</div>'; return; }
+function fecharModal(id){document.getElementById(id).classList.add('oculto');}
 
-  el.innerHTML = data.map(c => {
-    const hora = new Date(c.feito_em).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
-    const proj = c.projetos ? c.projetos.nome : '';
-    return `<div class="checkin-item">
-      <div class="checkin-dot ${c.aprovado?'dot-ok':'dot-fail'}"></div>
-      <div class="checkin-info">
-        <div class="checkin-info-proj">${proj}</div>
-        <div class="checkin-info-meta">${hora} · ${c.aprovado?'Aprovado':'Fora do raio'}</div>
-        <span class="checkin-info-dist ${c.aprovado?'dist-ok':'dist-far'}">${c.distancia_metros}m</span>
-      </div>
-    </div>`;
-  }).join('');
-}
-
-// ── HELPERS ───────────────────────────────────────────────
-function showPage(id, el) {
+function showPage(id,el) {
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   document.getElementById('page-'+id).classList.add('active');
   el.classList.add('active');
+  if(id==='notificacoes')carregarNotificacoes();
+  if(id==='plantoes')carregarPlantoes();
+  if(id==='disponiveis')carregarDisponiveis();
 }
 
-function fBRL(v) { return 'R$ ' + Number(v||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}); }
-function toastMed(msg, ok=true) {
-  const t = document.getElementById('toast-med');
-  if (!t) return;
-  t.textContent = msg;
-  t.style.background = ok ? '#2d7a3a' : '#b03030';
-  t.style.display = 'block';
-  setTimeout(() => t.style.display = 'none', 2800);
-}
+function toastMed(msg,ok=true){const t=document.getElementById('toast-med');if(!t)return;t.textContent=msg;t.style.background=ok?'#2d7a3a':'#b03030';t.style.display='block';setTimeout(()=>t.style.display='none',3000);}
 
-function toast(msg) {
-  const t = document.getElementById('toast-med');
-  t.textContent = msg; t.style.display = 'block';
-  setTimeout(()=>t.style.display='none', 3000);
-}
-
-// ── START ─────────────────────────────────────────────────
-window.addEventListener('load', init);
+window.addEventListener('load',init);
 </script>
 </body>
 </html>
