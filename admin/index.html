@@ -864,6 +864,7 @@ tr:hover td{background:var(--bg3);}
         <button type="button" class="rel-tipo-btn" id="rt-atrasos" onclick="selecionarRelTipo('atrasos',this)">⚠️ Atrasos</button>
         <button type="button" class="rel-tipo-btn" id="rt-checkins" onclick="selecionarRelTipo('checkins',this)">📍 Check-ins fora da tolerância</button>
         <button type="button" class="rel-tipo-btn" id="rt-medicos" onclick="selecionarRelTipo('medicos',this)">👨‍⚕️ Médicos cadastrados</button>
+        <button type="button" class="rel-tipo-btn" id="rt-risco" onclick="selecionarRelTipo('risco',this)" style="border-color:var(--red);color:var(--red);">🚨 Risco operacional</button>
       </div>
     </div>
 
@@ -4769,7 +4770,7 @@ function calcularFurosDash(){
 let _relTipoAtivo='detalhado';
 function selecionarRelTipo(tipo,btn){_relTipoAtivo=tipo;document.querySelectorAll('.rel-tipo-btn').forEach(b=>{b.classList.remove('active');b.style.cssText='';});btn.classList.add('active');document.getElementById('rel-resultado').innerHTML='';}
 function filtrarDadosRel(){const pid=document.getElementById('rp').value,mid=document.getElementById('rm').value,d1=document.getElementById('rd1').value,d2=document.getElementById('rd2').value;let dados=[...lancamentos];if(pid)dados=dados.filter(l=>l.projeto_id===pid);if(mid)dados=dados.filter(l=>l.medico_id===mid);if(d1)dados=dados.filter(l=>l.data>=d1);if(d2)dados=dados.filter(l=>l.data<=d2);return dados;}
-function gerarRelatorio(){const el=document.getElementById('rel-resultado');switch(_relTipoAtivo){case'detalhado':gerarRelDetalhado(el);break;case'resumo':gerarRelResumo(el);break;case'horas':gerarRelHoras(el);break;case'faltas':gerarRelFaltas(el);break;case'atrasos':gerarRelAtrasos(el);break;case'checkins':gerarRelCheckinsForaTol(el);break;case'medicos':gerarRelMedicos(el);break;}}
+function gerarRelatorio(){const el=document.getElementById('rel-resultado');switch(_relTipoAtivo){case'detalhado':gerarRelDetalhado(el);break;case'resumo':gerarRelResumo(el);break;case'horas':gerarRelHoras(el);break;case'faltas':gerarRelFaltas(el);break;case'atrasos':gerarRelAtrasos(el);break;case'checkins':gerarRelCheckinsForaTol(el);break;case'medicos':gerarRelMedicos(el);break;case'risco':gerarRelRisco(el);break;}}
 
 function gerarRelDetalhado(el){const dados=filtrarDadosRel();if(!dados.length){el.innerHTML='<div class="card"><div class="empty">Nenhum dado.</div></div>';return;}const tH=dados.reduce((s,l)=>s+(l.horas||0),0),tR=dados.reduce((s,l)=>s+(l.honorario||0),0),nMeds=new Set(dados.map(l=>l.medico_id)).size;let html=`<div class="metrics"><div class="metric"><div class="metric-label">Plantões</div><div class="metric-val">${dados.length}</div></div><div class="metric"><div class="metric-label">Horas totais</div><div class="metric-val">${Math.round(tH*10)/10}h</div></div><div class="metric"><div class="metric-label">Total honorários</div><div class="metric-val">${fBRL(tR)}</div></div><div class="metric"><div class="metric-label">Médicos</div><div class="metric-val">${nMeds}</div></div></div>`;const porProjeto={};dados.forEach(l=>{const p=l.projeto||'Sem projeto';if(!porProjeto[p])porProjeto[p]=[];porProjeto[p].push(l);});Object.entries(porProjeto).sort((a,b)=>a[0].localeCompare(b[0],'pt-BR')).forEach(([proj,lans])=>{const projH=lans.reduce((s,l)=>s+(l.horas||0),0),projR=lans.reduce((s,l)=>s+(l.honorario||0),0);const grupos={};lans.forEach(l=>{const turno=l.tipo?.includes('Noturno')?'Noturno':l.tipo?.includes('24')?'24h':'Diurno';const chave=`${l.medico}||${l.horas}||${turno}||${l.setor||''}`;if(!grupos[chave])grupos[chave]={medico:l.medico,crm:l.crm,horas:l.horas,turno,setor:l.setor||'',qtd:0,total:0};grupos[chave].qtd++;grupos[chave].total+=l.honorario||0;});const linhas=Object.values(grupos).sort((a,b)=>a.medico.localeCompare(b.medico,'pt-BR')).map(g=>{const badge=g.turno==='Noturno'?'badge-purple':g.turno==='24h'?'badge-amber':'badge-green';return `<tr><td>${g.medico}<br><span class="mono" style="font-size:11px;color:var(--text3);">${g.crm||''}</span></td><td class="mono">${g.horas}h</td><td><span class="badge ${badge}">${g.turno}</span></td><td>${g.setor||'—'}</td><td style="text-align:center;">${g.qtd}</td><td class="mono" style="color:var(--green);font-weight:600;">${fBRL(Math.round(g.total*100)/100)}</td></tr>`;}).join('');html+=`<div class="card" style="margin-bottom:12px;"><div style="display:flex;justify-content:space-between;margin-bottom:10px;"><div class="card-title" style="margin-bottom:0;">📁 ${proj}</div><div style="font-size:12px;color:var(--text2);">${lans.length} plantão(ões) · ${Math.round(projH*10)/10}h · <span style="color:var(--green);font-weight:600;">${fBRL(projR)}</span></div></div><table><thead><tr><th>Médico/CRM</th><th>Hrs/plantão</th><th>Turno</th><th>Setor</th><th style="text-align:center;">Qtd</th><th>Total</th></tr></thead><tbody>${linhas}</tbody><tfoot><tr style="border-top:1.5px solid var(--border2);"><td colspan="4" style="font-weight:600;padding:8px;font-size:12px;">Total</td><td style="text-align:center;font-weight:600;">${lans.length}</td><td class="mono" style="color:var(--green);font-weight:600;">${fBRL(projR)}</td></tr></tfoot></table></div>`;});el.innerHTML=html;}
 
@@ -4784,6 +4785,241 @@ async function gerarRelAtrasos(el){el.innerHTML='<div class="card"><div class="e
 async function gerarRelCheckinsForaTol(el){el.innerHTML='<div class="card"><div class="empty">Carregando...</div></div>';const d1=document.getElementById('rd1').value,d2=document.getElementById('rd2').value;let pathCI='/rest/v1/checkins?select=*,medicos(nome,crm),projetos(nome)';if(d1)pathCI+=`&feito_em=gte.${d1}T00:00:00`;if(d2)pathCI+=`&feito_em=lte.${d2}T23:59:59`;const checkins=await sb(pathCI)||[];const fora=[];checkins.forEach(ci=>{const lanc=lancamentos.find(l=>l.medico_id===ci.medico_id&&l.projeto_id===ci.projeto_id&&l.data===ci.feito_em?.slice(0,10));if(!lanc)return;const diffMin=Math.round((new Date(ci.feito_em)-new Date(`${lanc.data}T${lanc.hora_ini||'00:00'}`))/60000);if(diffMin>15||!ci.aprovado)fora.push({...ci,diffMin,foraRaio:!ci.aprovado,lanc});});if(!fora.length){el.innerHTML='<div class="card"><div style="text-align:center;padding:24px;"><div style="font-size:40px;">✅</div><div style="font-size:14px;color:var(--green);font-weight:600;margin-top:8px;">Todos dentro da tolerância!</div></div></div>';return;}let html=`<div class="card"><table><thead><tr><th>Médico</th><th>Projeto</th><th>Data</th><th>Previsto</th><th>Check-in</th><th>Atraso</th><th>GPS</th></tr></thead><tbody>`;fora.forEach(c=>{const horaReal=new Date(c.feito_em).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});html+=`<tr><td><strong>${c.medicos?.nome||'—'}</strong></td><td>${c.projetos?.nome||'—'}</td><td class="mono">${fDate(c.lanc?.data||'')}</td><td class="mono">${(c.lanc?.hora_ini||'').slice(0,5)}</td><td class="mono">${horaReal}</td><td style="color:${c.diffMin>15?'var(--amber)':'var(--green)'};font-weight:600;">${c.diffMin>0?'+'+c.diffMin+'min':'no prazo'}</td><td>${c.foraRaio?'❌ Fora':'✅ Ok'}</td></tr>`;});html+='</tbody></table></div>';el.innerHTML=html;}
 
 function gerarRelMedicos(el){let lista=[...medicos];const mid=document.getElementById('rm').value;if(mid)lista=lista.filter(m=>m.id===mid);if(!lista.length){el.innerHTML='<div class="card"><div class="empty">Nenhum médico.</div></div>';return;}let html=`<div class="card"><table><thead><tr><th>Nome</th><th>CRM</th><th>Especialidade</th><th>Tipo</th><th>Telefone</th><th>E-mail</th><th>PIX</th><th>Dispositivo</th></tr></thead><tbody>`;lista.sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR')).forEach(m=>{const pix=m.pix_tipo&&m.pix_chave?`${m.pix_tipo}: ${m.pix_chave}`:'—';html+=`<tr><td><strong>${m.nome}</strong></td><td class="mono">${m.crm||'—'}</td><td>${m.especialidade||'—'}</td><td><span class="badge badge-blue">${m.tipo||''}</span></td><td>${m.telefone||'—'}</td><td>${m.email||'—'}</td><td style="font-size:11px;">${pix}</td><td>${m.device_id?'<span class="badge badge-green">✓ Vinculado</span>':'<span class="badge badge-amber">Sem vínculo</span>'}</td></tr>`;});html+='</tbody></table></div>';el.innerHTML=html;}
+
+async function gerarRelRisco(el) {
+  el.innerHTML = '<div class="card"><div class="empty">Carregando dados de risco...</div></div>';
+
+  const d1 = document.getElementById('rd1').value;
+  const d2 = document.getElementById('rd2').value;
+  const mid = document.getElementById('rm').value;
+
+  // 1. Buscar ausências informadas (tabela ausencias)
+  let pathAus = '/rest/v1/ausencias?select=*,medicos(id,nome,crm),lancamentos(data,projeto_id,projetos(nome))&order=criado_em.desc';
+  if (d1) pathAus += `&criado_em=gte.${d1}T00:00:00`;
+  if (d2) pathAus += `&criado_em=lte.${d2}T23:59:59`;
+  if (mid) pathAus += `&medico_id=eq.${mid}`;
+  const ausencias = await sb(pathAus) || [];
+
+  // 2. Buscar transferências solicitadas (como origem — médico tentou passar o plantão)
+  let pathTr = '/rest/v1/transferencias?select=*,medicos!transferencias_medico_origem_id_fkey(id,nome,crm),lancamentos(data,projeto_id,projetos(nome))&order=criado_em.desc';
+  if (d1) pathTr += `&criado_em=gte.${d1}T00:00:00`;
+  if (d2) pathTr += `&criado_em=lte.${d2}T23:59:59`;
+  if (mid) pathTr += `&medico_origem_id=eq.${mid}`;
+  const transferencias = await sb(pathTr) || [];
+
+  // 3. Buscar faltas (plantões passados sem check-in)
+  let pathLanc = `/rest/v1/lancamentos?select=*,medicos(id,nome,crm),projetos(nome)&order=data.desc`;
+  if (d1) pathLanc += `&data=gte.${d1}`;
+  if (d2) pathLanc += `&data=lte.${d2}`;
+  else pathLanc += `&data=lte.${new Date().toISOString().slice(0,10)}`;
+  if (mid) pathLanc += `&medico_id=eq.${mid}`;
+  const todosLanc = await sb(pathLanc) || [];
+
+  let pathCI = '/rest/v1/checkins?aprovado=eq.true&select=medico_id,projeto_id,feito_em';
+  if (d1) pathCI += `&feito_em=gte.${d1}T00:00:00`;
+  if (d2) pathCI += `&feito_em=lte.${d2}T23:59:59`;
+  const checkins = await sb(pathCI) || [];
+  const ciKeys = new Set(checkins.map(c => `${c.medico_id}_${c.projeto_id}_${c.feito_em?.slice(0,10)}`));
+
+  // Plantões passados (já deveriam ter ocorrido)
+  const agora = new Date();
+  const lancPassados = todosLanc.filter(l => {
+    if (!l.data || !l.hora_ini) return false;
+    return new Date(`${l.data}T${l.hora_ini}`) < agora;
+  });
+  const faltas = lancPassados.filter(l =>
+    !ciKeys.has(`${l.medico_id}_${l.projeto_id}_${l.data}`)
+  );
+
+  // 4. Consolidar por médico
+  const porMed = {};
+
+  const garantirMed = (id, nome, crm) => {
+    if (!porMed[id]) porMed[id] = {
+      id, nome: nome||'—', crm: crm||'—',
+      ausencias: [], transferencias: [], faltas: [],
+      score: 0
+    };
+  };
+
+  ausencias.forEach(a => {
+    const m = a.medicos; if (!m) return;
+    garantirMed(m.id, m.nome, m.crm);
+    porMed[m.id].ausencias.push({
+      data: a.lancamentos?.data,
+      projeto: a.lancamentos?.projetos?.nome || '—',
+      motivo: a.motivo || '—',
+      status: a.status
+    });
+  });
+
+  transferencias.forEach(t => {
+    const m = t.medicos; if (!m) return;
+    garantirMed(m.id, m.nome, m.crm);
+    porMed[m.id].transferencias.push({
+      data: t.lancamentos?.data,
+      projeto: t.lancamentos?.projetos?.nome || '—',
+      status: t.status
+    });
+  });
+
+  faltas.forEach(l => {
+    if (!l.medico_id) return;
+    const m = l.medicos;
+    garantirMed(l.medico_id, m?.nome, m?.crm);
+    porMed[l.medico_id].faltas.push({
+      data: l.data,
+      projeto: l.projetos?.nome || '—',
+      tipo: l.tipo || '—'
+    });
+  });
+
+  // 5. Calcular score de risco (pesos: ausência=3, transferência=2, falta=5)
+  Object.values(porMed).forEach(m => {
+    m.score = (m.ausencias.length * 3) + (m.transferencias.length * 2) + (m.faltas.length * 5);
+    m.total = m.ausencias.length + m.transferencias.length + m.faltas.length;
+  });
+
+  const ranking = Object.values(porMed)
+    .filter(m => m.total > 0)
+    .sort((a, b) => b.score - a.score);
+
+  if (!ranking.length) {
+    el.innerHTML = `<div class="card"><div style="text-align:center;padding:32px;">
+      <div style="font-size:40px;">✅</div>
+      <div style="font-size:14px;color:var(--green);font-weight:600;margin-top:8px;">
+        Nenhuma ausência, transferência ou falta encontrada no período.
+      </div></div></div>`;
+    return;
+  }
+
+  // Nível de risco
+  const nivelRisco = score => {
+    if (score >= 10) return { label: '🔴 Alto risco', cor: 'var(--red)', bg: 'var(--red-bg, #fdf0f0)' };
+    if (score >= 5)  return { label: '🟡 Risco moderado', cor: 'var(--amber)', bg: 'var(--amber-bg, #fdf3e0)' };
+    return           { label: '🟢 Risco baixo', cor: 'var(--green)', bg: 'var(--green-bg, #e8f5eb)' };
+  };
+
+  const maxScore = ranking[0].score || 1;
+
+  let html = `
+  <div class="card" style="margin-bottom:16px;">
+    <div class="card-title">🚨 Ranking de risco operacional</div>
+    <div style="font-size:12px;color:var(--text2);margin-bottom:14px;line-height:1.5;">
+      Médicos ordenados por potencial de deixar plantões descobertos.<br>
+      <strong>Score:</strong> falta sem aviso = 5pts · ausência informada = 3pts · solicitação de transferência = 2pts
+    </div>
+
+    <!-- MÉTRICAS GERAIS -->
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:18px;">
+      <div class="metric" style="border-left:3px solid var(--red);">
+        <div class="metric-label">Médicos em risco</div>
+        <div class="metric-val" style="color:var(--red);">${ranking.filter(m=>m.score>=5).length}</div>
+      </div>
+      <div class="metric" style="border-left:3px solid var(--red);">
+        <div class="metric-label">Faltas sem aviso</div>
+        <div class="metric-val" style="color:var(--red);">${ranking.reduce((s,m)=>s+m.faltas.length,0)}</div>
+      </div>
+      <div class="metric" style="border-left:3px solid var(--amber);">
+        <div class="metric-label">Ausências informadas</div>
+        <div class="metric-val" style="color:var(--amber);">${ranking.reduce((s,m)=>s+m.ausencias.length,0)}</div>
+      </div>
+      <div class="metric" style="border-left:3px solid var(--blue);">
+        <div class="metric-label">Transferências pedidas</div>
+        <div class="metric-val" style="color:var(--blue);">${ranking.reduce((s,m)=>s+m.transferencias.length,0)}</div>
+      </div>
+    </div>
+
+    <!-- RANKING -->
+    <table style="width:100%;border-collapse:collapse;font-size:13px;">
+      <thead>
+        <tr>
+          <th style="padding:8px 10px;text-align:left;font-size:11px;color:var(--text3);border-bottom:1px solid var(--border);text-transform:uppercase;letter-spacing:0.5px;">#</th>
+          <th style="padding:8px 10px;text-align:left;font-size:11px;color:var(--text3);border-bottom:1px solid var(--border);text-transform:uppercase;letter-spacing:0.5px;">Médico</th>
+          <th style="padding:8px 10px;text-align:center;font-size:11px;color:var(--text3);border-bottom:1px solid var(--border);text-transform:uppercase;letter-spacing:0.5px;">Faltas</th>
+          <th style="padding:8px 10px;text-align:center;font-size:11px;color:var(--text3);border-bottom:1px solid var(--border);text-transform:uppercase;letter-spacing:0.5px;">Ausências</th>
+          <th style="padding:8px 10px;text-align:center;font-size:11px;color:var(--text3);border-bottom:1px solid var(--border);text-transform:uppercase;letter-spacing:0.5px;">Transf.</th>
+          <th style="padding:8px 10px;text-align:left;font-size:11px;color:var(--text3);border-bottom:1px solid var(--border);text-transform:uppercase;letter-spacing:0.5px;">Score / Barra</th>
+          <th style="padding:8px 10px;text-align:center;font-size:11px;color:var(--text3);border-bottom:1px solid var(--border);text-transform:uppercase;letter-spacing:0.5px;">Risco</th>
+        </tr>
+      </thead>
+      <tbody>`;
+
+  ranking.forEach((m, i) => {
+    const { label, cor, bg } = nivelRisco(m.score);
+    const pct = Math.round((m.score / maxScore) * 100);
+    const medalha = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${i+1}º`;
+
+    // Detalhes das ocorrências
+    const ultimaFalta = m.faltas.length ? fDate(m.faltas.sort((a,b)=>b.data?.localeCompare(a.data||'')).slice(0,1)[0].data||'') : null;
+    const ultimaAus   = m.ausencias.length ? fDate(m.ausencias[0].data||'') : null;
+
+    html += `<tr style="border-bottom:1px solid var(--border);">
+      <td style="padding:10px;font-size:16px;font-weight:700;color:var(--text2);">${medalha}</td>
+      <td style="padding:10px;">
+        <strong style="font-size:13px;">${m.nome}</strong><br>
+        <span style="font-size:11px;color:var(--text3);font-family:monospace;">${m.crm}</span>
+        ${ultimaFalta ? `<br><span style="font-size:10px;color:var(--red);">Última falta: ${ultimaFalta}</span>` : ''}
+        ${ultimaAus   ? `<br><span style="font-size:10px;color:var(--amber);">Última ausência: ${ultimaAus}</span>` : ''}
+      </td>
+      <td style="padding:10px;text-align:center;">
+        <span style="font-size:18px;font-weight:700;color:${m.faltas.length>0?'var(--red)':'var(--text3)'};">${m.faltas.length}</span>
+      </td>
+      <td style="padding:10px;text-align:center;">
+        <span style="font-size:18px;font-weight:700;color:${m.ausencias.length>0?'var(--amber)':'var(--text3)'};">${m.ausencias.length}</span>
+      </td>
+      <td style="padding:10px;text-align:center;">
+        <span style="font-size:18px;font-weight:700;color:${m.transferencias.length>0?'var(--blue)':'var(--text3)'};">${m.transferencias.length}</span>
+      </td>
+      <td style="padding:10px;min-width:140px;">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div style="flex:1;background:#f0f0f0;border-radius:99px;height:8px;overflow:hidden;">
+            <div style="width:${pct}%;height:100%;background:${cor};border-radius:99px;transition:width 0.4s;"></div>
+          </div>
+          <span style="font-size:13px;font-weight:700;color:${cor};min-width:28px;">${m.score}</span>
+        </div>
+      </td>
+      <td style="padding:10px;text-align:center;">
+        <span style="display:inline-block;padding:3px 10px;border-radius:99px;font-size:11px;font-weight:600;background:${bg};color:${cor};">${label}</span>
+      </td>
+    </tr>`;
+
+    // Expandir detalhes das ocorrências
+    const todasOcorr = [
+      ...m.faltas.map(f => ({tipo:'Falta sem aviso',cor:'var(--red)',data:f.data,projeto:f.projeto,detalhe:f.tipo})),
+      ...m.ausencias.map(a => ({tipo:'Ausência informada',cor:'var(--amber)',data:a.data,projeto:a.projeto,detalhe:a.motivo})),
+      ...m.transferencias.map(t => ({tipo:'Pedido de transferência',cor:'var(--blue)',data:t.data,projeto:t.projeto,detalhe:`Status: ${t.status}`}))
+    ].sort((a,b)=>(b.data||'').localeCompare(a.data||''));
+
+    if (todasOcorr.length) {
+      html += `<tr style="background:#fafafa;border-bottom:2px solid var(--border);">
+        <td></td>
+        <td colspan="6" style="padding:8px 10px 12px;">
+          <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:0.4px;margin-bottom:6px;">Histórico de ocorrências</div>
+          <div style="display:flex;flex-wrap:wrap;gap:6px;">
+            ${todasOcorr.map(o => `
+              <div style="background:#fff;border:1px solid ${o.cor};border-radius:6px;padding:4px 10px;font-size:11px;">
+                <span style="color:${o.cor};font-weight:600;">${o.tipo}</span>
+                ${o.data ? ` · <span style="color:var(--text2);">${fDate(o.data)}</span>` : ''}
+                ${o.projeto ? ` · <span style="color:var(--text3);">${o.projeto}</span>` : ''}
+                ${o.detalhe ? ` · <span style="color:var(--text3);">${o.detalhe}</span>` : ''}
+              </div>`).join('')}
+          </div>
+        </td>
+      </tr>`;
+    }
+  });
+
+  html += `</tbody></table>
+  <div style="margin-top:14px;font-size:11px;color:var(--text3);border-top:1px solid var(--border);padding-top:10px;">
+    ⚠️ Falta sem aviso = plantão escalado no passado sem check-in registrado.
+    Ausência informada = médico avisou que não compareceria pelo app.
+    Transferência = médico solicitou passar o plantão para um colega.
+  </div>
+  </div>`;
+
+  el.innerHTML = html;
+}
 
 function exportarRelXLSX(){const tipo=_relTipoAtivo,dados=filtrarDadosRel();if(!dados.length&&tipo!=='medicos'){toast('Nenhum dado',true);return;}const wb=XLSX.utils.book_new();if(tipo==='medicos'){const rows=[['Nome','CRM','Especialidade','Tipo','Telefone','E-mail']];medicos.sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR')).forEach(m=>rows.push([m.nome,m.crm||'',m.especialidade||'',m.tipo||'',m.telefone||'',m.email||'']));XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(rows),'Médicos');}else{const rows=[['Data','Médico','Projeto','Tipo','Horas','Honorários']];dados.sort((a,b)=>b.data.localeCompare(a.data)).forEach(l=>rows.push([fDate(l.data),l.medico,l.projeto,l.tipo||'',l.horas,l.honorario]));XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(rows),'Relatório');}XLSX.writeFile(wb,'relatorio_'+tipo+'_'+new Date().toISOString().slice(0,10)+'.xlsx');toast('XLSX exportado!');}
 
