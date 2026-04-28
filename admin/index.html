@@ -1176,132 +1176,6 @@ tr:hover td{background:var(--bg3);}
       </div>
     </div>
 
-    <!-- Modal: fechamento aberto -->
-    <div id="modal-fechamento" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.35);z-index:200;overflow-y:auto;padding:24px;">
-      <div style="background:#fff;border-radius:var(--radius-lg);max-width:900px;margin:0 auto;padding:24px;position:relative;">
-
-        <!-- Cabeçalho do modal -->
-        <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:16px;">
-          <div>
-            <div style="font-size:18px;font-weight:700;" id="mfech-titulo">Fechamento</div>
-            <div style="font-size:12px;color:var(--text3);margin-top:2px;" id="mfech-subtitulo"></div>
-          </div>
-          <button onclick="fecharModalFechamento()" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--text3);">✕</button>
-        </div>
-
-        <!-- Métricas do fechamento -->
-        <div class="metrics" style="margin-bottom:16px;">
-          <div class="metric"><div class="metric-label">Total plantões</div><div class="metric-val" id="mfech-total-plant">—</div></div>
-          <div class="metric"><div class="metric-label">Total horas</div><div class="metric-val" id="mfech-total-h">—</div></div>
-          <div class="metric"><div class="metric-label">Valor total</div><div class="metric-val" id="mfech-total-val">—</div></div>
-          <div class="metric"><div class="metric-label">Status</div><div class="metric-val" id="mfech-status-badge">—</div></div>
-        </div>
-
-        <!-- Sub-abas do modal -->
-        <div style="display:flex;gap:0;border-bottom:2px solid var(--border);margin-bottom:16px;">
-          <button class="btn btn-ghost mfech-tab-btn" onclick="mfechTab('fechamento',this)" style="border-radius:4px 4px 0 0;font-size:12px;border-bottom:2px solid var(--blue);color:var(--blue);font-weight:600;">📋 Fechamento</button>
-          <button class="btn btn-ghost mfech-tab-btn" onclick="mfechTab('remessa',this)" style="border-radius:4px 4px 0 0;font-size:12px;">📤 Remessa CNAB</button>
-        </div>
-
-        <!-- Aba: Itens do fechamento -->
-        <div id="mfech-page-fechamento">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
-            <div style="font-size:13px;font-weight:600;color:var(--text2);">Profissionais no período</div>
-            <div style="display:flex;gap:8px;">
-              <button class="btn btn-ghost btn-sm" onclick="exportarFechamentoXLSX()">⬇ Excel</button>
-              <button class="btn btn-danger btn-sm" onclick="if(confirm('Excluir este fechamento?'))deletarFechamento(_fechAtivo?.id)">🗑 Excluir</button>
-            </div>
-          </div>
-          <div id="mfech-itens"><div class="empty">Carregando...</div></div>
-        </div>
-
-        <!-- Aba: Remessa CNAB 240 -->
-        <div id="mfech-page-remessa" style="display:none;">
-
-          <!-- Validação CPF antes de gerar -->
-          <div id="mfech-alerta-cpf" style="display:none;background:var(--amber-bg);border:1px solid var(--amber);border-radius:var(--radius);padding:10px 14px;margin-bottom:12px;font-size:12px;color:var(--amber);"></div>
-
-          <!-- Gerar remessa -->
-          <div class="card" style="margin-bottom:12px;">
-            <div class="card-title">Gerar arquivo de remessa</div>
-            <div style="font-size:13px;color:var(--text2);margin-bottom:12px;">
-              Gera arquivo CNAB 240 Bradesco MULTIPAG para pagamento via PIX em lote.
-              Apenas profissionais com chave PIX cadastrada serão incluídos.
-            </div>
-            <button class="btn btn-primary" onclick="gerarRemessa()">📤 Gerar remessa CNAB 240</button>
-          </div>
-
-          <!-- Remessas geradas -->
-          <div class="card">
-            <div class="card-title">Remessas geradas</div>
-            <div id="mfech-remessas"><div class="empty">Nenhuma remessa gerada.</div></div>
-          </div>
-
-          <!-- Upload arquivo de retorno -->
-          <div class="card" style="margin-top:12px;">
-            <div class="card-title">Processar arquivo de retorno (.RET)</div>
-            <div style="font-size:13px;color:var(--text2);margin-bottom:10px;">
-              Faça upload do arquivo .RET enviado pelo Bradesco para verificar os pagamentos confirmados.
-            </div>
-            <label class="btn btn-ghost" style="cursor:pointer;">
-              📥 Selecionar arquivo .RET
-              <input type="file" id="ret-upload" accept=".ret,.txt,.RET" style="display:none;" onchange="processarRetorno(event)">
-            </label>
-            <div id="ret-resultado" style="margin-top:12px;"></div>
-          </div>
-        </div>
-
-      </div>
-    </div>
-  </div>
-
-  <!-- MODAL DETALHE FECHAMENTO -->
-  <div class="modal-overlay" id="modal-fechamento" onclick="if(event.target===this)fecharModalFechamento()">
-    <div class="modal" style="max-width:900px;max-height:90vh;overflow-y:auto;">
-      <div class="modal-header">
-        <div>
-          <div class="modal-title" id="mfech-titulo">Fechamento</div>
-          <div style="font-size:12px;color:var(--text3);" id="mfech-sub"></div>
-        </div>
-        <button class="modal-close" onclick="fecharModalFechamento()">✕</button>
-      </div>
-
-      <!-- Sub-abas do modal -->
-      <div style="display:flex;gap:0;border-bottom:2px solid var(--border);margin-bottom:16px;">
-        <button class="btn btn-ghost mfech-tab-btn active-tab" onclick="mfechTab('fechamento',this)" style="border-radius:4px 4px 0 0;font-size:12px;">📋 Fechamento</button>
-        <button class="btn btn-ghost mfech-tab-btn" onclick="mfechTab('remessa',this)" style="border-radius:4px 4px 0 0;font-size:12px;">📤 Remessa</button>
-        <button class="btn btn-ghost mfech-tab-btn" onclick="mfechTab('retorno',this)" style="border-radius:4px 4px 0 0;font-size:12px;">📥 Retorno</button>
-      </div>
-
-      <!-- Aba Fechamento -->
-      <div id="mfech-page-fechamento">
-        <div style="margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
-          <div id="mfech-resumo" style="font-size:12px;color:var(--text2);"></div>
-          <div style="display:flex;gap:6px;">
-            <button class="btn btn-success btn-sm" onclick="gerarRemessa()">📤 Gerar remessa</button>
-            <button class="btn btn-ghost btn-sm" onclick="exportarFechamentoXLSX()">⬇ Excel</button>
-          </div>
-        </div>
-        <div id="mfech-tabela"></div>
-      </div>
-
-      <!-- Aba Remessa -->
-      <div id="mfech-page-remessa" style="display:none;">
-        <div id="mfech-remessas-lista"><div class="empty">Nenhuma remessa gerada ainda.</div></div>
-      </div>
-
-      <!-- Aba Retorno -->
-      <div id="mfech-page-retorno" style="display:none;">
-        <div class="card" style="border:2px dashed var(--border);text-align:center;padding:32px;">
-          <div style="font-size:32px;margin-bottom:8px;">📥</div>
-          <div style="font-size:14px;font-weight:600;margin-bottom:4px;">Upload do arquivo de retorno (.RET)</div>
-          <div style="font-size:12px;color:var(--text2);margin-bottom:16px;">Gerado pelo Bradesco após processar a remessa</div>
-          <input type="file" id="ret-file-input" accept=".ret,.txt,.RET" style="display:none;" onchange="processarRetorno(event)">
-          <button class="btn btn-primary" onclick="document.getElementById('ret-file-input').click()">Selecionar arquivo .RET</button>
-        </div>
-        <div id="ret-resultado" style="margin-top:12px;"></div>
-      </div>
-    </div>
   </div>
 
   <!-- EXPORTAR TOTVS -->
@@ -5982,5 +5856,50 @@ function selecionarTipoCadastrado() {
 }
 
 </script>
+
+
+
+
+  <!-- MODAL DETALHE FECHAMENTO -->
+  <div class="modal-overlay" id="modal-fechamento" onclick="if(event.target===this)fecharModalFechamento()">
+    <div class="modal" style="max-width:900px;max-height:90vh;overflow-y:auto;">
+      <div class="modal-header">
+        <div>
+          <div class="modal-title" id="mfech-titulo">Fechamento</div>
+          <div style="font-size:12px;color:var(--text3);" id="mfech-sub"></div>
+        </div>
+        <button class="modal-close" onclick="fecharModalFechamento()">✕</button>
+      </div>
+      <div style="display:flex;gap:0;border-bottom:2px solid var(--border);margin-bottom:16px;">
+        <button class="btn btn-ghost mfech-tab-btn active-tab" onclick="mfechTab('fechamento',this)" style="border-radius:4px 4px 0 0;font-size:12px;">📋 Fechamento</button>
+        <button class="btn btn-ghost mfech-tab-btn" onclick="mfechTab('remessa',this)" style="border-radius:4px 4px 0 0;font-size:12px;">📤 Remessa</button>
+        <button class="btn btn-ghost mfech-tab-btn" onclick="mfechTab('retorno',this)" style="border-radius:4px 4px 0 0;font-size:12px;">📥 Retorno</button>
+      </div>
+      <div id="mfech-page-fechamento">
+        <div style="margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+          <div id="mfech-resumo" style="font-size:12px;color:var(--text2);"></div>
+          <div style="display:flex;gap:6px;">
+            <button class="btn btn-success btn-sm" onclick="gerarRemessa()">📤 Gerar remessa</button>
+            <button class="btn btn-ghost btn-sm" onclick="exportarFechamentoXLSX()">⬇ Excel</button>
+          </div>
+        </div>
+        <div id="mfech-tabela"></div>
+      </div>
+      <div id="mfech-page-remessa" style="display:none;">
+        <div id="mfech-remessas-lista"><div class="empty">Nenhuma remessa gerada ainda.</div></div>
+      </div>
+      <div id="mfech-page-retorno" style="display:none;">
+        <div class="card" style="border:2px dashed var(--border);text-align:center;padding:32px;">
+          <div style="font-size:32px;margin-bottom:8px;">📥</div>
+          <div style="font-size:14px;font-weight:600;margin-bottom:4px;">Upload do arquivo de retorno (.RET)</div>
+          <div style="font-size:12px;color:var(--text2);margin-bottom:16px;">Gerado pelo Bradesco após processar a remessa</div>
+          <input type="file" id="ret-file-input" accept=".ret,.txt,.RET" style="display:none;" onchange="processarRetorno(event)">
+          <button class="btn btn-primary" onclick="document.getElementById('ret-file-input').click()">Selecionar arquivo .RET</button>
+        </div>
+        <div id="ret-resultado" style="margin-top:12px;"></div>
+      </div>
+    </div>
+  </div>
+
 </body>
 </html>
