@@ -4312,12 +4312,13 @@ async function gerarRemessa() {
   ));
 
   // ── HEADER LOTE ────────────────────────────────────────────────────
-  // Forma de lançamento '45' = PIX por chave (obrigatório para remessa PIX Bradesco MULTIPAG)
+  // Bradesco MULTIPAG PIX: tipo serviço '20' (Pgto Fornecedor) + forma '01' + indicativo PIX '01' em 223-224
+  // Validador confirmou: forma deve ser '01', NÃO '45'. O PIX é indicado pelo campo 223-224 = '01'
   linhas.push(verif(
     BANCO + '0001' + '1' +           // 001-008: banco, lote, tipo
     'C' +                            // 009: operação crédito
     '20' +                           // 010-011: tipo serviço = pagamento fornecedor
-    '45' +                           // 012-013: forma lançamento = PIX por chave (era '01' — causa da rejeição AN)
+    '01' +                           // 012-013: forma lançamento = '01' (validador exige '01' para tipo '20')
     '045' +                          // 014-016: versão layout lote
     ' ' +                            // 017: Febraban exclusivo (branco)
     '2' + CNPJ +                     // 018-032: tipo inscrição + CNPJ
@@ -4326,13 +4327,14 @@ async function gerarRemessa() {
     padL(CC,12) + CC_DV + ' ' +      // 059-072: conta + DV + DAC
     ENOME +                          // 073-102: nome empresa
     ' '.repeat(40) +                 // 103-142: mensagem
-    dtGer + dtPag +                  // 143-158: data gravação + data crédito (PIX exige data crédito preenchida)
+    dtGer + '00000000' +             // 143-158: data gravação + data crédito (zeros para fornecedor)
     cents(totLote) +                 // 159-173: total valores
     String(qtRegsLote).padStart(6,'0') + // 174-179: qtd registros
     ' '.repeat(31) +                 // 180-210: brancos
     '01' +                           // 211-212: nº aviso débito
     ' '.repeat(10) +                 // 213-222: brancos (10)
-    ' '.repeat(16),                  // 223-240: brancos (PIX não usa indicativo neste campo)
+    '01' +                           // 223-224: indicativo PIX — validador exige '01' aqui
+    ' '.repeat(16),                  // 225-240: brancos (16)
     'Header Lote'
   ));
 
@@ -4345,25 +4347,23 @@ async function gerarRemessa() {
     const chaveLimpa = (m.pix_chave||'').replace(/[\.\-\/]/g,'').trim();
     const tipoNum    = {CPF:'1',CNPJ:'2',EMAIL:'3',TELEFONE:'4',ALEATORIA:'5'}[m.pix_tipo||'CPF']||'1';
     const tipoInscr  = (m.pix_tipo==='CNPJ') ? '2' : '1';
-    // Campo 019-032: usar CPF/CNPJ real do cadastro do médico (não a chave PIX)
-    // O Bradesco valida matematicamente — usa o CPF cadastrado, não a chave
     const cpfReal    = (m.cpf||'').replace(/\D/g,'');
     const cnpjReal   = (m.cnpj||'').replace(/\D/g,'');
     const docDigits  = chaveLimpa.replace(/\D/g,'');
     const cpfCnpj    = m.pix_tipo==='CNPJ'
-      ? (cnpjReal || docDigits).padStart(14,'0').slice(-14)           // CNPJ: 14 dígitos
-      : '000' + (cpfReal || docDigits).padStart(11,'0').slice(-11);  // CPF: usa CPF cadastrado
+      ? (cnpjReal || docDigits).padStart(14,'0').slice(-14)
+      : '000' + (cpfReal || docDigits).padStart(11,'0').slice(-11);
 
-    // Segmento A — para PIX por chave (forma 45), banco/ag/conta do favorecido = zeros
+    // Segmento A — forma '01': câmara '000', banco '237', agência da EMPRESA (validador exige banco e agência informados)
     linhas.push(verif(
       BANCO + '0001' + '3' +             // 001-008
       String(nrSeqA).padStart(5,'0') +   // 009-013 seq
       'A' + '0' + '00' +                 // 014-017: segmento, movimento, instrução
-      '009' +                            // 018-020: câmara = 009 (PIX)
-      '000' +                            // 021-023: banco favorecido = 000 (PIX — banco determinado pela chave)
-      '00000' + '0' +                    // 024-029: agência + DV = zeros (PIX não usa agência)
-      '000000000000' + '0' + ' ' +       // 030-043: conta + DV + DAC = zeros
-      padR(m.nome||'',30) +              // 044-073: nome favorecido
+      '000' +                            // 018-020: câmara = '000' (validador rejeitou '009' para forma '01')
+      '237' +                            // 021-023: banco favorecido = '237' (validador exige banco informado)
+      padL(AG,5) + AG_DV +              // 024-029: agência da empresa = '01785'+'0' (validador exige agência válida)
+      '000000000000' + '0' + ' ' +       // 030-043: conta zeros + DV + DAC (PIX: conta do fav não informada)
+      padR(m.nome||'',30) +              // 044-073: nome favorecido (30 chars)
       padR(nrDoc,20) +                   // 074-093: nº doc empresa
       dtPag + 'BRL' +                    // 094-104: data pagamento + moeda
       '0'.repeat(15) +                   // 105-119: qtd moeda
@@ -4372,24 +4372,23 @@ async function gerarRemessa() {
       '00000000' +                       // 155-162: data real pgto
       '0'.repeat(15) +                   // 163-177: valor real pgto
       ' '.repeat(40) +                   // 178-217: informação 2
-      ' '.repeat(7) +                    // 218-224: brancos
+      ' '.repeat(2) +                    // 218-219: brancos
+      ' '.repeat(5) +                    // 220-224: brancos
       ' '.repeat(5) +                    // 225-229: brancos
       '0' +                              // 230: código aviso favorecido
       ' '.repeat(9),                     // 231-239: brancos
       'Segmento A'
     ));
 
-    // Segmento B — layout Bradesco MULTIPAG PIX (forma 45)
-    // A chave PIX fica nos últimos campos, com até 77 chars para chaves longas (email/aleatória)
-    const chavePix45 = chaveLimpa.slice(0, 77).padEnd(77, ' ');
+    // Segmento B — forma '01': chave PIX em 14 chars (pos 212-225), código aviso na pos 226 (240 total exato)
     linhas.push(verif(
       BANCO + '0001' + '3' +             // 001-008
       String(nrSeqB).padStart(5,'0') +   // 009-013 seq
       'B' +                              // 014: segmento B
       ' '.repeat(3) +                    // 015-017: Febraban exclusivo (brancos)
       tipoInscr +                        // 018: tipo inscrição (1=CPF, 2=CNPJ)
-      cpfCnpj +                          // 019-032: CPF/CNPJ só dígitos (14)
-      padR(m.nome||'',30) +              // 033-062: nome favorecido (30)
+      cpfCnpj +                          // 019-032: CPF/CNPJ só dígitos (14 chars)
+      padR(m.nome||'',30) +              // 033-062: nome favorecido (30 chars)
       ' '.repeat(30) +                   // 063-092: logradouro (30) brancos
       ' '.repeat(10) +                   // 093-102: número+complemento (10) brancos
       ' '.repeat(15) +                   // 103-117: bairro (15) brancos
@@ -4401,10 +4400,10 @@ async function gerarRemessa() {
       '0'.repeat(15) +                   // 166-180: valor desconto (15)
       '0'.repeat(15) +                   // 181-195: valor mora (15)
       '0'.repeat(15) +                   // 196-210: valor multa (15)
-      tipoNum +                          // 211: tipo chave PIX (1=CPF,2=CNPJ,3=email,4=tel,5=aleatória)
-      chavePix45 +                       // 212-288: chave PIX (77 chars) — campo expandido para forma 45
-      '2' +                              // 289: código aviso (1)
-      ' '.repeat(0),                     // sem brancos restantes — linha já ≥240
+      tipoNum +                          // 211: tipo chave PIX
+      padR(chaveLimpa,14) +              // 212-225: chave PIX (14 chars — forma '01' usa 14)
+      '2' +                              // 226: código aviso ao favorecido (validador: pos 226 obrigatória)
+      ' '.repeat(14),                    // 227-240: brancos (14)
       'Segmento B'
     ));
   });
