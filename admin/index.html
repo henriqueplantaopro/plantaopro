@@ -133,25 +133,32 @@ tr:hover td{background:var(--bg3);}
   /* Menu grupos colapsáveis */
   .nav-group { margin:0; }
   .nav-group-label {
-    font-size:11px; font-weight:700; text-transform:uppercase;
-    letter-spacing:0.7px; color:rgba(255,255,255,0.5);
-    padding:8px 16px 6px; cursor:pointer;
-    display:flex; align-items:center; justify-content:space-between;
-    user-select:none; transition:color 0.15s;
+    display:flex; align-items:center; gap:10px;
+    padding:9px 20px; font-size:13px;
+    color:var(--text2); cursor:pointer;
+    border-left:3px solid transparent;
+    user-select:none; transition:all 0.15s;
+    justify-content:space-between;
   }
-  .nav-group-label:hover { color:rgba(255,255,255,0.85); }
+  .nav-group-label:hover { background:var(--bg3); color:var(--text); }
+  .nav-group-label.open { color:var(--text); }
+  .nav-group-label .nav-label-left { display:flex; align-items:center; gap:10px; }
   .nav-group-label .nav-arrow {
-    font-size:9px; transition:transform 0.2s; display:inline-block;
+    font-size:9px; opacity:0.5; transition:transform 0.2s; flex-shrink:0;
   }
-  .nav-group-label.open .nav-arrow { transform:rotate(90deg); }
+  .nav-group-label.open .nav-arrow { transform:rotate(90deg); opacity:0.8; }
   .nav-group-items {
     overflow:hidden; max-height:0; transition:max-height 0.25s ease;
   }
   .nav-group-items.open { max-height:300px; }
+  .nav-group-items .nav-item {
+    padding-left:36px;
+    font-size:12.5px;
+  }
   .nav-item-small {
-    padding:6px 16px 6px 22px !important;
+    padding:6px 16px 6px 20px !important;
     font-size:12px !important;
-    opacity:0.6;
+    opacity:0.55;
   }
   .nav-item-small:hover { opacity:1; }
   .nav-item-small.active { opacity:1; }
@@ -366,7 +373,8 @@ tr:hover td{background:var(--bg3);}
     <!-- Cadastros (colapsável) -->
     <div class="nav-group">
       <div class="nav-group-label" onclick="toggleNavGroup(this)">
-        Cadastros <span class="nav-arrow">▶</span>
+        <span class="nav-label-left">🗂️ Cadastros</span>
+        <span class="nav-arrow">▶</span>
       </div>
       <div class="nav-group-items">
         <div class="nav-item" onclick="showTab('medicos',this)">👨‍⚕️ Médicos</div>
@@ -378,7 +386,8 @@ tr:hover td{background:var(--bg3);}
     <!-- Lançamentos (colapsável) -->
     <div class="nav-group">
       <div class="nav-group-label" onclick="toggleNavGroup(this)">
-        Lançamentos <span class="nav-arrow">▶</span>
+        <span class="nav-label-left">📋 Lançamentos</span>
+        <span class="nav-arrow">▶</span>
       </div>
       <div class="nav-group-items">
         <div class="nav-item" onclick="showTab('lancamentos',this)">📋 Lançamentos</div>
@@ -395,7 +404,8 @@ tr:hover td{background:var(--bg3);}
     <!-- Importar/Exportar (colapsável) -->
     <div class="nav-group">
       <div class="nav-group-label" onclick="toggleNavGroup(this)">
-        Importar / Exportar CSV <span class="nav-arrow">▶</span>
+        <span class="nav-label-left">🔄 Importar / Exportar</span>
+        <span class="nav-arrow">▶</span>
       </div>
       <div class="nav-group-items">
         <div class="nav-item" onclick="showTab('importar',this)">📥 Importar planilha</div>
