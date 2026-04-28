@@ -129,6 +129,22 @@ tr:hover td{background:var(--bg3);}
 .mr-tipo-btn:hover{border-color:var(--blue);color:var(--blue);background:var(--blue-light);}
 .mr-tipo-btn.active{border-color:var(--blue);background:var(--blue);color:#fff;font-weight:700;box-shadow:0 2px 8px rgba(26,95,173,0.3);}
 
+
+  /* Menu grupos */
+  .nav-group { margin-top:6px; }
+  .nav-group-label {
+    font-size:10px; font-weight:700; text-transform:uppercase;
+    letter-spacing:0.8px; color:rgba(255,255,255,0.4);
+    padding:10px 16px 4px; margin-top:4px;
+  }
+  .nav-item-small {
+    padding:5px 16px 5px 22px !important;
+    font-size:12px !important;
+    opacity:0.65;
+  }
+  .nav-item-small:hover { opacity:1; }
+  .nav-item-small.active { opacity:1; }
+
   /* Calendário */
   .cal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
   .cal-title{font-size:15px;font-weight:600;color:var(--text);}
@@ -329,20 +345,50 @@ tr:hover td{background:var(--bg3);}
     <div class="sidebar-sub">Painel Admin</div>
   </div>
   <nav class="sidebar-nav">
+
+    <!-- Home -->
     <div class="nav-item active" onclick="showTab('dashboard',this)">📊 Dashboard</div>
-    <div class="nav-item" onclick="showTab('medicos',this)">👨‍⚕️ Médicos</div>
-    <div class="nav-item" onclick="showTab('projetos',this)">📁 Projetos</div>
-    <div class="nav-item" onclick="showTab('lancamentos',this)">📋 Lançamentos</div>
-    <div class="nav-item" onclick="showTab('lote',this)">⚡ Lançamento em lote</div>
-    <div class="nav-item" onclick="showTab('lotemed',this)">📆 Agenda por médico</div>
-    <div class="nav-item" onclick="showTab('checkins',this)">📍 Check-ins</div>
-    <div class="nav-item" onclick="showTab('candidaturas',this)">📢 Plantões abertos <span id="badge-cand" style="display:none;background:var(--red);color:#fff;font-size:9px;font-weight:700;border-radius:99px;padding:1px 5px;margin-left:4px;"></span></div>
-    <div class="nav-item" onclick="showTab('relatorios',this)">📈 Relatórios</div>
-    <div class="nav-item" onclick="showTab('financeiro',this)">💰 Financeiro</div>
+
+    <!-- Calendário -->
     <div class="nav-item" onclick="showTab('calendario',this)">📅 Calendário</div>
-    <div class="nav-item" onclick="showTab('escala',this)">👥 Escala por profissional</div>
-    <div class="nav-item" onclick="showTab('importar',this)">📥 Importar CSV</div>
-    <div class="nav-item" onclick="showTab('exportar',this)">📤 Exportar TOTVS</div>
+
+    <!-- Cadastros -->
+    <div class="nav-group">
+      <div class="nav-group-label">Cadastros</div>
+      <div class="nav-item" onclick="showTab('medicos',this)">👨‍⚕️ Médicos</div>
+      <div class="nav-item" onclick="showTab('projetos',this)">📁 Projetos</div>
+      <div class="nav-item" onclick="showTab('tipos',this)">⚙️ Tipos de plantão</div>
+    </div>
+
+    <!-- Lançamentos -->
+    <div class="nav-group">
+      <div class="nav-group-label">Lançamentos</div>
+      <div class="nav-item" onclick="showTab('lancamentos',this)">📋 Lançamentos</div>
+      <div class="nav-item" onclick="showTab('lote',this)">⚡ Em lote</div>
+    </div>
+
+    <!-- Operacional -->
+    <div class="nav-group">
+      <div class="nav-group-label">Operacional</div>
+      <div class="nav-item" onclick="showTab('checkins',this)">📍 Check-ins</div>
+      <div class="nav-item" onclick="showTab('candidaturas',this)">📢 Plantões abertos <span id="badge-cand" style="display:none;background:var(--red);color:#fff;font-size:9px;font-weight:700;border-radius:99px;padding:1px 5px;margin-left:4px;"></span></div>
+      <div class="nav-item" onclick="showTab('relatorios',this)">📈 Relatórios</div>
+      <div class="nav-item" onclick="showTab('financeiro',this)">💰 Financeiro</div>
+    </div>
+
+    <!-- Importar/Exportar -->
+    <div class="nav-group">
+      <div class="nav-group-label">Importar / Exportar</div>
+      <div class="nav-item" onclick="showTab('importar',this)">📥 Importar planilha</div>
+      <div class="nav-item" onclick="showTab('exportar',this)">📤 Exportar relatório</div>
+    </div>
+
+    <!-- Secundários -->
+    <div class="nav-group" style="margin-top:8px;border-top:1px solid rgba(255,255,255,0.1);padding-top:6px;">
+      <div class="nav-item nav-item-small" onclick="showTab('lotemed',this)">📆 Agenda por médico</div>
+      <div class="nav-item nav-item-small" onclick="showTab('escala',this)">👥 Escala por profissional</div>
+    </div>
+
   </nav>
   <div class="sidebar-footer">
     <div id="admin-nome" style="font-weight:600;"></div>
@@ -592,26 +638,36 @@ tr:hover td{background:var(--bg3);}
     </div>
     <div class="card"><div class="card-title">Projetos cadastrados</div><div id="projetos-lista"><div class="empty">Carregando...</div></div></div>
 
-    <!-- TIPOS DE PLANTÃO -->
-    <div class="card" style="margin-top:16px;">
-      <div class="card-title">⚙️ Tipos de plantão</div>
-      <div style="font-size:13px;color:var(--text3);margin-top:-8px;margin-bottom:14px;">Configure tipos com horário, valor e setor pré-definidos por projeto</div>
-      <div style="background:var(--bg2);border-radius:var(--radius);padding:14px;margin-bottom:14px;">
-        <div style="font-size:12px;font-weight:700;color:var(--text2);text-transform:uppercase;margin-bottom:10px;">Novo tipo</div>
-        <div class="form-row">
-          <div class="form-group"><label>Projeto</label><select id="tp-proj" onchange="carregarTiposLista()"><option value="">Selecione...</option></select></div>
-          <div class="form-group"><label>Nome</label><input id="tp-nome" type="text" placeholder="Ex: Diurno 12h — Emergência"></div>
-          <div class="form-group"><label>Setor</label><input id="tp-setor" type="text" placeholder="Ex: Emergência, UTI"></div>
-        </div>
-        <div class="form-row four">
-          <div class="form-group"><label>Início</label><input id="tp-ini" type="time" value="07:00" oninput="calcDuracaoTipo()"></div>
-          <div class="form-group"><label>Fim</label><input id="tp-fim" type="time" value="19:00" oninput="calcDuracaoTipo()"></div>
-          <div class="form-group"><label>Duração</label><input id="tp-horas" type="text" value="12h" readonly style="background:var(--bg3);color:var(--text2);"></div>
-          <div class="form-group"><label>Valor (R$)</label><input id="tp-valor" type="text" placeholder="1.800,00"></div>
-        </div>
-        <button class="btn btn-primary btn-sm" onclick="salvarTipoPlantao()">+ Adicionar tipo</button>
+  </div>
+
+  <!-- TIPOS DE PLANTÃO -->
+  <div id="tab-tipos" class="section">
+    <div class="page-title">Tipos de plantão</div>
+    <div class="page-sub">Configure horário, valor e setor pré-definidos por projeto</div>
+    <div class="card">
+      <div class="card-title">Novo tipo</div>
+      <div class="form-row">
+        <div class="form-group"><label>Projeto</label><select id="tp-proj" onchange="carregarTiposLista()"><option value="">Selecione...</option></select></div>
+        <div class="form-group"><label>Nome</label><input id="tp-nome" type="text" placeholder="Ex: Diurno 12h — Emergência"></div>
+        <div class="form-group"><label>Setor</label><input id="tp-setor" type="text" placeholder="Ex: Emergência, UTI"></div>
       </div>
-      <div id="tipos-lista"><div class="empty">Selecione um projeto para ver os tipos cadastrados</div></div>
+      <div class="form-row four">
+        <div class="form-group"><label>Início</label><input id="tp-ini" type="time" value="07:00" oninput="calcDuracaoTipo()"></div>
+        <div class="form-group"><label>Fim</label><input id="tp-fim" type="time" value="19:00" oninput="calcDuracaoTipo()"></div>
+        <div class="form-group"><label>Duração</label><input id="tp-horas" type="text" value="12h" readonly style="background:var(--bg3);color:var(--text2);"></div>
+        <div class="form-group"><label>Valor (R$)</label><input id="tp-valor" type="text" placeholder="1.800,00"></div>
+      </div>
+      <button class="btn btn-primary" onclick="salvarTipoPlantao()">+ Adicionar tipo</button>
+    </div>
+    <div class="card" style="margin-top:12px;">
+      <div class="card-title">Tipos cadastrados</div>
+      <div style="margin-bottom:12px;">
+        <label style="font-size:12px;color:var(--text2);">Filtrar por projeto:</label>
+        <select id="tp-proj-filtro" onchange="carregarTiposLista()" style="margin-left:8px;padding:5px 10px;border:1px solid var(--border);border-radius:var(--radius);font-size:13px;">
+          <option value="">Todos os projetos</option>
+        </select>
+      </div>
+      <div id="tipos-lista"><div class="empty">Carregando...</div></div>
     </div>
   </div>
 
@@ -873,6 +929,7 @@ tr:hover td{background:var(--bg3);}
     <div style="display:flex;gap:6px;margin-bottom:16px;">
       <button class="btn btn-primary" id="imp-tab-med" onclick="switchImpTab('med')">Médicos</button>
       <button class="btn btn-ghost" id="imp-tab-proj" onclick="switchImpTab('proj')">Projetos</button>
+      <button class="btn btn-ghost" id="imp-tab-tipos" onclick="switchImpTab('tipos')">Tipos de plantão</button>
       <button class="btn btn-ghost" id="imp-tab-lanc" onclick="switchImpTab('lanc')">Lançamentos</button>
     </div>
 
@@ -903,6 +960,24 @@ tr:hover td{background:var(--bg3);}
           <div style="font-size:12px;color:var(--text3);margin-top:4px;">Separador ; ou , · UTF-8 ou ANSI</div>
         </div>
         <div id="import-preview-proj" style="margin-top:14px;"></div>
+      </div>
+    </div>
+
+    </div>
+
+    <!-- TIPOS DE PLANTÃO -->
+    <div id="imp-tipos" style="display:none;">
+      <div class="card">
+        <div class="card-title">Importar tipos de plantão</div>
+        <p style="font-size:13px;color:var(--text2);margin-bottom:14px;">Colunas: <code>projeto · nome · hora_ini · hora_fim · valor · setor</code></p>
+        <div class="upload-area" onclick="document.getElementById('file-upload-tipos').click()">
+          <div>📎 Clique para selecionar arquivo CSV ou Excel</div>
+          <input type="file" id="file-upload-tipos" accept=".csv,.xlsx,.xls" style="display:none;" onchange="handleUploadTipos(this)">
+        </div>
+        <div style="margin-top:10px;">
+          <button class="btn btn-ghost btn-sm" onclick="downloadModeloTipos()">⬇ Baixar modelo Excel</button>
+        </div>
+        <div id="import-preview-tipos"></div>
       </div>
     </div>
 
@@ -1767,7 +1842,7 @@ function exportarMedicosXLSX() {
   const wb = XLSX.utils.book_new();
   const rows = [
     ['Nome','CRM','RQE','Especialidade(s)','CPF','Tipo','Nascimento','Telefone','E-mail',
-     'Valor/Hora','Razão Social','CNPJ','Tipo PIX','Chave PIX','Projetos']
+     'Razão Social','CNPJ','Tipo PIX','Chave PIX','Projetos']
   ];
   medicos.sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR')).forEach(m => {
     const nasc = m.data_nascimento
@@ -1779,7 +1854,7 @@ function exportarMedicosXLSX() {
     rows.push([
       m.nome||'', m.crm||'', m.rqe||'', esps, m.cpf||'',
       m.tipo||'', nasc, m.telefone||'', m.email||'',
-      m.valor_hora||0, m.razao_social||'', m.cnpj||'',
+      m.razao_social||'', m.cnpj||'',
       m.pix_tipo||'', m.pix_chave||'', projs
     ]);
   });
@@ -2482,9 +2557,10 @@ function showTab(id,el){
   if(el) el.classList.add('active');
   if(id==='lancamentos') initLancamentos();
   if(id==='projetos'){ popTpProj(); }
+  if(id==='tipos'){ popTpProj(); document.getElementById('tp-proj-filtro') && popTpProjFiltro(); carregarTiposLista(); }
   if(id==='checkins'){ popCiSelects(); popCiProjPresenca(); document.getElementById('ci-data-p').value=hoje_str(); carregarPresenca(); }
   if(id==='relatorios'){ popRelSelects(); }
-  if(id==='calendario'){ popCalSelects(); switchCalTab(_calTabAtiva||'semanal'); }
+  if(id==='calendario'){ popCalSelects(); _calTabAtiva='semanal'; switchCalTab('semanal'); }
   if(id==='exportar'){ renderLayoutPreview(); popExportSelects(); }
   if(id==='escala'){ initEscala(); }
   if(id==='importar') switchImpTab('med');
@@ -4923,10 +4999,77 @@ async function carregarDisponiveis() {
 
 // ─── IMPORTAR CSV ────────────────────────────────────────
 function switchImpTab(tab) {
-  document.getElementById('imp-med').style.display  = tab==='med'  ? 'block' : 'none';
-  document.getElementById('imp-proj').style.display = tab==='proj' ? 'block' : 'none';
-  document.getElementById('imp-tab-med').className  = 'btn ' + (tab==='med'  ? 'btn-primary' : 'btn-ghost');
-  document.getElementById('imp-tab-proj').className = 'btn ' + (tab==='proj' ? 'btn-primary' : 'btn-ghost');
+  ['med','proj','tipos','lanc'].forEach(t => {
+    const el = document.getElementById('imp-'+t);
+    if (el) el.style.display = tab===t ? 'block' : 'none';
+    const btn = document.getElementById('imp-tab-'+t);
+    if (btn) btn.className = 'btn ' + (tab===t ? 'btn-primary' : 'btn-ghost');
+  });
+}
+
+function downloadModeloTipos() {
+  const wb = XLSX.utils.book_new();
+  const ws = XLSX.utils.aoa_to_sheet([
+    ['projeto','nome','hora_ini','hora_fim','valor','setor'],
+    ['Hospital Bonsucesso','Diurno 12h — Emergência','07:00','19:00','1800','Emergência'],
+    ['Hospital Bonsucesso','Noturno 12h — UTI','19:00','07:00','2000','UTI'],
+    ['Hospital Bonsucesso','Plantão 24h','07:00','07:00','3600',''],
+  ]);
+  XLSX.utils.book_append_sheet(wb, ws, 'Tipos de Plantão');
+  XLSX.writeFile(wb, 'modelo_tipos_plantao.xlsx');
+  toast('Modelo baixado!');
+}
+
+async function handleUploadTipos(input) {
+  const file = input.files[0]; if (!file) return;
+  const buf = await file.arrayBuffer();
+  const wb  = XLSX.read(buf, {type:'array'});
+  const ws  = wb.Sheets[wb.SheetNames[0]];
+  const rows = XLSX.utils.sheet_to_json(ws, {header:1, defval:''});
+  if (rows.length < 2) { toast('Arquivo inválido', true); return; }
+  const hdr = rows[0].map(h => String(h).toLowerCase());
+  const iProj=hdr.findIndex(h=>h.includes('projeto'));
+  const iNome=hdr.findIndex(h=>h.includes('nome'));
+  const iIni=hdr.findIndex(h=>h.includes('ini')||h.includes('início'));
+  const iFim=hdr.findIndex(h=>h.includes('fim'));
+  const iVal=hdr.findIndex(h=>h.includes('valor'));
+  const iSet=hdr.findIndex(h=>h.includes('setor'));
+  if (iNome<0) { toast('Coluna nome não encontrada', true); return; }
+  const novos = [];
+  for (let i=1; i<rows.length; i++) {
+    const r = rows[i]; if (!r[iNome]) continue;
+    const projNome = iProj>=0 ? String(r[iProj]).trim() : '';
+    const proj = projetos.find(p => p.nome.toLowerCase()===projNome.toLowerCase());
+    const ini = String(r[iIni]||'07:00').trim();
+    const fim = String(r[iFim]||'19:00').trim();
+    const [hi,mi] = ini.split(':').map(Number), [hf,mf] = fim.split(':').map(Number);
+    let diff = (hf*60+mf)-(hi*60+mi); if(diff<0)diff+=1440;
+    const horas = Math.round(diff/60*100)/100;
+    novos.push({ proj_id: proj?.id||null, proj_nome: projNome, nome: String(r[iNome]).trim(), hora_ini: ini, hora_fim: fim, horas, valor: iVal>=0&&r[iVal]?parseFloat(String(r[iVal]).replace(',','.'))||null:null, setor: iSet>=0?String(r[iSet]).trim()||null:null });
+  }
+  const semProjeto = novos.filter(n => !n.proj_id);
+  const prev = document.getElementById('import-preview-tipos');
+  prev.innerHTML = `<div class="card" style="margin-top:12px;">
+    <div class="card-title">Pré-visualização — ${novos.length} tipo(s)</div>
+    ${semProjeto.length>0 ? `<div style="color:var(--amber);font-size:12px;margin-bottom:8px;">⚠️ ${semProjeto.length} tipo(s) com projeto não encontrado serão ignorados: ${[...new Set(semProjeto.map(n=>n.proj_nome))].join(', ')}</div>` : ''}
+    <table><thead><tr><th>Projeto</th><th>Nome</th><th>Horário</th><th>Horas</th><th>Valor</th><th>Setor</th></tr></thead><tbody>
+    ${novos.slice(0,8).map(n=>`<tr><td style="font-size:12px;">${n.proj_nome||'—'}</td><td><strong>${n.nome}</strong></td><td class="mono">${n.hora_ini}–${n.hora_fim}</td><td class="mono">${n.horas}h</td><td class="mono">${n.valor?fBRL(n.valor):'Padrão'}</td><td>${n.setor||'—'}</td></tr>`).join('')}
+    </tbody></table>
+    <div style="margin-top:12px;display:flex;gap:8px;">
+      <button class="btn btn-primary" id="imp-tipos-btn">Importar ${novos.filter(n=>n.proj_id).length} tipo(s) válido(s)</button>
+      <button class="btn btn-ghost" onclick="document.getElementById('import-preview-tipos').innerHTML='';document.getElementById('file-upload-tipos').value='';">Cancelar</button>
+    </div></div>`;
+  document.getElementById('imp-tipos-btn').onclick = async () => {
+    const validos = novos.filter(n => n.proj_id);
+    let ok=0;
+    for (const t of validos) {
+      const res = await sb('/rest/v1/tipos_plantao', { method:'POST', body: JSON.stringify({projeto_id:t.proj_id,nome:t.nome,hora_ini:t.hora_ini,hora_fim:t.hora_fim,horas:t.horas,valor:t.valor,setor:t.setor,ativo:true}) });
+      if (res) ok++;
+    }
+    toast(`${ok} tipo(s) importado(s)!`);
+    prev.innerHTML=''; input.value='';
+    await carregarTiposPlantao();
+  };
 }
 
 function parseCSV(text) {
@@ -5525,10 +5668,12 @@ async function carregarTiposPlantao() {
 }
 
 function popTpProj() {
-  const el = document.getElementById('tp-proj');
-  if (!el) return;
-  el.innerHTML = '<option value="">Selecione...</option>' +
-    sortedProjetos().map(p => `<option value="${p.id}">${p.nome}</option>`).join('');
+  ['tp-proj'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.innerHTML = '<option value="">Selecione...</option>' +
+      sortedProjetos().map(p => `<option value="${p.id}">${p.nome}</option>`).join('');
+  });
+  popTpProjFiltro();
 }
 
 function calcDuracaoTipo() {
@@ -5541,21 +5686,36 @@ function calcDuracaoTipo() {
   document.getElementById('tp-horas').value = Math.round(diff/60*10)/10 + 'h';
 }
 
+function popTpProjFiltro() {
+  const el = document.getElementById('tp-proj-filtro');
+  if (!el) return;
+  el.innerHTML = '<option value="">Todos os projetos</option>' +
+    sortedProjetos().map(p => `<option value="${p.id}">${p.nome}</option>`).join('');
+}
+
 async function carregarTiposLista() {
-  const projId = document.getElementById('tp-proj')?.value;
+  // Usar o filtro da aba tipos OU o select do formulário
+  const projFiltro = document.getElementById('tp-proj-filtro')?.value;
+  const projForm   = document.getElementById('tp-proj')?.value;
+  const projId = projFiltro || projForm;
   const el = document.getElementById('tipos-lista');
   if (!el) return;
-  if (!projId) { el.innerHTML = '<div class="empty">Selecione um projeto para ver os tipos cadastrados</div>'; return; }
 
-  const data = await sb(`/rest/v1/tipos_plantao?projeto_id=eq.${projId}&ativo=eq.true&order=nome`) || [];
+  let url = '/rest/v1/tipos_plantao?ativo=eq.true&order=nome&select=*,projetos(nome)';
+  if (projId) url += `&projeto_id=eq.${projId}`;
+
+  const data = await sb(url) || [];
   if (!data.length) {
     el.innerHTML = '<div class="empty">Nenhum tipo cadastrado para este projeto. Adicione acima!</div>';
     return;
   }
+  const mostraProjeto = !projId;
   el.innerHTML = `<table><thead><tr>
+    ${mostraProjeto ? '<th>Projeto</th>' : ''}
     <th>Nome</th><th>Horário</th><th>Horas</th><th>Valor</th><th>Setor</th><th></th>
   </tr></thead><tbody>` +
   data.map(t => `<tr>
+    ${mostraProjeto ? `<td style="font-size:12px;color:var(--text3);">${t.projetos?.nome||'—'}</td>` : ''}
     <td><strong>${t.nome}</strong></td>
     <td class="mono">${(t.hora_ini||'').slice(0,5)} – ${(t.hora_fim||'').slice(0,5)}</td>
     <td class="mono">${t.horas}h</td>
