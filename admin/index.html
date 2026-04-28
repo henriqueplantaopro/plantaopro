@@ -130,17 +130,28 @@ tr:hover td{background:var(--bg3);}
 .mr-tipo-btn.active{border-color:var(--blue);background:var(--blue);color:#fff;font-weight:700;box-shadow:0 2px 8px rgba(26,95,173,0.3);}
 
 
-  /* Menu grupos */
-  .nav-group { margin-top:6px; }
+  /* Menu grupos colapsáveis */
+  .nav-group { margin:0; }
   .nav-group-label {
-    font-size:10px; font-weight:700; text-transform:uppercase;
-    letter-spacing:0.8px; color:rgba(255,255,255,0.4);
-    padding:10px 16px 4px; margin-top:4px;
+    font-size:11px; font-weight:700; text-transform:uppercase;
+    letter-spacing:0.7px; color:rgba(255,255,255,0.5);
+    padding:8px 16px 6px; cursor:pointer;
+    display:flex; align-items:center; justify-content:space-between;
+    user-select:none; transition:color 0.15s;
   }
+  .nav-group-label:hover { color:rgba(255,255,255,0.85); }
+  .nav-group-label .nav-arrow {
+    font-size:9px; transition:transform 0.2s; display:inline-block;
+  }
+  .nav-group-label.open .nav-arrow { transform:rotate(90deg); }
+  .nav-group-items {
+    overflow:hidden; max-height:0; transition:max-height 0.25s ease;
+  }
+  .nav-group-items.open { max-height:300px; }
   .nav-item-small {
-    padding:5px 16px 5px 22px !important;
+    padding:6px 16px 6px 22px !important;
     font-size:12px !important;
-    opacity:0.65;
+    opacity:0.6;
   }
   .nav-item-small:hover { opacity:1; }
   .nav-item-small.active { opacity:1; }
@@ -347,44 +358,53 @@ tr:hover td{background:var(--bg3);}
   <nav class="sidebar-nav">
 
     <!-- Home -->
-    <div class="nav-item active" onclick="showTab('dashboard',this)">📊 Dashboard</div>
+    <div class="nav-item active" onclick="showTab('dashboard',this)" style="margin-bottom:2px;">📊 Dashboard</div>
 
     <!-- Calendário -->
-    <div class="nav-item" onclick="showTab('calendario',this)">📅 Calendário</div>
+    <div class="nav-item" onclick="showTab('calendario',this)" style="margin-bottom:2px;">📅 Calendário</div>
 
-    <!-- Cadastros -->
+    <!-- Cadastros (colapsável) -->
     <div class="nav-group">
-      <div class="nav-group-label">Cadastros</div>
-      <div class="nav-item" onclick="showTab('medicos',this)">👨‍⚕️ Médicos</div>
-      <div class="nav-item" onclick="showTab('projetos',this)">📁 Projetos</div>
-      <div class="nav-item" onclick="showTab('tipos',this)">⚙️ Tipos de plantão</div>
+      <div class="nav-group-label" onclick="toggleNavGroup(this)">
+        Cadastros <span class="nav-arrow">▶</span>
+      </div>
+      <div class="nav-group-items">
+        <div class="nav-item" onclick="showTab('medicos',this)">👨‍⚕️ Médicos</div>
+        <div class="nav-item" onclick="showTab('projetos',this)">📁 Projetos</div>
+        <div class="nav-item" onclick="showTab('tipos',this)">⚙️ Tipos de plantão</div>
+      </div>
     </div>
 
-    <!-- Lançamentos -->
+    <!-- Lançamentos (colapsável) -->
     <div class="nav-group">
-      <div class="nav-group-label">Lançamentos</div>
-      <div class="nav-item" onclick="showTab('lancamentos',this)">📋 Lançamentos</div>
-      <div class="nav-item" onclick="showTab('lote',this)">⚡ Em lote</div>
+      <div class="nav-group-label" onclick="toggleNavGroup(this)">
+        Lançamentos <span class="nav-arrow">▶</span>
+      </div>
+      <div class="nav-group-items">
+        <div class="nav-item" onclick="showTab('lancamentos',this)">📋 Lançamentos</div>
+        <div class="nav-item" onclick="showTab('lote',this)">⚡ Em lote</div>
+      </div>
     </div>
 
-    <!-- Operacional -->
-    <div class="nav-group">
-      <div class="nav-group-label">Operacional</div>
-      <div class="nav-item" onclick="showTab('checkins',this)">📍 Check-ins</div>
-      <div class="nav-item" onclick="showTab('candidaturas',this)">📢 Plantões abertos <span id="badge-cand" style="display:none;background:var(--red);color:#fff;font-size:9px;font-weight:700;border-radius:99px;padding:1px 5px;margin-left:4px;"></span></div>
-      <div class="nav-item" onclick="showTab('relatorios',this)">📈 Relatórios</div>
-      <div class="nav-item" onclick="showTab('financeiro',this)">💰 Financeiro</div>
-    </div>
+    <!-- Operacional (itens soltos sem grupo) -->
+    <div class="nav-item" onclick="showTab('checkins',this)">📍 Check-ins</div>
+    <div class="nav-item" onclick="showTab('candidaturas',this)">📢 Plantões abertos <span id="badge-cand" style="display:none;background:var(--red);color:#fff;font-size:9px;font-weight:700;border-radius:99px;padding:1px 5px;margin-left:4px;"></span></div>
+    <div class="nav-item" onclick="showTab('relatorios',this)">📈 Relatórios</div>
+    <div class="nav-item" onclick="showTab('financeiro',this)">💰 Financeiro</div>
 
-    <!-- Importar/Exportar -->
+    <!-- Importar/Exportar (colapsável) -->
     <div class="nav-group">
-      <div class="nav-group-label">Importar / Exportar</div>
-      <div class="nav-item" onclick="showTab('importar',this)">📥 Importar planilha</div>
-      <div class="nav-item" onclick="showTab('exportar',this)">📤 Exportar relatório</div>
+      <div class="nav-group-label" onclick="toggleNavGroup(this)">
+        Importar / Exportar CSV <span class="nav-arrow">▶</span>
+      </div>
+      <div class="nav-group-items">
+        <div class="nav-item" onclick="showTab('importar',this)">📥 Importar planilha</div>
+        <div class="nav-item" onclick="showTab('exportar',this)">📤 Exportar relatório</div>
+      </div>
     </div>
 
     <!-- Secundários -->
-    <div class="nav-group" style="margin-top:8px;border-top:1px solid rgba(255,255,255,0.1);padding-top:6px;">
+    <div style="border-top:1px solid rgba(255,255,255,0.08);margin-top:10px;padding-top:4px;">
       <div class="nav-item nav-item-small" onclick="showTab('lotemed',this)">📆 Agenda por médico</div>
       <div class="nav-item nav-item-small" onclick="showTab('escala',this)">👥 Escala por profissional</div>
     </div>
@@ -2555,6 +2575,7 @@ function showTab(id,el){
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
   document.getElementById('tab-'+id).classList.add('active');
   if(el) el.classList.add('active');
+  expandNavGroup(id);
   if(id==='lancamentos') initLancamentos();
   if(id==='projetos'){ popTpProj(); }
   if(id==='tipos'){ popTpProj(); document.getElementById('tp-proj-filtro') && popTpProjFiltro(); carregarTiposLista(); }
@@ -5659,7 +5680,30 @@ async function delLanc(id) {
 }
 
 
-// ─── TIPOS DE PLANTÃO ─────────────────────────────────────
+// ─── MENU COLAPSÁVEL ─────────────────────────────────
+function toggleNavGroup(labelEl) {
+  const items = labelEl.nextElementSibling;
+  const isOpen = items.classList.contains('open');
+  labelEl.classList.toggle('open', !isOpen);
+  items.classList.toggle('open', !isOpen);
+}
+
+function expandNavGroup(tabId) {
+  // Encontrar o nav-item que contém o showTab deste id e abrir seu grupo
+  const items = document.querySelectorAll('.nav-group-items .nav-item');
+  items.forEach(item => {
+    if (item.getAttribute('onclick')?.includes("'" + tabId + "'")) {
+      const groupItems = item.closest('.nav-group-items');
+      const label = groupItems?.previousElementSibling;
+      if (groupItems && label) {
+        groupItems.classList.add('open');
+        label.classList.add('open');
+      }
+    }
+  });
+}
+
+
 let tiposPlantao = []; // cache global
 
 async function carregarTiposPlantao() {
