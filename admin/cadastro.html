@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PlantãoPro — Cadastre-se</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --blue:#1a5fad;--blue-dark:#0f3d7a;--blue-light:#e8f0fb;
+  --green:#2d7a3a;--green-light:#e8f5eb;
+  --red:#b03030;--amber:#8a5500;--amber-light:#fdf3e0;
+  --border:#e0dbd2;--bg:#f8f7f4;--text:#1a1a1a;--text2:#555;--text3:#999;
+  --radius:12px;
+}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+/* HEADER */
+.top-bar{background:var(--blue);padding:16px 32px;display:flex;align-items:center;justify-content:space-between;}
+.top-logo{color:#fff;font-size:18px;font-weight:700;}
+.top-login{color:rgba(255,255,255,0.85);font-size:13px;text-decoration:none;}
+.top-login:hover{color:#fff;}
+/* HERO */
+.hero{background:linear-gradient(135deg,var(--blue-dark) 0%,var(--blue) 100%);color:#fff;text-align:center;padding:56px 24px 48px;}
+.hero h1{font-size:32px;font-weight:800;letter-spacing:-0.5px;margin-bottom:12px;}
+.hero p{font-size:16px;opacity:0.85;max-width:540px;margin:0 auto;line-height:1.6;}
+/* PLANOS */
+.planos-wrap{max-width:1100px;margin:0 auto;padding:48px 24px 0;}
+.planos-titulo{text-align:center;font-size:22px;font-weight:700;margin-bottom:6px;}
+.planos-sub{text-align:center;font-size:14px;color:var(--text2);margin-bottom:32px;}
+.planos-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:20px;}
+.plano-card{background:#fff;border:2px solid var(--border);border-radius:var(--radius);padding:24px 20px;cursor:pointer;transition:all 0.2s;position:relative;}
+.plano-card:hover{border-color:var(--blue);box-shadow:0 4px 16px rgba(26,95,173,0.12);}
+.plano-card.selecionado{border-color:var(--blue);background:var(--blue-light);box-shadow:0 4px 20px rgba(26,95,173,0.18);}
+.plano-card.popular::before{content:'Mais popular';position:absolute;top:-11px;left:50%;transform:translateX(-50%);background:var(--amber);color:#fff;font-size:11px;font-weight:700;padding:3px 12px;border-radius:99px;white-space:nowrap;}
+.plano-nome{font-size:15px;font-weight:700;color:var(--text);margin-bottom:4px;}
+.plano-limite{font-size:12px;color:var(--text2);margin-bottom:14px;}
+.plano-valor{font-size:26px;font-weight:800;color:var(--blue);line-height:1;}
+.plano-valor span{font-size:13px;font-weight:400;color:var(--text2);}
+.plano-features{margin-top:14px;border-top:1px solid var(--border);padding-top:12px;}
+.plano-feat{font-size:12px;color:var(--text2);padding:3px 0;display:flex;gap:6px;align-items:flex-start;}
+.feat-ok{color:var(--green);}
+.feat-no{color:var(--text3);text-decoration:line-through;}
+.feat-lock{color:var(--red);}
+.plano-badge-gratis{display:inline-block;background:var(--green-light);color:var(--green);font-size:10px;font-weight:700;padding:2px 8px;border-radius:99px;margin-bottom:6px;}
+.plano-badge-lock{display:inline-block;background:#fef3e2;color:var(--amber);font-size:10px;font-weight:700;padding:2px 8px;border-radius:99px;margin-bottom:6px;}
+/* AVISO PICO */
+.aviso-pico{background:#fff8e1;border:1px solid #f9c740;border-radius:var(--radius);padding:14px 18px;margin:0 auto 32px;max-width:1100px;font-size:13px;color:#6d4c00;display:flex;gap:12px;align-items:flex-start;margin-left:24px;margin-right:24px;}
+/* FORM */
+.form-wrap{max-width:600px;margin:0 auto;padding:0 24px 64px;}
+.form-titulo{font-size:20px;font-weight:700;margin-bottom:20px;padding-top:20px;border-top:2px solid var(--border);}
+.form-section{background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:24px;margin-bottom:16px;}
+.form-section-title{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--text2);margin-bottom:16px;}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;}
+.form-group{display:flex;flex-direction:column;gap:4px;}
+.form-group.full{grid-column:1/-1;}
+label{font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:0.4px;}
+input,select{padding:10px 12px;font-size:14px;border:1.5px solid var(--border);border-radius:8px;background:#fff;color:var(--text);font-family:inherit;outline:none;transition:border-color 0.15s;}
+input:focus,select:focus{border-color:var(--blue);}
+/* PAGAMENTO */
+.pag-tabs{display:flex;gap:8px;margin-bottom:16px;}
+.pag-tab{flex:1;padding:10px 8px;border:2px solid var(--border);border-radius:8px;background:#fff;font-size:13px;font-weight:600;cursor:pointer;text-align:center;transition:all 0.15s;color:var(--text2);}
+.pag-tab.active{border-color:var(--blue);background:var(--blue-light);color:var(--blue);}
+.pag-tab:hover{border-color:var(--blue);}
+.pag-content{display:none;}.pag-content.active{display:block;}
+.pix-info{background:var(--green-light);border:1px solid #a8d8b0;border-radius:8px;padding:14px;font-size:13px;color:var(--green);line-height:1.6;}
+.boleto-info{background:var(--blue-light);border:1px solid #a0c4f0;border-radius:8px;padding:14px;font-size:13px;color:var(--blue);line-height:1.6;}
+.card-row{display:grid;grid-template-columns:2fr 1fr 1fr;gap:10px;}
+/* RESUMO */
+.resumo-box{background:var(--blue-light);border:1.5px solid #a0c4f0;border-radius:var(--radius);padding:18px 20px;margin-bottom:20px;}
+.resumo-titulo{font-size:12px;font-weight:700;text-transform:uppercase;color:var(--blue);margin-bottom:12px;}
+.resumo-linha{display:flex;justify-content:space-between;font-size:13px;padding:4px 0;}
+.resumo-total{font-size:18px;font-weight:800;color:var(--blue);border-top:1.5px solid #a0c4f0;margin-top:10px;padding-top:10px;display:flex;justify-content:space-between;}
+/* BTN */
+.btn-cadastrar{width:100%;padding:16px;background:var(--blue);color:#fff;border:none;border-radius:var(--radius);font-size:16px;font-weight:700;cursor:pointer;transition:background 0.15s;letter-spacing:0.3px;}
+.btn-cadastrar:hover{background:var(--blue-dark);}
+.btn-cadastrar:disabled{opacity:0.6;cursor:not-allowed;}
+.termos{font-size:12px;color:var(--text3);text-align:center;margin-top:12px;line-height:1.6;}
+/* TOAST */
+#toast{position:fixed;bottom:24px;right:24px;padding:12px 18px;border-radius:8px;font-size:13px;font-weight:600;display:none;z-index:9999;box-shadow:0 4px 12px rgba(0,0,0,0.15);color:#fff;}
+/* SUCCESS */
+#tela-sucesso{display:none;text-align:center;padding:80px 24px;}
+.sucesso-icon{font-size:64px;margin-bottom:16px;}
+.sucesso-titulo{font-size:26px;font-weight:800;margin-bottom:10px;color:var(--green);}
+.sucesso-sub{font-size:15px;color:var(--text2);line-height:1.7;max-width:480px;margin:0 auto 28px;}
+.btn-ir{display:inline-block;padding:14px 32px;background:var(--blue);color:#fff;border-radius:var(--radius);font-size:15px;font-weight:700;text-decoration:none;}
+/* SPINNER */
+.spinner{display:inline-block;width:18px;height:18px;border:3px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:spin 0.8s linear infinite;vertical-align:middle;margin-right:8px;}
+@keyframes spin{to{transform:rotate(360deg);}}
+@media(max-width:640px){
+  .planos-grid{grid-template-columns:1fr 1fr;}
+  .form-row{grid-template-columns:1fr;}
+  .card-row{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+
+<div class="top-bar">
+  <div class="top-logo">🏥 PlantãoPro</div>
+  <a href="/admin/" class="top-login">Já tenho conta — Entrar →</a>
+</div>
+
+<div class="hero">
+  <h1>Gestão de plantões médicos sem complicação</h1>
+  <p>Escalas, check-ins, relatórios e pagamentos em uma plataforma só. Comece agora, sem burocracia.</p>
+</div>
+
+<!-- PLANOS -->
+<div class="planos-wrap">
+  <div class="planos-titulo">Escolha o plano para sua instituição</div>
+  <div class="planos-sub">Cobrança baseada no pico de profissionais do mês — sem surpresas</div>
+
+  <div class="planos-grid" id="planos-grid">
+    <!-- Starter -->
+    <div class="plano-card" data-plano="starter" data-valor="390" data-limite="100" onclick="selecionarPlano(this)">
+      <div class="plano-badge-gratis">Acesso limitado</div>
+      <div class="plano-nome">Starter</div>
+      <div class="plano-limite">Até 100 profissionais</div>
+      <div class="plano-valor">R$ 390<span>/mês</span></div>
+      <div class="plano-features">
+        <div class="plano-feat"><span class="feat-ok">✓</span> Escalas e lançamentos</div>
+        <div class="plano-feat"><span class="feat-ok">✓</span> Check-in por GPS</div>
+        <div class="plano-feat"><span class="feat-ok">✓</span> Calendário e app médico</div>
+        <div class="plano-feat"><span class="feat-lock">✗</span> <span class="feat-no">Relatórios avançados</span></div>
+        <div class="plano-feat"><span class="feat-lock">✗</span> <span class="feat-no">Módulo financeiro</span></div>
+        <div class="plano-feat"><span class="feat-lock">✗</span> <span class="feat-no">Exportar TOTVS</span></div>
+      </div>
+    </div>
+    <!-- Growth -->
+    <div class="plano-card" data-plano="growth" data-valor="690" data-limite="200" onclick="selecionarPlano(this)">
+      <div class="plano-badge-gratis">Acesso limitado</div>
+      <div class="plano-nome">Growth</div>
+      <div class="plano-limite">Até 200 profissionais</div>
+      <div class="plano-valor">R$ 690<span>/mês</span></div>
+      <div class="plano-features">
+        <div class="plano-feat"><span class="feat-ok">✓</span> Escalas e lançamentos</div>
+        <div class="plano-feat"><span class="feat-ok">✓</span> Check-in por GPS</div>
+        <div class="plano-feat"><span class="feat-ok">✓</span> Calendário e app médico</div>
+        <div class="plano-feat"><span class="feat-lock">✗</span> <span class="feat-no">Relatórios avançados</span></div>
+        <div class="plano-feat"><span class="feat-lock">✗</span> <span class="feat-no">Módulo financeiro</span></div>
+        <div class="plano-feat"><span class="feat-lock">✗</span> <span class="feat-no">Exportar TOTVS</span></div>
+      </div>
+    </div>
+    <!-- Pro -->
+    <div class="plano-card popular" data-plano="pro" data-valor="1460" data-limite="500" onclick="selecionarPlano(this)">
+      <div class="plano-nome">Pro</div>
+      <div class="plano-limite">Até 500 profissionais</div>
+      <div class="plano-valor">R$ 1.460<span>/mês</span></div>
+      <div class="plano-features">
+        <div class="plano-feat"><span class="feat-ok">✓</span> Tudo do Growth</div>
+        <div class="plano-feat"><span class="feat-ok">✓</span> Relatórios completos</div>
+        <div class="plano-feat"><span class="feat-ok">✓</span> Módulo financeiro</div>
+        <div class="plano-feat"><span class="feat-ok">✓</span> Exportar TOTVS</div>
+        <div class="plano-feat"><span class="feat-ok">✓</span> Ranking de risco</div>
+      </div>
+    </div>
+    <!-- Business -->
+    <div class="plano-card" data-plano="business" data-valor="2780" data-limite="1000" onclick="selecionarPlano(this)">
+      <div class="plano-nome">Business</div>
+      <div class="plano-limite">Até 1.000 profissionais</div>
+      <div class="plano-valor">R$ 2.780<span>/mês</span></div>
+      <div class="plano-features">
+        <div class="plano-feat"><span class="feat-ok">✓</span> Tudo do Pro</div>
+        <div class="plano-feat"><span class="feat-ok">✓</span> Suporte prioritário</div>
+        <div class="plano-feat"><span class="feat-ok">✓</span> Histórico completo</div>
+      </div>
+    </div>
+    <!-- Enterprise -->
+    <div class="plano-card" data-plano="enterprise" data-valor="3450" data-limite="1500" onclick="selecionarPlano(this)">
+      <div class="plano-nome">Enterprise</div>
+      <div class="plano-limite">Até 1.500 profissionais</div>
+      <div class="plano-valor">R$ 3.450<span>/mês</span></div>
+      <div class="plano-features">
+        <div class="plano-feat"><span class="feat-ok">✓</span> Tudo do Business</div>
+        <div class="plano-feat"><span class="feat-ok">✓</span> SLA garantido</div>
+        <div class="plano-feat"><span class="feat-ok">✓</span> Onboarding dedicado</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- AVISO ANTI-FRAUDE -->
+  <div class="aviso-pico">
+    <span style="font-size:20px;">🛡️</span>
+    <div>
+      <strong>Cobrança justa e transparente:</strong> o valor mensal é calculado com base no <strong>maior número de profissionais ativos</strong> registrado durante o mês, não no dia do vencimento. Isso garante que você pague pelo uso real da plataforma.
+    </div>
+  </div>
+</div>
+
+<!-- FORMULÁRIO -->
+<div class="form-wrap" id="form-wrap">
+  <div class="form-titulo">Dados do cadastro</div>
+
+  <!-- RESUMO DO PLANO -->
+  <div class="resumo-box" id="resumo-box" style="display:none;">
+    <div class="resumo-titulo">Resumo do plano selecionado</div>
+    <div class="resumo-linha"><span>Plano</span><span id="res-plano" style="font-weight:600;">—</span></div>
+    <div class="resumo-linha"><span>Limite de profissionais</span><span id="res-limite">—</span></div>
+    <div class="resumo-linha"><span>Cobrança</span><span>Mensal recorrente</span></div>
+    <div class="resumo-total"><span>Total/mês</span><span id="res-valor">—</span></div>
+  </div>
+
+  <div class="form-section">
+    <div class="form-section-title">Dados da instituição</div>
+    <div class="form-row">
+      <div class="form-group"><label>Nome da instituição *</label><input id="f-empresa" type="text" placeholder="Hospital São Lucas"></div>
+      <div class="form-group"><label>CNPJ</label><input id="f-cnpj" type="text" placeholder="00.000.000/0000-00" oninput="mascaraCNPJ(this)"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Nome do responsável *</label><input id="f-nome" type="text" placeholder="Dr. João Silva"></div>
+      <div class="form-group"><label>Cargo</label><input id="f-cargo" type="text" placeholder="Diretor Clínico"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>E-mail de acesso *</label><input id="f-email" type="email" placeholder="admin@hospital.com"></div>
+      <div class="form-group"><label>Telefone / WhatsApp *</label><input id="f-tel" type="text" placeholder="(21) 99999-9999" oninput="mascaraTel(this)"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Senha de acesso *</label><input id="f-senha" type="password" placeholder="Mínimo 8 caracteres"></div>
+      <div class="form-group"><label>Confirmar senha *</label><input id="f-senha2" type="password" placeholder="Repita a senha"></div>
+    </div>
+  </div>
+
+  <div class="form-section">
+    <div class="form-section-title">Forma de pagamento</div>
+    <div class="pag-tabs">
+      <div class="pag-tab active" data-pag="pix" onclick="selecionarPag(this)">⚡ PIX</div>
+      <div class="pag-tab" data-pag="boleto" onclick="selecionarPag(this)">🏦 Boleto</div>
+      <div class="pag-tab" data-pag="cartao" onclick="selecionarPag(this)">💳 Cartão</div>
+    </div>
+
+    <div id="pag-pix" class="pag-content active">
+      <div class="pix-info">
+        ⚡ <strong>PIX — Recebimento instantâneo.</strong><br>
+        Após confirmar o cadastro, você receberá um QR Code PIX para pagamento. O acesso é liberado assim que o pagamento for confirmado (em segundos). A cobrança se repete mensalmente na mesma data.
+      </div>
+    </div>
+
+    <div id="pag-boleto" class="pag-content">
+      <div class="boleto-info">
+        🏦 <strong>Boleto bancário — Vencimento em 3 dias úteis.</strong><br>
+        Um boleto será gerado e enviado para o seu e-mail. O acesso é liberado após a compensação (até 1 dia útil após o pagamento). Boleto recorrente gerado todo mês automaticamente.
+      </div>
+    </div>
+
+    <div id="pag-cartao" class="pag-content">
+      <div style="margin-bottom:12px;">
+        <div class="form-group" style="margin-bottom:10px;"><label>Número do cartão *</label><input id="cc-num" type="text" placeholder="0000 0000 0000 0000" oninput="mascaraCartao(this)" maxlength="19"></div>
+        <div class="card-row">
+          <div class="form-group"><label>Nome no cartão *</label><input id="cc-nome" type="text" placeholder="NOME SOBRENOME"></div>
+          <div class="form-group"><label>Validade *</label><input id="cc-val" type="text" placeholder="MM/AA" maxlength="5" oninput="mascaraVal(this)"></div>
+          <div class="form-group"><label>CVV *</label><input id="cc-cvv" type="text" placeholder="123" maxlength="4"></div>
+        </div>
+      </div>
+      <div style="font-size:12px;color:var(--text3);">💳 Cobrança recorrente mensal. Cancelável a qualquer momento.</div>
+    </div>
+  </div>
+
+  <button class="btn-cadastrar" id="btn-cadastrar" onclick="finalizarCadastro()">Finalizar cadastro e ativar plano</button>
+  <div class="termos">Ao finalizar, você concorda com os <a href="#" style="color:var(--blue);">Termos de Uso</a> e a <a href="#" style="color:var(--blue);">Política de Privacidade</a> do PlantãoPro.</div>
+</div>
+
+<!-- TELA SUCESSO -->
+<div id="tela-sucesso">
+  <div class="sucesso-icon">🎉</div>
+  <div class="sucesso-titulo">Cadastro realizado!</div>
+  <div class="sucesso-sub" id="sucesso-msg">Seu cadastro foi criado com sucesso. Siga as instruções de pagamento enviadas para seu e-mail para ativar o acesso.</div>
+  <a href="/admin/" class="btn-ir" id="btn-ir-admin">Acessar o painel →</a>
+</div>
+
+<div id="toast"></div>
+
+<script>
+const SUPABASE_URL = 'https://hqtnnadzwtfyfkunwfcy.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhxdG5uYWR6d3RmeWZrdW53ZmN5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYzMTM1MzcsImV4cCI6MjA5MTg4OTUzN30.j2qpn6JJZQ5QcB5j0eWtNV1EfqEz7DfTE-tQbW_WEGw';
+
+// Estado
+let planoSelecionado = null;
+let pagSelecionado = 'pix';
+
+// PLANOS
+const PLANOS = {
+  starter:    {nome:'Starter',    limite:100,  valor:390},
+  growth:     {nome:'Growth',     limite:200,  valor:690},
+  pro:        {nome:'Pro',        limite:500,  valor:1460},
+  business:   {nome:'Business',   limite:1000, valor:2780},
+  enterprise: {nome:'Enterprise', limite:1500, valor:3450},
+};
+
+function selecionarPlano(el) {
+  document.querySelectorAll('.plano-card').forEach(c => c.classList.remove('selecionado'));
+  el.classList.add('selecionado');
+  planoSelecionado = el.dataset.plano;
+  const p = PLANOS[planoSelecionado];
+  document.getElementById('resumo-box').style.display = 'block';
+  document.getElementById('res-plano').textContent = p.nome;
+  document.getElementById('res-limite').textContent = 'Até ' + p.limite.toLocaleString('pt-BR') + ' profissionais';
+  document.getElementById('res-valor').textContent = 'R$ ' + p.valor.toLocaleString('pt-BR', {minimumFractionDigits:2});
+  document.getElementById('form-wrap').scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+function selecionarPag(el) {
+  document.querySelectorAll('.pag-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.pag-content').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  pagSelecionado = el.dataset.pag;
+  document.getElementById('pag-' + pagSelecionado).classList.add('active');
+}
+
+// MÁSCARAS
+function mascaraCNPJ(el) {
+  let v = el.value.replace(/\D/g,'').slice(0,14);
+  if (v.length > 12) v = v.slice(0,2)+'.'+v.slice(2,5)+'.'+v.slice(5,8)+'/'+v.slice(8,12)+'-'+v.slice(12);
+  else if (v.length > 8) v = v.slice(0,2)+'.'+v.slice(2,5)+'.'+v.slice(5,8)+'/'+v.slice(8);
+  else if (v.length > 5) v = v.slice(0,2)+'.'+v.slice(2,5)+'.'+v.slice(5);
+  else if (v.length > 2) v = v.slice(0,2)+'.'+v.slice(2);
+  el.value = v;
+}
+function mascaraTel(el) {
+  let v = el.value.replace(/\D/g,'').slice(0,11);
+  if (v.length > 10) v = '('+v.slice(0,2)+') '+v.slice(2,7)+'-'+v.slice(7);
+  else if (v.length > 6) v = '('+v.slice(0,2)+') '+v.slice(2,6)+'-'+v.slice(6);
+  else if (v.length > 2) v = '('+v.slice(0,2)+') '+v.slice(2);
+  el.value = v;
+}
+function mascaraCartao(el) {
+  let v = el.value.replace(/\D/g,'').slice(0,16);
+  el.value = v.replace(/(.{4})/g,'$1 ').trim();
+}
+function mascaraVal(el) {
+  let v = el.value.replace(/\D/g,'').slice(0,4);
+  if (v.length > 2) v = v.slice(0,2)+'/'+v.slice(2);
+  el.value = v;
+}
+
+// CADASTRO
+async function finalizarCadastro() {
+  if (!planoSelecionado) { toast('Selecione um plano primeiro', true); document.getElementById('planos-grid').scrollIntoView({behavior:'smooth'}); return; }
+
+  const empresa = document.getElementById('f-empresa').value.trim();
+  const nome    = document.getElementById('f-nome').value.trim();
+  const email   = document.getElementById('f-email').value.trim().toLowerCase();
+  const tel     = document.getElementById('f-tel').value.trim();
+  const senha   = document.getElementById('f-senha').value;
+  const senha2  = document.getElementById('f-senha2').value;
+
+  if (!empresa || !nome || !email || !tel || !senha) { toast('Preencha todos os campos obrigatórios', true); return; }
+  if (senha.length < 8) { toast('A senha deve ter pelo menos 8 caracteres', true); return; }
+  if (senha !== senha2) { toast('As senhas não coincidem', true); return; }
+  if (pagSelecionado === 'cartao') {
+    if (!document.getElementById('cc-num').value || !document.getElementById('cc-nome').value) { toast('Preencha os dados do cartão', true); return; }
+  }
+
+  const btn = document.getElementById('btn-cadastrar');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Processando...';
+
+  try {
+    // 1. Verificar se e-mail já existe
+    const existe = await sbFetch('/rest/v1/admins?email=eq.' + encodeURIComponent(email) + '&select=id');
+    if (existe && existe.length > 0) { toast('Este e-mail já está cadastrado. Faça login.', true); btn.disabled=false; btn.textContent='Finalizar cadastro e ativar plano'; return; }
+
+    // 2. Criar admin no Supabase
+    const planoInfo = PLANOS[planoSelecionado];
+    const adminPayload = {
+      nome, email,
+      senha_hash: senha, // Em produção: hash bcrypt via Edge Function
+      empresa_nome: empresa,
+      cnpj: document.getElementById('f-cnpj').value.trim() || null,
+      cargo: document.getElementById('f-cargo').value.trim() || null,
+      telefone: tel,
+    };
+    const adminRes = await sbFetch('/rest/v1/admins', {method:'POST', body: JSON.stringify(adminPayload)});
+    if (!adminRes || !adminRes[0]?.id) throw new Error('Erro ao criar conta');
+    const adminId = adminRes[0].id;
+
+    // 3. Criar cliente (assinatura pendente)
+    const clientePayload = {
+      admin_id: adminId,
+      nome_empresa: empresa,
+      cnpj: document.getElementById('f-cnpj').value.replace(/\D/g,'') || null,
+      email,
+      plano: planoSelecionado,
+    };
+    const clienteRes = await sbFetch('/rest/v1/clientes', {method:'POST', body: JSON.stringify(clientePayload)});
+    if (!clienteRes || !clienteRes[0]?.id) throw new Error('Erro ao criar cliente');
+    const clienteId = clienteRes[0].id;
+
+    // 4. Criar assinatura com status 'pendente'
+    const hoje = new Date();
+    const venc = new Date(hoje); venc.setDate(venc.getDate() + 30);
+    await sbFetch('/rest/v1/assinaturas', {method:'POST', body: JSON.stringify({
+      cliente_id: clienteId,
+      admin_id: adminId,
+      status: 'pendente',
+      plano: planoSelecionado,
+      valor: planoInfo.valor,
+      limite_medicos: planoInfo.limite,
+      forma_pagamento: pagSelecionado,
+      vencimento: venc.toISOString().slice(0,10),
+      pico_mes_atual: 0,
+    })});
+
+    // 5. Chamar API para criar cobrança no Asaas
+    const cobRes = await fetch('/api/criar-cobranca', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        adminId, clienteId, nome, email, tel,
+        cnpj: document.getElementById('f-cnpj').value.replace(/\D/g,''),
+        plano: planoSelecionado,
+        valor: planoInfo.valor,
+        formaPagamento: pagSelecionado,
+        cartao: pagSelecionado === 'cartao' ? {
+          numero: document.getElementById('cc-num').value.replace(/\s/g,''),
+          nome: document.getElementById('cc-nome').value,
+          validade: document.getElementById('cc-val').value,
+          cvv: document.getElementById('cc-cvv').value,
+        } : null
+      })
+    });
+    const cobData = await cobRes.json();
+
+    // 6. Mostrar tela de sucesso
+    document.getElementById('form-wrap').style.display = 'none';
+    document.querySelector('.planos-wrap').style.display = 'none';
+    document.querySelector('.hero').style.display = 'none';
+
+    let msgSucesso = '';
+    if (pagSelecionado === 'pix' && cobData.pixQrCode) {
+      msgSucesso = 'Escaneie o QR Code PIX abaixo para ativar seu acesso imediatamente:';
+      document.getElementById('sucesso-msg').innerHTML =
+        msgSucesso + '<br><br>' +
+        '<img src="data:image/png;base64,' + cobData.pixQrCode + '" style="width:200px;height:200px;border:2px solid #eee;border-radius:8px;margin:12px auto;display:block;">' +
+        '<div style="font-size:12px;color:#555;margin-top:8px;">Ou copie o código: <code style="font-size:11px;background:#f5f5f5;padding:4px 8px;border-radius:4px;word-break:break-all;">' + (cobData.pixCopiaECola||'') + '</code></div>';
+    } else if (pagSelecionado === 'boleto' && cobData.boletoUrl) {
+      msgSucesso = 'Clique abaixo para abrir e pagar seu boleto. O acesso é liberado em até 1 dia útil após o pagamento.';
+      document.getElementById('sucesso-msg').innerHTML =
+        msgSucesso + '<br><br>' +
+        '<a href="' + cobData.boletoUrl + '" target="_blank" style="display:inline-block;background:var(--blue);color:#fff;padding:12px 28px;border-radius:8px;font-weight:700;text-decoration:none;margin:8px 0;">📄 Abrir boleto</a>';
+    } else if (pagSelecionado === 'cartao') {
+      msgSucesso = 'Pagamento processado! Seu acesso foi ativado. Verifique seu e-mail para mais detalhes.';
+      document.getElementById('sucesso-msg').textContent = msgSucesso;
+    } else {
+      document.getElementById('sucesso-msg').textContent = 'Seu cadastro foi criado. Verifique seu e-mail para as instruções de pagamento e ativação do acesso.';
+    }
+
+    document.getElementById('tela-sucesso').style.display = 'block';
+
+  } catch(e) {
+    console.error(e);
+    toast('Erro ao processar: ' + (e.message || 'tente novamente'), true);
+    btn.disabled = false;
+    btn.textContent = 'Finalizar cadastro e ativar plano';
+  }
+}
+
+async function sbFetch(path, opts={}) {
+  const r = await fetch(SUPABASE_URL + path, {
+    headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json','Prefer':'return=representation',...(opts.headers||{})},
+    ...opts
+  });
+  if (!r.ok) { const e = await r.text(); throw new Error('SB ' + r.status + ': ' + e.slice(0,100)); }
+  if (r.status === 204) return null;
+  return r.json();
+}
+
+function toast(msg, err=false) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.style.background = err ? '#b03030' : '#2d7a3a';
+  t.style.display = 'block'; setTimeout(()=>t.style.display='none', 3500);
+}
+</script>
+</body>
+</html>
