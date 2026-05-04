@@ -1,0 +1,8 @@
+{
+  "crons": [
+    {
+      "path": "/api/registrar-pico",
+      "schedule": "0 3 * * *"
+    }
+  ]
+}
