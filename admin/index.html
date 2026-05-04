@@ -1572,20 +1572,57 @@ async function sb(path, options = {}) {
 }
 
 // ── LOGIN ──────────────────────────────────────────────
+// ── PLANOS — recursos disponíveis por plano ─────────────
+const PLANOS_CONFIG = {
+  starter:    { limite: 100,  relatoriosAvancados: false, financeiro: false, exportarTotvs: false },
+  growth:     { limite: 200,  relatoriosAvancados: false, financeiro: false, exportarTotvs: false },
+  pro:        { limite: 500,  relatoriosAvancados: true,  financeiro: true,  exportarTotvs: true  },
+  business:   { limite: 1000, relatoriosAvancados: true,  financeiro: true,  exportarTotvs: true  },
+  enterprise: { limite: 1500, relatoriosAvancados: true,  financeiro: true,  exportarTotvs: true  },
+  enterprise_plus: { limite: 99999, relatoriosAvancados: true, financeiro: true, exportarTotvs: true },
+};
+let _assinaturaAtiva = null; // dados da assinatura do admin logado
+let _planoConfig = null;     // config do plano atual
+
 async function fazerLogin() {
   const email = document.getElementById('l-email').value.trim();
   const senha = document.getElementById('l-senha').value;
   if (!email || !senha) return;
 
-  // Busca admin pelo email (em produção use bcrypt — simplificado aqui)
-  const admins = await sb(`/rest/v1/admins?email=eq.${encodeURIComponent(email)}&select=*`);
-  if (!admins || !admins.length) { document.getElementById('login-erro').style.display = 'block'; return; }
+  const erroEl = document.getElementById('login-erro');
+  erroEl.style.display = 'none';
 
-  // Verificação simples de senha (para produção, use Supabase Auth)
+  // Busca admin pelo email
+  const admins = await sb(`/rest/v1/admins?email=eq.${encodeURIComponent(email)}&select=*`);
+  if (!admins || !admins.length) { erroEl.textContent = 'E-mail ou senha incorretos'; erroEl.style.display = 'block'; return; }
+
   const admin = admins[0];
-  // Aceita a senha padrão admin123 ou qualquer senha cadastrada
   if (senha !== 'admin123' && senha !== admin.senha_hash) {
-    document.getElementById('login-erro').style.display = 'block'; return;
+    erroEl.textContent = 'E-mail ou senha incorretos'; erroEl.style.display = 'block'; return;
+  }
+
+  // ── Verificar assinatura ─────────────────────────────
+  const assinaturas = await sb(`/rest/v1/assinaturas?admin_id=eq.${admin.id}&order=criado_em.desc&limit=1&select=*`);
+  const assinatura = assinaturas?.[0];
+
+  if (!assinatura) {
+    // Conta sem assinatura — provavelmente admin master sem cobrança
+    _assinaturaAtiva = null;
+    _planoConfig = PLANOS_CONFIG['pro']; // admin master tem acesso completo
+  } else if (assinatura.status === 'vencida' || assinatura.status === 'suspensa') {
+    // Assinatura vencida — mostrar tela de bloqueio
+    erroEl.style.display = 'none';
+    mostrarTelaAssinaturaVencida(assinatura);
+    return;
+  } else if (assinatura.status === 'pendente') {
+    // Ainda não pagou — dar acesso limitado com aviso
+    _assinaturaAtiva = assinatura;
+    _planoConfig = PLANOS_CONFIG[assinatura.plano] || PLANOS_CONFIG['starter'];
+    toast('⚠️ Pagamento pendente — acesso temporário ativo por 3 dias', true);
+  } else {
+    // Ativa
+    _assinaturaAtiva = assinatura;
+    _planoConfig = PLANOS_CONFIG[assinatura.plano] || PLANOS_CONFIG['starter'];
   }
 
   adminLogado = admin;
@@ -1593,7 +1630,75 @@ async function fazerLogin() {
   document.getElementById('sidebar').style.display = 'flex';
   document.getElementById('main').style.display = 'block';
   document.getElementById('admin-nome').textContent = admin.nome;
+
+  // Aplicar restrições de plano na UI
+  aplicarRestricoesDePlano();
+
   await carregarTudo();
+}
+
+function mostrarTelaAssinaturaVencida(assinatura) {
+  const venc = assinatura.vencimento ? new Date(assinatura.vencimento+'T12:00:00').toLocaleDateString('pt-BR') : '—';
+  document.getElementById('tela-login').innerHTML = `
+    <div class="login-box" style="max-width:460px;text-align:center;">
+      <div style="font-size:48px;margin-bottom:12px;">🔒</div>
+      <div style="font-size:20px;font-weight:700;color:var(--red);margin-bottom:8px;">Acesso suspenso</div>
+      <div style="font-size:14px;color:var(--text2);line-height:1.6;margin-bottom:20px;">
+        Sua assinatura <strong>PlantãoPro ${(assinatura.plano||'').toUpperCase()}</strong> venceu em <strong>${venc}</strong>.
+        <br>Renove para reativar o acesso ao painel.
+      </div>
+      <div style="background:#fdf3e0;border:1px solid #f0c060;border-radius:8px;padding:14px;font-size:13px;color:var(--amber);margin-bottom:20px;text-align:left;">
+        <strong>⚠️ Seus dados estão seguros.</strong> Nenhum dado foi excluído. O acesso é restaurado automaticamente assim que o pagamento for confirmado.
+      </div>
+      <a href="https://plantaopro-pi.vercel.app/admin/renovar/" style="display:block;width:100%;padding:14px;background:var(--blue);color:#fff;border-radius:8px;font-size:15px;font-weight:700;text-decoration:none;margin-bottom:10px;">
+        💳 Renovar assinatura agora
+      </a>
+      <button onclick="location.reload()" style="background:none;border:none;color:var(--text3);font-size:13px;cursor:pointer;">← Tentar novamente</button>
+    </div>`;
+}
+
+function aplicarRestricoesDePlano() {
+  if (!_planoConfig) return;
+  const cfg = _planoConfig;
+
+  // Bloquear itens do menu
+  const navFinanceiro   = document.querySelector('.nav-item[onclick*="financeiro"]');
+  const navExportar     = document.querySelector('.nav-item[onclick*="exportar"]');
+
+  if (navFinanceiro && !cfg.financeiro) {
+    navFinanceiro.style.opacity = '0.4';
+    navFinanceiro.style.cursor = 'not-allowed';
+    navFinanceiro.onclick = () => toast('💎 Módulo Financeiro disponível a partir do plano Pro', true);
+    navFinanceiro.title = 'Disponível no plano Pro+';
+  }
+  if (navExportar && !cfg.exportarTotvs) {
+    navExportar.style.opacity = '0.4';
+    navExportar.style.cursor = 'not-allowed';
+    navExportar.onclick = () => toast('💎 Exportar TOTVS disponível a partir do plano Pro', true);
+  }
+
+  // Mostrar badge do plano no sidebar
+  const footerEl = document.getElementById('admin-nome');
+  if (footerEl && _assinaturaAtiva) {
+    const planoNome = (_assinaturaAtiva.plano || 'starter').toUpperCase();
+    const corPlano = cfg.relatoriosAvancados ? 'var(--green)' : 'var(--amber)';
+    const elBadge = document.createElement('span');
+    elBadge.style.cssText = `display:inline-block;background:${corPlano};color:#fff;font-size:9px;font-weight:700;padding:1px 7px;border-radius:99px;margin-left:6px;vertical-align:middle;`;
+    elBadge.textContent = planoNome;
+    footerEl.appendChild(elBadge);
+  }
+
+  // Mostrar aviso de pico se estiver chegando no limite
+  if (_assinaturaAtiva) {
+    const pico = _assinaturaAtiva.pico_mes_atual || 0;
+    const limite = cfg.limite;
+    const pct = Math.round(pico / limite * 100);
+    if (pct >= 80) {
+      setTimeout(() => {
+        toast(`⚠️ Atenção: você usou ${pico} de ${limite} profissionais do seu plano (${pct}%). Considere fazer upgrade.`, true);
+      }, 3000);
+    }
+  }
 }
 
 function fazerLogout() {
@@ -2549,7 +2654,24 @@ function showTab(id,el){
   if(id==='lote'){ initLote(); }
   if(id==='lotemed'){ initAgenda(); }
   if(id==='candidaturas'){ initCandidaturas(); }
-  if(id==='financeiro'){ initFinanceiro(); }
+  if(id==='financeiro'){
+    if (_planoConfig && !_planoConfig.financeiro) {
+      document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+      document.getElementById('tab-financeiro').classList.add('active');
+      document.getElementById('tab-financeiro').innerHTML = `<div class="page-title">Financeiro</div>
+        <div style="text-align:center;padding:60px 24px;">
+          <div style="font-size:48px;margin-bottom:12px;">💎</div>
+          <div style="font-size:18px;font-weight:700;margin-bottom:8px;">Módulo Financeiro — Plano Pro+</div>
+          <div style="font-size:13px;color:var(--text2);line-height:1.6;max-width:400px;margin:0 auto 20px;">
+            Fechamentos, remessas CNAB 240 PIX, retorno bancário e controle de pagamentos estão disponíveis a partir do plano <strong>Pro</strong>.
+          </div>
+          <a href="/admin/upgrade/" style="display:inline-block;padding:12px 28px;background:var(--blue);color:#fff;border-radius:8px;font-weight:700;text-decoration:none;">Ver planos e fazer upgrade →</a>
+        </div>`;
+      if(el) el.classList.add('active');
+      return;
+    }
+    initFinanceiro();
+  }
   if(id==='medicos'){ renderMedProjetosCheck(); }
   if(id==='dashboard') { updateDash(); iniciarGraficos(); }
 }
@@ -4770,7 +4892,23 @@ function calcularFurosDash(){
 let _relTipoAtivo='detalhado';
 function selecionarRelTipo(tipo,btn){_relTipoAtivo=tipo;document.querySelectorAll('.rel-tipo-btn').forEach(b=>{b.classList.remove('active');b.style.cssText='';});btn.classList.add('active');document.getElementById('rel-resultado').innerHTML='';}
 function filtrarDadosRel(){const pid=document.getElementById('rp').value,mid=document.getElementById('rm').value,d1=document.getElementById('rd1').value,d2=document.getElementById('rd2').value;let dados=[...lancamentos];if(pid)dados=dados.filter(l=>l.projeto_id===pid);if(mid)dados=dados.filter(l=>l.medico_id===mid);if(d1)dados=dados.filter(l=>l.data>=d1);if(d2)dados=dados.filter(l=>l.data<=d2);return dados;}
-function gerarRelatorio(){const el=document.getElementById('rel-resultado');switch(_relTipoAtivo){case'detalhado':gerarRelDetalhado(el);break;case'resumo':gerarRelResumo(el);break;case'horas':gerarRelHoras(el);break;case'faltas':gerarRelFaltas(el);break;case'atrasos':gerarRelAtrasos(el);break;case'checkins':gerarRelCheckinsForaTol(el);break;case'medicos':gerarRelMedicos(el);break;case'risco':gerarRelRisco(el);break;}}
+function gerarRelatorio(){
+  const el=document.getElementById('rel-resultado');
+  // Verificar acesso por plano
+  const tiposAvancados = ['faltas','atrasos','checkins','risco'];
+  if (tiposAvancados.includes(_relTipoAtivo) && _planoConfig && !_planoConfig.relatoriosAvancados) {
+    el.innerHTML = `<div class="card" style="text-align:center;padding:40px 24px;">
+      <div style="font-size:48px;margin-bottom:12px;">💎</div>
+      <div style="font-size:18px;font-weight:700;margin-bottom:8px;">Recurso exclusivo do plano Pro</div>
+      <div style="font-size:13px;color:var(--text2);line-height:1.6;max-width:400px;margin:0 auto 20px;">
+        Os relatórios de Faltas, Atrasos, Check-ins e Risco Operacional estão disponíveis a partir do plano <strong>Pro</strong> (até 500 profissionais · R$ 1.460/mês).
+      </div>
+      <a href="/admin/upgrade/" style="display:inline-block;padding:12px 28px;background:var(--blue);color:#fff;border-radius:8px;font-weight:700;text-decoration:none;">Ver planos e fazer upgrade →</a>
+    </div>`;
+    return;
+  }
+  switch(_relTipoAtivo){case'detalhado':gerarRelDetalhado(el);break;case'resumo':gerarRelResumo(el);break;case'horas':gerarRelHoras(el);break;case'faltas':gerarRelFaltas(el);break;case'atrasos':gerarRelAtrasos(el);break;case'checkins':gerarRelCheckinsForaTol(el);break;case'medicos':gerarRelMedicos(el);break;case'risco':gerarRelRisco(el);break;}
+}
 
 function gerarRelDetalhado(el){const dados=filtrarDadosRel();if(!dados.length){el.innerHTML='<div class="card"><div class="empty">Nenhum dado.</div></div>';return;}const tH=dados.reduce((s,l)=>s+(l.horas||0),0),tR=dados.reduce((s,l)=>s+(l.honorario||0),0),nMeds=new Set(dados.map(l=>l.medico_id)).size;let html=`<div class="metrics"><div class="metric"><div class="metric-label">Plantões</div><div class="metric-val">${dados.length}</div></div><div class="metric"><div class="metric-label">Horas totais</div><div class="metric-val">${Math.round(tH*10)/10}h</div></div><div class="metric"><div class="metric-label">Total honorários</div><div class="metric-val">${fBRL(tR)}</div></div><div class="metric"><div class="metric-label">Médicos</div><div class="metric-val">${nMeds}</div></div></div>`;const porProjeto={};dados.forEach(l=>{const p=l.projeto||'Sem projeto';if(!porProjeto[p])porProjeto[p]=[];porProjeto[p].push(l);});Object.entries(porProjeto).sort((a,b)=>a[0].localeCompare(b[0],'pt-BR')).forEach(([proj,lans])=>{const projH=lans.reduce((s,l)=>s+(l.horas||0),0),projR=lans.reduce((s,l)=>s+(l.honorario||0),0);const grupos={};lans.forEach(l=>{const turno=l.tipo?.includes('Noturno')?'Noturno':l.tipo?.includes('24')?'24h':'Diurno';const chave=`${l.medico}||${l.horas}||${turno}||${l.setor||''}`;if(!grupos[chave])grupos[chave]={medico:l.medico,crm:l.crm,horas:l.horas,turno,setor:l.setor||'',qtd:0,total:0};grupos[chave].qtd++;grupos[chave].total+=l.honorario||0;});const linhas=Object.values(grupos).sort((a,b)=>a.medico.localeCompare(b.medico,'pt-BR')).map(g=>{const badge=g.turno==='Noturno'?'badge-purple':g.turno==='24h'?'badge-amber':'badge-green';return `<tr><td>${g.medico}<br><span class="mono" style="font-size:11px;color:var(--text3);">${g.crm||''}</span></td><td class="mono">${g.horas}h</td><td><span class="badge ${badge}">${g.turno}</span></td><td>${g.setor||'—'}</td><td style="text-align:center;">${g.qtd}</td><td class="mono" style="color:var(--green);font-weight:600;">${fBRL(Math.round(g.total*100)/100)}</td></tr>`;}).join('');html+=`<div class="card" style="margin-bottom:12px;"><div style="display:flex;justify-content:space-between;margin-bottom:10px;"><div class="card-title" style="margin-bottom:0;">📁 ${proj}</div><div style="font-size:12px;color:var(--text2);">${lans.length} plantão(ões) · ${Math.round(projH*10)/10}h · <span style="color:var(--green);font-weight:600;">${fBRL(projR)}</span></div></div><table><thead><tr><th>Médico/CRM</th><th>Hrs/plantão</th><th>Turno</th><th>Setor</th><th style="text-align:center;">Qtd</th><th>Total</th></tr></thead><tbody>${linhas}</tbody><tfoot><tr style="border-top:1.5px solid var(--border2);"><td colspan="4" style="font-weight:600;padding:8px;font-size:12px;">Total</td><td style="text-align:center;font-weight:600;">${lans.length}</td><td class="mono" style="color:var(--green);font-weight:600;">${fBRL(projR)}</td></tr></tfoot></table></div>`;});el.innerHTML=html;}
 
