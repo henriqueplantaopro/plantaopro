@@ -8,6 +8,7 @@ on:
 jobs:
   backup:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
 
     steps:
       - uses: actions/checkout@v4
@@ -18,10 +19,11 @@ jobs:
       - name: Gerar backup
         env:
           PGPASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+          PGSSLMODE: require
         run: |
           pg_dump \
             --host=aws-0-sa-east-1.pooler.supabase.com \
-            --port=6543 \
+            --port=5432 \
             --username=postgres.hqtnnadzwtfyfkunwfcy \
             --dbname=postgres \
             --no-owner --no-acl --clean --if-exists \
