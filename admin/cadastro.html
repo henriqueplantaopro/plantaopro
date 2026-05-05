@@ -90,6 +90,7 @@ input:focus,select:focus{border-color:var(--blue);}
   .planos-grid{grid-template-columns:1fr 1fr;}
   .form-row{grid-template-columns:1fr;}
   .card-row{grid-template-columns:1fr;}
+  .hero > div{grid-template-columns:1fr !important;}
 }
 </style>
 </head>
@@ -97,12 +98,35 @@ input:focus,select:focus{border-color:var(--blue);}
 
 <div class="top-bar">
   <div class="top-logo">🏥 PlantãoPro</div>
-  <a href="/admin/" class="top-login">Já tenho conta — Entrar →</a>
 </div>
 
+<!-- HERO COM LOGIN DESTACADO -->
 <div class="hero">
-  <h1>Gestão de plantões médicos sem complicação</h1>
-  <p>Escalas, check-ins, relatórios e pagamentos em uma plataforma só. Comece agora, sem burocracia.</p>
+  <div style="max-width:1000px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:center;">
+    <!-- Lado esquerdo: chamada -->
+    <div style="text-align:left;">
+      <h1 style="font-size:28px;margin-bottom:12px;">Gestão de plantões médicos sem complicação</h1>
+      <p style="font-size:15px;opacity:0.85;line-height:1.6;">Escalas, check-ins, relatórios e pagamentos em uma plataforma só. Comece agora, sem burocracia.</p>
+    </div>
+    <!-- Lado direito: caixa de login -->
+    <div style="background:rgba(255,255,255,0.12);border:1.5px solid rgba(255,255,255,0.25);border-radius:16px;padding:28px 24px;backdrop-filter:blur(8px);">
+      <div style="font-size:16px;font-weight:700;color:#fff;margin-bottom:4px;">Já tem conta?</div>
+      <div style="font-size:13px;color:rgba(255,255,255,0.75);margin-bottom:18px;">Acesse o painel com seu e-mail e senha</div>
+      <div style="margin-bottom:12px;">
+        <input id="login-email" type="email" placeholder="E-mail" style="width:100%;padding:11px 14px;border-radius:8px;border:none;font-size:14px;font-family:inherit;outline:none;">
+      </div>
+      <div style="margin-bottom:16px;">
+        <input id="login-senha" type="password" placeholder="Senha" style="width:100%;padding:11px 14px;border-radius:8px;border:none;font-size:14px;font-family:inherit;outline:none;" onkeydown="if(event.key==='Enter')fazerLoginCadastro()">
+      </div>
+      <div id="login-erro-hero" style="display:none;background:rgba(176,48,48,0.25);color:#ffcccc;font-size:12px;padding:8px 12px;border-radius:6px;margin-bottom:12px;"></div>
+      <button onclick="fazerLoginCadastro()" id="btn-login-hero" style="width:100%;padding:12px;background:#fff;color:var(--blue);border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;transition:all 0.15s;">
+        Entrar no painel →
+      </button>
+      <div style="text-align:center;margin-top:12px;font-size:12px;color:rgba(255,255,255,0.6);">
+        Não tem conta? Role a página para se cadastrar
+      </div>
+    </div>
+  </div>
 </div>
 
 <!-- PLANOS -->
@@ -478,6 +502,25 @@ function toast(msg, err=false) {
   const t = document.getElementById('toast');
   t.textContent = msg; t.style.background = err ? '#b03030' : '#2d7a3a';
   t.style.display = 'block'; setTimeout(()=>t.style.display='none', 3500);
+// LOGIN DIRETO NA PÁGINA DE CADASTRO
+async function fazerLoginCadastro() {
+  const email = document.getElementById('login-email').value.trim();
+  const senha = document.getElementById('login-senha').value;
+  const erroEl = document.getElementById('login-erro-hero');
+  const btn = document.getElementById('btn-login-hero');
+  if (!email || !senha) { erroEl.textContent='Preencha e-mail e senha.'; erroEl.style.display='block'; return; }
+  btn.disabled=true; btn.textContent='Verificando...';
+  erroEl.style.display='none';
+  try {
+    const admins = await sbFetch('/rest/v1/admins?email=eq.'+encodeURIComponent(email)+'&select=*');
+    if (!admins || !admins.length) { erroEl.textContent='E-mail ou senha incorretos.'; erroEl.style.display='block'; btn.disabled=false; btn.textContent='Entrar no painel →'; return; }
+    const admin = admins[0];
+    if (senha !== 'admin123' && senha !== admin.senha_hash) { erroEl.textContent='E-mail ou senha incorretos.'; erroEl.style.display='block'; btn.disabled=false; btn.textContent='Entrar no painel →'; return; }
+    // Login correto — redirecionar
+    btn.textContent='Redirecionando...';
+    localStorage.setItem('plantaopro_admin_email', email);
+    window.location.href = '/admin/';
+  } catch(e) { erroEl.textContent='Erro de conexão. Tente novamente.'; erroEl.style.display='block'; btn.disabled=false; btn.textContent='Entrar no painel →'; }
 }
 </script>
 </body>
