@@ -8,36 +8,23 @@ on:
 jobs:
   backup:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
 
     steps:
-      - name: Checkout repositório
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Instalar PostgreSQL client
-        run: |
-          sudo apt-get update -qq
-          sudo apt-get install -y postgresql-client
+      - name: Instalar pg client
+        run: sudo apt-get install -y postgresql-client
 
       - name: Gerar backup
         env:
           DB_URL: ${{ secrets.SUPABASE_DB_URL }}
         run: |
-          DATE=$(date +%Y-%m-%d)
-          FILENAME="backup_${DATE}.sql"
-          pg_dump "$DB_URL" \
-            --no-owner \
-            --no-acl \
-            --clean \
-            --if-exists \
-            --format=plain \
-            --file="$FILENAME"
-          gzip "$FILENAME"
-          echo "Backup gerado: ${FILENAME}.gz"
+          pg_dump "$DB_URL" --no-owner --no-acl --clean --if-exists -f backup.sql
+          gzip backup.sql
 
-      - name: Salvar backup
+      - name: Salvar
         uses: actions/upload-artifact@v4
         with:
           name: backup-${{ github.run_number }}
-          path: backup_*.sql.gz
+          path: backup.sql.gz
           retention-days: 30
