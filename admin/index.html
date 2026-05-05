@@ -42,8 +42,60 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 .nav-item{display:flex;align-items:center;gap:10px;padding:9px 20px;font-size:13px;color:var(--text2);cursor:pointer;border-left:3px solid transparent;user-select:none;transition:all 0.15s;}
 .nav-item:hover{background:var(--bg3);color:var(--text);}
 .nav-item.active{background:var(--blue-light);color:var(--blue);border-left-color:var(--blue);font-weight:600;}
-.sidebar-footer{padding:14px 20px;border-top:1px solid var(--border);font-size:12px;color:var(--text3);}
+.sidebar-footer{padding:10px 14px;border-top:1px solid var(--border);font-size:12px;color:var(--text3);position:relative;}
 .btn-logout{background:none;border:none;color:var(--red);font-size:12px;cursor:pointer;padding:0;margin-top:4px;}
+/* PERFIL MENU */
+.perfil-trigger{display:flex;align-items:center;gap:10px;padding:8px 6px;border-radius:8px;cursor:pointer;transition:background 0.15s;width:100%;}
+.perfil-trigger:hover{background:var(--bg3);}
+.perfil-avatar{width:36px;height:36px;border-radius:50%;background:var(--blue);color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0;}
+.perfil-info{flex:1;min-width:0;}
+.perfil-nome{font-size:12px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.perfil-plano-badge{display:inline-block;font-size:9px;font-weight:700;padding:1px 6px;border-radius:99px;margin-top:2px;}
+.perfil-chevron{font-size:10px;color:var(--text3);}
+/* DROPDOWN PERFIL */
+.perfil-dropdown{position:absolute;bottom:calc(100% + 6px);left:10px;right:10px;background:#fff;border:1px solid var(--border);border-radius:10px;box-shadow:0 4px 20px rgba(0,0,0,0.15);z-index:500;display:none;overflow:hidden;}
+.perfil-dropdown.open{display:block;}
+.perfil-dropdown-header{padding:14px 16px;border-bottom:1px solid var(--border);background:var(--bg3);}
+.perfil-empresa{font-size:13px;font-weight:700;color:var(--text);}
+.perfil-email{font-size:11px;color:var(--text3);margin-top:2px;}
+.perfil-plano-info{display:flex;align-items:center;justify-content:space-between;margin-top:8px;padding:8px 10px;background:#fff;border-radius:6px;border:1px solid var(--border);}
+.perfil-plano-nome{font-size:12px;font-weight:700;color:var(--blue);}
+.perfil-plano-limite{font-size:11px;color:var(--text3);}
+.perfil-plano-status{font-size:10px;font-weight:600;padding:2px 8px;border-radius:99px;}
+.status-ativa{background:var(--green-bg,#e8f5eb);color:var(--green);}
+.status-pendente{background:var(--amber-bg,#fdf3e0);color:var(--amber);}
+.status-vencida{background:var(--red-bg,#fdf0f0);color:var(--red);}
+.perfil-pico{font-size:11px;color:var(--text2);margin-top:8px;padding:6px 10px;background:var(--bg3);border-radius:6px;}
+.perfil-pico-bar{width:100%;height:5px;background:var(--border);border-radius:99px;margin-top:4px;overflow:hidden;}
+.perfil-pico-fill{height:100%;border-radius:99px;transition:width 0.4s;}
+.perfil-menu-item{display:flex;align-items:center;gap:10px;padding:11px 16px;font-size:13px;color:var(--text);cursor:pointer;transition:background 0.1s;border:none;background:none;width:100%;text-align:left;}
+.perfil-menu-item:hover{background:var(--bg3);}
+.perfil-menu-item.danger{color:var(--red);}
+.perfil-menu-sep{height:1px;background:var(--border);margin:2px 0;}
+/* MODAL PERFIL */
+.modal-perfil-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:1000;display:none;align-items:center;justify-content:center;}
+.modal-perfil-overlay.open{display:flex;}
+.modal-perfil{background:#fff;border-radius:12px;width:100%;max-width:560px;max-height:90vh;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,0.18);}
+.modal-perfil-header{padding:20px 24px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.modal-perfil-body{padding:20px 24px;}
+.plano-opcao{border:2px solid var(--border);border-radius:10px;padding:14px 16px;cursor:pointer;transition:all 0.15s;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;}
+.plano-opcao:hover{border-color:var(--blue);background:var(--blue-light);}
+.plano-opcao.atual{border-color:var(--blue);background:var(--blue-light);}
+.plano-opcao.upgrade-necessario{border-color:var(--amber);background:var(--amber-bg,#fdf3e0);}
+.plano-opcao-nome{font-size:14px;font-weight:700;}
+.plano-opcao-limite{font-size:12px;color:var(--text2);}
+.plano-opcao-valor{font-size:16px;font-weight:800;color:var(--blue);}
+/* UPGRADE AUTOMATICO */
+.upgrade-auto-box{background:var(--amber-bg,#fdf3e0);border:1.5px solid #f0c060;border-radius:10px;padding:16px 18px;margin:16px 0;}
+.upgrade-auto-titulo{font-size:13px;font-weight:700;color:var(--amber);margin-bottom:8px;display:flex;align-items:center;gap:8px;}
+.upgrade-auto-desc{font-size:12px;color:var(--text2);line-height:1.6;margin-bottom:12px;}
+.upgrade-auto-toggle{display:flex;align-items:center;gap:10px;cursor:pointer;}
+.toggle-switch{width:44px;height:24px;background:var(--border);border-radius:99px;position:relative;transition:background 0.2s;flex-shrink:0;}
+.toggle-switch.on{background:var(--green);}
+.toggle-switch::after{content:'';position:absolute;width:18px;height:18px;background:#fff;border-radius:50%;top:3px;left:3px;transition:transform 0.2s;box-shadow:0 1px 3px rgba(0,0,0,0.2);}
+.toggle-switch.on::after{transform:translateX(20px);}
+.toggle-label{font-size:13px;font-weight:600;color:var(--text);}
+.upgrade-auto-aviso{font-size:11px;color:var(--text3);margin-top:8px;padding:8px 10px;background:#fff;border-radius:6px;border:1px solid var(--border);}
 .main{margin-left:220px;min-height:100vh;padding:28px 32px;}
 .section{display:none;}.section.active{display:block;}
 .page-title{font-size:20px;font-weight:700;margin-bottom:4px;}
@@ -421,8 +473,120 @@ tr:hover td{background:var(--bg3);}
 
   </nav>
   <div class="sidebar-footer">
-    <div id="admin-nome" style="font-weight:600;"></div>
-    <button class="btn-logout" onclick="fazerLogout()">Sair</button>
+    <!-- DROPDOWN PERFIL -->
+    <div class="perfil-dropdown" id="perfil-dropdown">
+      <div class="perfil-dropdown-header">
+        <div class="perfil-empresa" id="pd-empresa">—</div>
+        <div class="perfil-email" id="pd-email">—</div>
+        <div class="perfil-plano-info">
+          <div>
+            <div class="perfil-plano-nome" id="pd-plano-nome">—</div>
+            <div class="perfil-plano-limite" id="pd-plano-limite">—</div>
+          </div>
+          <span class="perfil-plano-status" id="pd-status">—</span>
+        </div>
+        <div class="perfil-pico" id="pd-pico-wrap" style="display:none;">
+          <div style="display:flex;justify-content:space-between;margin-bottom:3px;">
+            <span>Profissionais este mês</span>
+            <strong id="pd-pico-txt">0 / 0</strong>
+          </div>
+          <div class="perfil-pico-bar"><div class="perfil-pico-fill" id="pd-pico-fill"></div></div>
+        </div>
+      </div>
+      <button class="perfil-menu-item" onclick="abrirModalPerfil()">👤 Dados da empresa</button>
+      <button class="perfil-menu-item" onclick="abrirModalPlanos()">💎 Plano e cobrança</button>
+      <div class="perfil-menu-sep"></div>
+      <button class="perfil-menu-item danger" onclick="fecharPerfilMenu();fazerLogout()">🚪 Sair</button>
+    </div>
+
+    <!-- TRIGGER DO PERFIL -->
+    <div class="perfil-trigger" onclick="togglePerfilMenu()">
+      <div class="perfil-avatar" id="perfil-avatar-mini">?</div>
+      <div class="perfil-info">
+        <div class="perfil-nome" id="admin-nome">Carregando...</div>
+        <span class="perfil-plano-badge" id="perfil-plano-badge" style="display:none;"></span>
+      </div>
+      <span class="perfil-chevron">▲</span>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL PERFIL DA EMPRESA -->
+<div class="modal-perfil-overlay" id="modal-perfil" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="modal-perfil">
+    <div class="modal-perfil-header">
+      <div style="font-size:16px;font-weight:700;">👤 Dados da empresa</div>
+      <button onclick="document.getElementById('modal-perfil').classList.remove('open')" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--text3);">✕</button>
+    </div>
+    <div class="modal-perfil-body">
+      <div class="form-row">
+        <div class="form-group"><label>Nome da empresa</label><input id="mp-empresa" type="text"></div>
+        <div class="form-group"><label>CNPJ</label><input id="mp-cnpj" type="text"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Nome do responsável</label><input id="mp-nome" type="text"></div>
+        <div class="form-group"><label>E-mail</label><input id="mp-email" type="email"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Telefone</label><input id="mp-tel" type="text"></div>
+        <div class="form-group"><label>Cargo</label><input id="mp-cargo" type="text"></div>
+      </div>
+      <hr>
+      <div style="font-size:13px;font-weight:600;margin-bottom:10px;">Alterar senha</div>
+      <div class="form-row">
+        <div class="form-group"><label>Nova senha</label><input id="mp-senha" type="password" placeholder="Mínimo 8 caracteres"></div>
+        <div class="form-group"><label>Confirmar senha</label><input id="mp-senha2" type="password" placeholder="Repita a senha"></div>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:16px;justify-content:flex-end;">
+        <button class="btn btn-ghost" onclick="document.getElementById('modal-perfil').classList.remove('open')">Cancelar</button>
+        <button class="btn btn-primary" onclick="salvarPerfil()">💾 Salvar alterações</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL PLANOS -->
+<div class="modal-perfil-overlay" id="modal-planos" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="modal-perfil" style="max-width:620px;">
+    <div class="modal-perfil-header">
+      <div style="font-size:16px;font-weight:700;">💎 Plano e cobrança</div>
+      <button onclick="document.getElementById('modal-planos').classList.remove('open')" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--text3);">✕</button>
+    </div>
+    <div class="modal-perfil-body">
+
+      <!-- Status atual -->
+      <div id="mp-status-atual" style="margin-bottom:20px;"></div>
+
+      <!-- Upgrade automático -->
+      <div class="upgrade-auto-box">
+        <div class="upgrade-auto-titulo">⚡ Upgrade automático de plano</div>
+        <div class="upgrade-auto-desc">
+          Quando o número de profissionais cadastrados ultrapassar o limite do seu plano atual, o sistema realiza o upgrade automaticamente para o próximo plano e ajusta a cobrança mensal. Você <strong>não perde acesso</strong> e não precisa fazer nada manualmente.
+        </div>
+        <label class="upgrade-auto-toggle" onclick="toggleUpgradeAuto()">
+          <div class="toggle-switch" id="toggle-upgrade-auto"></div>
+          <span class="toggle-label" id="toggle-upgrade-label">Ativar upgrade automático</span>
+        </label>
+        <div class="upgrade-auto-aviso">
+          ⚠️ <strong>Como funciona a cobrança:</strong> calculamos o <strong>maior número de profissionais ativos</strong> durante o mês (pico mensal), não o número no dia do vencimento. Isso garante transparência e evita manipulação do valor.
+        </div>
+      </div>
+
+      <!-- Lista de planos -->
+      <div style="font-size:13px;font-weight:600;margin-bottom:12px;color:var(--text2);">Planos disponíveis</div>
+      <div id="mp-planos-lista"></div>
+
+      <!-- Histórico de pagamentos -->
+      <div style="margin-top:20px;border-top:1px solid var(--border);padding-top:16px;">
+        <div style="font-size:13px;font-weight:600;margin-bottom:10px;color:var(--text2);">Histórico de pagamentos</div>
+        <div id="mp-historico-pag" style="font-size:13px;color:var(--text3);">Carregando...</div>
+      </div>
+
+      <div style="display:flex;gap:8px;margin-top:20px;justify-content:flex-end;">
+        <button class="btn btn-ghost" onclick="document.getElementById('modal-planos').classList.remove('open')">Fechar</button>
+        <button class="btn btn-primary" id="btn-salvar-plano" onclick="salvarAlteracoesPlano()">💾 Salvar</button>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -1633,6 +1797,7 @@ async function fazerLogin() {
 
   // Aplicar restrições de plano na UI
   aplicarRestricoesDePlano();
+  preencherPerfilMenu();
 
   await carregarTudo();
 }
@@ -6275,3 +6440,168 @@ function selecionarTipoCadastrado() {
 
 </body>
 </html>
+
+<script>
+// ── MENU PERFIL ───────────────────────────────────────────
+let _upgradeAutoAtivo = false;
+let _planoSelecionadoModal = null;
+
+function togglePerfilMenu() {
+  const dd = document.getElementById('perfil-dropdown');
+  dd.classList.toggle('open');
+}
+function fecharPerfilMenu() {
+  document.getElementById('perfil-dropdown').classList.remove('open');
+}
+document.addEventListener('click', e => {
+  const footer = document.querySelector('.sidebar-footer');
+  if (footer && !footer.contains(e.target)) fecharPerfilMenu();
+});
+
+function preencherPerfilMenu() {
+  if (!adminLogado) return;
+  const ass = _assinaturaAtiva;
+  const cfg = _planoConfig;
+  const iniciais = adminLogado.nome.split(' ').slice(0,2).map(n=>n[0]).join('');
+  const avEl = document.getElementById('perfil-avatar-mini');
+  if (avEl) avEl.textContent = iniciais;
+  document.getElementById('admin-nome').textContent = adminLogado.nome;
+  const badge = document.getElementById('perfil-plano-badge');
+  if (badge && ass) {
+    const cor = cfg?.relatoriosAvancados ? '#2d7a3a' : '#8a5500';
+    badge.textContent = (ass.plano||'starter').toUpperCase();
+    badge.style.cssText = `display:inline-block;background:${cor};color:#fff;font-size:9px;font-weight:700;padding:1px 6px;border-radius:99px;`;
+  }
+  const pdEmp = document.getElementById('pd-empresa'); if(pdEmp) pdEmp.textContent = adminLogado.empresa_nome || adminLogado.nome;
+  const pdEmail = document.getElementById('pd-email'); if(pdEmail) pdEmail.textContent = adminLogado.email || '';
+  if (ass) {
+    const planos = {starter:'Starter',growth:'Growth',pro:'Pro',business:'Business',enterprise:'Enterprise'};
+    const pdNome = document.getElementById('pd-plano-nome'); if(pdNome) pdNome.textContent = 'Plano ' + (planos[ass.plano]||ass.plano||'—');
+    const pdLim = document.getElementById('pd-plano-limite'); if(pdLim) pdLim.textContent = 'Até ' + (ass.limite_medicos||0).toLocaleString('pt-BR') + ' profissionais';
+    const pdSt = document.getElementById('pd-status');
+    if (pdSt) {
+      const stMap = {ativa:{txt:'Ativa',cls:'status-ativa'},pendente:{txt:'Pendente',cls:'status-pendente'},vencida:{txt:'Vencida',cls:'status-vencida'},suspensa:{txt:'Suspensa',cls:'status-vencida'}};
+      const st = stMap[ass.status]||{txt:ass.status,cls:'status-pendente'};
+      pdSt.textContent = st.txt; pdSt.className = 'perfil-plano-status ' + st.cls;
+    }
+    const pico = ass.pico_mes_atual||0, lim = ass.limite_medicos||100;
+    const pct = Math.min(100, Math.round(pico/lim*100));
+    const picoWrap = document.getElementById('pd-pico-wrap');
+    if (picoWrap) {
+      picoWrap.style.display = 'block';
+      document.getElementById('pd-pico-txt').textContent = pico + ' / ' + lim;
+      const fill = document.getElementById('pd-pico-fill');
+      fill.style.width = pct + '%';
+      fill.style.background = pct>=90?'var(--red)':pct>=70?'var(--amber)':'var(--green)';
+    }
+    _upgradeAutoAtivo = ass.upgrade_automatico || false;
+    atualizarToggleUpgrade();
+  }
+}
+
+function abrirModalPerfil() {
+  fecharPerfilMenu();
+  if (!adminLogado) return;
+  document.getElementById('mp-empresa').value = adminLogado.empresa_nome||'';
+  document.getElementById('mp-cnpj').value    = adminLogado.cnpj||'';
+  document.getElementById('mp-nome').value    = adminLogado.nome||'';
+  document.getElementById('mp-email').value   = adminLogado.email||'';
+  document.getElementById('mp-tel').value     = adminLogado.telefone||'';
+  document.getElementById('mp-cargo').value   = adminLogado.cargo||'';
+  document.getElementById('mp-senha').value   = '';
+  document.getElementById('mp-senha2').value  = '';
+  document.getElementById('modal-perfil').classList.add('open');
+}
+
+async function salvarPerfil() {
+  const nome=document.getElementById('mp-nome').value.trim();
+  const senha=document.getElementById('mp-senha').value;
+  const senha2=document.getElementById('mp-senha2').value;
+  if (!nome) { toast('Nome obrigatório',true); return; }
+  if (senha && senha!==senha2) { toast('As senhas não coincidem',true); return; }
+  if (senha && senha.length<8) { toast('Senha mínima: 8 caracteres',true); return; }
+  const payload = {nome,empresa_nome:document.getElementById('mp-empresa').value.trim(),cnpj:document.getElementById('mp-cnpj').value.trim()||null,telefone:document.getElementById('mp-tel').value.trim()||null,cargo:document.getElementById('mp-cargo').value.trim()||null};
+  if (senha) payload.senha_hash = senha;
+  const res = await fetch(SUPABASE_URL+'/rest/v1/admins?id=eq.'+adminLogado.id,{method:'PATCH',headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify(payload)});
+  if (res.ok||res.status===204) { Object.assign(adminLogado,payload); toast('✅ Dados salvos!'); document.getElementById('modal-perfil').classList.remove('open'); preencherPerfilMenu(); }
+  else toast('Erro ao salvar',true);
+}
+
+const PLANOS_LISTA = [
+  {id:'starter',limite:100,nome:'Starter',valor:390,recursos:false},
+  {id:'growth',limite:200,nome:'Growth',valor:690,recursos:false},
+  {id:'pro',limite:500,nome:'Pro',valor:1460,recursos:true},
+  {id:'business',limite:1000,nome:'Business',valor:2780,recursos:true},
+  {id:'enterprise',limite:1500,nome:'Enterprise',valor:3450,recursos:true},
+];
+
+function abrirModalPlanos() {
+  fecharPerfilMenu();
+  _planoSelecionadoModal = _assinaturaAtiva?.plano||'starter';
+  atualizarToggleUpgrade();
+  renderModalPlanos();
+  carregarHistoricoPagamentos();
+  document.getElementById('modal-planos').classList.add('open');
+}
+
+function renderModalPlanos() {
+  const ass=_assinaturaAtiva, planoAtual=ass?.plano||'starter', picoAtual=ass?.pico_mes_atual||0;
+  const stEl=document.getElementById('mp-status-atual');
+  if (stEl&&ass) {
+    const venc=ass.vencimento?new Date(ass.vencimento+'T12:00:00').toLocaleDateString('pt-BR'):'—';
+    const stColor=ass.status==='ativa'?'var(--green)':ass.status==='pendente'?'var(--amber)':'var(--red)';
+    const stTxt={ativa:'✅ Ativa',pendente:'⏳ Pagamento pendente',vencida:'❌ Vencida',suspensa:'⛔ Suspensa'}[ass.status]||ass.status;
+    stEl.innerHTML=`<div style="background:var(--bg3);border-radius:8px;padding:12px 14px;display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;"><div><div style="font-size:12px;color:var(--text2);">Status</div><div style="font-size:14px;font-weight:700;color:${stColor};margin-top:2px;">${stTxt}</div></div><div style="text-align:right;"><div style="font-size:12px;color:var(--text2);">Vencimento</div><div style="font-size:14px;font-weight:700;margin-top:2px;">${venc}</div></div></div>`;
+  }
+  const el=document.getElementById('mp-planos-lista');
+  el.innerHTML=PLANOS_LISTA.map(p=>{
+    const isAtual=p.id===planoAtual;
+    const abaixo=picoAtual>p.limite&&!isAtual;
+    const cls=isAtual?'atual':abaixo?'upgrade-necessario':'';
+    const tag=isAtual?'<span style="font-size:10px;font-weight:700;background:var(--blue);color:#fff;padding:2px 8px;border-radius:99px;margin-left:6px;">Plano atual</span>':abaixo?'<span style="font-size:10px;color:var(--red);margin-left:6px;">⛔ Abaixo do seu uso atual</span>':'';
+    const rec=!p.recursos?'<span style="font-size:10px;color:var(--text3);">· Acesso limitado</span>':'<span style="font-size:10px;color:var(--green);">· Acesso completo</span>';
+    return `<div class="plano-opcao ${cls}" onclick="selecionarPlanoModal('${p.id}',this)"><div><div class="plano-opcao-nome">${p.nome}${tag}</div><div class="plano-opcao-limite">Até ${p.limite.toLocaleString('pt-BR')} profissionais ${rec}</div></div><div class="plano-opcao-valor">R$ ${p.valor.toLocaleString('pt-BR')}<span style="font-size:11px;font-weight:400;color:var(--text2);">/mês</span></div></div>`;
+  }).join('');
+}
+
+function selecionarPlanoModal(id,el) {
+  _planoSelecionadoModal=id;
+  document.querySelectorAll('.plano-opcao').forEach(o=>o.classList.remove('selecionado'));
+  el.classList.add('selecionado');
+}
+
+function toggleUpgradeAuto() { _upgradeAutoAtivo=!_upgradeAutoAtivo; atualizarToggleUpgrade(); }
+function atualizarToggleUpgrade() {
+  const t=document.getElementById('toggle-upgrade-auto'),l=document.getElementById('toggle-upgrade-label');
+  if(t)t.classList.toggle('on',_upgradeAutoAtivo);
+  if(l)l.textContent=_upgradeAutoAtivo?'✅ Upgrade automático ativado':'Ativar upgrade automático';
+}
+
+async function salvarAlteracoesPlano() {
+  if (!_assinaturaAtiva) return;
+  const btn=document.getElementById('btn-salvar-plano');
+  btn.disabled=true; btn.textContent='Salvando...';
+  const planoNovo=_planoSelecionadoModal, p=PLANOS_LISTA.find(x=>x.id===planoNovo);
+  const payload={upgrade_automatico:_upgradeAutoAtivo,atualizado_em:new Date().toISOString()};
+  if (planoNovo&&planoNovo!==_assinaturaAtiva.plano&&p) {
+    payload.plano=planoNovo; payload.limite_medicos=p.limite; payload.valor=p.valor;
+  }
+  await fetch(SUPABASE_URL+'/rest/v1/assinaturas?id=eq.'+_assinaturaAtiva.id,{method:'PATCH',headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify(payload)});
+  Object.assign(_assinaturaAtiva,payload);
+  if (p&&planoNovo!==_assinaturaAtiva.plano) { _planoConfig=PLANOS_CONFIG[planoNovo]||PLANOS_CONFIG['starter']; aplicarRestricoesDePlano(); }
+  toast('✅ Configurações salvas!');
+  document.getElementById('modal-planos').classList.remove('open');
+  preencherPerfilMenu();
+  btn.disabled=false; btn.textContent='💾 Salvar';
+}
+
+async function carregarHistoricoPagamentos() {
+  if (!adminLogado) return;
+  const el=document.getElementById('mp-historico-pag');
+  const data=await sb(`/rest/v1/pagamentos_log?admin_id=eq.${adminLogado.id}&order=pago_em.desc&limit=6`);
+  if (!data?.length) { el.innerHTML='<div style="color:var(--text3);font-size:12px;">Nenhum pagamento registrado ainda.</div>'; return; }
+  const formaMap={PIX:'PIX',BOLETO:'Boleto',CREDIT_CARD:'Cartão'};
+  el.innerHTML='<table style="width:100%;border-collapse:collapse;font-size:12px;"><thead><tr><th style="text-align:left;padding:4px 8px;color:var(--text3);font-size:11px;">Data</th><th style="padding:4px 8px;color:var(--text3);font-size:11px;">Forma</th><th style="text-align:right;padding:4px 8px;color:var(--text3);font-size:11px;">Valor</th><th style="text-align:right;padding:4px 8px;color:var(--text3);font-size:11px;">Status</th></tr></thead><tbody>'+
+    data.map(p=>`<tr style="border-top:1px solid var(--border);"><td style="padding:7px 8px;">${p.pago_em?new Date(p.pago_em).toLocaleDateString('pt-BR'):'—'}</td><td style="padding:7px 8px;">${formaMap[p.forma]||p.forma||'—'}</td><td style="padding:7px 8px;text-align:right;color:var(--green);font-weight:600;">${fBRL(p.valor)}</td><td style="padding:7px 8px;text-align:right;"><span style="font-size:10px;background:var(--green-bg,#e8f5eb);color:var(--green);padding:2px 6px;border-radius:99px;">${p.status==='pago'?'✅ Pago':p.status}</span></td></tr>`).join('')+'</tbody></table>';
+}
+</script>
