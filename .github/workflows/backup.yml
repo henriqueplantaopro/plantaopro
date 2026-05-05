@@ -21,8 +21,12 @@ jobs:
           PGPASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
           PGSSLMODE: require
         run: |
+          # Resolve IPv4 do host Supabase para evitar problema com IPv6
+          DB_HOST="db.hqtnnadzwtfyfkunwfcy.supabase.co"
+          DB_IPV4=$(getent ahostsv4 "$DB_HOST" | head -1 | awk '{print $1}')
+          echo "Conectando via IPv4: $DB_IPV4"
           pg_dump \
-            --host=db.hqtnnadzwtfyfkunwfcy.supabase.co \
+            --host="$DB_IPV4" \
             --port=5432 \
             --username=postgres \
             --dbname=postgres \
