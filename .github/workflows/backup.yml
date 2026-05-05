@@ -16,6 +16,23 @@ jobs:
       - name: Instalar pg client
         run: sudo apt-get install -y postgresql-client
 
+      - name: Debug conexão (sem senha)
+        env:
+          PGHOST: aws-0-sa-east-1.pooler.supabase.com
+          PGPORT: "5432"
+          PGUSER: postgres.hqtnnadzwtfyfkunwfcy
+          PGPASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+          PGDATABASE: postgres
+          PGSSLMODE: require
+        run: |
+          echo "Host: $PGHOST"
+          echo "Port: $PGPORT"
+          echo "User: $PGUSER"
+          echo "DB: $PGDATABASE"
+          echo "SSL: $PGSSLMODE"
+          echo "Password length: ${#PGPASSWORD}"
+          psql -c "SELECT current_user, version();" 2>&1 || true
+
       - name: Gerar backup
         env:
           PGHOST: aws-0-sa-east-1.pooler.supabase.com
