@@ -22,9 +22,9 @@ jobs:
           PGSSLMODE: require
         run: |
           pg_dump \
-            --host=aws-0-sa-east-1.pooler.supabase.com \
+            --host=db.hqtnnadzwtfyfkunwfcy.supabase.co \
             --port=5432 \
-            --username=postgres.hqtnnadzwtfyfkunwfcy \
+            --username=postgres \
             --dbname=postgres \
             --no-owner --no-acl --clean --if-exists \
             -f backup.sql
