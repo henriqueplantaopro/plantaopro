@@ -557,19 +557,19 @@ tr:hover td{background:var(--bg3);}
       <!-- Status atual -->
       <div id="mp-status-atual" style="margin-bottom:20px;"></div>
 
-      <!-- Upgrade automático -->
-      <div class="upgrade-auto-box">
-        <div class="upgrade-auto-titulo">⚡ Upgrade automático de plano</div>
-        <div class="upgrade-auto-desc">
-          Quando o número de profissionais cadastrados ultrapassar o limite do seu plano atual, o sistema realiza o upgrade automaticamente para o próximo plano e ajusta a cobrança mensal. Você <strong>não perde acesso</strong> e não precisa fazer nada manualmente.
+      <!-- Upgrade automático — simplificado -->
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;background:var(--bg3);border-radius:10px;border:1px solid var(--border);margin:16px 0;">
+        <div style="display:flex;align-items:center;gap:12px;">
+          <label style="display:flex;align-items:center;gap:10px;cursor:pointer;margin:0;" onclick="toggleUpgradeAuto()">
+            <div class="toggle-switch" id="toggle-upgrade-auto"></div>
+            <span style="font-size:13px;font-weight:600;color:var(--text);" id="toggle-upgrade-label">Upgrade automático de plano</span>
+          </label>
         </div>
-        <label class="upgrade-auto-toggle" onclick="toggleUpgradeAuto()">
-          <div class="toggle-switch" id="toggle-upgrade-auto"></div>
-          <span class="toggle-label" id="toggle-upgrade-label">Ativar upgrade automático</span>
-        </label>
-        <div class="upgrade-auto-aviso">
-          ⚠️ <strong>Como funciona a cobrança:</strong> calculamos o <strong>maior número de profissionais ativos</strong> durante o mês (pico mensal), não o número no dia do vencimento. Isso garante transparência e evita manipulação do valor.
-        </div>
+        <button onclick="mostrarInfoUpgrade()" style="background:none;border:1px solid var(--border);border-radius:6px;padding:4px 10px;font-size:12px;color:var(--text2);cursor:pointer;white-space:nowrap;">ℹ️ Mais informações</button>
+      </div>
+      <!-- Popover de informações (oculto por padrão) -->
+      <div id="upgrade-info-box" style="display:none;background:#fffbf0;border:1px solid #f0c060;border-radius:8px;padding:12px 14px;font-size:13px;color:var(--text2);line-height:1.6;margin:-8px 0 16px;">
+        Quando o número de profissionais cadastrados ultrapassar o limite do seu plano atual, o sistema realiza o upgrade automaticamente para o próximo plano e ajusta a cobrança mensal.
       </div>
 
       <!-- Lista de planos -->
@@ -1886,7 +1886,9 @@ async function carregarTudo() {
 }
 
 async function carregarMedicos() {
-  const data = await sb('/rest/v1/medicos?select=*&order=nome');
+  // Filtrar por admin se não for o admin master (sem assinatura = acesso total)
+  const filtroAdmin = adminLogado?.id && _assinaturaAtiva ? `&admin_id=eq.${adminLogado.id}` : '';
+  const data = await sb('/rest/v1/medicos?select=*&order=nome' + filtroAdmin);
   medicos = data || [];
   renderMedicos();
   popLancSelects();
@@ -1894,7 +1896,8 @@ async function carregarMedicos() {
 }
 
 async function carregarProjetos() {
-  const data = await sb('/rest/v1/projetos?select=*&order=nome');
+  const filtroAdmin = adminLogado?.id && _assinaturaAtiva ? `&admin_id=eq.${adminLogado.id}` : '';
+  const data = await sb('/rest/v1/projetos?select=*&order=nome' + filtroAdmin);
   projetos = data || [];
   renderProjetos();
   popLancSelects();
@@ -1903,7 +1906,8 @@ async function carregarProjetos() {
 }
 
 async function carregarLancamentos(silencioso=false) {
-  const data = await sb('/rest/v1/lancamentos?select=*,medicos(nome,crm),projetos(nome)&order=data.desc&limit=200');
+  const filtroAdmin = adminLogado?.id && _assinaturaAtiva ? `&admin_id=eq.${adminLogado.id}` : '';
+  const data = await sb('/rest/v1/lancamentos?select=*,medicos(nome,crm),projetos(nome)&order=data.desc&limit=200' + filtroAdmin);
   lancamentos = (data || []).map(l => ({
     ...l,
     medico: l.medicos?.nome || '',
@@ -1912,7 +1916,6 @@ async function carregarLancamentos(silencioso=false) {
   }));
   if (!silencioso) renderLancamentos();
   else { const el=document.getElementById('lanc-lista'); if(el&&lancamentos.length) renderLancamentos(); }
-  // Carregar nomes dos aprovados para plantões abertos
   carregarNomesAprovados();
 }
 
@@ -2390,6 +2393,7 @@ function parseBRLField(id) {
   return parseFloat(v.replace(/\./g,'').replace(',','.'))||null;
 }
 async function addProjeto() {
+  if (!podeCadastrar('projetos')) return;
   const nome = document.getElementById('pn').value.trim();
   if (!nome) { toast('Nome obrigatório', true); return; }
   const payload = { nome,
@@ -2403,7 +2407,8 @@ async function addProjeto() {
     valor_padrao_12h: parseBRLField('pval12'),
     valor_padrao_24h: parseBRLField('pval24'),
     valor_padrao_noturno: parseBRLField('pvaln'),
-    valor_padrao_sobreaviso: parseBRLField('pvalsob')
+    valor_padrao_sobreaviso: parseBRLField('pvalsob'),
+    admin_id: adminLogado?.id || null
   };
   const res = await sb('/rest/v1/projetos', { method:'POST', body: JSON.stringify(payload) });
   if (res) {
@@ -3036,6 +3041,7 @@ function gerarPreviewAgenda() {
 }
 
 async function confirmarAgenda() {
+  if (!podeCadastrar('plantões')) return;
   const d = window._agdData;
   if (!d) return;
   const btn = document.getElementById('agd-confirmar-btn');
@@ -3612,6 +3618,7 @@ function atualizarPreviewRapido() {
 }
 
 async function salvarLancamentoRapido() {
+  if (!podeCadastrar('plantões')) return;
   const overlay = document.getElementById('modal-rapido');
   const ds    = overlay.dataset.ds;
   const medsSel = getMedsSelecionadosMR();
@@ -4129,6 +4136,7 @@ function renderMedProjetosCheck() {
 // Atualizar addMedico para salvar projetos_vinculados
 const _origAddMedico = addMedico;
 async function addMedico() {
+  if (!podeCadastrar('médicos')) return;
   const nome = document.getElementById('mn').value.trim();
   const crm  = document.getElementById('mc').value.trim();
   if (!nome||!crm) { toast('Nome e CRM são obrigatórios', true); return; }
@@ -4149,7 +4157,8 @@ async function addMedico() {
     pix_tipo: document.getElementById('mn-pix-tipo')?.value||null,
     pix_chave: document.getElementById('mn-pix-chave')?.value.trim()||null,
     ativo: true,
-    projetos_vinculados: projsVinc
+    projetos_vinculados: projsVinc,
+    admin_id: adminLogado?.id || null
   };
   const res = await sb('/rest/v1/medicos', { method:'POST', body: JSON.stringify(payload) });
   if (res) {
@@ -6574,7 +6583,23 @@ function toggleUpgradeAuto() { _upgradeAutoAtivo=!_upgradeAutoAtivo; atualizarTo
 function atualizarToggleUpgrade() {
   const t=document.getElementById('toggle-upgrade-auto'),l=document.getElementById('toggle-upgrade-label');
   if(t)t.classList.toggle('on',_upgradeAutoAtivo);
-  if(l)l.textContent=_upgradeAutoAtivo?'✅ Upgrade automático ativado':'Ativar upgrade automático';
+}
+
+function mostrarInfoUpgrade() {
+  const el = document.getElementById('upgrade-info-box');
+  if (el) el.style.display = el.style.display === 'none' ? 'block' : 'none';
+}
+
+// ── VERIFICAR SE PODE CADASTRAR (acesso pendente = somente leitura) ──
+function podeCadastrar(acao) {
+  if (!_assinaturaAtiva) return true; // admin master — sem restrição
+  if (_assinaturaAtiva.status === 'ativa') return true;
+  // Pendente ou vencida — bloquear cadastros
+  const msg = _assinaturaAtiva.status === 'pendente'
+    ? '⏳ Acesso temporário — regularize o pagamento para cadastrar ' + acao + '.\nClique em "💎 Plano e cobrança" no menu de perfil para ver as instruções.'
+    : '❌ Assinatura vencida — renove para cadastrar ' + acao + '.';
+  toast(msg, true);
+  return false;
 }
 
 async function salvarAlteracoesPlano() {
