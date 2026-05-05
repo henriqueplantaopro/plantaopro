@@ -359,6 +359,16 @@ async function finalizarCadastro() {
     const existe = await sbFetch('/rest/v1/admins?email=eq.' + encodeURIComponent(email) + '&select=id');
     if (existe && existe.length > 0) { toast('Este e-mail já está cadastrado. Faça login.', true); btn.disabled=false; btn.textContent='Finalizar cadastro e ativar plano'; return; }
 
+    // 1b. Verificar se CNPJ já existe
+    const cnpjDigitos = document.getElementById('f-cnpj').value.replace(/\D/g,'');
+    if (cnpjDigitos && cnpjDigitos.length === 14) {
+      const existeCnpj = await sbFetch('/rest/v1/clientes?cnpj=eq.' + cnpjDigitos + '&select=id');
+      if (existeCnpj && existeCnpj.length > 0) {
+        toast('Este CNPJ já possui uma conta cadastrada. Faça login ou entre em contato com o suporte.', true);
+        btn.disabled=false; btn.textContent='Finalizar cadastro e ativar plano'; return;
+      }
+    }
+
     // 2. Criar admin no Supabase
     const planoInfo = PLANOS[planoSelecionado];
     const adminPayload = {
