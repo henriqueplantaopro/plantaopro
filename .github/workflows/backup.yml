@@ -18,18 +18,9 @@ jobs:
 
       - name: Gerar backup
         env:
-          PGPASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
-          PGSSLMODE: require
+          DB_URL: ${{ secrets.SUPABASE_DB_URL }}
         run: |
-          # Resolve IPv4 do host Supabase para evitar problema com IPv6
-          DB_HOST="db.hqtnnadzwtfyfkunwfcy.supabase.co"
-          DB_IPV4=$(python3 -c "import socket; print(socket.getaddrinfo('$DB_HOST', 5432, socket.AF_INET)[0][4][0])")
-          echo "Conectando via IPv4: $DB_IPV4"
-          pg_dump \
-            --host="$DB_IPV4" \
-            --port=5432 \
-            --username=postgres \
-            --dbname=postgres \
+          pg_dump "$DB_URL" \
             --no-owner --no-acl --clean --if-exists \
             -f backup.sql
           gzip backup.sql
