@@ -35,7 +35,7 @@ jobs:
 
       - name: Gerar backup
         env:
-          PGHOST: aws-0-sa-east-1.pooler.supabase.com
+                    PGHOST: aws-1-sa-east-1.pooler.supabase.com
           PGPORT: "5432"
           PGUSER: postgres.hqtnnadzwtfyfkunwfcy
           PGPASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
