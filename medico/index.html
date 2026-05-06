@@ -416,11 +416,32 @@ async function vincularDispositivo() {
 async function init() {
   setTimeout(()=>{const s=document.getElementById('splash');if(s&&!s.classList.contains('hide')){s.classList.add('hide');if(document.getElementById('header').style.display==='none')document.getElementById('tela-erro').style.display='block';}},8000);
   const params=new URLSearchParams(window.location.search);
-  let token=params.get('token')||localStorage.getItem('plantaopro_token');
-  if(token)localStorage.setItem('plantaopro_token',token);
+  let token=params.get('token');
+
+  // Salvar token em múltiplos lugares para garantir persistência no PWA
+  if(token){
+    localStorage.setItem('plantaopro_token',token);
+    sessionStorage.setItem('plantaopro_token',token);
+    // Atualizar manifest start_url com o token para quando instalar como PWA
+    try{
+      const manifestEl=document.querySelector('link[rel="manifest"]');
+      if(manifestEl){
+        const resp=await fetch(manifestEl.href);
+        const manifest=await resp.json();
+        manifest.start_url='/medico/?token='+token;
+        const blob=new Blob([JSON.stringify(manifest)],{type:'application/json'});
+        manifestEl.href=URL.createObjectURL(blob);
+      }
+    }catch(e){}
+  } else {
+    // Tentar recuperar token salvo
+    token = localStorage.getItem('plantaopro_token') || 
+            sessionStorage.getItem('plantaopro_token');
+  }
+
   if(!token){mostrarErro();return;}
   const med=await sb('/rest/v1/medicos?token_acesso=eq.'+token+'&select=*');
-  if(!med?.length){localStorage.removeItem('plantaopro_token');mostrarErro();return;}
+  if(!med?.length){localStorage.removeItem('plantaopro_token');sessionStorage.removeItem('plantaopro_token');mostrarErro();return;}
   medico=med[0];
   const did=getDeviceId();
   if(!medico.device_id){document.getElementById('splash').classList.add('hide');document.getElementById('tela-primeiro-acesso').style.display='block';return;}
