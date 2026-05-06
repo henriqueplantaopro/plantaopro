@@ -558,6 +558,8 @@ function toast(msg, err=false) {
   const t = document.getElementById('toast');
   t.textContent = msg; t.style.background = err ? '#b03030' : '#2d7a3a';
   t.style.display = 'block'; setTimeout(()=>t.style.display='none', 3500);
+}
+
 // ESQUECI MINHA SENHA
 function abrirEsqueciSenha() {
   const email = document.getElementById('login-email').value.trim();
@@ -603,8 +605,11 @@ async function enviarEsqueciSenha() {
 }
 
 // Fechar modal ao clicar fora
-document.getElementById('modal-esqueci').addEventListener('click', function(e) {
-  if (e.target === this) fecharEsqueciSenha();
+window.addEventListener('load', function() {
+  const m = document.getElementById('modal-esqueci');
+  if (m) m.addEventListener('click', function(e) {
+    if (e.target === this) fecharEsqueciSenha();
+  });
 });
 
 // LOGIN DIRETO NA PÁGINA DE CADASTRO
