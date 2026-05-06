@@ -2,7 +2,7 @@
   "name": "PlantãoPro",
   "short_name": "PlantãoPro",
   "description": "Gestão de plantões médicos",
-  "start_url": "/medico/",
+  "start_url": "/medico/redirect.html",
   "display": "standalone",
   "background_color": "#1a5fad",
   "theme_color": "#1a5fad",
