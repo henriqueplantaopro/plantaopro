@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head><title>Gerador de Ícones PlantãoPro</title></head>
+<body>
+<script>
+// Ícone base em SVG — cruz médica + fundo azul
+const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="115" fill="#1a5fad"/>
+  <rect x="206" y="116" width="100" height="280" rx="20" fill="white"/>
+  <rect x="116" y="206" width="280" height="100" rx="20" fill="white"/>
+</svg>`;
+
+const sizes = [512, 192, 180, 152, 120, 96];
+const container = document.createElement('div');
+document.body.appendChild(container);
+
+sizes.forEach(size => {
+  const canvas = document.createElement('canvas');
+  canvas.width = size; canvas.height = size;
+  const ctx = canvas.getContext('2d');
+  const img = new Image();
+  const blob = new Blob([svg], {type:'image/svg+xml'});
+  const url = URL.createObjectURL(blob);
+  img.onload = () => {
+    ctx.drawImage(img, 0, 0, size, size);
+    const link = document.createElement('a');
+    link.download = `icon-${size}.png`;
+    link.href = canvas.toDataURL('image/png');
+    link.textContent = `Baixar icon-${size}.png`;
+    link.style = 'display:block;margin:8px;padding:8px;background:#1a5fad;color:#fff;border-radius:6px;text-decoration:none;';
+    container.appendChild(link);
+    URL.revokeObjectURL(url);
+  };
+  img.src = url;
+});
+</script>
+<h2 style="font-family:sans-serif;padding:16px;">Clique nos links abaixo para baixar os ícones:</h2>
+</body>
+</html>
