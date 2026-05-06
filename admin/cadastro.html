@@ -323,15 +323,20 @@ input:focus,select:focus{border-color:var(--blue);}
     </div>
 
     <div id="pag-cartao" class="pag-content">
-      <div style="margin-bottom:12px;">
-        <div class="form-group" style="margin-bottom:10px;"><label>Número do cartão *</label><input id="cc-num" type="text" placeholder="0000 0000 0000 0000" oninput="mascaraCartao(this)" maxlength="19"></div>
-        <div class="card-row">
-          <div class="form-group"><label>Nome no cartão *</label><input id="cc-nome" type="text" placeholder="NOME SOBRENOME"></div>
-          <div class="form-group"><label>Validade *</label><input id="cc-val" type="text" placeholder="MM/AA" maxlength="5" oninput="mascaraVal(this)"></div>
-          <div class="form-group"><label>CVV *</label><input id="cc-cvv" type="text" placeholder="123" maxlength="4"></div>
-        </div>
+      <div style="background:#f8f7f4;border:1px solid var(--border);border-radius:8px;padding:12px 14px;margin-bottom:14px;font-size:13px;color:var(--text2);">
+        Somente <strong>cartão de crédito</strong> é aceito. Cartões de débito não são suportados.
       </div>
-      <div style="font-size:12px;color:var(--text3);">Cobrança recorrente mensal. Cancelável a qualquer momento.</div>
+      <div style="margin-bottom:10px;">
+        <div class="form-group"><label>Número do cartão de crédito *</label><input id="cc-num" type="text" placeholder="0000 0000 0000 0000" oninput="mascaraCartao(this)" maxlength="19" style="width:100%;"></div>
+      </div>
+      <div style="margin-bottom:10px;">
+        <div class="form-group"><label>Nome impresso no cartão *</label><input id="cc-nome" type="text" placeholder="NOME SOBRENOME" style="width:100%;"></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
+        <div class="form-group"><label>Validade *</label><input id="cc-val" type="text" placeholder="MM/AA" maxlength="5" oninput="mascaraVal(this)" style="width:100%;"></div>
+        <div class="form-group"><label>CVV *</label><input id="cc-cvv" type="text" placeholder="123" maxlength="4" style="width:100%;"></div>
+      </div>
+      <div style="font-size:12px;color:var(--text3);">Cobrança recorrente mensal no cartão de crédito. Cancelável a qualquer momento.</div>
     </div>
   </div>
 
