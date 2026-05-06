@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<script>
+// Arquivo intermediário — redireciona para o app com o token salvo
+const token = localStorage.getItem('plantaopro_token');
+if (token) {
+  window.location.replace('/medico/index.html?token=' + token);
+} else {
+  // Sem token — mostrar mensagem de erro
+  document.write('<div style="font-family:system-ui;text-align:center;padding:60px 24px;"><div style="font-size:48px;margin-bottom:16px;">🔒</div><div style="font-size:18px;font-weight:700;margin-bottom:8px;">Acesso não encontrado</div><div style="font-size:14px;color:#666;">Solicite um novo link de acesso ao administrador.</div></div>');
+}
+</script>
+</head>
+<body></body>
+</html>
