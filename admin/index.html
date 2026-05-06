@@ -405,6 +405,37 @@ tr:hover td{background:var(--bg3);}
     <div class="login-field"><label>Senha</label><input id="l-senha" type="password" placeholder="••••••••" value="admin123"></div>
     <button class="btn-login" onclick="fazerLogin()">Entrar</button>
     <div class="login-erro" id="login-erro">E-mail ou senha incorretos</div>
+    <div style="text-align:center;margin-top:14px;">
+      <button onclick="abrirEsqueciSenhaAdmin()" style="background:none;border:none;color:rgba(255,255,255,0.55);font-size:12px;cursor:pointer;text-decoration:underline;font-family:inherit;">Esqueci minha senha</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL ESQUECI SENHA ADMIN -->
+<div id="modal-esqueci-admin" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:9999;align-items:center;justify-content:center;">
+  <div style="background:#fff;border-radius:16px;padding:32px;width:100%;max-width:400px;margin:24px;box-shadow:0 8px 32px rgba(0,0,0,0.25);">
+    <div style="font-size:17px;font-weight:700;color:var(--text);margin-bottom:6px;">Esqueci minha senha</div>
+    <div id="esqueci-admin-form">
+      <p style="font-size:13px;color:var(--text2);line-height:1.6;margin-bottom:18px;">Digite seu e-mail de cadastro. Nossa equipe entrará em contato em até 1 dia útil com as instruções para redefinir sua senha.</p>
+      <div style="margin-bottom:14px;">
+        <label style="font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:0.4px;display:block;margin-bottom:5px;">E-mail cadastrado</label>
+        <input id="esqueci-admin-email" type="email" placeholder="admin@hospital.com" style="width:100%;padding:10px 12px;font-size:14px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;outline:none;box-sizing:border-box;">
+      </div>
+      <div id="esqueci-admin-erro" style="display:none;background:#fdf0f0;color:var(--red);font-size:12px;padding:8px 12px;border-radius:6px;margin-bottom:12px;border:1px solid #f0b8b8;"></div>
+      <div style="display:flex;gap:8px;">
+        <button onclick="fecharEsqueciSenhaAdmin()" style="flex:1;padding:11px;background:#fff;border:1.5px solid var(--border);border-radius:8px;font-size:13px;cursor:pointer;font-family:inherit;color:var(--text2);">Cancelar</button>
+        <button onclick="enviarEsqueciSenhaAdmin()" id="btn-esqueci-admin" style="flex:1;padding:11px;background:var(--blue);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">Enviar solicitação</button>
+      </div>
+    </div>
+    <div id="esqueci-admin-ok" style="display:none;text-align:center;padding:8px 0;">
+      <div style="font-size:36px;margin-bottom:12px;">✉️</div>
+      <div style="font-size:15px;font-weight:700;margin-bottom:8px;">Solicitação enviada!</div>
+      <p style="font-size:13px;color:var(--text2);line-height:1.6;margin-bottom:16px;">Nossa equipe entrará em contato em até <strong>1 dia útil</strong> com as instruções para redefinir sua senha.</p>
+      <div style="background:#fdf3e0;border:1px solid #f0c060;border-radius:8px;padding:12px;font-size:12px;color:var(--amber);margin-bottom:18px;">
+        Ou entre em contato: <strong>suporte@plantaopro.com.br</strong>
+      </div>
+      <button onclick="fecharEsqueciSenhaAdmin()" style="width:100%;padding:11px;background:var(--blue);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;">Fechar</button>
+    </div>
   </div>
 </div>
 
@@ -6620,7 +6651,54 @@ async function salvarAlteracoesPlano() {
   btn.disabled=false; btn.textContent='💾 Salvar';
 }
 
-async function carregarHistoricoPagamentos() {
+// ESQUECI SENHA — ADMIN
+function abrirEsqueciSenhaAdmin() {
+  const email = document.getElementById('l-email').value.trim();
+  if (email) document.getElementById('esqueci-admin-email').value = email;
+  document.getElementById('esqueci-admin-form').style.display = 'block';
+  document.getElementById('esqueci-admin-ok').style.display = 'none';
+  document.getElementById('esqueci-admin-erro').style.display = 'none';
+  const modal = document.getElementById('modal-esqueci-admin');
+  modal.style.display = 'flex';
+}
+
+function fecharEsqueciSenhaAdmin() {
+  document.getElementById('modal-esqueci-admin').style.display = 'none';
+}
+
+async function enviarEsqueciSenhaAdmin() {
+  const email = document.getElementById('esqueci-admin-email').value.trim();
+  const erroEl = document.getElementById('esqueci-admin-erro');
+  const btn = document.getElementById('btn-esqueci-admin');
+  erroEl.style.display = 'none';
+  if (!email) { erroEl.textContent = 'Digite seu e-mail.'; erroEl.style.display = 'block'; return; }
+  btn.disabled = true; btn.textContent = 'Verificando...';
+  try {
+    const res = await sb('/rest/v1/admins?email=eq.' + encodeURIComponent(email) + '&select=id,nome');
+    if (!res || !res.length) {
+      erroEl.textContent = 'E-mail não encontrado. Verifique se digitou corretamente.';
+      erroEl.style.display = 'block';
+      btn.disabled = false; btn.textContent = 'Enviar solicitação';
+      return;
+    }
+    await sb('/rest/v1/solicitacoes_senha', {
+      method: 'POST',
+      headers: {'Prefer': 'return=minimal'},
+      body: JSON.stringify({ email, admin_id: res[0].id, criado_em: new Date().toISOString(), status: 'pendente' })
+    });
+    document.getElementById('esqueci-admin-form').style.display = 'none';
+    document.getElementById('esqueci-admin-ok').style.display = 'block';
+  } catch(e) {
+    erroEl.textContent = 'Erro ao processar. Tente novamente.';
+    erroEl.style.display = 'block';
+    btn.disabled = false; btn.textContent = 'Enviar solicitação';
+  }
+}
+
+document.getElementById('modal-esqueci-admin').addEventListener('click', function(e) {
+  if (e.target === this) fecharEsqueciSenhaAdmin();
+});
+
   if (!adminLogado) return;
   const el=document.getElementById('mp-historico-pag');
   const data=await sb(`/rest/v1/pagamentos_log?admin_id=eq.${adminLogado.id}&order=pago_em.desc&limit=6`);
