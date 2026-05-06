@@ -419,35 +419,44 @@ async function init() {
   const params=new URLSearchParams(window.location.search);
   let token=params.get('token');
 
-  // Salvar token sempre que vier na URL
   if(token){
-    localStorage.setItem('plantaopro_token',token);
-    sessionStorage.setItem('plantaopro_token',token);
+    // Salvar token
+    try{ localStorage.setItem('plantaopro_token',token); }catch(e){}
+    try{ sessionStorage.setItem('plantaopro_token',token); }catch(e){}
+
+    // IMPORTANTE: Injetar token no manifest para que o PWA instalado abra com o token
+    // O iOS usa o start_url do manifest como URL de entrada do app instalado
+    try{
+      const manifestLink = document.querySelector('link[rel="manifest"]');
+      if(manifestLink){
+        const manifestResp = await fetch(manifestLink.href);
+        const manifestData = await manifestResp.json();
+        manifestData.start_url = '/medico/?token=' + encodeURIComponent(token);
+        const blob = new Blob([JSON.stringify(manifestData)], {type:'application/manifest+json'});
+        const newUrl = URL.createObjectURL(blob);
+        manifestLink.href = newUrl;
+      }
+    }catch(e){ console.log('manifest err:', e); }
+
   } else {
-    // Recuperar token salvo
-    token = localStorage.getItem('plantaopro_token') ||
-            sessionStorage.getItem('plantaopro_token');
-    // Se encontrou token salvo mas não está na URL, redirecionar com token
-    // Isso garante que o iOS abra em modo standalone corretamente
-    if(token && window.navigator.standalone){
-      window.location.replace('/medico/?token='+token);
-      return;
-    }
+    // Sem token na URL — tentar recuperar
+    try{ token = localStorage.getItem('plantaopro_token'); }catch(e){}
+    if(!token){ try{ token = sessionStorage.getItem('plantaopro_token'); }catch(e){} }
   }
 
-  if(!token){mostrarErro();return;}
+  if(!token){ mostrarErro(); return; }
 
-  const med=await sb('/rest/v1/medicos?token_acesso=eq.'+token+'&select=*');
+  const med = await sb('/rest/v1/medicos?token_acesso=eq.'+token+'&select=*');
   if(!med?.length){
-    localStorage.removeItem('plantaopro_token');
-    sessionStorage.removeItem('plantaopro_token');
+    try{ localStorage.removeItem('plantaopro_token'); }catch(e){}
+    try{ sessionStorage.removeItem('plantaopro_token'); }catch(e){}
     mostrarErro();
     return;
   }
-  medico=med[0];
-  const did=getDeviceId();
-  if(!medico.device_id){document.getElementById('splash').classList.add('hide');document.getElementById('tela-primeiro-acesso').style.display='block';return;}
-  if(medico.device_id!==did){document.getElementById('splash').classList.add('hide');document.getElementById('tela-device').style.display='block';return;}
+  medico = med[0];
+  const did = getDeviceId();
+  if(!medico.device_id){ document.getElementById('splash').classList.add('hide'); document.getElementById('tela-primeiro-acesso').style.display='block'; return; }
+  if(medico.device_id!==did){ document.getElementById('splash').classList.add('hide'); document.getElementById('tela-device').style.display='block'; return; }
   mostrarApp();
 }
 
