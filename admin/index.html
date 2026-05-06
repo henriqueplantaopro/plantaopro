@@ -42,60 +42,8 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 .nav-item{display:flex;align-items:center;gap:10px;padding:9px 20px;font-size:13px;color:var(--text2);cursor:pointer;border-left:3px solid transparent;user-select:none;transition:all 0.15s;}
 .nav-item:hover{background:var(--bg3);color:var(--text);}
 .nav-item.active{background:var(--blue-light);color:var(--blue);border-left-color:var(--blue);font-weight:600;}
-.sidebar-footer{padding:10px 14px;border-top:1px solid var(--border);font-size:12px;color:var(--text3);position:relative;}
+.sidebar-footer{padding:14px 20px;border-top:1px solid var(--border);font-size:12px;color:var(--text3);}
 .btn-logout{background:none;border:none;color:var(--red);font-size:12px;cursor:pointer;padding:0;margin-top:4px;}
-/* PERFIL MENU */
-.perfil-trigger{display:flex;align-items:center;gap:10px;padding:8px 6px;border-radius:8px;cursor:pointer;transition:background 0.15s;width:100%;}
-.perfil-trigger:hover{background:var(--bg3);}
-.perfil-avatar{width:36px;height:36px;border-radius:50%;background:var(--blue);color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0;}
-.perfil-info{flex:1;min-width:0;}
-.perfil-nome{font-size:12px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.perfil-plano-badge{display:inline-block;font-size:9px;font-weight:700;padding:1px 6px;border-radius:99px;margin-top:2px;}
-.perfil-chevron{font-size:10px;color:var(--text3);}
-/* DROPDOWN PERFIL */
-.perfil-dropdown{position:absolute;bottom:calc(100% + 6px);left:10px;right:10px;background:#fff;border:1px solid var(--border);border-radius:10px;box-shadow:0 4px 20px rgba(0,0,0,0.15);z-index:500;display:none;overflow:hidden;}
-.perfil-dropdown.open{display:block;}
-.perfil-dropdown-header{padding:14px 16px;border-bottom:1px solid var(--border);background:var(--bg3);}
-.perfil-empresa{font-size:13px;font-weight:700;color:var(--text);}
-.perfil-email{font-size:11px;color:var(--text3);margin-top:2px;}
-.perfil-plano-info{display:flex;align-items:center;justify-content:space-between;margin-top:8px;padding:8px 10px;background:#fff;border-radius:6px;border:1px solid var(--border);}
-.perfil-plano-nome{font-size:12px;font-weight:700;color:var(--blue);}
-.perfil-plano-limite{font-size:11px;color:var(--text3);}
-.perfil-plano-status{font-size:10px;font-weight:600;padding:2px 8px;border-radius:99px;}
-.status-ativa{background:var(--green-bg,#e8f5eb);color:var(--green);}
-.status-pendente{background:var(--amber-bg,#fdf3e0);color:var(--amber);}
-.status-vencida{background:var(--red-bg,#fdf0f0);color:var(--red);}
-.perfil-pico{font-size:11px;color:var(--text2);margin-top:8px;padding:6px 10px;background:var(--bg3);border-radius:6px;}
-.perfil-pico-bar{width:100%;height:5px;background:var(--border);border-radius:99px;margin-top:4px;overflow:hidden;}
-.perfil-pico-fill{height:100%;border-radius:99px;transition:width 0.4s;}
-.perfil-menu-item{display:flex;align-items:center;gap:10px;padding:11px 16px;font-size:13px;color:var(--text);cursor:pointer;transition:background 0.1s;border:none;background:none;width:100%;text-align:left;}
-.perfil-menu-item:hover{background:var(--bg3);}
-.perfil-menu-item.danger{color:var(--red);}
-.perfil-menu-sep{height:1px;background:var(--border);margin:2px 0;}
-/* MODAL PERFIL */
-.modal-perfil-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:1000;display:none;align-items:center;justify-content:center;}
-.modal-perfil-overlay.open{display:flex;}
-.modal-perfil{background:#fff;border-radius:12px;width:100%;max-width:560px;max-height:90vh;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,0.18);}
-.modal-perfil-header{padding:20px 24px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
-.modal-perfil-body{padding:20px 24px;}
-.plano-opcao{border:2px solid var(--border);border-radius:10px;padding:14px 16px;cursor:pointer;transition:all 0.15s;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;}
-.plano-opcao:hover{border-color:var(--blue);background:var(--blue-light);}
-.plano-opcao.atual{border-color:var(--blue);background:var(--blue-light);}
-.plano-opcao.upgrade-necessario{border-color:var(--amber);background:var(--amber-bg,#fdf3e0);}
-.plano-opcao-nome{font-size:14px;font-weight:700;}
-.plano-opcao-limite{font-size:12px;color:var(--text2);}
-.plano-opcao-valor{font-size:16px;font-weight:800;color:var(--blue);}
-/* UPGRADE AUTOMATICO */
-.upgrade-auto-box{background:var(--amber-bg,#fdf3e0);border:1.5px solid #f0c060;border-radius:10px;padding:16px 18px;margin:16px 0;}
-.upgrade-auto-titulo{font-size:13px;font-weight:700;color:var(--amber);margin-bottom:8px;display:flex;align-items:center;gap:8px;}
-.upgrade-auto-desc{font-size:12px;color:var(--text2);line-height:1.6;margin-bottom:12px;}
-.upgrade-auto-toggle{display:flex;align-items:center;gap:10px;cursor:pointer;}
-.toggle-switch{width:44px;height:24px;background:var(--border);border-radius:99px;position:relative;transition:background 0.2s;flex-shrink:0;}
-.toggle-switch.on{background:var(--green);}
-.toggle-switch::after{content:'';position:absolute;width:18px;height:18px;background:#fff;border-radius:50%;top:3px;left:3px;transition:transform 0.2s;box-shadow:0 1px 3px rgba(0,0,0,0.2);}
-.toggle-switch.on::after{transform:translateX(20px);}
-.toggle-label{font-size:13px;font-weight:600;color:var(--text);}
-.upgrade-auto-aviso{font-size:11px;color:var(--text3);margin-top:8px;padding:8px 10px;background:#fff;border-radius:6px;border:1px solid var(--border);}
 .main{margin-left:220px;min-height:100vh;padding:28px 32px;}
 .section{display:none;}.section.active{display:block;}
 .page-title{font-size:20px;font-weight:700;margin-bottom:4px;}
@@ -405,11 +353,2387 @@ tr:hover td{background:var(--bg3);}
     <div class="login-field"><label>Senha</label><input id="l-senha" type="password" placeholder="••••••••" value="admin123"></div>
     <button class="btn-login" onclick="fazerLogin()">Entrar</button>
     <div class="login-erro" id="login-erro">E-mail ou senha incorretos</div>
-    <div style="text-align:center;margin-top:14px;">
-      <button onclick="abrirEsqueciSenhaAdmin()" style="background:none;border:none;color:rgba(255,255,255,0.55);font-size:12px;cursor:pointer;text-decoration:underline;font-family:inherit;">Esqueci minha senha</button>
+  </div>
+</div>
+
+<!-- SIDEBAR -->
+<div class="sidebar" id="sidebar" style="display:none;">
+  <div class="sidebar-header">
+    <div class="sidebar-logo">🏥 PlantãoPro</div>
+    <div class="sidebar-sub">Painel Admin</div>
+  </div>
+  <nav class="sidebar-nav">
+
+    <!-- Home -->
+    <div class="nav-item active" onclick="showTab('dashboard',this)" style="margin-bottom:2px;">📊 Dashboard</div>
+
+    <!-- Calendário -->
+    <div class="nav-item" onclick="showTab('calendario',this)" style="margin-bottom:2px;">📅 Calendário</div>
+
+    <!-- Cadastros (colapsável) -->
+    <div class="nav-group">
+      <div class="nav-group-label" onclick="toggleNavGroup(this)">
+        <span class="nav-label-left">🗂️ Cadastros</span>
+        <span class="nav-arrow">▶</span>
+      </div>
+      <div class="nav-group-items">
+        <div class="nav-item" onclick="showTab('medicos',this)">👨‍⚕️ Médicos</div>
+        <div class="nav-item" onclick="showTab('projetos',this)">📁 Projetos</div>
+        <div class="nav-item" onclick="showTab('tipos',this)">⚙️ Tipos de plantão</div>
+      </div>
+    </div>
+
+    <!-- Lançamentos (colapsável) -->
+    <div class="nav-group">
+      <div class="nav-group-label" onclick="toggleNavGroup(this)">
+        <span class="nav-label-left">📋 Lançamentos</span>
+        <span class="nav-arrow">▶</span>
+      </div>
+      <div class="nav-group-items">
+        <div class="nav-item" onclick="showTab('lancamentos',this)">📋 Lançamentos</div>
+        <div class="nav-item" onclick="showTab('lote',this)">⚡ Em lote</div>
+      </div>
+    </div>
+
+    <!-- Operacional (itens soltos sem grupo) -->
+    <div class="nav-item" onclick="showTab('checkins',this)">📍 Check-ins</div>
+    <div class="nav-item" onclick="showTab('candidaturas',this)">📢 Plantões abertos <span id="badge-cand" style="display:none;background:var(--red);color:#fff;font-size:9px;font-weight:700;border-radius:99px;padding:1px 5px;margin-left:4px;"></span></div>
+    <div class="nav-item" onclick="showTab('relatorios',this)">📈 Relatórios</div>
+    <div class="nav-item" onclick="showTab('financeiro',this)">💰 Financeiro</div>
+
+    <!-- Importar/Exportar (colapsável) -->
+    <div class="nav-group">
+      <div class="nav-group-label" onclick="toggleNavGroup(this)">
+        <span class="nav-label-left">🔄 Importar / Exportar</span>
+        <span class="nav-arrow">▶</span>
+      </div>
+      <div class="nav-group-items">
+        <div class="nav-item" onclick="showTab('importar',this)">📥 Importar planilha</div>
+        <div class="nav-item" onclick="showTab('exportar',this)">📤 Exportar relatório</div>
+      </div>
+    </div>
+
+    <!-- Secundários — colados ao rodapé -->
+    <div style="margin-top:auto;border-top:1px solid var(--border);padding-top:4px;">
+      <div class="nav-item nav-item-small" onclick="showTab('lotemed',this)">📆 Agenda por médico</div>
+      <div class="nav-item nav-item-small" onclick="showTab('escala',this)">👥 Escala por profissional</div>
+    </div>
+
+  </nav>
+  <div class="sidebar-footer">
+    <div id="admin-nome" style="font-weight:600;"></div>
+    <button class="btn-logout" onclick="fazerLogout()">Sair</button>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main" id="main" style="display:none;">
+  <!-- Barra de cópia ativa -->
+  <div id="barra-copiado">
+    <span>📋 <span id="barra-copiado-txt">Plantão copiado</span> — clique em 📌 Colar em qualquer dia da semana</span>
+    <button onclick="cancelarCopia()">✕ Cancelar cópia</button>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div id="tab-dashboard" class="section active">
+    <div class="page-title">Dashboard</div>
+    <div class="page-sub">Visão geral em tempo real</div>
+
+    <!-- ALERTAS DE FURO -->
+    <div id="dash-furos-card" style="display:none;margin-bottom:14px;">
+      <div class="card" style="border-left:4px solid var(--red);background:var(--red-bg);padding:14px 18px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;">
+          <div>
+            <div style="font-size:13px;font-weight:700;color:var(--red);">⚠️ Plantões sem confirmação — próximas 48h</div>
+            <div style="font-size:12px;color:var(--text2);margin-top:4px;">Médicos que ainda não confirmaram presença</div>
+          </div>
+          <div style="font-size:32px;font-weight:700;color:var(--red);" id="dash-furos-count">0</div>
+        </div>
+        <div id="dash-furos-lista" style="margin-top:10px;"></div>
+      </div>
+    </div>
+
+    <div class="metrics">
+      <div class="metric"><div class="metric-label">Médicos ativos</div><div class="metric-val" id="d-medicos">—</div></div>
+      <div class="metric"><div class="metric-label">Plantões este mês</div><div class="metric-val" id="d-plantoes">—</div></div>
+      <div class="metric"><div class="metric-label">Check-ins hoje</div><div class="metric-val" id="d-checkins">—</div></div>
+      <div class="metric"><div class="metric-label">Total honorários mês</div><div class="metric-val" id="d-total">—</div></div>
+    </div>
+    <!-- FILTRO DOS GRÁFICOS -->
+    <div class="card" style="padding:12px 16px;margin-bottom:16px;">
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+        <span style="font-size:13px;font-weight:600;color:var(--text2);">📊 Gráficos — período:</span>
+        <input type="date" id="graf-d1" style="padding:5px 8px;border:1px solid var(--border);border-radius:var(--radius);font-size:13px;">
+        <span style="font-size:13px;color:var(--text3);">até</span>
+        <input type="date" id="graf-d2" style="padding:5px 8px;border:1px solid var(--border);border-radius:var(--radius);font-size:13px;">
+        <button class="btn btn-primary btn-sm" onclick="atualizarGraficos()">Atualizar</button>
+        <button class="btn btn-ghost btn-sm" onclick="resetarPeriodoGraficos()">Últimos 30 dias</button>
+      </div>
+    </div>
+
+    <!-- GRÁFICOS linha 1 -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
+      <div class="card">
+        <div class="card-title">💰 Custo por projeto</div>
+        <div style="position:relative;height:280px;"><canvas id="graf-proj"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-title">⏱️ Top 10 médicos — horas trabalhadas</div>
+        <div style="position:relative;height:280px;"><canvas id="graf-horas"></canvas></div>
+      </div>
+    </div>
+
+    <!-- GRÁFICOS linha 2 -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
+      <div class="card">
+        <div class="card-title">✅ Pontualidade — check-ins</div>
+        <div style="display:flex;align-items:center;justify-content:center;gap:24px;">
+          <div style="position:relative;height:220px;width:220px;"><canvas id="graf-pontual"></canvas></div>
+          <div id="graf-pontual-legend" style="font-size:13px;"></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">📋 Status dos plantões — próximos 7 dias</div>
+        <div style="display:flex;align-items:center;justify-content:center;gap:24px;">
+          <div style="position:relative;height:220px;width:220px;"><canvas id="graf-status"></canvas></div>
+          <div id="graf-status-legend" style="font-size:13px;"></div>
+        </div>
+        <div style="margin-top:8px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+          <span style="font-size:12px;color:var(--text3);">Período plantões:</span>
+          <input type="date" id="graf-status-d1" style="padding:4px 6px;border:1px solid var(--border);border-radius:var(--radius);font-size:12px;">
+          <span style="font-size:12px;color:var(--text3);">até</span>
+          <input type="date" id="graf-status-d2" style="padding:4px 6px;border:1px solid var(--border);border-radius:var(--radius);font-size:12px;">
+          <button class="btn btn-ghost btn-sm" onclick="renderGrafStatus()">↺</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ÚLTIMOS LANÇAMENTOS E CHECK-INS -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px;">
+      <div class="card"><div class="card-title">Últimos lançamentos</div><div id="d-lanc-tab"><div class="empty">Carregando...</div></div></div>
+      <div class="card"><div class="card-title">Check-ins recentes</div><div id="d-ci-tab"><div class="empty">Carregando...</div></div></div>
+    </div>
+  </div>
+
+  <!-- MÉDICOS -->
+  <div id="tab-medicos" class="section">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+      <div class="page-title" style="margin-bottom:0;">Médicos</div>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-ghost btn-sm" onclick="exportarMedicosXLSX()">⬇ Exportar Excel</button>
+        <label class="btn btn-ghost btn-sm" style="cursor:pointer;" title="Importar médicos via Excel">
+          ⬆ Importar Excel
+          <input type="file" id="import-med-file" accept=".xlsx,.xls" style="display:none;" onchange="importarMedicosXLSX(event)">
+        </label>
+      </div>
+    </div>
+    <div class="page-sub">Cadastro e links de acesso ao app</div>
+    <div class="card">
+      <div class="card-title">Novo médico</div>
+      <div class="form-row">
+        <div class="form-group"><label>Nome completo</label><input id="mn" type="text" placeholder="Dr. João Silva"></div>
+        <div class="form-group"><label>E-mail</label><input id="memail" type="email" placeholder="medico@hospital.com"></div>
+      </div>
+      <div class="form-row four">
+        <div class="form-group"><label>Telefone celular</label><input id="mtel" type="text" placeholder="(21) 99999-9999"></div>
+        <div class="form-group"><label>Data de nascimento</label><input id="mnascimento" type="date"></div>
+        <div class="form-group"><label>CPF</label><input id="mcpf" type="text" placeholder="000.000.000-00" oninput="if(document.getElementById('mn-pix-tipo')?.value==='CPF') autoPreencherPixNovo()"></div>
+        <div class="form-group"><label>Tipo</label><select id="mt"><option>Plantonista</option><option>Diarista</option><option>Coordenador</option><option>Residente</option></select></div>
+      </div>
+      <div class="form-row four">
+        <div class="form-group"><label>CRM</label><input id="mc" type="text" placeholder="CRM/RJ 000001"></div>
+        <div class="form-group"><label>RQE</label><input id="mrqe" type="text" placeholder="RQE 00000"></div>
+        <input type="hidden" id="me" value="">
+        <input type="hidden" id="mv" value="0">
+      </div>
+      <!-- Especialidades múltiplas — dropdown compacto -->
+      <div class="form-group" style="margin-top:10px;">
+        <label>Especialidades <span style="font-weight:400;font-size:11px;color:var(--text3);">(selecione todas que se aplicam)</span></label>
+        <div class="esp-dropdown" id="esp-dropdown-novo">
+          <div class="esp-trigger" onclick="toggleEspDropdown('novo')" id="esp-trigger-novo">
+            <span id="esp-label-novo" style="color:var(--text3);">Clique para selecionar...</span>
+            <span>▾</span>
+          </div>
+          <div class="esp-panel" id="esp-panel-novo">
+          <label class="esp-panel-item"><input type="checkbox" class="med-esp-chk" value="Clínica Geral / Emergência">Clínica Geral / Emergência</label>
+          <label class="esp-panel-item"><input type="checkbox" class="med-esp-chk" value="Anestesiologia">Anestesiologia</label>
+          <label class="esp-panel-item"><input type="checkbox" class="med-esp-chk" value="Cardiologia">Cardiologia</label>
+          <label class="esp-panel-item"><input type="checkbox" class="med-esp-chk" value="Cirurgia Geral">Cirurgia Geral</label>
+          <label class="esp-panel-item"><input type="checkbox" class="med-esp-chk" value="Cirurgia Vascular">Cirurgia Vascular</label>
+          <label class="esp-panel-item"><input type="checkbox" class="med-esp-chk" value="Dermatologia">Dermatologia</label>
+          <label class="esp-panel-item"><input type="checkbox" class="med-esp-chk" value="Endocrinologia">Endocrinologia</label>
+          <label class="esp-panel-item"><input type="checkbox" class="med-esp-chk" value="Gastroenterologia">Gastroenterologia</label>
+          <label class="esp-panel-item"><input type="checkbox" class="med-esp-chk" value="Geriatria">Geriatria</label>
+          <label class="esp-panel-item"><input type="checkbox" class="med-esp-chk" value="Ginecologia e Obstetrícia">Ginecologia e Obstetrícia</label>
+          <label class="esp-panel-item"><input type="checkbox" class="med-esp-chk" value="Hematologia">Hematologia</label>
+          <label class="esp-panel-item"><input type="checkbox" class="med-esp-chk" value="Infectologia">Infectologia</label>
+          <label class="esp-panel-item"><input type="checkbox" class="med-esp-chk" value="Medicina Intensiva (UTI)">Medicina Intensiva (UTI)</label>
+          <label class="esp-panel-item"><input type="checkbox" class="med-esp-chk" value="Medicina do Trabalho">Medicina do Trabalho</label>
+          <label class="esp-panel-item"><input type="checkbox" class="med-esp-chk" value="Nefrologia">Nefrologia</label>
+          <label class="esp-panel-item"><input type="checkbox" class="med-esp-chk" value="Neurologia">Neurologia</label>
+          <label class="esp-panel-item"><input type="checkbox" class="med-esp-chk" value="Neurocirurgia">Neurocirurgia</label>
+          <label class="esp-panel-item"><input type="checkbox" class="med-esp-chk" value="Oftalmologia">Oftalmologia</label>
+          <label class="esp-panel-item"><input type="checkbox" class="med-esp-chk" value="Oncologia">Oncologia</label>
+          <label class="esp-panel-item"><input type="checkbox" class="med-esp-chk" value="Ortopedia e Traumatologia">Ortopedia e Traumatologia</label>
+          <label class="esp-panel-item"><input type="checkbox" class="med-esp-chk" value="Otorrinolaringologia">Otorrinolaringologia</label>
+          <label class="esp-panel-item"><input type="checkbox" class="med-esp-chk" value="Pediatria">Pediatria</label>
+          <label class="esp-panel-item"><input type="checkbox" class="med-esp-chk" value="Pneumologia">Pneumologia</label>
+          <label class="esp-panel-item"><input type="checkbox" class="med-esp-chk" value="Psiquiatria">Psiquiatria</label>
+          <label class="esp-panel-item"><input type="checkbox" class="med-esp-chk" value="Radiologia">Radiologia</label>
+          <label class="esp-panel-item"><input type="checkbox" class="med-esp-chk" value="Reumatologia">Reumatologia</label>
+          <label class="esp-panel-item"><input type="checkbox" class="med-esp-chk" value="Urologia">Urologia</label>
+          </div>
+        </div>
+        <div class="esp-tags" id="esp-tags-novo"></div>
+      </div>
+      <!-- Dados bancários / PIX -->
+      <div style="border-top:1px solid var(--border);margin-top:12px;padding-top:12px;">
+        <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px;">Dados bancários</div>
+        <div class="form-row">
+          <div class="form-group"><label>Razão social <span style="font-weight:400;color:var(--text3);font-size:11px;">(se PJ)</span></label><input id="mn-razao" type="text" placeholder="Empresa LTDA"></div>
+          <div class="form-group"><label>CNPJ <span style="font-weight:400;color:var(--text3);font-size:11px;">(se PJ)</span></label><input id="mn-cnpj" type="text" placeholder="00.000.000/0000-00"></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>Tipo de chave PIX</label>
+            <select id="mn-pix-tipo" onchange="autoPreencherPixNovo()">
+              <option value="">Sem PIX cadastrado</option>
+              <option value="CPF">CPF</option>
+              <option value="CNPJ">CNPJ</option>
+              <option value="EMAIL">E-mail</option>
+              <option value="TELEFONE">Telefone</option>
+              <option value="ALEATORIA">Chave aleatória</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Chave PIX</label>
+            <div style="position:relative;">
+              <input id="mn-pix-chave" type="text" placeholder="Digite a chave PIX" oninput="validarPixNovo()" style="width:100%;padding-right:30px;">
+              <span id="mn-pix-status" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);font-size:16px;display:none;"></span>
+            </div>
+            <div id="mn-pix-aviso" style="display:none;font-size:11px;margin-top:4px;padding:4px 8px;border-radius:4px;"></div>
+          </div>
+        </div>
+      </div>
+      <!-- Projetos vinculados -->
+      <div class="form-group" style="margin-top:8px;">
+        <label>Projetos vinculados <span style="font-weight:400;font-size:11px;color:var(--text3);">(médico verá plantões abertos destes projetos)</span></label>
+        <div id="med-projetos-check" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;"></div>
+      </div>
+      <button class="btn btn-primary" onclick="addMedico()">+ Adicionar médico</button>
+    </div>
+    <div class="card">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+        <div class="card-title" style="margin-bottom:0;">Médicos cadastrados</div>
+        <div style="position:relative;width:280px;">
+          <input id="med-busca" type="text" placeholder="🔍 Buscar por nome ou CRM..."
+            oninput="filtrarMedicosLista()"
+            style="width:100%;padding:7px 30px 7px 10px;border:1px solid var(--border);border-radius:var(--radius);font-size:13px;">
+          <span id="med-busca-clear" onclick="limparBuscaMedicos()"
+            style="display:none;position:absolute;right:8px;top:50%;transform:translateY(-50%);cursor:pointer;color:var(--text3);font-size:16px;">×</span>
+        </div>
+      </div>
+      <div id="med-busca-count" style="font-size:12px;color:var(--text3);margin-bottom:8px;display:none;"></div>
+      <div id="medicos-lista"><div class="empty">Carregando...</div></div>
+    </div>
+  </div>
+
+  <!-- PROJETOS -->
+  <div id="tab-projetos" class="section">
+    <div class="page-title">Projetos</div>
+    <div class="page-sub">Unidades e coordenadas GPS para check-in</div>
+    <div class="card">
+      <div class="card-title">Novo projeto</div>
+      <div class="form-row"><div class="form-group"><label>Nome do projeto</label><input id="pn" type="text" placeholder="UPA Centro"></div><div class="form-group"><label>Código TOTVS (CC)</label><input id="pc" type="text" placeholder="CC-001"></div></div>
+      <div class="form-row"><div class="form-group"><label>Contratante</label><input id="pco" type="text" placeholder="Secretaria Municipal de Saúde"></div><div class="form-group"><label>Status</label><select id="ps"><option>Ativo</option><option>Encerrado</option><option>Em negociação</option></select></div></div>
+      <!-- Remuneração padrão -->
+      <div style="border-top:1px solid var(--border);margin:10px 0 12px;padding-top:12px;">
+        <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;color:var(--text2);margin-bottom:10px;">Remuneração padrão</div>
+        <div class="form-row four">
+          <div class="form-group"><label>Valor plantão 12h (R$)</label><input id="pval12" type="text" placeholder="1.800,00"></div>
+          <div class="form-group"><label>Valor plantão 24h (R$)</label><input id="pval24" type="text" placeholder="3.600,00"></div>
+          <div class="form-group"><label>Valor noturno 12h (R$)</label><input id="pvaln" type="text" placeholder="1.800,00"></div>
+          <div class="form-group"><label>Valor sobreaviso (R$)</label><input id="pvalsob" type="text" placeholder="900,00"></div>
+        </div>
+        <div style="font-size:12px;color:var(--text3);">💡 Esses valores serão sugeridos automaticamente ao lançar plantões neste projeto.</div>
+      </div>
+      <!-- GPS -->
+      <div class="form-row four">
+        <div class="form-group"><label>Latitude GPS</label><input id="plat" type="text" placeholder="-22.9068"></div>
+        <div class="form-group"><label>Longitude GPS</label><input id="plon" type="text" placeholder="-43.1729"></div>
+        <div class="form-group"><label>Raio check-in (m)</label><input id="praio" type="number" value="100" placeholder="100"></div>
+        <div class="form-group"><label>Contrato</label><input id="pnc" type="text" placeholder="CTR-2024-001"></div>
+      </div>
+      <div style="font-size:12px;color:var(--text3);margin-bottom:10px;">💡 GPS: abra o Google Maps, clique com botão direito no hospital e copie as coordenadas.</div>
+      <button class="btn btn-primary" onclick="addProjeto()">+ Adicionar projeto</button>
+    </div>
+    <div class="card"><div class="card-title">Projetos cadastrados</div><div id="projetos-lista"><div class="empty">Carregando...</div></div></div>
+
+  </div>
+
+  <!-- TIPOS DE PLANTÃO -->
+  <div id="tab-tipos" class="section">
+    <div class="page-title">Tipos de plantão</div>
+    <div class="page-sub">Configure horário, valor e setor pré-definidos por projeto</div>
+    <div class="card">
+      <div class="card-title">Novo tipo</div>
+      <div class="form-row">
+        <div class="form-group"><label>Projeto</label><select id="tp-proj" onchange="carregarTiposLista()"><option value="">Selecione...</option></select></div>
+        <div class="form-group"><label>Nome</label><input id="tp-nome" type="text" placeholder="Ex: Diurno 12h — Emergência"></div>
+        <div class="form-group"><label>Setor</label><input id="tp-setor" type="text" placeholder="Ex: Emergência, UTI"></div>
+      </div>
+      <div class="form-row four">
+        <div class="form-group"><label>Início</label><input id="tp-ini" type="time" value="07:00" oninput="calcDuracaoTipo()"></div>
+        <div class="form-group"><label>Fim</label><input id="tp-fim" type="time" value="19:00" oninput="calcDuracaoTipo()"></div>
+        <div class="form-group"><label>Duração</label><input id="tp-horas" type="text" value="12h" readonly style="background:var(--bg3);color:var(--text2);"></div>
+        <div class="form-group"><label>Valor (R$)</label><input id="tp-valor" type="text" placeholder="1.800,00"></div>
+      </div>
+      <button class="btn btn-primary" onclick="salvarTipoPlantao()">+ Adicionar tipo</button>
+    </div>
+    <div class="card" style="margin-top:12px;">
+      <div class="card-title">Tipos cadastrados</div>
+      <div style="margin-bottom:12px;">
+        <label style="font-size:12px;color:var(--text2);">Filtrar por projeto:</label>
+        <select id="tp-proj-filtro" onchange="carregarTiposLista()" style="margin-left:8px;padding:5px 10px;border:1px solid var(--border);border-radius:var(--radius);font-size:13px;">
+          <option value="">Todos os projetos</option>
+        </select>
+      </div>
+      <div id="tipos-lista"><div class="empty">Carregando...</div></div>
+    </div>
+  </div>
+
+  <!-- LANÇAMENTOS -->
+  <div id="tab-lancamentos" class="section">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+      <div>
+        <div class="page-title" style="margin-bottom:0;">Lançamentos</div>
+        <div class="page-sub">Registro de plantões</div>
+      </div>
+      <button class="btn btn-primary" onclick="abrirLancamentoRapido(new Date().toISOString().slice(0,10),'')">+ Novo plantão</button>
+    </div>
+    <div class="card" style="padding:12px 16px;margin-bottom:12px;">
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;">
+        <div class="form-group" style="margin:0;flex:1;min-width:160px;"><label>Médico</label><select id="lf-med" onchange="filtrarLancamentos()"><option value="">Todos</option></select></div>
+        <div class="form-group" style="margin:0;flex:1;min-width:160px;"><label>Projeto</label><select id="lf-proj" onchange="filtrarLancamentos()"><option value="">Todos</option></select></div>
+        <div class="form-group" style="margin:0;"><label>De</label><input id="lf-d1" type="date" onchange="filtrarLancamentos()"></div>
+        <div class="form-group" style="margin:0;"><label>Até</label><input id="lf-d2" type="date" onchange="filtrarLancamentos()"></div>
+        <button class="btn btn-ghost btn-sm" onclick="limparFiltrosLanc()">Limpar</button>
+      </div>
+    </div>
+    <div class="card"><div id="lanc-lista"><div class="empty">Carregando...</div></div></div>
+  </div>
+
+  <!-- LANÇAMENTO EM LOTE -->
+  <div id="tab-lote" class="section">
+    <div class="page-title">Lançamento em lote</div>
+    <div class="page-sub">Registre plantões para vários médicos de uma vez</div>
+
+    <!-- Configurações do lote -->
+    <div class="card">
+      <div class="card-title">1. Configurar plantão</div>
+      <div class="form-row">
+        <div class="form-group"><label>Projeto</label><select id="lote-proj"><option value="">Selecione...</option></select></div>
+        <div class="form-group"><label>Setor</label><input id="lote-setor" type="text" placeholder="Ex: Emergência, UTI"></div>
+      </div>
+      <div class="form-row four">
+        <div class="form-group"><label>Data</label><input id="lote-data" type="date"></div>
+        <div class="form-group"><label>Início</label><input id="lote-ini" type="time" value="07:00" oninput="atualizarDuracaoLote()"></div>
+        <div class="form-group"><label>Fim</label><input id="lote-fim" type="time" value="19:00" oninput="atualizarDuracaoLote()"></div>
+        <div class="form-group"><label>Tipo</label>
+          <select id="lote-tipo">
+            <option>Diurno 12h</option><option>Noturno 12h</option><option>24h</option><option>Fim de Semana Diurno</option><option>Fim de Semana Noturno</option><option>Rotina Manhã</option><option>Rotina Tarde</option><option>Sobreaviso</option><option>Plantão 4 Semanas</option><option>Plantão 5 Semanas</option><option>Personalizado</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Valor por médico (R$) <span id="lote-duracao-label" style="font-weight:400;color:var(--text3);"></span></label>
+          <input id="lote-valor" type="text" placeholder="1.800,00" oninput="atualizarResumoLote();document.getElementById('lote-valor-badge').style.display='none';">
+          <span id="lote-valor-badge" style="display:none;font-size:11px;color:var(--green);margin-top:3px;">✓ Valor padrão do projeto</span>
+        </div>
+        <div class="form-group"><label>Observações</label><input id="lote-obs" type="text" placeholder="Opcional"></div>
+      </div>
+      <div class="lote-resumo" id="lote-resumo-config"></div>
+    </div>
+
+    <!-- Seleção de médicos -->
+    <div class="card">
+      <div class="card-title">2. Selecionar médicos</div>
+      <input class="busca-medico" id="lote-busca" type="text" placeholder="🔍 Buscar médico por nome..." oninput="filtrarMedicosLote()">
+      <div style="border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;">
+        <div class="sel-all-row">
+          <input type="checkbox" class="medico-check" id="lote-sel-all" onchange="selecionarTodosLote(this.checked)">
+          <span>Selecionar todos</span>
+          <span id="lote-contador" style="margin-left:auto;color:var(--blue);font-weight:600;">0 selecionados</span>
+        </div>
+        <div id="lote-medicos-lista" style="max-height:400px;overflow-y:auto;">
+          <div class="empty">Carregando médicos...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pré-visualização e confirmação -->
+    <div class="card" id="lote-preview-card" style="display:none;">
+      <div class="card-title">3. Confirmar lançamentos</div>
+      <div class="lote-erros" id="lote-erros"></div>
+      <div id="lote-preview-tabela"></div>
+      <div style="display:flex;gap:8px;margin-top:14px;align-items:center;">
+        <button class="btn btn-primary" id="lote-confirmar-btn" onclick="confirmarLote()">✓ Confirmar e registrar</button>
+        <button class="btn btn-ghost" onclick="limparLote()">Cancelar</button>
+        <span id="lote-total-label" style="font-size:13px;color:var(--text2);margin-left:auto;"></span>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:8px;">
+      <button class="btn btn-success" id="lote-gerar-btn" onclick="gerarPreviewLote()">Gerar pré-visualização →</button>
+    </div>
+  </div>
+
+  <!-- PLANTÕES ABERTOS / CANDIDATURAS -->
+  <div id="tab-candidaturas" class="section">
+    <div class="page-title">Plantões Abertos</div>
+    <div class="page-sub">Gerencie vagas e candidaturas dos médicos</div>
+
+    <!-- Filtros -->
+    <div class="card" style="margin-bottom:12px;padding:12px 16px;">
+      <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;">
+        <div class="form-group" style="flex:1;min-width:180px;"><label>Projeto</label><select id="cand-proj" onchange="carregarCandidaturas()"><option value="">Todos</option></select></div>
+        <div class="form-group"><label>De</label><input type="date" id="cand-d1" onchange="carregarCandidaturas()"></div>
+        <div class="form-group"><label>Até</label><input type="date" id="cand-d2" onchange="carregarCandidaturas()"></div>
+        <div style="display:flex;gap:6px;align-items:flex-end;">
+          <button class="btn btn-primary btn-sm" id="filtro-todos" onclick="filtrarStatusCand('todos',this)">Todos</button>
+          <button class="btn btn-ghost btn-sm" id="filtro-pendentes" onclick="filtrarStatusCand('pendente',this)">⏳ Pendentes</button>
+          <button class="btn btn-ghost btn-sm" id="filtro-abertos" onclick="filtrarStatusCand('aberto',this)">📢 Abertos</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="cand-lista"><div class="empty">Carregando...</div></div>
+  </div>
+
+  <!-- CHECK-INS -->
+  <div id="tab-checkins" class="section">
+    <div class="page-title">Controle de Presença</div>
+    <div class="page-sub">Plantões escalados × check-ins realizados</div>
+
+    <!-- SUB-ABAS -->
+    <div style="display:flex;gap:6px;margin-bottom:16px;">
+      <button class="btn btn-primary" id="ci-tab-presenca" onclick="switchCiTab('presenca')">📋 Presença do dia</button>
+      <button class="btn btn-ghost" id="ci-tab-historico" onclick="switchCiTab('historico')">🕐 Histórico de check-ins</button>
+    </div>
+
+    <!-- ABA PRESENÇA -->
+    <div id="ci-presenca">
+      <div class="card">
+        <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;">
+          <div class="form-group" style="flex:1;min-width:150px;"><label>Projeto</label><select id="ci-proj-p" onchange="carregarPresenca()"><option value="">Todos os projetos</option></select></div>
+          <div class="form-group"><label>Data</label><input type="date" id="ci-data-p" onchange="carregarPresenca()"></div>
+          <button class="btn btn-ghost btn-sm" onclick="document.getElementById('ci-data-p').value=hoje_str();carregarPresenca()">Hoje</button>
+        </div>
+      </div>
+      <div id="presenca-resumo" style="display:none;margin-bottom:12px;"></div>
+      <div class="card"><div class="card-title">Plantões escalados</div><div id="presenca-lista"><div class="empty">Selecione uma data para ver os plantões</div></div></div>
+    </div>
+
+    <!-- ABA HISTÓRICO -->
+    <div id="ci-historico" style="display:none;">
+      <div class="card">
+        <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;">
+          <div class="form-group" style="flex:1;min-width:150px;"><label>Projeto</label><select id="ci-proj" onchange="carregarCheckins()"><option value="">Todos</option></select></div>
+          <div class="form-group" style="flex:1;min-width:150px;"><label>Médico</label><select id="ci-med" onchange="carregarCheckins()"><option value="">Todos</option></select></div>
+          <div class="form-group"><label>De</label><input type="date" id="ci-d1" onchange="carregarCheckins()"></div>
+          <div class="form-group"><label>Até</label><input type="date" id="ci-d2" onchange="carregarCheckins()"></div>
+        </div>
+      </div>
+      <div class="card"><div class="card-title">Registros de check-in</div><div id="checkins-lista"><div class="empty">Carregando...</div></div></div>
+    </div>
+  </div>
+
+  <!-- RELATÓRIOS -->
+  <div id="tab-relatorios" class="section">
+    <div class="page-title">Relatórios</div>
+    <div class="page-sub">Selecione o tipo e os filtros desejados</div>
+
+    <!-- Tipo de relatório -->
+    <div class="card" style="margin-bottom:12px;">
+      <div class="card-title">Tipo de relatório</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;" id="rel-tipo-grid">
+        <button type="button" class="rel-tipo-btn active" id="rt-detalhado" onclick="selecionarRelTipo('detalhado',this)">📊 Detalhado por projeto</button>
+        <button type="button" class="rel-tipo-btn" id="rt-resumo" onclick="selecionarRelTipo('resumo',this)">📋 Plantões por projeto</button>
+        <button type="button" class="rel-tipo-btn" id="rt-horas" onclick="selecionarRelTipo('horas',this)">⏱️ Horas por profissional</button>
+        <button type="button" class="rel-tipo-btn" id="rt-faltas" onclick="selecionarRelTipo('faltas',this)">❌ Faltas</button>
+        <button type="button" class="rel-tipo-btn" id="rt-atrasos" onclick="selecionarRelTipo('atrasos',this)">⚠️ Atrasos</button>
+        <button type="button" class="rel-tipo-btn" id="rt-checkins" onclick="selecionarRelTipo('checkins',this)">📍 Check-ins fora da tolerância</button>
+        <button type="button" class="rel-tipo-btn" id="rt-medicos" onclick="selecionarRelTipo('medicos',this)">👨‍⚕️ Médicos cadastrados</button>
+        <button type="button" class="rel-tipo-btn" id="rt-risco" onclick="selecionarRelTipo('risco',this)" style="border-color:var(--red);color:var(--red);">🚨 Risco operacional</button>
+      </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="card" style="margin-bottom:12px;">
+      <div class="form-row four">
+        <div class="form-group"><label>Projeto</label><select id="rp"><option value="">Todos</option></select></div>
+        <div class="form-group"><label>Médico</label><select id="rm"><option value="">Todos</option></select></div>
+        <div class="form-group"><label>De</label><input type="date" id="rd1"></div>
+        <div class="form-group"><label>Até</label><input type="date" id="rd2"></div>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:8px;">
+        <button class="btn btn-primary" onclick="gerarRelatorio()">🔍 Gerar relatório</button>
+        <button class="btn btn-success" onclick="exportarRelXLSX()">⬇ Excel</button>
+        <button class="btn btn-amber" onclick="exportarRelPDF()">⬇ PDF</button>
+      </div>
+    </div>
+    <div id="rel-resultado"></div>
+  </div>
+
+
+  <!-- CALENDÁRIO -->
+  <div id="tab-calendario" class="section">
+    <div class="page-title">Calendário</div>
+    <div class="page-sub">Escala mensal e semanal por projeto</div>
+
+    <!-- Sub-abas -->
+    <div style="display:flex;gap:6px;margin-bottom:16px;">
+      <button class="btn btn-primary" id="cal-tab-mensal" onclick="switchCalTab('mensal')">📅 Mensal</button>
+      <button class="btn btn-ghost" id="cal-tab-semanal" onclick="switchCalTab('semanal')">📋 Semanal</button>
+    </div>
+
+    <!-- FILTROS compartilhados -->
+    <div class="card" style="padding:12px 16px;margin-bottom:12px;">
+      <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;">
+        <div class="form-group" style="flex:1;min-width:180px;"><label>Projeto</label><select id="cal-proj" onchange="renderCalAtual()"><option value="">Todos os projetos</option></select></div>
+        <div class="form-group" style="flex:1;min-width:180px;"><label>Médico</label><select id="cal-med" onchange="renderCalAtual()"><option value="">Todos os médicos</option></select></div>
+        <button class="btn btn-ghost btn-sm" onclick="limparFiltrosCal()">Limpar</button>
+      </div>
+    </div>
+
+    <!-- VIEW MENSAL -->
+    <div id="cal-mensal">
+      <div class="card">
+        <div class="cal-header">
+          <div style="display:flex;align-items:center;gap:12px;">
+            <button class="btn btn-ghost btn-sm" onclick="navCal(-1)">‹ Anterior</button>
+            <div class="cal-title" id="cal-label"></div>
+            <button class="btn btn-ghost btn-sm" onclick="navCal(1)">Próximo ›</button>
+          </div>
+          <div class="cal-legend">
+            <span><span class="cal-legend-dot" style="background:#e8f5eb;"></span>Diurno</span>
+            <span><span class="cal-legend-dot" style="background:#f0eeff;"></span>Noturno</span>
+            <span><span class="cal-legend-dot" style="background:#fdf3e0;"></span>24h</span>
+          </div>
+        </div>
+        <div id="cal-filtro-badge" style="font-size:12px;color:var(--blue);margin-bottom:8px;display:none;"></div>
+        <div class="cal-grid">
+          <div class="cal-dow">Dom</div><div class="cal-dow">Seg</div><div class="cal-dow">Ter</div>
+          <div class="cal-dow">Qua</div><div class="cal-dow">Qui</div><div class="cal-dow">Sex</div><div class="cal-dow">Sáb</div>
+        </div>
+        <div class="cal-grid" id="cal-grid" style="margin-top:4px;"></div>
+      </div>
+      <div class="card" id="cal-detail" style="display:none;">
+        <div class="card-title" id="cal-detail-title"></div>
+        <div id="cal-detail-body"></div>
+      </div>
+    </div>
+
+    <!-- VIEW SEMANAL -->
+    <div id="cal-semanal" style="display:none;">
+      <div class="card">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <button class="btn btn-ghost btn-sm" onclick="navSemana(-1)">‹ Anterior</button>
+            <div style="font-size:15px;font-weight:600;" id="sem-label"></div>
+            <button class="btn btn-ghost btn-sm" onclick="navSemana(1)">Próxima ›</button>
+            <button class="btn btn-ghost btn-sm" onclick="irSemanaAtual()">Hoje</button>
+          </div>
+          <div style="display:flex;gap:8px;">
+            <button class="btn btn-success" onclick="copiarSemana()" title="Copia todos os plantões desta semana para a próxima">📋 Copiar semana</button>
+          </div>
+        </div>
+        <div id="sem-grid" style="overflow-x:auto;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- IMPORTAR -->
+  <div id="tab-importar" class="section">
+    <div class="page-title">Importar CSV</div>
+    <div class="page-sub">Carga em lote de médicos, projetos e lançamentos</div>
+    <div style="display:flex;gap:6px;margin-bottom:16px;">
+      <button class="btn btn-primary" id="imp-tab-med" onclick="switchImpTab('med')">Médicos</button>
+      <button class="btn btn-ghost" id="imp-tab-proj" onclick="switchImpTab('proj')">Projetos</button>
+      <button class="btn btn-ghost" id="imp-tab-tipos" onclick="switchImpTab('tipos')">Tipos de plantão</button>
+      <button class="btn btn-ghost" id="imp-tab-lanc" onclick="switchImpTab('lanc')">Lançamentos</button>
+    </div>
+
+    <!-- MÉDICOS -->
+    <div id="imp-med">
+      <div class="card">
+        <div class="card-title">Importar médicos</div>
+        <p style="font-size:13px;color:var(--text2);margin-bottom:14px;">Colunas: <code>nome · crm · especialidade · valor_hora · tipo · cpf</code><br><span style="font-size:12px;color:var(--text3);">Obrigatórias: nome, crm</span></p>
+        <div class="upload-zone" onclick="document.getElementById('file-upload-med').click()">
+          <input type="file" id="file-upload-med" accept=".csv" onchange="handleUploadMed(this)" style="display:none;">
+          <div style="font-size:28px;margin-bottom:8px;">📂</div>
+          <div style="font-size:14px;font-weight:600;color:var(--text);">Clique para selecionar CSV de médicos</div>
+          <div style="font-size:12px;color:var(--text3);margin-top:4px;">Separador ; ou , · UTF-8 ou ANSI</div>
+        </div>
+        <div id="import-preview-med" style="margin-top:14px;"></div>
+      </div>
+    </div>
+
+    <!-- PROJETOS -->
+    <div id="imp-proj" style="display:none;">
+      <div class="card">
+        <div class="card-title">Importar projetos</div>
+        <p style="font-size:13px;color:var(--text2);margin-bottom:14px;">Colunas: <code>nome · codigo_cc · contratante · status · cnpj · contrato</code></p>
+        <div class="upload-zone" onclick="document.getElementById('file-upload-proj').click()">
+          <input type="file" id="file-upload-proj" accept=".csv" onchange="handleUploadProj(this)" style="display:none;">
+          <div style="font-size:28px;margin-bottom:8px;">📂</div>
+          <div style="font-size:14px;font-weight:600;color:var(--text);">Clique para selecionar CSV de projetos</div>
+          <div style="font-size:12px;color:var(--text3);margin-top:4px;">Separador ; ou , · UTF-8 ou ANSI</div>
+        </div>
+        <div id="import-preview-proj" style="margin-top:14px;"></div>
+      </div>
+    </div>
+
+    <!-- TIPOS DE PLANTÃO -->
+    <div id="imp-tipos" style="display:none;">
+      <div class="card">
+        <div class="card-title">Importar tipos de plantão</div>
+        <p style="font-size:13px;color:var(--text2);margin-bottom:14px;">Colunas: <code>projeto · nome · hora_ini · hora_fim · valor · setor</code></p>
+        <div class="upload-area" onclick="document.getElementById('file-upload-tipos').click()">
+          <div>📎 Clique para selecionar arquivo CSV ou Excel</div>
+          <input type="file" id="file-upload-tipos" accept=".csv,.xlsx,.xls" style="display:none;" onchange="handleUploadTipos(this)">
+        </div>
+        <div style="margin-top:10px;">
+          <button class="btn btn-ghost btn-sm" onclick="downloadModeloTipos()">⬇ Baixar modelo Excel</button>
+        </div>
+        <div id="import-preview-tipos"></div>
+      </div>
+    </div>
+
+    <!-- LANÇAMENTOS -->
+    <div id="imp-lanc" style="display:none;">
+      <div class="card">
+        <div class="card-title">Importar lançamentos em massa</div>
+        <p style="font-size:13px;color:var(--text2);margin-bottom:6px;">Colunas obrigatórias: <code>medico · projeto · data · hora_ini · hora_fim · valor_total</code></p>
+        <p style="font-size:12px;color:var(--text3);margin-bottom:14px;">Opcionais: <code>tipo · setor · obs · codigo_totvs</code> — O médico e projeto são identificados pelo <strong>nome</strong> (deve estar cadastrado no sistema)</p>
+        <div class="upload-zone" onclick="document.getElementById('file-upload-lanc').click()">
+          <input type="file" id="file-upload-lanc" accept=".csv" onchange="handleUploadLanc(this)" style="display:none;">
+          <div style="font-size:28px;margin-bottom:8px;">📂</div>
+          <div style="font-size:14px;font-weight:600;color:var(--text);">Clique para selecionar CSV de lançamentos</div>
+          <div style="font-size:12px;color:var(--text3);margin-top:4px;">Separador ; ou , · UTF-8 ou ANSI</div>
+        </div>
+        <div id="import-preview-lanc" style="margin-top:14px;"></div>
+      </div>
+    </div>
+
+    <!-- MODELO -->
+    <div class="card">
+      <div class="card-title">Modelos Excel</div>
+      <p style="font-size:13px;color:var(--text2);margin-bottom:12px;">Baixe o modelo com abas Médicos, Projetos e <strong>Lançamentos</strong> já formatadas.</p>
+      <button class="btn btn-success" onclick="downloadModeloExcel()">⬇ Baixar modelo Excel (.xlsx)</button>
+    </div>
+  </div>
+
+  <!-- AGENDA POR MÉDICO -->
+  <div id="tab-lotemed" class="section">
+    <div class="page-title">Agenda por médico</div>
+    <div class="page-sub">Selecione os dias do mês para um profissional e registre em lote</div>
+
+    <!-- Passo 1: Médico e configurações -->
+    <div class="card">
+      <div class="card-title">1. Selecionar médico e configurar plantão</div>
+      <div class="form-row">
+        <div class="form-group"><label>Médico</label><select id="agd-med" onchange="preencherValorPadraoAgenda()"><option value="">Selecione...</option></select></div>
+        <div class="form-group"><label>Projeto</label><select id="agd-proj" onchange="preencherValorPadraoAgenda()"><option value="">Selecione...</option></select></div>
+      </div>
+      <div class="form-row four">
+        <div class="form-group"><label>Início</label><input id="agd-ini" type="time" value="07:00" oninput="atualizarDuracaoAgenda()"></div>
+        <div class="form-group"><label>Fim</label><input id="agd-fim" type="time" value="19:00" oninput="atualizarDuracaoAgenda()"></div>
+        <div class="form-group"><label>Tipo</label>
+          <select id="agd-tipo" onchange="preencherValorPadraoAgenda()">
+            <option>Diurno 12h</option><option>Noturno 12h</option><option>24h</option><option>Fim de Semana Diurno</option><option>Fim de Semana Noturno</option><option>Rotina Manhã</option><option>Rotina Tarde</option><option>Sobreaviso</option><option>Plantão 4 Semanas</option><option>Plantão 5 Semanas</option><option>Personalizado</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Valor por plantão (R$) <span id="agd-dur-label" style="font-weight:400;color:var(--text3);"></span></label>
+          <input id="agd-valor" type="text" placeholder="1.800,00" oninput="atualizarResumoAgenda()">
+          <span id="agd-valor-badge" style="display:none;font-size:11px;color:var(--green);margin-top:3px;">✓ Valor padrão do projeto</span>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Setor</label><input id="agd-setor" type="text" placeholder="Ex: Emergência, UTI"></div>
+        <div class="form-group"><label>Observações</label><input id="agd-obs" type="text" placeholder="Opcional"></div>
+      </div>
+    </div>
+
+    <!-- Passo 2: Mini-calendário -->
+    <div class="card">
+      <div class="card-title">2. Selecionar dias do plantão</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <button class="btn btn-ghost btn-sm" onclick="navAgdCal(-1)">‹</button>
+          <span id="agd-cal-label" style="font-size:15px;font-weight:600;"></span>
+          <button class="btn btn-ghost btn-sm" onclick="navAgdCal(1)">›</button>
+        </div>
+        <button class="btn btn-ghost btn-sm" onclick="limparDiasAgenda()">Limpar seleção</button>
+      </div>
+      <div class="mini-cal-grid">
+        <div class="mini-cal-dow">Dom</div><div class="mini-cal-dow">Seg</div><div class="mini-cal-dow">Ter</div>
+        <div class="mini-cal-dow">Qua</div><div class="mini-cal-dow">Qui</div><div class="mini-cal-dow">Sex</div><div class="mini-cal-dow">Sáb</div>
+      </div>
+      <div class="mini-cal-grid" id="agd-cal-grid"></div>
+
+      <!-- Dias selecionados -->
+      <div style="margin-top:14px;border-top:1px solid var(--border);padding-top:12px;">
+        <div style="font-size:12px;font-weight:600;color:var(--text2);margin-bottom:8px;">Dias selecionados: <span id="agd-qtd-dias" style="color:var(--blue);">0</span></div>
+        <div id="agd-chips"></div>
+      </div>
+    </div>
+
+    <!-- Resumo e confirmação -->
+    <div class="card" id="agd-preview-card" style="display:none;">
+      <div class="card-title">3. Confirmar lançamentos</div>
+      <div id="agd-preview-tabela"></div>
+      <div style="display:flex;gap:8px;margin-top:14px;align-items:center;">
+        <button class="btn btn-primary" id="agd-confirmar-btn" onclick="confirmarAgenda()">✓ Confirmar e registrar</button>
+        <button class="btn btn-ghost" onclick="limparAgenda()">Cancelar</button>
+        <span id="agd-total-label" style="font-size:13px;color:var(--text2);margin-left:auto;"></span>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:8px;">
+      <button class="btn btn-success" onclick="gerarPreviewAgenda()">Gerar pré-visualização →</button>
+    </div>
+  </div>
+
+  <!-- ESCALA POR PROFISSIONAL -->
+  <div id="tab-escala" class="section">
+    <div class="page-title">Escala por Profissional</div>
+    <div class="page-sub">Visão semanal de todos os médicos escalados</div>
+
+    <div class="card" style="padding:12px 16px;margin-bottom:12px;">
+      <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;">
+        <div class="form-group" style="flex:1;min-width:180px;"><label>Projeto</label><select id="esc-proj" onchange="renderEscala()"><option value="">Todos os projetos</option></select></div>
+        <div class="form-group" style="min-width:200px;"><label>Buscar médico</label><input id="esc-busca" type="text" placeholder="Nome do médico..." oninput="renderEscala()" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:var(--radius);font-size:13px;"></div>
+        <div style="display:flex;gap:6px;align-items:flex-end;padding-bottom:1px;">
+          <button class="btn btn-ghost btn-sm" onclick="navEscala(-1)">‹ Anterior</button>
+          <span id="esc-label" style="font-size:13px;font-weight:600;white-space:nowrap;line-height:2.2;"></span>
+          <button class="btn btn-ghost btn-sm" onclick="navEscala(1)">Próxima ›</button>
+          <button class="btn btn-ghost btn-sm" onclick="escOffset=0;renderEscala()">Hoje</button>
+        </div>
+      </div>
+      <div style="display:flex;gap:12px;margin-top:10px;font-size:11px;flex-wrap:wrap;">
+        <span><span style="display:inline-block;width:10px;height:10px;background:var(--green-bg);border-left:3px solid var(--green);border-radius:2px;margin-right:4px;"></span>Diurno</span>
+        <span><span style="display:inline-block;width:10px;height:10px;background:var(--purple-bg);border-left:3px solid var(--purple);border-radius:2px;margin-right:4px;"></span>Noturno</span>
+        <span><span style="display:inline-block;width:10px;height:10px;background:var(--amber-bg);border-left:3px solid var(--amber);border-radius:2px;margin-right:4px;"></span>24h</span>
+        <span><span style="display:inline-block;width:10px;height:10px;background:#fce4ec;border-left:3px solid #c2185b;border-radius:2px;margin-right:4px;"></span>Fim de semana</span>
+        <span style="margin-left:8px;color:var(--text3);">✅ = confirmado pelo médico</span>
+      </div>
+    </div>
+
+    <div style="overflow-x:auto;">
+      <div id="escala-grid"></div>
+    </div>
+  </div>
+
+  <!-- Tooltip global -->
+  <div class="tooltip" id="tooltip-escala"></div>
+
+  <!-- FINANCEIRO -->
+  <div id="tab-financeiro" class="section">
+    <div class="page-title">Financeiro</div>
+    <div class="page-sub">Fechamentos, remessas e controle de pagamentos</div>
+
+    <!-- Sub-abas -->
+    <div style="display:flex;gap:0;border-bottom:2px solid var(--border);margin-bottom:16px;">
+      <button id="fin-tab-lista" class="btn btn-ghost" onclick="finShowTab('lista',this)" style="border-radius:var(--radius) var(--radius) 0 0;border-bottom:2px solid var(--blue);color:var(--blue);font-weight:600;">📋 Fechamentos</button>
+      <button id="fin-tab-novo" class="btn btn-ghost" onclick="finShowTab('novo',this)" style="border-radius:var(--radius) var(--radius) 0 0;">+ Novo fechamento</button>
+    </div>
+
+    <!-- Lista de fechamentos -->
+    <div id="fin-page-lista">
+      <div id="fin-lista"><div class="empty">Carregando...</div></div>
+    </div>
+
+    <!-- Novo fechamento -->
+    <div id="fin-page-novo" style="display:none;">
+      <div class="card" style="max-width:600px;">
+        <div class="card-title">Criar novo fechamento</div>
+        <div class="form-group"><label>Nome do fechamento</label><input id="fin-nome" type="text" placeholder="Ex: Hospital Bonsucesso — Abril 2026"></div>
+        <div class="form-row">
+          <div class="form-group"><label>Projeto</label><select id="fin-proj"><option value="">Todos os projetos</option></select></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>Data início</label><input id="fin-d1" type="date"></div>
+          <div class="form-group"><label>Data fim</label><input id="fin-d2" type="date"></div>
+        </div>
+        <div class="form-group"><label>Observações</label><input id="fin-obs" type="text" placeholder="Opcional"></div>
+        <div style="margin-top:12px;display:flex;gap:8px;">
+          <button class="btn btn-primary" onclick="criarFechamento()">✓ Criar fechamento</button>
+          <button class="btn btn-ghost" onclick="finShowTab('lista',document.getElementById('fin-tab-lista'))">Cancelar</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- EXPORTAR TOTVS -->
+  <div id="tab-exportar" class="section">
+    <div class="page-title">Exportar TOTVS</div>
+    <div class="page-sub">Relatório agrupado em CSV, XLSX ou PDF</div>
+    <div class="card">
+      <div class="card-title">Filtros</div>
+      <div class="form-row four">
+        <div class="form-group"><label>Projeto</label><select id="ex-proj"><option value="">Todos os projetos</option></select></div>
+        <div class="form-group"><label>Médico</label><select id="ex-med"><option value="">Todos os médicos</option></select></div>
+        <div class="form-group"><label>Período — De</label><input id="ex-d1" type="date"></div>
+        <div class="form-group"><label>Período — Até</label><input id="ex-d2" type="date"></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Layout de exportação</div>
+      <div class="layout-opts">
+        <div class="layout-opt selected" id="lay-1" onclick="selectLayout(1)"><div class="layout-opt-title">RH — Folha de pagamento</div><div class="layout-opt-desc">Por CPF e competência</div></div>
+        <div class="layout-opt" id="lay-2" onclick="selectLayout(2)"><div class="layout-opt-title">Financeiro — Contas a pagar</div><div class="layout-opt-desc">Por fornecedor e centro de custo</div></div>
+        <div class="layout-opt" id="lay-3" onclick="selectLayout(3)"><div class="layout-opt-title">Obras — Apontamento de horas</div><div class="layout-opt-desc">Por funcionário e CC</div></div>
+        <div class="layout-opt" id="lay-4" onclick="selectLayout(4)"><div class="layout-opt-title">Personalizado (completo)</div><div class="layout-opt-desc">Todas as colunas disponíveis</div></div>
+      </div>
+      <div id="layout-preview" style="font-size:12px;color:var(--text2);padding:8px 10px;background:var(--bg3);border-radius:var(--radius);margin-bottom:14px;font-family:monospace;"></div>
+      <hr>
+      <div style="font-size:12px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px;">Formato de exportação</div>
+      <div class="export-btns">
+        <button class="btn btn-success" onclick="exportarXLSX()">⬇ Excel (XLSX)</button>
+        <button class="btn btn-primary" onclick="exportarCSV()">⬇ CSV</button>
+        <button class="btn btn-amber" onclick="exportarPDF()">⬇ PDF</button>
+        <button class="btn btn-ghost" onclick="previewExport()">Pré-visualizar</button>
+      </div>
+    </div>
+    <div id="export-preview-area"></div>
+  </div>
+
+</div><!-- /main -->
+
+<!-- MODAL LINK MÉDICO -->
+<div class="modal-overlay" id="modal-link" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title">Link de acesso — App do médico</div><button class="modal-close" onclick="document.getElementById('modal-link').classList.remove('open')">✕</button></div>
+    <p style="font-size:13px;color:var(--text2);margin-bottom:12px;">Envie este link por WhatsApp para o médico. Ele abre o app direto no celular, sem precisar de senha.</p>
+    <div class="link-box" id="link-medico"></div>
+    <div style="margin-top:12px;display:flex;gap:8px;">
+      <button class="btn btn-primary" onclick="copiarLink()">📋 Copiar link</button>
+      <button class="btn btn-success" onclick="abrirWhatsapp()">📱 Enviar WhatsApp</button>
+    </div>
+    <div class="modal-footer"><button class="btn btn-ghost" onclick="document.getElementById('modal-link').classList.remove('open')">Fechar</button></div>
+  </div>
+</div>
+
+<!-- MODAL LANÇAMENTO RÁPIDO — Escala Semanal -->
+<div class="modal-rapido-overlay" id="modal-rapido" onclick="if(event.target===this)fecharModalRapido()" onmousedown="event.stopPropagation()">
+  <div class="modal-rapido">
+    <div class="modal-rapido-header">
+      <div>
+        <div class="modal-rapido-titulo">+ Adicionar plantão</div>
+        <div class="modal-rapido-data" id="mr-data-label"></div>
+      </div>
+      <button class="modal-rapido-close" onclick="fecharModalRapido()">✕</button>
+    </div>
+    <div class="modal-rapido-body">
+      <div class="mr-sucesso" id="mr-sucesso"></div>
+      <div class="form-group" style="margin-bottom:10px;">
+        <label>Médicos <span id="mr-med-count" style="color:var(--blue);font-weight:600;font-size:11px;"></span></label>
+        <div style="display:flex;gap:6px;margin-bottom:6px;">
+          <input type="text" id="mr-med-busca" placeholder="🔍 Buscar médico..." oninput="filtrarMedMR()" style="flex:1;padding:7px 10px;border:1px solid var(--border);border-radius:var(--radius);font-size:13px;">
+          <select id="mr-esp-filtro" onchange="filtrarMedMR()" style="padding:7px 10px;border:1px solid var(--border);border-radius:var(--radius);font-size:12px;max-width:160px;">
+            <option value="">Todas especialidades</option>
+            <option value="Clínica Geral / Emergência">Clínica Geral / Emergência</option>
+<option value="Anestesiologia">Anestesiologia</option>
+<option value="Cardiologia">Cardiologia</option>
+<option value="Cirurgia Geral">Cirurgia Geral</option>
+<option value="Cirurgia Vascular">Cirurgia Vascular</option>
+<option value="Dermatologia">Dermatologia</option>
+<option value="Endocrinologia">Endocrinologia</option>
+<option value="Gastroenterologia">Gastroenterologia</option>
+<option value="Geriatria">Geriatria</option>
+<option value="Ginecologia e Obstetrícia">Ginecologia e Obstetrícia</option>
+<option value="Hematologia">Hematologia</option>
+<option value="Infectologia">Infectologia</option>
+<option value="Medicina Intensiva (UTI)">Medicina Intensiva (UTI)</option>
+<option value="Medicina do Trabalho">Medicina do Trabalho</option>
+<option value="Nefrologia">Nefrologia</option>
+<option value="Neurologia">Neurologia</option>
+<option value="Neurocirurgia">Neurocirurgia</option>
+<option value="Oftalmologia">Oftalmologia</option>
+<option value="Oncologia">Oncologia</option>
+<option value="Ortopedia e Traumatologia">Ortopedia e Traumatologia</option>
+<option value="Otorrinolaringologia">Otorrinolaringologia</option>
+<option value="Pediatria">Pediatria</option>
+<option value="Pneumologia">Pneumologia</option>
+<option value="Psiquiatria">Psiquiatria</option>
+<option value="Radiologia">Radiologia</option>
+<option value="Reumatologia">Reumatologia</option>
+<option value="Urologia">Urologia</option>
+          </select>
+        </div>
+        <div id="mr-med-lista" style="max-height:180px;overflow-y:auto;border:1px solid var(--border);border-radius:var(--radius);"></div>
+      </div>
+      <div class="form-group" style="margin-bottom:10px;">
+        <label>Projeto</label>
+        <select id="mr-proj" onchange="atualizarValorRapido();atualizarPreviewRapido()">
+          <option value="">Selecione...</option>
+        </select>
+      </div>
+      <!-- Tipo de plantão — determina duração e horário automaticamente -->
+      <div class="form-group" style="margin-bottom:10px;">
+        <label>Tipo de plantão</label>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:6px;" id="mr-tipo-grid">
+          <!-- Select de tipos cadastrados (aparece quando há tipos para o projeto) -->
+          <div id="mr-tipos-select-wrap" style="display:none;grid-column:1/-1;margin-bottom:6px;">
+            <select id="mr-tipo-select" onchange="selecionarTipoCadastrado()"
+              style="width:100%;padding:10px 12px;border:2px solid var(--blue);border-radius:var(--radius);font-size:14px;font-weight:500;background:#fff;cursor:pointer;">
+              <option value="">— Selecione o tipo de plantão —</option>
+            </select>
+          </div>
+          <!-- Botões padrão (fallback quando não há tipos cadastrados) -->
+          <div id="mr-tipos-btns-wrap" style="display:contents;">
+            <button type="button" id="mr-btn-diurno" data-tipo="Diurno 12h" data-horas="12" data-ini="07:00" onclick="selecionarTipoRapido(this)">☀️ Diurno 12h</button>
+            <button type="button" id="mr-btn-noturno" data-tipo="Noturno 12h" data-horas="12" data-ini="19:00" onclick="selecionarTipoRapido(this)">🌙 Noturno 12h</button>
+            <button type="button" id="mr-btn-24h" data-tipo="24h" data-horas="24" data-ini="07:00" onclick="selecionarTipoRapido(this)">🔄 Plantão 24h</button>
+            <button type="button" id="mr-btn-custom" data-tipo="Personalizado" data-horas="0" data-ini="" onclick="selecionarTipoRapido(this)">✏️ Personalizado</button>
+          </div>
+        </div>
+        <input type="hidden" id="mr-tipo" value="Diurno 12h">
+      </div>
+      <!-- Personalizado: início livre + duração em horas -->
+      <div id="mr-horas-custom-row" style="display:none;margin-bottom:10px;">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Horário de início</label>
+            <input id="mr-ini" type="time" value="07:00" oninput="atualizarPreviewRapido()">
+          </div>
+          <div class="form-group">
+            <label>Duração (horas)</label>
+            <input id="mr-horas-custom" type="number" min="1" max="48" placeholder="Ex: 6" oninput="atualizarPreviewRapido()">
+          </div>
+        </div>
+      </div>
+      <!-- Horário fixo (mostrado para tipos com horário predefinido) -->
+      <div id="mr-ini-fixo-row" style="margin-bottom:10px;">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Horário de início</label>
+            <input id="mr-ini-fixo" type="time" value="07:00" disabled style="background:var(--bg3);color:var(--text2);">
+            <span style="font-size:11px;color:var(--text3);margin-top:3px;display:block;">⚑ Horário fixo para este tipo</span>
+          </div>
+          <div class="form-group">
+            <label>Setor</label>
+            <input id="mr-setor" type="text" placeholder="Emergência, UTI...">
+          </div>
+        </div>
+      </div>
+      <!-- Setor para personalizado -->
+      <div id="mr-setor-custom-row" style="display:none;margin-bottom:10px;">
+        <div class="form-group">
+          <label>Setor</label>
+          <input id="mr-setor-custom" type="text" placeholder="Emergência, UTI...">
+        </div>
+      </div>
+      <!-- Preview calculado -->
+      <div id="mr-horario-calc" style="background:var(--blue-light);border:1px solid #a0c4f0;border-radius:var(--radius);padding:8px 12px;font-size:12px;color:var(--blue);margin-bottom:10px;display:none;">
+        <span id="mr-horario-calc-txt"></span>
+      </div>
+      <div class="form-group" style="margin-bottom:10px;">
+        <label>Valor total (R$) <span id="mr-dur-label" style="font-weight:400;color:var(--text3);font-size:11px;"></span></label>
+        <input id="mr-valor" type="text" placeholder="1.800,00" oninput="atualizarPreviewRapido()">
+        <span id="mr-valor-badge" style="display:none;font-size:11px;color:var(--green);margin-top:3px;">✓ Valor padrão do projeto</span>
+      </div>
+      <div class="form-group" style="margin-bottom:10px;">
+        <label>Observações</label>
+        <input id="mr-obs" type="text" placeholder="Opcional">
+      </div>
+      <!-- Plantão aberto -->
+      <div style="border-top:1px solid var(--border);padding-top:10px;margin-top:4px;">
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;">
+          <input type="checkbox" id="mr-aberto" onchange="toggleAberto()" style="width:16px;height:16px;accent-color:var(--amber);">
+          <span>📢 Publicar como plantão aberto (sem médico vinculado)</span>
+        </label>
+        <div id="mr-aberto-opts" style="display:none;margin-top:10px;padding:10px;background:var(--amber-bg);border-radius:var(--radius);border:1px solid #f0c060;">
+          <div class="form-group">
+            <label style="color:var(--amber);">Número de vagas</label>
+            <input id="mr-vagas" type="number" min="1" max="20" value="1" style="max-width:100px;padding:6px 10px;border:1px solid var(--border);border-radius:var(--radius);">
+          </div>
+          <div style="font-size:11px;color:var(--amber);margin-top:4px;">Os médicos vinculados a este projeto verão esta vaga no app e poderão se candidatar.</div>
+        </div>
+      </div>
+      <div class="mr-preview" id="mr-preview"></div>
+    </div>
+    <div class="modal-rapido-footer">
+      <button type="button" class="btn btn-primary" style="flex:1;" onclick="event.preventDefault();event.stopPropagation();salvarLancamentoRapido()">+ Registrar plantão</button>
+      <button class="btn btn-ghost" onclick="fecharModalRapido()">Fechar</button>
     </div>
   </div>
 </div>
+
+<!-- MENU DE CONTEXTO — Calendário semanal -->
+<div class="ctx-menu" id="ctx-menu">
+  <div class="ctx-item" id="ctx-copiar" onclick="ctxCopiar()">📋 Copiar plantão</div>
+  <div class="ctx-sep"></div>
+  <div class="ctx-item" id="ctx-colar" onclick="ctxColar()" style="display:none;">📌 Colar aqui</div>
+  <div class="ctx-item" id="ctx-colar-dia" style="font-size:11px;color:var(--text3);padding:4px 14px;cursor:default;display:none;"></div>
+  <div class="ctx-sep" id="ctx-sep-colar" style="display:none;"></div>
+  <div class="ctx-item" onclick="ctxNovoPlantao()">+ Novo plantão</div>
+  <div class="ctx-item danger" id="ctx-remover" onclick="ctxRemover()" style="display:none;">🗑️ Remover plantão</div>
+</div>
+
+<!-- MODAL EDITAR MÉDICO -->
+<div class="modal-overlay" id="modal-editar-med" onclick="if(event.target===this)fecharEditarMedico()">
+  <div class="modal" style="max-width:680px;">
+    <div class="modal-header">
+      <div class="modal-title">✏️ Editar médico</div>
+      <button class="modal-close" onclick="fecharEditarMedico()">✕</button>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Nome completo</label><input id="em-nome" type="text"></div>
+      <div class="form-group"><label>E-mail</label><input id="em-email" type="email"></div>
+    </div>
+    <div class="form-row four">
+      <div class="form-group"><label>Telefone</label><input id="em-tel" type="text"></div>
+      <div class="form-group"><label>Data de nascimento</label><input id="em-nasc" type="date"></div>
+      <div class="form-group"><label>CPF</label><input id="em-cpf" type="text"></div>
+      <div class="form-group"><label>Tipo</label>
+        <select id="em-tipo">
+          <option>Plantonista</option><option>Diarista</option><option>Coordenador</option><option>Residente</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row four">
+      <div class="form-group"><label>CRM</label><input id="em-crm" type="text"></div>
+      <div class="form-group"><label>RQE</label><input id="em-rqe" type="text"></div>
+      <div class="form-group"><label>Especialidade(s)</label>
+        <div id="em-esp-check" style="display:flex;flex-wrap:wrap;gap:5px;max-height:120px;overflow-y:auto;border:1px solid var(--border);border-radius:var(--radius);padding:8px;">
+                  <label style="display:flex;align-items:center;gap:4px;font-size:11px;cursor:pointer;white-space:nowrap;">
+            <input type="checkbox" class="em-esp-chk" value="Clínica Geral / Emergência" style="accent-color:var(--blue);">Clínica Geral / Emergência
+          </label>
+          <label style="display:flex;align-items:center;gap:4px;font-size:11px;cursor:pointer;white-space:nowrap;">
+            <input type="checkbox" class="em-esp-chk" value="Anestesiologia" style="accent-color:var(--blue);">Anestesiologia
+          </label>
+          <label style="display:flex;align-items:center;gap:4px;font-size:11px;cursor:pointer;white-space:nowrap;">
+            <input type="checkbox" class="em-esp-chk" value="Cardiologia" style="accent-color:var(--blue);">Cardiologia
+          </label>
+          <label style="display:flex;align-items:center;gap:4px;font-size:11px;cursor:pointer;white-space:nowrap;">
+            <input type="checkbox" class="em-esp-chk" value="Cirurgia Geral" style="accent-color:var(--blue);">Cirurgia Geral
+          </label>
+          <label style="display:flex;align-items:center;gap:4px;font-size:11px;cursor:pointer;white-space:nowrap;">
+            <input type="checkbox" class="em-esp-chk" value="Cirurgia Vascular" style="accent-color:var(--blue);">Cirurgia Vascular
+          </label>
+          <label style="display:flex;align-items:center;gap:4px;font-size:11px;cursor:pointer;white-space:nowrap;">
+            <input type="checkbox" class="em-esp-chk" value="Dermatologia" style="accent-color:var(--blue);">Dermatologia
+          </label>
+          <label style="display:flex;align-items:center;gap:4px;font-size:11px;cursor:pointer;white-space:nowrap;">
+            <input type="checkbox" class="em-esp-chk" value="Endocrinologia" style="accent-color:var(--blue);">Endocrinologia
+          </label>
+          <label style="display:flex;align-items:center;gap:4px;font-size:11px;cursor:pointer;white-space:nowrap;">
+            <input type="checkbox" class="em-esp-chk" value="Gastroenterologia" style="accent-color:var(--blue);">Gastroenterologia
+          </label>
+          <label style="display:flex;align-items:center;gap:4px;font-size:11px;cursor:pointer;white-space:nowrap;">
+            <input type="checkbox" class="em-esp-chk" value="Geriatria" style="accent-color:var(--blue);">Geriatria
+          </label>
+          <label style="display:flex;align-items:center;gap:4px;font-size:11px;cursor:pointer;white-space:nowrap;">
+            <input type="checkbox" class="em-esp-chk" value="Ginecologia e Obstetrícia" style="accent-color:var(--blue);">Ginecologia e Obstetrícia
+          </label>
+          <label style="display:flex;align-items:center;gap:4px;font-size:11px;cursor:pointer;white-space:nowrap;">
+            <input type="checkbox" class="em-esp-chk" value="Hematologia" style="accent-color:var(--blue);">Hematologia
+          </label>
+          <label style="display:flex;align-items:center;gap:4px;font-size:11px;cursor:pointer;white-space:nowrap;">
+            <input type="checkbox" class="em-esp-chk" value="Infectologia" style="accent-color:var(--blue);">Infectologia
+          </label>
+          <label style="display:flex;align-items:center;gap:4px;font-size:11px;cursor:pointer;white-space:nowrap;">
+            <input type="checkbox" class="em-esp-chk" value="Medicina Intensiva (UTI)" style="accent-color:var(--blue);">Medicina Intensiva (UTI)
+          </label>
+          <label style="display:flex;align-items:center;gap:4px;font-size:11px;cursor:pointer;white-space:nowrap;">
+            <input type="checkbox" class="em-esp-chk" value="Medicina do Trabalho" style="accent-color:var(--blue);">Medicina do Trabalho
+          </label>
+          <label style="display:flex;align-items:center;gap:4px;font-size:11px;cursor:pointer;white-space:nowrap;">
+            <input type="checkbox" class="em-esp-chk" value="Nefrologia" style="accent-color:var(--blue);">Nefrologia
+          </label>
+          <label style="display:flex;align-items:center;gap:4px;font-size:11px;cursor:pointer;white-space:nowrap;">
+            <input type="checkbox" class="em-esp-chk" value="Neurologia" style="accent-color:var(--blue);">Neurologia
+          </label>
+          <label style="display:flex;align-items:center;gap:4px;font-size:11px;cursor:pointer;white-space:nowrap;">
+            <input type="checkbox" class="em-esp-chk" value="Neurocirurgia" style="accent-color:var(--blue);">Neurocirurgia
+          </label>
+          <label style="display:flex;align-items:center;gap:4px;font-size:11px;cursor:pointer;white-space:nowrap;">
+            <input type="checkbox" class="em-esp-chk" value="Oftalmologia" style="accent-color:var(--blue);">Oftalmologia
+          </label>
+          <label style="display:flex;align-items:center;gap:4px;font-size:11px;cursor:pointer;white-space:nowrap;">
+            <input type="checkbox" class="em-esp-chk" value="Oncologia" style="accent-color:var(--blue);">Oncologia
+          </label>
+          <label style="display:flex;align-items:center;gap:4px;font-size:11px;cursor:pointer;white-space:nowrap;">
+            <input type="checkbox" class="em-esp-chk" value="Ortopedia e Traumatologia" style="accent-color:var(--blue);">Ortopedia e Traumatologia
+          </label>
+          <label style="display:flex;align-items:center;gap:4px;font-size:11px;cursor:pointer;white-space:nowrap;">
+            <input type="checkbox" class="em-esp-chk" value="Otorrinolaringologia" style="accent-color:var(--blue);">Otorrinolaringologia
+          </label>
+          <label style="display:flex;align-items:center;gap:4px;font-size:11px;cursor:pointer;white-space:nowrap;">
+            <input type="checkbox" class="em-esp-chk" value="Pediatria" style="accent-color:var(--blue);">Pediatria
+          </label>
+          <label style="display:flex;align-items:center;gap:4px;font-size:11px;cursor:pointer;white-space:nowrap;">
+            <input type="checkbox" class="em-esp-chk" value="Pneumologia" style="accent-color:var(--blue);">Pneumologia
+          </label>
+          <label style="display:flex;align-items:center;gap:4px;font-size:11px;cursor:pointer;white-space:nowrap;">
+            <input type="checkbox" class="em-esp-chk" value="Psiquiatria" style="accent-color:var(--blue);">Psiquiatria
+          </label>
+          <label style="display:flex;align-items:center;gap:4px;font-size:11px;cursor:pointer;white-space:nowrap;">
+            <input type="checkbox" class="em-esp-chk" value="Radiologia" style="accent-color:var(--blue);">Radiologia
+          </label>
+          <label style="display:flex;align-items:center;gap:4px;font-size:11px;cursor:pointer;white-space:nowrap;">
+            <input type="checkbox" class="em-esp-chk" value="Reumatologia" style="accent-color:var(--blue);">Reumatologia
+          </label>
+          <label style="display:flex;align-items:center;gap:4px;font-size:11px;cursor:pointer;white-space:nowrap;">
+            <input type="checkbox" class="em-esp-chk" value="Urologia" style="accent-color:var(--blue);">Urologia
+          </label>
+        </div>
+      </div>
+      <input type="hidden" id="em-valor" value="0">
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Razão social <span style="font-weight:400;font-size:11px;color:var(--text3);">(se PJ)</span></label>
+        <input id="em-razao" type="text" placeholder="Empresa LTDA">
+      </div>
+      <div class="form-group">
+        <label>CNPJ <span style="font-weight:400;font-size:11px;color:var(--text3);">(se PJ)</span></label>
+        <input id="em-cnpj" type="text" placeholder="00.000.000/0000-00">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Tipo de chave PIX</label>
+        <select id="em-pix-tipo" onchange="autoPreencherPixEdit()">
+          <option value="">Sem PIX cadastrado</option>
+          <option value="CPF">CPF</option>
+          <option value="CNPJ">CNPJ</option>
+          <option value="EMAIL">E-mail</option>
+          <option value="TELEFONE">Telefone</option>
+          <option value="ALEATORIA">Chave aleatória</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Chave PIX</label>
+        <div style="position:relative;">
+          <input id="em-pix-chave" type="text" placeholder="Digite a chave PIX" oninput="validarPixEdit()" style="width:100%;padding-right:30px;">
+          <span id="em-pix-status" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);font-size:16px;display:none;"></span>
+        </div>
+        <div id="em-pix-aviso" style="display:none;font-size:11px;margin-top:4px;padding:4px 8px;border-radius:4px;"></div>
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Projetos vinculados <span style="font-weight:400;font-size:11px;color:var(--text3);">(plantões disponíveis visíveis no app)</span></label>
+      <div id="em-projetos-check" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="fecharEditarMedico()">Cancelar</button>
+      <button class="btn btn-primary" onclick="salvarEdicaoMedico()">💾 Salvar alterações</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+<!-- MODAL PERFIL DA EMPRESA -->
+<div class="modal-perfil-overlay" id="modal-perfil" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="modal-perfil">
+    <div class="modal-perfil-header">
+      <div style="font-size:16px;font-weight:700;">👤 Dados da empresa</div>
+      <button onclick="document.getElementById('modal-perfil').classList.remove('open')" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--text3);">✕</button>
+    </div>
+    <div class="modal-perfil-body">
+      <div class="form-row">
+        <div class="form-group"><label>Nome da empresa</label><input id="mp-empresa" type="text"></div>
+        <div class="form-group"><label>CNPJ</label><input id="mp-cnpj" type="text"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Nome do responsável</label><input id="mp-nome" type="text"></div>
+        <div class="form-group"><label>E-mail</label><input id="mp-email" type="email"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Telefone</label><input id="mp-tel" type="text"></div>
+        <div class="form-group"><label>Cargo</label><input id="mp-cargo" type="text"></div>
+      </div>
+      <hr>
+      <div style="font-size:13px;font-weight:600;margin-bottom:10px;">Alterar senha</div>
+      <div class="form-row">
+        <div class="form-group"><label>Nova senha</label><input id="mp-senha" type="password" placeholder="Mínimo 8 caracteres"></div>
+        <div class="form-group"><label>Confirmar senha</label><input id="mp-senha2" type="password" placeholder="Repita a senha"></div>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:16px;justify-content:flex-end;">
+        <button class="btn btn-ghost" onclick="document.getElementById('modal-perfil').classList.remove('open')">Cancelar</button>
+        <button class="btn btn-primary" onclick="salvarPerfil()">💾 Salvar alterações</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- MODAL PLANOS -->
+<div class="modal-perfil-overlay" id="modal-planos" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="modal-perfil" style="max-width:620px;">
+    <div class="modal-perfil-header">
+      <div style="font-size:16px;font-weight:700;">💎 Plano e cobrança</div>
+      <button onclick="document.getElementById('modal-planos').classList.remove('open')" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--text3);">✕</button>
+    </div>
+    <div class="modal-perfil-body">
+
+      <!-- Status atual -->
+      <div id="mp-status-atual" style="margin-bottom:20px;"></div>
+
+      <!-- Upgrade automático — simplificado -->
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;background:var(--bg3);border-radius:10px;border:1px solid var(--border);margin:16px 0;">
+        <div style="display:flex;align-items:center;gap:12px;">
+          <label style="display:flex;align-items:center;gap:10px;cursor:pointer;margin:0;" onclick="toggleUpgradeAuto()">
+            <div class="toggle-switch" id="toggle-upgrade-auto"></div>
+            <span style="font-size:13px;font-weight:600;color:var(--text);" id="toggle-upgrade-label">Upgrade automático de plano</span>
+          </label>
+        </div>
+        <button onclick="mostrarInfoUpgrade()" style="background:none;border:1px solid var(--border);border-radius:6px;padding:4px 10px;font-size:12px;color:var(--text2);cursor:pointer;white-space:nowrap;">ℹ️ Mais informações</button>
+      </div>
+      <!-- Popover de informações (oculto por padrão) -->
+      <div id="upgrade-info-box" style="display:none;background:#fffbf0;border:1px solid #f0c060;border-radius:8px;padding:12px 14px;font-size:13px;color:var(--text2);line-height:1.6;margin:-8px 0 16px;">
+        Quando o número de profissionais cadastrados ultrapassar o limite do seu plano atual, o sistema realiza o upgrade automaticamente para o próximo plano e ajusta a cobrança mensal.
+      </div>
+
+      <!-- Lista de planos -->
+      <div style="font-size:13px;font-weight:600;margin-bottom:12px;color:var(--text2);">Planos disponíveis</div>
+      <div id="mp-planos-lista"></div>
+
+      <!-- Histórico de pagamentos -->
+      <div style="margin-top:20px;border-top:1px solid var(--border);padding-top:16px;">
+        <div style="font-size:13px;font-weight:600;margin-bottom:10px;color:var(--text2);">Histórico de pagamentos</div>
+        <div id="mp-historico-pag" style="font-size:13px;color:var(--text3);">Carregando...</div>
+      </div>
+
+      <div style="display:flex;gap:8px;margin-top:20px;justify-content:flex-end;">
+        <button class="btn btn-ghost" onclick="document.getElementById('modal-planos').classList.remove('open')">Fechar</button>
+        <button class="btn btn-primary" id="btn-salvar-plano" onclick="salvarAlteracoesPlano()">💾 Salvar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main" id="main" style="display:none;">
+  <!-- Barra de cópia ativa -->
+  <div id="barra-copiado">
+    <span>📋 <span id="barra-copiado-txt">Plantão copiado</span> — clique em 📌 Colar em qualquer dia da semana</span>
+    <button onclick="cancelarCopia()">✕ Cancelar cópia</button>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div id="tab-dashboard" class="section active">
+    <div class="page-title">Dashboard</div>
+    <div class="page-sub">Visão geral em tempo real</div>
+
+    <!-- ALERTAS DE FURO -->
+    <div id="dash-furos-card" style="display:none;margin-bottom:14px;">
+      <div class="card" style="border-left:4px solid var(--red);background:var(--red-bg);padding:14px 18px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;">
+          <div>
+            <div style="font-size:13px;font-weight:700;color:var(--red);">⚠️ Plantões sem confirmação — próximas 48h</div>
+            <div style="font-size:12px;color:var(--text2);margin-top:4px;">Médicos que ainda não confirmaram presença</div>
+          </div>
+          <div style="font-size:32px;font-weight:700;color:var(--red);" id="dash-furos-count">0</div>
+        </div>
+        <div id="dash-furos-lista" style="margin-top:10px;"></div>
+      </div>
+    </div>
+
+    <div class="metrics">
+      <div class="metric"><div class="metric-label">Médicos ativos</div><div class="metric-val" id="d-medicos">—</div></div>
+      <div class="metric"><div class="metric-label">Plantões este mês</div><div class="metric-val" id="d-plantoes">—</div></div>
+      <div class="metric"><div class="metric-label">Check-ins hoje</div><div class="metric-val" id="d-checkins">—</div></div>
+      <div class="metric"><div class="metric-label">Total honorários mês</div><div class="metric-val" id="d-total">—</div></div>
+    </div>
+    <!-- FILTRO DOS GRÁFICOS -->
+    <div class="card" style="padding:12px 16px;margin-bottom:16px;">
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+        <span style="font-size:13px;font-weight:600;color:var(--text2);">📊 Gráficos — período:</span>
+        <input type="date" id="graf-d1" style="padding:5px 8px;border:1px solid var(--border);border-radius:var(--radius);font-size:13px;">
+        <span style="font-size:13px;color:var(--text3);">até</span>
+        <input type="date" id="graf-d2" style="padding:5px 8px;border:1px solid var(--border);border-radius:var(--radius);font-size:13px;">
+        <button class="btn btn-primary btn-sm" onclick="atualizarGraficos()">Atualizar</button>
+        <button class="btn btn-ghost btn-sm" onclick="resetarPeriodoGraficos()">Últimos 30 dias</button>
+      </div>
+    </div>
+
+    <!-- GRÁFICOS linha 1 -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
+      <div class="card">
+        <div class="card-title">💰 Custo por projeto</div>
+        <div style="position:relative;height:280px;"><canvas id="graf-proj"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-title">⏱️ Top 10 médicos — horas trabalhadas</div>
+        <div style="position:relative;height:280px;"><canvas id="graf-horas"></canvas></div>
+      </div>
+    </div>
+
+    <!-- GRÁFICOS linha 2 -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
+      <div class="card">
+        <div class="card-title">✅ Pontualidade — check-ins</div>
+        <div style="display:flex;align-items:center;justify-content:center;gap:24px;">
+          <div style="position:relative;height:220px;width:220px;"><canvas id="graf-pontual"></canvas></div>
+          <div id="graf-pontual-legend" style="font-size:13px;"></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">📋 Status dos plantões — próximos 7 dias</div>
+        <div style="display:flex;align-items:center;justify-content:center;gap:24px;">
+          <div style="position:relative;height:220px;width:220px;"><canvas id="graf-status"></canvas></div>
+          <div id="graf-status-legend" style="font-size:13px;"></div>
+        </div>
+        <div style="margin-top:8px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+          <span style="font-size:12px;color:var(--text3);">Período plantões:</span>
+          <input type="date" id="graf-status-d1" style="padding:4px 6px;border:1px solid var(--border);border-radius:var(--radius);font-size:12px;">
+          <span style="font-size:12px;color:var(--text3);">até</span>
+          <input type="date" id="graf-status-d2" style="padding:4px 6px;border:1px solid var(--border);border-radius:var(--radius);font-size:12px;">
+          <button class="btn btn-ghost btn-sm" onclick="renderGrafStatus()">↺</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ÚLTIMOS LANÇAMENTOS E CHECK-INS -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px;">
+      <div class="card"><div class="card-title">Últimos lançamentos</div><div id="d-lanc-tab"><div class="empty">Carregando...</div></div></div>
+      <div class="card"><div class="card-title">Check-ins recentes</div><div id="d-ci-tab"><div class="empty">Carregando...</div></div></div>
+    </div>
+  </div>
+
+  <!-- MÉDICOS -->
+  <div id="tab-medicos" class="section">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+      <div class="page-title" style="margin-bottom:0;">Médicos</div>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-ghost btn-sm" onclick="exportarMedicosXLSX()">⬇ Exportar Excel</button>
+        <label class="btn btn-ghost btn-sm" style="cursor:pointer;" title="Importar médicos via Excel">
+          ⬆ Importar Excel
+          <input type="file" id="import-med-file" accept=".xlsx,.xls" style="display:none;" onchange="importarMedicosXLSX(event)">
+        </label>
+      </div>
+    </div>
+    <div class="page-sub">Cadastro e links de acesso ao app</div>
+    <div class="card">
+      <div class="card-title">Novo médico</div>
+      <div class="form-row">
+        <div class="form-group"><label>Nome completo</label><input id="mn" type="text" placeholder="Dr. João Silva"></div>
+        <div class="form-group"><label>E-mail</label><input id="memail" type="email" placeholder="medico@hospital.com"></div>
+      </div>
+      <div class="form-row four">
+        <div class="form-group"><label>Telefone celular</label><input id="mtel" type="text" placeholder="(21) 99999-9999"></div>
+        <div class="form-group"><label>Data de nascimento</label><input id="mnascimento" type="date"></div>
+        <div class="form-group"><label>CPF</label><input id="mcpf" type="text" placeholder="000.000.000-00" oninput="if(document.getElementById('mn-pix-tipo')?.value==='CPF') autoPreencherPixNovo()"></div>
+        <div class="form-group"><label>Tipo</label><select id="mt"><option>Plantonista</option><option>Diarista</option><option>Coordenador</option><option>Residente</option></select></div>
+      </div>
+      <div class="form-row four">
+        <div class="form-group"><label>CRM</label><input id="mc" type="text" placeholder="CRM/RJ 000001"></div>
+        <div class="form-group"><label>RQE</label><input id="mrqe" type="text" placeholder="RQE 00000"></div>
+        <input type="hidden" id="me" value="">
+        <input type="hidden" id="mv" value="0">
+      </div>
+      <!-- Especialidades múltiplas — dropdown compacto -->
+      <div class="form-group" style="margin-top:10px;">
+        <label>Especialidades <span style="font-weight:400;font-size:11px;color:var(--text3);">(selecione todas que se aplicam)</span></label>
+        <div class="esp-dropdown" id="esp-dropdown-novo">
+          <div class="esp-trigger" onclick="toggleEspDropdown('novo')" id="esp-trigger-novo">
+            <span id="esp-label-novo" style="color:var(--text3);">Clique para selecionar...</span>
+            <span>▾</span>
+          </div>
+          <div class="esp-panel" id="esp-panel-novo">
+          <label class="esp-panel-item"><input type="checkbox" class="med-esp-chk" value="Clínica Geral / Emergência">Clínica Geral / Emergência</label>
+          <label class="esp-panel-item"><input type="checkbox" class="med-esp-chk" value="Anestesiologia">Anestesiologia</label>
+          <label class="esp-panel-item"><input type="checkbox" class="med-esp-chk" value="Cardiologia">Cardiologia</label>
+          <label class="esp-panel-item"><input type="checkbox" class="med-esp-chk" value="Cirurgia Geral">Cirurgia Geral</label>
+          <label class="esp-panel-item"><input type="checkbox" class="med-esp-chk" value="Cirurgia Vascular">Cirurgia Vascular</label>
+          <label class="esp-panel-item"><input type="checkbox" class="med-esp-chk" value="Dermatologia">Dermatologia</label>
+          <label class="esp-panel-item"><input type="checkbox" class="med-esp-chk" value="Endocrinologia">Endocrinologia</label>
+          <label class="esp-panel-item"><input type="checkbox" class="med-esp-chk" value="Gastroenterologia">Gastroenterologia</label>
+          <label class="esp-panel-item"><input type="checkbox" class="med-esp-chk" value="Geriatria">Geriatria</label>
+          <label class="esp-panel-item"><input type="checkbox" class="med-esp-chk" value="Ginecologia e Obstetrícia">Ginecologia e Obstetrícia</label>
+          <label class="esp-panel-item"><input type="checkbox" class="med-esp-chk" value="Hematologia">Hematologia</label>
+          <label class="esp-panel-item"><input type="checkbox" class="med-esp-chk" value="Infectologia">Infectologia</label>
+          <label class="esp-panel-item"><input type="checkbox" class="med-esp-chk" value="Medicina Intensiva (UTI)">Medicina Intensiva (UTI)</label>
+          <label class="esp-panel-item"><input type="checkbox" class="med-esp-chk" value="Medicina do Trabalho">Medicina do Trabalho</label>
+          <label class="esp-panel-item"><input type="checkbox" class="med-esp-chk" value="Nefrologia">Nefrologia</label>
+          <label class="esp-panel-item"><input type="checkbox" class="med-esp-chk" value="Neurologia">Neurologia</label>
+          <label class="esp-panel-item"><input type="checkbox" class="med-esp-chk" value="Neurocirurgia">Neurocirurgia</label>
+          <label class="esp-panel-item"><input type="checkbox" class="med-esp-chk" value="Oftalmologia">Oftalmologia</label>
+          <label class="esp-panel-item"><input type="checkbox" class="med-esp-chk" value="Oncologia">Oncologia</label>
+          <label class="esp-panel-item"><input type="checkbox" class="med-esp-chk" value="Ortopedia e Traumatologia">Ortopedia e Traumatologia</label>
+          <label class="esp-panel-item"><input type="checkbox" class="med-esp-chk" value="Otorrinolaringologia">Otorrinolaringologia</label>
+          <label class="esp-panel-item"><input type="checkbox" class="med-esp-chk" value="Pediatria">Pediatria</label>
+          <label class="esp-panel-item"><input type="checkbox" class="med-esp-chk" value="Pneumologia">Pneumologia</label>
+          <label class="esp-panel-item"><input type="checkbox" class="med-esp-chk" value="Psiquiatria">Psiquiatria</label>
+          <label class="esp-panel-item"><input type="checkbox" class="med-esp-chk" value="Radiologia">Radiologia</label>
+          <label class="esp-panel-item"><input type="checkbox" class="med-esp-chk" value="Reumatologia">Reumatologia</label>
+          <label class="esp-panel-item"><input type="checkbox" class="med-esp-chk" value="Urologia">Urologia</label>
+          </div>
+        </div>
+        <div class="esp-tags" id="esp-tags-novo"></div>
+      </div>
+      <!-- Dados bancários / PIX -->
+      <div style="border-top:1px solid var(--border);margin-top:12px;padding-top:12px;">
+        <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px;">Dados bancários</div>
+        <div class="form-row">
+          <div class="form-group"><label>Razão social <span style="font-weight:400;color:var(--text3);font-size:11px;">(se PJ)</span></label><input id="mn-razao" type="text" placeholder="Empresa LTDA"></div>
+          <div class="form-group"><label>CNPJ <span style="font-weight:400;color:var(--text3);font-size:11px;">(se PJ)</span></label><input id="mn-cnpj" type="text" placeholder="00.000.000/0000-00"></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>Tipo de chave PIX</label>
+            <select id="mn-pix-tipo" onchange="autoPreencherPixNovo()">
+              <option value="">Sem PIX cadastrado</option>
+              <option value="CPF">CPF</option>
+              <option value="CNPJ">CNPJ</option>
+              <option value="EMAIL">E-mail</option>
+              <option value="TELEFONE">Telefone</option>
+              <option value="ALEATORIA">Chave aleatória</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Chave PIX</label>
+            <div style="position:relative;">
+              <input id="mn-pix-chave" type="text" placeholder="Digite a chave PIX" oninput="validarPixNovo()" style="width:100%;padding-right:30px;">
+              <span id="mn-pix-status" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);font-size:16px;display:none;"></span>
+            </div>
+            <div id="mn-pix-aviso" style="display:none;font-size:11px;margin-top:4px;padding:4px 8px;border-radius:4px;"></div>
+          </div>
+        </div>
+      </div>
+      <!-- Projetos vinculados -->
+      <div class="form-group" style="margin-top:8px;">
+        <label>Projetos vinculados <span style="font-weight:400;font-size:11px;color:var(--text3);">(médico verá plantões abertos destes projetos)</span></label>
+        <div id="med-projetos-check" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;"></div>
+      </div>
+      <button class="btn btn-primary" onclick="addMedico()">+ Adicionar médico</button>
+    </div>
+    <div class="card">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+        <div class="card-title" style="margin-bottom:0;">Médicos cadastrados</div>
+        <div style="position:relative;width:280px;">
+          <input id="med-busca" type="text" placeholder="🔍 Buscar por nome ou CRM..."
+            oninput="filtrarMedicosLista()"
+            style="width:100%;padding:7px 30px 7px 10px;border:1px solid var(--border);border-radius:var(--radius);font-size:13px;">
+          <span id="med-busca-clear" onclick="limparBuscaMedicos()"
+            style="display:none;position:absolute;right:8px;top:50%;transform:translateY(-50%);cursor:pointer;color:var(--text3);font-size:16px;">×</span>
+        </div>
+      </div>
+      <div id="med-busca-count" style="font-size:12px;color:var(--text3);margin-bottom:8px;display:none;"></div>
+      <div id="medicos-lista"><div class="empty">Carregando...</div></div>
+    </div>
+  </div>
+
+  <!-- PROJETOS -->
+  <div id="tab-projetos" class="section">
+    <div class="page-title">Projetos</div>
+    <div class="page-sub">Unidades e coordenadas GPS para check-in</div>
+    <div class="card">
+      <div class="card-title">Novo projeto</div>
+      <div class="form-row"><div class="form-group"><label>Nome do projeto</label><input id="pn" type="text" placeholder="UPA Centro"></div><div class="form-group"><label>Código TOTVS (CC)</label><input id="pc" type="text" placeholder="CC-001"></div></div>
+      <div class="form-row"><div class="form-group"><label>Contratante</label><input id="pco" type="text" placeholder="Secretaria Municipal de Saúde"></div><div class="form-group"><label>Status</label><select id="ps"><option>Ativo</option><option>Encerrado</option><option>Em negociação</option></select></div></div>
+      <!-- Remuneração padrão -->
+      <div style="border-top:1px solid var(--border);margin:10px 0 12px;padding-top:12px;">
+        <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;color:var(--text2);margin-bottom:10px;">Remuneração padrão</div>
+        <div class="form-row four">
+          <div class="form-group"><label>Valor plantão 12h (R$)</label><input id="pval12" type="text" placeholder="1.800,00"></div>
+          <div class="form-group"><label>Valor plantão 24h (R$)</label><input id="pval24" type="text" placeholder="3.600,00"></div>
+          <div class="form-group"><label>Valor noturno 12h (R$)</label><input id="pvaln" type="text" placeholder="1.800,00"></div>
+          <div class="form-group"><label>Valor sobreaviso (R$)</label><input id="pvalsob" type="text" placeholder="900,00"></div>
+        </div>
+        <div style="font-size:12px;color:var(--text3);">💡 Esses valores serão sugeridos automaticamente ao lançar plantões neste projeto.</div>
+      </div>
+      <!-- GPS -->
+      <div class="form-row four">
+        <div class="form-group"><label>Latitude GPS</label><input id="plat" type="text" placeholder="-22.9068"></div>
+        <div class="form-group"><label>Longitude GPS</label><input id="plon" type="text" placeholder="-43.1729"></div>
+        <div class="form-group"><label>Raio check-in (m)</label><input id="praio" type="number" value="100" placeholder="100"></div>
+        <div class="form-group"><label>Contrato</label><input id="pnc" type="text" placeholder="CTR-2024-001"></div>
+      </div>
+      <div style="font-size:12px;color:var(--text3);margin-bottom:10px;">💡 GPS: abra o Google Maps, clique com botão direito no hospital e copie as coordenadas.</div>
+      <button class="btn btn-primary" onclick="addProjeto()">+ Adicionar projeto</button>
+    </div>
+    <div class="card"><div class="card-title">Projetos cadastrados</div><div id="projetos-lista"><div class="empty">Carregando...</div></div></div>
+
+  </div>
+
+  <!-- TIPOS DE PLANTÃO -->
+  <div id="tab-tipos" class="section">
+    <div class="page-title">Tipos de plantão</div>
+    <div class="page-sub">Configure horário, valor e setor pré-definidos por projeto</div>
+    <div class="card">
+      <div class="card-title">Novo tipo</div>
+      <div class="form-row">
+        <div class="form-group"><label>Projeto</label><select id="tp-proj" onchange="carregarTiposLista()"><option value="">Selecione...</option></select></div>
+        <div class="form-group"><label>Nome</label><input id="tp-nome" type="text" placeholder="Ex: Diurno 12h — Emergência"></div>
+        <div class="form-group"><label>Setor</label><input id="tp-setor" type="text" placeholder="Ex: Emergência, UTI"></div>
+      </div>
+      <div class="form-row four">
+        <div class="form-group"><label>Início</label><input id="tp-ini" type="time" value="07:00" oninput="calcDuracaoTipo()"></div>
+        <div class="form-group"><label>Fim</label><input id="tp-fim" type="time" value="19:00" oninput="calcDuracaoTipo()"></div>
+        <div class="form-group"><label>Duração</label><input id="tp-horas" type="text" value="12h" readonly style="background:var(--bg3);color:var(--text2);"></div>
+        <div class="form-group"><label>Valor (R$)</label><input id="tp-valor" type="text" placeholder="1.800,00"></div>
+      </div>
+      <button class="btn btn-primary" onclick="salvarTipoPlantao()">+ Adicionar tipo</button>
+    </div>
+    <div class="card" style="margin-top:12px;">
+      <div class="card-title">Tipos cadastrados</div>
+      <div style="margin-bottom:12px;">
+        <label style="font-size:12px;color:var(--text2);">Filtrar por projeto:</label>
+        <select id="tp-proj-filtro" onchange="carregarTiposLista()" style="margin-left:8px;padding:5px 10px;border:1px solid var(--border);border-radius:var(--radius);font-size:13px;">
+          <option value="">Todos os projetos</option>
+        </select>
+      </div>
+      <div id="tipos-lista"><div class="empty">Carregando...</div></div>
+    </div>
+  </div>
+
+  <!-- LANÇAMENTOS -->
+  <div id="tab-lancamentos" class="section">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+      <div>
+        <div class="page-title" style="margin-bottom:0;">Lançamentos</div>
+        <div class="page-sub">Registro de plantões</div>
+      </div>
+      <button class="btn btn-primary" onclick="abrirLancamentoRapido(new Date().toISOString().slice(0,10),'')">+ Novo plantão</button>
+    </div>
+    <div class="card" style="padding:12px 16px;margin-bottom:12px;">
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;">
+        <div class="form-group" style="margin:0;flex:1;min-width:160px;"><label>Médico</label><select id="lf-med" onchange="filtrarLancamentos()"><option value="">Todos</option></select></div>
+        <div class="form-group" style="margin:0;flex:1;min-width:160px;"><label>Projeto</label><select id="lf-proj" onchange="filtrarLancamentos()"><option value="">Todos</option></select></div>
+        <div class="form-group" style="margin:0;"><label>De</label><input id="lf-d1" type="date" onchange="filtrarLancamentos()"></div>
+        <div class="form-group" style="margin:0;"><label>Até</label><input id="lf-d2" type="date" onchange="filtrarLancamentos()"></div>
+        <button class="btn btn-ghost btn-sm" onclick="limparFiltrosLanc()">Limpar</button>
+      </div>
+    </div>
+    <div class="card"><div id="lanc-lista"><div class="empty">Carregando...</div></div></div>
+  </div>
+
+  <!-- LANÇAMENTO EM LOTE -->
+  <div id="tab-lote" class="section">
+    <div class="page-title">Lançamento em lote</div>
+    <div class="page-sub">Registre plantões para vários médicos de uma vez</div>
+
+    <!-- Configurações do lote -->
+    <div class="card">
+      <div class="card-title">1. Configurar plantão</div>
+      <div class="form-row">
+        <div class="form-group"><label>Projeto</label><select id="lote-proj"><option value="">Selecione...</option></select></div>
+        <div class="form-group"><label>Setor</label><input id="lote-setor" type="text" placeholder="Ex: Emergência, UTI"></div>
+      </div>
+      <div class="form-row four">
+        <div class="form-group"><label>Data</label><input id="lote-data" type="date"></div>
+        <div class="form-group"><label>Início</label><input id="lote-ini" type="time" value="07:00" oninput="atualizarDuracaoLote()"></div>
+        <div class="form-group"><label>Fim</label><input id="lote-fim" type="time" value="19:00" oninput="atualizarDuracaoLote()"></div>
+        <div class="form-group"><label>Tipo</label>
+          <select id="lote-tipo">
+            <option>Diurno 12h</option><option>Noturno 12h</option><option>24h</option><option>Fim de Semana Diurno</option><option>Fim de Semana Noturno</option><option>Rotina Manhã</option><option>Rotina Tarde</option><option>Sobreaviso</option><option>Plantão 4 Semanas</option><option>Plantão 5 Semanas</option><option>Personalizado</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Valor por médico (R$) <span id="lote-duracao-label" style="font-weight:400;color:var(--text3);"></span></label>
+          <input id="lote-valor" type="text" placeholder="1.800,00" oninput="atualizarResumoLote();document.getElementById('lote-valor-badge').style.display='none';">
+          <span id="lote-valor-badge" style="display:none;font-size:11px;color:var(--green);margin-top:3px;">✓ Valor padrão do projeto</span>
+        </div>
+        <div class="form-group"><label>Observações</label><input id="lote-obs" type="text" placeholder="Opcional"></div>
+      </div>
+      <div class="lote-resumo" id="lote-resumo-config"></div>
+    </div>
+
+    <!-- Seleção de médicos -->
+    <div class="card">
+      <div class="card-title">2. Selecionar médicos</div>
+      <input class="busca-medico" id="lote-busca" type="text" placeholder="🔍 Buscar médico por nome..." oninput="filtrarMedicosLote()">
+      <div style="border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;">
+        <div class="sel-all-row">
+          <input type="checkbox" class="medico-check" id="lote-sel-all" onchange="selecionarTodosLote(this.checked)">
+          <span>Selecionar todos</span>
+          <span id="lote-contador" style="margin-left:auto;color:var(--blue);font-weight:600;">0 selecionados</span>
+        </div>
+        <div id="lote-medicos-lista" style="max-height:400px;overflow-y:auto;">
+          <div class="empty">Carregando médicos...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pré-visualização e confirmação -->
+    <div class="card" id="lote-preview-card" style="display:none;">
+      <div class="card-title">3. Confirmar lançamentos</div>
+      <div class="lote-erros" id="lote-erros"></div>
+      <div id="lote-preview-tabela"></div>
+      <div style="display:flex;gap:8px;margin-top:14px;align-items:center;">
+        <button class="btn btn-primary" id="lote-confirmar-btn" onclick="confirmarLote()">✓ Confirmar e registrar</button>
+        <button class="btn btn-ghost" onclick="limparLote()">Cancelar</button>
+        <span id="lote-total-label" style="font-size:13px;color:var(--text2);margin-left:auto;"></span>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:8px;">
+      <button class="btn btn-success" id="lote-gerar-btn" onclick="gerarPreviewLote()">Gerar pré-visualização →</button>
+    </div>
+  </div>
+
+  <!-- PLANTÕES ABERTOS / CANDIDATURAS -->
+  <div id="tab-candidaturas" class="section">
+    <div class="page-title">Plantões Abertos</div>
+    <div class="page-sub">Gerencie vagas e candidaturas dos médicos</div>
+
+    <!-- Filtros -->
+    <div class="card" style="margin-bottom:12px;padding:12px 16px;">
+      <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;">
+        <div class="form-group" style="flex:1;min-width:180px;"><label>Projeto</label><select id="cand-proj" onchange="carregarCandidaturas()"><option value="">Todos</option></select></div>
+        <div class="form-group"><label>De</label><input type="date" id="cand-d1" onchange="carregarCandidaturas()"></div>
+        <div class="form-group"><label>Até</label><input type="date" id="cand-d2" onchange="carregarCandidaturas()"></div>
+        <div style="display:flex;gap:6px;align-items:flex-end;">
+          <button class="btn btn-primary btn-sm" id="filtro-todos" onclick="filtrarStatusCand('todos',this)">Todos</button>
+          <button class="btn btn-ghost btn-sm" id="filtro-pendentes" onclick="filtrarStatusCand('pendente',this)">⏳ Pendentes</button>
+          <button class="btn btn-ghost btn-sm" id="filtro-abertos" onclick="filtrarStatusCand('aberto',this)">📢 Abertos</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="cand-lista"><div class="empty">Carregando...</div></div>
+  </div>
+
+  <!-- CHECK-INS -->
+  <div id="tab-checkins" class="section">
+    <div class="page-title">Controle de Presença</div>
+    <div class="page-sub">Plantões escalados × check-ins realizados</div>
+
+    <!-- SUB-ABAS -->
+    <div style="display:flex;gap:6px;margin-bottom:16px;">
+      <button class="btn btn-primary" id="ci-tab-presenca" onclick="switchCiTab('presenca')">📋 Presença do dia</button>
+      <button class="btn btn-ghost" id="ci-tab-historico" onclick="switchCiTab('historico')">🕐 Histórico de check-ins</button>
+    </div>
+
+    <!-- ABA PRESENÇA -->
+    <div id="ci-presenca">
+      <div class="card">
+        <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;">
+          <div class="form-group" style="flex:1;min-width:150px;"><label>Projeto</label><select id="ci-proj-p" onchange="carregarPresenca()"><option value="">Todos os projetos</option></select></div>
+          <div class="form-group"><label>Data</label><input type="date" id="ci-data-p" onchange="carregarPresenca()"></div>
+          <button class="btn btn-ghost btn-sm" onclick="document.getElementById('ci-data-p').value=hoje_str();carregarPresenca()">Hoje</button>
+        </div>
+      </div>
+      <div id="presenca-resumo" style="display:none;margin-bottom:12px;"></div>
+      <div class="card"><div class="card-title">Plantões escalados</div><div id="presenca-lista"><div class="empty">Selecione uma data para ver os plantões</div></div></div>
+    </div>
+
+    <!-- ABA HISTÓRICO -->
+    <div id="ci-historico" style="display:none;">
+      <div class="card">
+        <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;">
+          <div class="form-group" style="flex:1;min-width:150px;"><label>Projeto</label><select id="ci-proj" onchange="carregarCheckins()"><option value="">Todos</option></select></div>
+          <div class="form-group" style="flex:1;min-width:150px;"><label>Médico</label><select id="ci-med" onchange="carregarCheckins()"><option value="">Todos</option></select></div>
+          <div class="form-group"><label>De</label><input type="date" id="ci-d1" onchange="carregarCheckins()"></div>
+          <div class="form-group"><label>Até</label><input type="date" id="ci-d2" onchange="carregarCheckins()"></div>
+        </div>
+      </div>
+      <div class="card"><div class="card-title">Registros de check-in</div><div id="checkins-lista"><div class="empty">Carregando...</div></div></div>
+    </div>
+  </div>
+
+  <!-- RELATÓRIOS -->
+  <div id="tab-relatorios" class="section">
+    <div class="page-title">Relatórios</div>
+    <div class="page-sub">Selecione o tipo e os filtros desejados</div>
+
+    <!-- Tipo de relatório -->
+    <div class="card" style="margin-bottom:12px;">
+      <div class="card-title">Tipo de relatório</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;" id="rel-tipo-grid">
+        <button type="button" class="rel-tipo-btn active" id="rt-detalhado" onclick="selecionarRelTipo('detalhado',this)">📊 Detalhado por projeto</button>
+        <button type="button" class="rel-tipo-btn" id="rt-resumo" onclick="selecionarRelTipo('resumo',this)">📋 Plantões por projeto</button>
+        <button type="button" class="rel-tipo-btn" id="rt-horas" onclick="selecionarRelTipo('horas',this)">⏱️ Horas por profissional</button>
+        <button type="button" class="rel-tipo-btn" id="rt-faltas" onclick="selecionarRelTipo('faltas',this)">❌ Faltas</button>
+        <button type="button" class="rel-tipo-btn" id="rt-atrasos" onclick="selecionarRelTipo('atrasos',this)">⚠️ Atrasos</button>
+        <button type="button" class="rel-tipo-btn" id="rt-checkins" onclick="selecionarRelTipo('checkins',this)">📍 Check-ins fora da tolerância</button>
+        <button type="button" class="rel-tipo-btn" id="rt-medicos" onclick="selecionarRelTipo('medicos',this)">👨‍⚕️ Médicos cadastrados</button>
+        <button type="button" class="rel-tipo-btn" id="rt-risco" onclick="selecionarRelTipo('risco',this)" style="border-color:var(--red);color:var(--red);">🚨 Risco operacional</button>
+      </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="card" style="margin-bottom:12px;">
+      <div class="form-row four">
+        <div class="form-group"><label>Projeto</label><select id="rp"><option value="">Todos</option></select></div>
+        <div class="form-group"><label>Médico</label><select id="rm"><option value="">Todos</option></select></div>
+        <div class="form-group"><label>De</label><input type="date" id="rd1"></div>
+        <div class="form-group"><label>Até</label><input type="date" id="rd2"></div>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:8px;">
+        <button class="btn btn-primary" onclick="gerarRelatorio()">🔍 Gerar relatório</button>
+        <button class="btn btn-success" onclick="exportarRelXLSX()">⬇ Excel</button>
+        <button class="btn btn-amber" onclick="exportarRelPDF()">⬇ PDF</button>
+      </div>
+    </div>
+    <div id="rel-resultado"></div>
+  </div>
+
+
+  <!-- CALENDÁRIO -->
+  <div id="tab-calendario" class="section">
+    <div class="page-title">Calendário</div>
+    <div class="page-sub">Escala mensal e semanal por projeto</div>
+
+    <!-- Sub-abas -->
+    <div style="display:flex;gap:6px;margin-bottom:16px;">
+      <button class="btn btn-primary" id="cal-tab-mensal" onclick="switchCalTab('mensal')">📅 Mensal</button>
+      <button class="btn btn-ghost" id="cal-tab-semanal" onclick="switchCalTab('semanal')">📋 Semanal</button>
+    </div>
+
+    <!-- FILTROS compartilhados -->
+    <div class="card" style="padding:12px 16px;margin-bottom:12px;">
+      <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;">
+        <div class="form-group" style="flex:1;min-width:180px;"><label>Projeto</label><select id="cal-proj" onchange="renderCalAtual()"><option value="">Todos os projetos</option></select></div>
+        <div class="form-group" style="flex:1;min-width:180px;"><label>Médico</label><select id="cal-med" onchange="renderCalAtual()"><option value="">Todos os médicos</option></select></div>
+        <button class="btn btn-ghost btn-sm" onclick="limparFiltrosCal()">Limpar</button>
+      </div>
+    </div>
+
+    <!-- VIEW MENSAL -->
+    <div id="cal-mensal">
+      <div class="card">
+        <div class="cal-header">
+          <div style="display:flex;align-items:center;gap:12px;">
+            <button class="btn btn-ghost btn-sm" onclick="navCal(-1)">‹ Anterior</button>
+            <div class="cal-title" id="cal-label"></div>
+            <button class="btn btn-ghost btn-sm" onclick="navCal(1)">Próximo ›</button>
+          </div>
+          <div class="cal-legend">
+            <span><span class="cal-legend-dot" style="background:#e8f5eb;"></span>Diurno</span>
+            <span><span class="cal-legend-dot" style="background:#f0eeff;"></span>Noturno</span>
+            <span><span class="cal-legend-dot" style="background:#fdf3e0;"></span>24h</span>
+          </div>
+        </div>
+        <div id="cal-filtro-badge" style="font-size:12px;color:var(--blue);margin-bottom:8px;display:none;"></div>
+        <div class="cal-grid">
+          <div class="cal-dow">Dom</div><div class="cal-dow">Seg</div><div class="cal-dow">Ter</div>
+          <div class="cal-dow">Qua</div><div class="cal-dow">Qui</div><div class="cal-dow">Sex</div><div class="cal-dow">Sáb</div>
+        </div>
+        <div class="cal-grid" id="cal-grid" style="margin-top:4px;"></div>
+      </div>
+      <div class="card" id="cal-detail" style="display:none;">
+        <div class="card-title" id="cal-detail-title"></div>
+        <div id="cal-detail-body"></div>
+      </div>
+    </div>
+
+    <!-- VIEW SEMANAL -->
+    <div id="cal-semanal" style="display:none;">
+      <div class="card">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <button class="btn btn-ghost btn-sm" onclick="navSemana(-1)">‹ Anterior</button>
+            <div style="font-size:15px;font-weight:600;" id="sem-label"></div>
+            <button class="btn btn-ghost btn-sm" onclick="navSemana(1)">Próxima ›</button>
+            <button class="btn btn-ghost btn-sm" onclick="irSemanaAtual()">Hoje</button>
+          </div>
+          <div style="display:flex;gap:8px;">
+            <button class="btn btn-success" onclick="copiarSemana()" title="Copia todos os plantões desta semana para a próxima">📋 Copiar semana</button>
+          </div>
+        </div>
+        <div id="sem-grid" style="overflow-x:auto;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- IMPORTAR -->
+  <div id="tab-importar" class="section">
+    <div class="page-title">Importar CSV</div>
+    <div class="page-sub">Carga em lote de médicos, projetos e lançamentos</div>
+    <div style="display:flex;gap:6px;margin-bottom:16px;">
+      <button class="btn btn-primary" id="imp-tab-med" onclick="switchImpTab('med')">Médicos</button>
+      <button class="btn btn-ghost" id="imp-tab-proj" onclick="switchImpTab('proj')">Projetos</button>
+      <button class="btn btn-ghost" id="imp-tab-tipos" onclick="switchImpTab('tipos')">Tipos de plantão</button>
+      <button class="btn btn-ghost" id="imp-tab-lanc" onclick="switchImpTab('lanc')">Lançamentos</button>
+    </div>
+
+    <!-- MÉDICOS -->
+    <div id="imp-med">
+      <div class="card">
+        <div class="card-title">Importar médicos</div>
+        <p style="font-size:13px;color:var(--text2);margin-bottom:14px;">Colunas: <code>nome · crm · especialidade · valor_hora · tipo · cpf</code><br><span style="font-size:12px;color:var(--text3);">Obrigatórias: nome, crm</span></p>
+        <div class="upload-zone" onclick="document.getElementById('file-upload-med').click()">
+          <input type="file" id="file-upload-med" accept=".csv" onchange="handleUploadMed(this)" style="display:none;">
+          <div style="font-size:28px;margin-bottom:8px;">📂</div>
+          <div style="font-size:14px;font-weight:600;color:var(--text);">Clique para selecionar CSV de médicos</div>
+          <div style="font-size:12px;color:var(--text3);margin-top:4px;">Separador ; ou , · UTF-8 ou ANSI</div>
+        </div>
+        <div id="import-preview-med" style="margin-top:14px;"></div>
+      </div>
+    </div>
+
+    <!-- PROJETOS -->
+    <div id="imp-proj" style="display:none;">
+      <div class="card">
+        <div class="card-title">Importar projetos</div>
+        <p style="font-size:13px;color:var(--text2);margin-bottom:14px;">Colunas: <code>nome · codigo_cc · contratante · status · cnpj · contrato</code></p>
+        <div class="upload-zone" onclick="document.getElementById('file-upload-proj').click()">
+          <input type="file" id="file-upload-proj" accept=".csv" onchange="handleUploadProj(this)" style="display:none;">
+          <div style="font-size:28px;margin-bottom:8px;">📂</div>
+          <div style="font-size:14px;font-weight:600;color:var(--text);">Clique para selecionar CSV de projetos</div>
+          <div style="font-size:12px;color:var(--text3);margin-top:4px;">Separador ; ou , · UTF-8 ou ANSI</div>
+        </div>
+        <div id="import-preview-proj" style="margin-top:14px;"></div>
+      </div>
+    </div>
+
+    <!-- TIPOS DE PLANTÃO -->
+    <div id="imp-tipos" style="display:none;">
+      <div class="card">
+        <div class="card-title">Importar tipos de plantão</div>
+        <p style="font-size:13px;color:var(--text2);margin-bottom:14px;">Colunas: <code>projeto · nome · hora_ini · hora_fim · valor · setor</code></p>
+        <div class="upload-area" onclick="document.getElementById('file-upload-tipos').click()">
+          <div>📎 Clique para selecionar arquivo CSV ou Excel</div>
+          <input type="file" id="file-upload-tipos" accept=".csv,.xlsx,.xls" style="display:none;" onchange="handleUploadTipos(this)">
+        </div>
+        <div style="margin-top:10px;">
+          <button class="btn btn-ghost btn-sm" onclick="downloadModeloTipos()">⬇ Baixar modelo Excel</button>
+        </div>
+        <div id="import-preview-tipos"></div>
+      </div>
+    </div>
+
+    <!-- LANÇAMENTOS -->
+    <div id="imp-lanc" style="display:none;">
+      <div class="card">
+        <div class="card-title">Importar lançamentos em massa</div>
+        <p style="font-size:13px;color:var(--text2);margin-bottom:6px;">Colunas obrigatórias: <code>medico · projeto · data · hora_ini · hora_fim · valor_total</code></p>
+        <p style="font-size:12px;color:var(--text3);margin-bottom:14px;">Opcionais: <code>tipo · setor · obs · codigo_totvs</code> — O médico e projeto são identificados pelo <strong>nome</strong> (deve estar cadastrado no sistema)</p>
+        <div class="upload-zone" onclick="document.getElementById('file-upload-lanc').click()">
+          <input type="file" id="file-upload-lanc" accept=".csv" onchange="handleUploadLanc(this)" style="display:none;">
+          <div style="font-size:28px;margin-bottom:8px;">📂</div>
+          <div style="font-size:14px;font-weight:600;color:var(--text);">Clique para selecionar CSV de lançamentos</div>
+          <div style="font-size:12px;color:var(--text3);margin-top:4px;">Separador ; ou , · UTF-8 ou ANSI</div>
+        </div>
+        <div id="import-preview-lanc" style="margin-top:14px;"></div>
+      </div>
+    </div>
+
+    <!-- MODELO -->
+    <div class="card">
+      <div class="card-title">Modelos Excel</div>
+      <p style="font-size:13px;color:var(--text2);margin-bottom:12px;">Baixe o modelo com abas Médicos, Projetos e <strong>Lançamentos</strong> já formatadas.</p>
+      <button class="btn btn-success" onclick="downloadModeloExcel()">⬇ Baixar modelo Excel (.xlsx)</button>
+    </div>
+  </div>
+
+  <!-- AGENDA POR MÉDICO -->
+  <div id="tab-lotemed" class="section">
+    <div class="page-title">Agenda por médico</div>
+    <div class="page-sub">Selecione os dias do mês para um profissional e registre em lote</div>
+
+    <!-- Passo 1: Médico e configurações -->
+    <div class="card">
+      <div class="card-title">1. Selecionar médico e configurar plantão</div>
+      <div class="form-row">
+        <div class="form-group"><label>Médico</label><select id="agd-med" onchange="preencherValorPadraoAgenda()"><option value="">Selecione...</option></select></div>
+        <div class="form-group"><label>Projeto</label><select id="agd-proj" onchange="preencherValorPadraoAgenda()"><option value="">Selecione...</option></select></div>
+      </div>
+      <div class="form-row four">
+        <div class="form-group"><label>Início</label><input id="agd-ini" type="time" value="07:00" oninput="atualizarDuracaoAgenda()"></div>
+        <div class="form-group"><label>Fim</label><input id="agd-fim" type="time" value="19:00" oninput="atualizarDuracaoAgenda()"></div>
+        <div class="form-group"><label>Tipo</label>
+          <select id="agd-tipo" onchange="preencherValorPadraoAgenda()">
+            <option>Diurno 12h</option><option>Noturno 12h</option><option>24h</option><option>Fim de Semana Diurno</option><option>Fim de Semana Noturno</option><option>Rotina Manhã</option><option>Rotina Tarde</option><option>Sobreaviso</option><option>Plantão 4 Semanas</option><option>Plantão 5 Semanas</option><option>Personalizado</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Valor por plantão (R$) <span id="agd-dur-label" style="font-weight:400;color:var(--text3);"></span></label>
+          <input id="agd-valor" type="text" placeholder="1.800,00" oninput="atualizarResumoAgenda()">
+          <span id="agd-valor-badge" style="display:none;font-size:11px;color:var(--green);margin-top:3px;">✓ Valor padrão do projeto</span>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Setor</label><input id="agd-setor" type="text" placeholder="Ex: Emergência, UTI"></div>
+        <div class="form-group"><label>Observações</label><input id="agd-obs" type="text" placeholder="Opcional"></div>
+      </div>
+    </div>
+
+    <!-- Passo 2: Mini-calendário -->
+    <div class="card">
+      <div class="card-title">2. Selecionar dias do plantão</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <button class="btn btn-ghost btn-sm" onclick="navAgdCal(-1)">‹</button>
+          <span id="agd-cal-label" style="font-size:15px;font-weight:600;"></span>
+          <button class="btn btn-ghost btn-sm" onclick="navAgdCal(1)">›</button>
+        </div>
+        <button class="btn btn-ghost btn-sm" onclick="limparDiasAgenda()">Limpar seleção</button>
+      </div>
+      <div class="mini-cal-grid">
+        <div class="mini-cal-dow">Dom</div><div class="mini-cal-dow">Seg</div><div class="mini-cal-dow">Ter</div>
+        <div class="mini-cal-dow">Qua</div><div class="mini-cal-dow">Qui</div><div class="mini-cal-dow">Sex</div><div class="mini-cal-dow">Sáb</div>
+      </div>
+      <div class="mini-cal-grid" id="agd-cal-grid"></div>
+
+      <!-- Dias selecionados -->
+      <div style="margin-top:14px;border-top:1px solid var(--border);padding-top:12px;">
+        <div style="font-size:12px;font-weight:600;color:var(--text2);margin-bottom:8px;">Dias selecionados: <span id="agd-qtd-dias" style="color:var(--blue);">0</span></div>
+        <div id="agd-chips"></div>
+      </div>
+    </div>
+
+    <!-- Resumo e confirmação -->
+    <div class="card" id="agd-preview-card" style="display:none;">
+      <div class="card-title">3. Confirmar lançamentos</div>
+      <div id="agd-preview-tabela"></div>
+      <div style="display:flex;gap:8px;margin-top:14px;align-items:center;">
+        <button class="btn btn-primary" id="agd-confirmar-btn" onclick="confirmarAgenda()">✓ Confirmar e registrar</button>
+        <button class="btn btn-ghost" onclick="limparAgenda()">Cancelar</button>
+        <span id="agd-total-label" style="font-size:13px;color:var(--text2);margin-left:auto;"></span>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:8px;">
+      <button class="btn btn-success" onclick="gerarPreviewAgenda()">Gerar pré-visualização →</button>
+    </div>
+  </div>
+
+  <!-- ESCALA POR PROFISSIONAL -->
+  <div id="tab-escala" class="section">
+    <div class="page-title">Escala por Profissional</div>
+    <div class="page-sub">Visão semanal de todos os médicos escalados</div>
+
+    <div class="card" style="padding:12px 16px;margin-bottom:12px;">
+      <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;">
+        <div class="form-group" style="flex:1;min-width:180px;"><label>Projeto</label><select id="esc-proj" onchange="renderEscala()"><option value="">Todos os projetos</option></select></div>
+        <div class="form-group" style="min-width:200px;"><label>Buscar médico</label><input id="esc-busca" type="text" placeholder="Nome do médico..." oninput="renderEscala()" style="width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:var(--radius);font-size:13px;"></div>
+        <div style="display:flex;gap:6px;align-items:flex-end;padding-bottom:1px;">
+          <button class="btn btn-ghost btn-sm" onclick="navEscala(-1)">‹ Anterior</button>
+          <span id="esc-label" style="font-size:13px;font-weight:600;white-space:nowrap;line-height:2.2;"></span>
+          <button class="btn btn-ghost btn-sm" onclick="navEscala(1)">Próxima ›</button>
+          <button class="btn btn-ghost btn-sm" onclick="escOffset=0;renderEscala()">Hoje</button>
+        </div>
+      </div>
+      <div style="display:flex;gap:12px;margin-top:10px;font-size:11px;flex-wrap:wrap;">
+        <span><span style="display:inline-block;width:10px;height:10px;background:var(--green-bg);border-left:3px solid var(--green);border-radius:2px;margin-right:4px;"></span>Diurno</span>
+        <span><span style="display:inline-block;width:10px;height:10px;background:var(--purple-bg);border-left:3px solid var(--purple);border-radius:2px;margin-right:4px;"></span>Noturno</span>
+        <span><span style="display:inline-block;width:10px;height:10px;background:var(--amber-bg);border-left:3px solid var(--amber);border-radius:2px;margin-right:4px;"></span>24h</span>
+        <span><span style="display:inline-block;width:10px;height:10px;background:#fce4ec;border-left:3px solid #c2185b;border-radius:2px;margin-right:4px;"></span>Fim de semana</span>
+        <span style="margin-left:8px;color:var(--text3);">✅ = confirmado pelo médico</span>
+      </div>
+    </div>
+
+    <div style="overflow-x:auto;">
+      <div id="escala-grid"></div>
+    </div>
+  </div>
+
+  <!-- Tooltip global -->
+  <div class="tooltip" id="tooltip-escala"></div>
+
+  <!-- FINANCEIRO -->
+  <div id="tab-financeiro" class="section">
+    <div class="page-title">Financeiro</div>
+    <div class="page-sub">Fechamentos, remessas e controle de pagamentos</div>
+
+    <!-- Sub-abas -->
+    <div style="display:flex;gap:0;border-bottom:2px solid var(--border);margin-bottom:16px;">
+      <button id="fin-tab-lista" class="btn btn-ghost" onclick="finShowTab('lista',this)" style="border-radius:var(--radius) var(--radius) 0 0;border-bottom:2px solid var(--blue);color:var(--blue);font-weight:600;">📋 Fechamentos</button>
+      <button id="fin-tab-novo" class="btn btn-ghost" onclick="finShowTab('novo',this)" style="border-radius:var(--radius) var(--radius) 0 0;">+ Novo fechamento</button>
+    </div>
+
+    <!-- Lista de fechamentos -->
+    <div id="fin-page-lista">
+      <div id="fin-lista"><div class="empty">Carregando...</div></div>
+    </div>
+
+    <!-- Novo fechamento -->
+    <div id="fin-page-novo" style="display:none;">
+      <div class="card" style="max-width:600px;">
+        <div class="card-title">Criar novo fechamento</div>
+        <div class="form-group"><label>Nome do fechamento</label><input id="fin-nome" type="text" placeholder="Ex: Hospital Bonsucesso — Abril 2026"></div>
+        <div class="form-row">
+          <div class="form-group"><label>Projeto</label><select id="fin-proj"><option value="">Todos os projetos</option></select></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>Data início</label><input id="fin-d1" type="date"></div>
+          <div class="form-group"><label>Data fim</label><input id="fin-d2" type="date"></div>
+        </div>
+        <div class="form-group"><label>Observações</label><input id="fin-obs" type="text" placeholder="Opcional"></div>
+        <div style="margin-top:12px;display:flex;gap:8px;">
+          <button class="btn btn-primary" onclick="criarFechamento()">✓ Criar fechamento</button>
+          <button class="btn btn-ghost" onclick="finShowTab('lista',document.getElementById('fin-tab-lista'))">Cancelar</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- EXPORTAR TOTVS -->
+  <div id="tab-exportar" class="section">
+    <div class="page-title">Exportar TOTVS</div>
+    <div class="page-sub">Relatório agrupado em CSV, XLSX ou PDF</div>
+    <div class="card">
+      <div class="card-title">Filtros</div>
+      <div class="form-row four">
+        <div class="form-group"><label>Projeto</label><select id="ex-proj"><option value="">Todos os projetos</option></select></div>
+        <div class="form-group"><label>Médico</label><select id="ex-med"><option value="">Todos os médicos</option></select></div>
+        <div class="form-group"><label>Período — De</label><input id="ex-d1" type="date"></div>
+        <div class="form-group"><label>Período — Até</label><input id="ex-d2" type="date"></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Layout de exportação</div>
+      <div class="layout-opts">
+        <div class="layout-opt selected" id="lay-1" onclick="selectLayout(1)"><div class="layout-opt-title">RH — Folha de pagamento</div><div class="layout-opt-desc">Por CPF e competência</div></div>
+        <div class="layout-opt" id="lay-2" onclick="selectLayout(2)"><div class="layout-opt-title">Financeiro — Contas a pagar</div><div class="layout-opt-desc">Por fornecedor e centro de custo</div></div>
+        <div class="layout-opt" id="lay-3" onclick="selectLayout(3)"><div class="layout-opt-title">Obras — Apontamento de horas</div><div class="layout-opt-desc">Por funcionário e CC</div></div>
+        <div class="layout-opt" id="lay-4" onclick="selectLayout(4)"><div class="layout-opt-title">Personalizado (completo)</div><div class="layout-opt-desc">Todas as colunas disponíveis</div></div>
+      </div>
+      <div id="layout-preview" style="font-size:12px;color:var(--text2);padding:8px 10px;background:var(--bg3);border-radius:var(--radius);margin-bottom:14px;font-family:monospace;"></div>
+      <hr>
+      <div style="font-size:12px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px;">Formato de exportação</div>
+      <div class="export-btns">
+        <button class="btn btn-success" onclick="exportarXLSX()">⬇ Excel (XLSX)</button>
+        <button class="btn btn-primary" onclick="exportarCSV()">⬇ CSV</button>
+        <button class="btn btn-amber" onclick="exportarPDF()">⬇ PDF</button>
+        <button class="btn btn-ghost" onclick="previewExport()">Pré-visualizar</button>
+      </div>
+    </div>
+    <div id="export-preview-area"></div>
+  </div>
+
+</div><!-- /main -->
+
+<!-- MODAL LINK MÉDICO -->
+<div class="modal-overlay" id="modal-link" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title">Link de acesso — App do médico</div><button class="modal-close" onclick="document.getElementById('modal-link').classList.remove('open')">✕</button></div>
+    <p style="font-size:13px;color:var(--text2);margin-bottom:12px;">Envie este link por WhatsApp para o médico. Ele abre o app direto no celular, sem precisar de senha.</p>
+    <div class="link-box" id="link-medico"></div>
+    <div style="margin-top:12px;display:flex;gap:8px;">
+      <button class="btn btn-primary" onclick="copiarLink()">📋 Copiar link</button>
+      <button class="btn btn-success" onclick="abrirWhatsapp()">📱 Enviar WhatsApp</button>
+    </div>
+    <div class="modal-footer"><button class="btn btn-ghost" onclick="document.getElementById('modal-link').classList.remove('open')">Fechar</button></div>
+  </div>
+</div>
+
+<!-- MODAL LANÇAMENTO RÁPIDO — Escala Semanal -->
+<div class="modal-rapido-overlay" id="modal-rapido" onclick="if(event.target===this)fecharModalRapido()" onmousedown="event.stopPropagation()">
+  <div class="modal-rapido">
+    <div class="modal-rapido-header">
+      <div>
+        <div class="modal-rapido-titulo">+ Adicionar plantão</div>
+        <div class="modal-rapido-data" id="mr-data-label"></div>
+      </div>
+      <button class="modal-rapido-close" onclick="fecharModalRapido()">✕</button>
+    </div>
+    <div class="modal-rapido-body">
+      <div class="mr-sucesso" id="mr-sucesso"></div>
+      <div class="form-group" style="margin-bottom:10px;">
+        <label>Médicos <span id="mr-med-count" style="color:var(--blue);font-weight:600;font-size:11px;"></span></label>
+        <div style="display:flex;gap:6px;margin-bottom:6px;">
+          <input type="text" id="mr-med-busca" placeholder="🔍 Buscar médico..." oninput="filtrarMedMR()" style="flex:1;padding:7px 10px;border:1px solid var(--border);border-radius:var(--radius);font-size:13px;">
+          <select id="mr-esp-filtro" onchange="filtrarMedMR()" style="padding:7px 10px;border:1px solid var(--border);border-radius:var(--radius);font-size:12px;max-width:160px;">
+            <option value="">Todas especialidades</option>
+            <option value="Clínica Geral / Emergência">Clínica Geral / Emergência</option>
+<option value="Anestesiologia">Anestesiologia</option>
+<option value="Cardiologia">Cardiologia</option>
+<option value="Cirurgia Geral">Cirurgia Geral</option>
+<option value="Cirurgia Vascular">Cirurgia Vascular</option>
+<option value="Dermatologia">Dermatologia</option>
+<option value="Endocrinologia">Endocrinologia</option>
+<option value="Gastroenterologia">Gastroenterologia</option>
+<option value="Geriatria">Geriatria</option>
+<option value="Ginecologia e Obstetrícia">Ginecologia e Obstetrícia</option>
+<option value="Hematologia">Hematologia</option>
+<option value="Infectologia">Infectologia</option>
+<option value="Medicina Intensiva (UTI)">Medicina Intensiva (UTI)</option>
+<option value="Medicina do Trabalho">Medicina do Trabalho</option>
+<option value="Nefrologia">Nefrologia</option>
+<option value="Neurologia">Neurologia</option>
+<option value="Neurocirurgia">Neurocirurgia</option>
+<option value="Oftalmologia">Oftalmologia</option>
+<option value="Oncologia">Oncologia</option>
+<option value="Ortopedia e Traumatologia">Ortopedia e Traumatologia</option>
+<option value="Otorrinolaringologia">Otorrinolaringologia</option>
+<option value="Pediatria">Pediatria</option>
+<option value="Pneumologia">Pneumologia</option>
+<option value="Psiquiatria">Psiquiatria</option>
+<option value="Radiologia">Radiologia</option>
+<option value="Reumatologia">Reumatologia</option>
+<option value="Urologia">Urologia</option>
+          </select>
+        </div>
+        <div id="mr-med-lista" style="max-height:180px;overflow-y:auto;border:1px solid var(--border);border-radius:var(--radius);"></div>
+      </div>
+      <div class="form-group" style="margin-bottom:10px;">
+        <label>Projeto</label>
+        <select id="mr-proj" onchange="atualizarValorRapido();atualizarPreviewRapido()">
+          <option value="">Selecione...</option>
+        </select>
+      </div>
+      <!-- Tipo de plantão — determina duração e horário automaticamente -->
+      <div class="form-group" style="margin-bottom:10px;">
+        <label>Tipo de plantão</label>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:6px;" id="mr-tipo-grid">
+          <!-- Select de tipos cadastrados (aparece quando há tipos para o projeto) -->
+          <div id="mr-tipos-select-wrap" style="display:none;grid-column:1/-1;margin-bottom:6px;">
+            <select id="mr-tipo-select" onchange="selecionarTipoCadastrado()"
+              style="width:100%;padding:10px 12px;border:2px solid var(--blue);border-radius:var(--radius);font-size:14px;font-weight:500;background:#fff;cursor:pointer;">
+              <option value="">— Selecione o tipo de plantão —</option>
+            </select>
+          </div>
+          <!-- Botões padrão (fallback quando não há tipos cadastrados) -->
+          <div id="mr-tipos-btns-wrap" style="display:contents;">
+            <button type="button" id="mr-btn-diurno" data-tipo="Diurno 12h" data-horas="12" data-ini="07:00" onclick="selecionarTipoRapido(this)">☀️ Diurno 12h</button>
+            <button type="button" id="mr-btn-noturno" data-tipo="Noturno 12h" data-horas="12" data-ini="19:00" onclick="selecionarTipoRapido(this)">🌙 Noturno 12h</button>
+            <button type="button" id="mr-btn-24h" data-tipo="24h" data-horas="24" data-ini="07:00" onclick="selecionarTipoRapido(this)">🔄 Plantão 24h</button>
+            <button type="button" id="mr-btn-custom" data-tipo="Personalizado" data-horas="0" data-ini="" onclick="selecionarTipoRapido(this)">✏️ Personalizado</button>
+          </div>
+        </div>
+        <input type="hidden" id="mr-tipo" value="Diurno 12h">
+      </div>
+      <!-- Personalizado: início livre + duração em horas -->
+      <div id="mr-horas-custom-row" style="display:none;margin-bottom:10px;">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Horário de início</label>
+            <input id="mr-ini" type="time" value="07:00" oninput="atualizarPreviewRapido()">
+          </div>
+          <div class="form-group">
+            <label>Duração (horas)</label>
+            <input id="mr-horas-custom" type="number" min="1" max="48" placeholder="Ex: 6" oninput="atualizarPreviewRapido()">
+          </div>
+        </div>
+      </div>
+      <!-- Horário fixo (mostrado para tipos com horário predefinido) -->
+      <div id="mr-ini-fixo-row" style="margin-bottom:10px;">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Horário de início</label>
+            <input id="mr-ini-fixo" type="time" value="07:00" disabled style="background:var(--bg3);color:var(--text2);">
+            <span style="font-size:11px;color:var(--text3);margin-top:3px;display:block;">⚑ Horário fixo para este tipo</span>
+          </div>
+          <div class="form-group">
+            <label>Setor</label>
+            <input id="mr-setor" type="text" placeholder="Emergência, UTI...">
+          </div>
+        </div>
+      </div>
+      <!-- Setor para personalizado -->
+      <div id="mr-setor-custom-row" style="display:none;margin-bottom:10px;">
+        <div class="form-group">
+          <label>Setor</label>
+          <input id="mr-setor-custom" type="text" placeholder="Emergência, UTI...">
+        </div>
+      </div>
+      <!-- Preview calculado -->
+      <div id="mr-horario-calc" style="background:var(--blue-light);border:1px solid #a0c4f0;border-radius:var(--radius);padding:8px 12px;font-size:12px;color:var(--blue);margin-bottom:10px;display:none;">
+        <span id="mr-horario-calc-txt"></span>
+      </div>
+      <div class="form-group" style="margin-bottom:10px;">
+        <label>Valor total (R$) <span id="mr-dur-label" style="font-weight:400;color:var(--text3);font-size:11px;"></span></label>
+        <input id="mr-valor" type="text" placeholder="1.800,00" oninput="atualizarPreviewRapido()">
+        <span id="mr-valor-badge" style="display:none;font-size:11px;color:var(--green);margin-top:3px;">✓ Valor padrão do projeto</span>
+      </div>
+      <div class="form-group" style="margin-bottom:10px;">
+        <label>Observações</label>
+        <input id="mr-obs" type="text" placeholder="Opcional">
+      </div>
+      <!-- Plantão aberto -->
+      <div style="border-top:1px solid var(--border);padding-top:10px;margin-top:4px;">
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;">
+          <input type="checkbox" id="mr-aberto" onchange="toggleAberto()" style="width:16px;height:16px;accent-color:var(--amber);">
+          <span>📢 Publicar como plantão aberto (sem médico vinculado)</span>
+        </label>
+        <div id="mr-aberto-opts" style="display:none;margin-top:10px;padding:10px;background:var(--amber-bg);border-radius:var(--radius);border:1px solid #f0c060;">
+          <div class="form-group">
+            <label style="color:var(--amber);">Número de vagas</label>
+            <input id="mr-vagas" type="number" min="1" max="20" value="1" style="max-width:100px;padding:6px 10px;border:1px solid var(--border);border-radius:var(--radius);">
+          </div>
+          <div style="font-size:11px;color:var(--amber);margin-top:4px;">Os médicos vinculados a este projeto verão esta vaga no app e poderão se candidatar.</div>
+        </div>
+      </div>
+      <div class="mr-preview" id="mr-preview"></div>
+    </div>
+    <div class="modal-rapido-footer">
+      <button type="button" class="btn btn-primary" style="flex:1;" onclick="event.preventDefault();event.stopPropagation();salvarLancamentoRapido()">+ Registrar plantão</button>
+      <button class="btn btn-ghost" onclick="fecharModalRapido()">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MENU DE CONTEXTO — Calendário semanal -->
+<div class="ctx-menu" id="ctx-menu">
+  <div class="ctx-item" id="ctx-copiar" onclick="ctxCopiar()">📋 Copiar plantão</div>
+  <div class="ctx-sep"></div>
+  <div class="ctx-item" id="ctx-colar" onclick="ctxColar()" style="display:none;">📌 Colar aqui</div>
+  <div class="ctx-item" id="ctx-colar-dia" style="font-size:11px;color:var(--text3);padding:4px 14px;cursor:default;display:none;"></div>
+  <div class="ctx-sep" id="ctx-sep-colar" style="display:none;"></div>
+  <div class="ctx-item" onclick="ctxNovoPlantao()">+ Novo plantão</div>
+  <div class="ctx-item danger" id="ctx-remover" onclick="ctxRemover()" style="display:none;">🗑️ Remover plantão</div>
+</div>
+
+<!-- MODAL EDITAR MÉDICO -->
+<div class="modal-overlay" id="modal-editar-med" onclick="if(event.target===this)fecharEditarMedico()">
+  <div class="modal" style="max-width:680px;">
+    <div class="modal-header">
+      <div class="modal-title">✏️ Editar médico</div>
+      <button class="modal-close" onclick="fecharEditarMedico()">✕</button>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Nome completo</label><input id="em-nome" type="text"></div>
+      <div class="form-group"><label>E-mail</label><input id="em-email" type="email"></div>
+    </div>
+    <div class="form-row four">
+      <div class="form-group"><label>Telefone</label><input id="em-tel" type="text"></div>
+      <div class="form-group"><label>Data de nascimento</label><input id="em-nasc" type="date"></div>
+      <div class="form-group"><label>CPF</label><input id="em-cpf" type="text"></div>
+      <div class="form-group"><label>Tipo</label>
+        <select id="em-tipo">
+          <option>Plantonista</option><option>Diarista</option><option>Coordenador</option><option>Residente</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row four">
+      <div class="form-group"><label>CRM</label><input id="em-crm" type="text"></div>
+      <div class="form-group"><label>RQE</label><input id="em-rqe" type="text"></div>
+      <div class="form-group"><label>Especialidade(s)</label>
+        <div id="em-esp-check" style="display:flex;flex-wrap:wrap;gap:5px;max-height:120px;overflow-y:auto;border:1px solid var(--border);border-radius:var(--radius);padding:8px;">
+                  <label style="display:flex;align-items:center;gap:4px;font-size:11px;cursor:pointer;white-space:nowrap;">
+            <input type="checkbox" class="em-esp-chk" value="Clínica Geral / Emergência" style="accent-color:var(--blue);">Clínica Geral / Emergência
+          </label>
+          <label style="display:flex;align-items:center;gap:4px;font-size:11px;cursor:pointer;white-space:nowrap;">
+            <input type="checkbox" class="em-esp-chk" value="Anestesiologia" style="accent-color:var(--blue);">Anestesiologia
+          </label>
+          <label style="display:flex;align-items:center;gap:4px;font-size:11px;cursor:pointer;white-space:nowrap;">
+            <input type="checkbox" class="em-esp-chk" value="Cardiologia" style="accent-color:var(--blue);">Cardiologia
+          </label>
+          <label style="display:flex;align-items:center;gap:4px;font-size:11px;cursor:pointer;white-space:nowrap;">
+            <input type="checkbox" class="em-esp-chk" value="Cirurgia Geral" style="accent-color:var(--blue);">Cirurgia Geral
+          </label>
+          <label style="display:flex;align-items:center;gap:4px;font-size:11px;cursor:pointer;white-space:nowrap;">
+            <input type="checkbox" class="em-esp-chk" value="Cirurgia Vascular" style="accent-color:var(--blue);">Cirurgia Vascular
+          </label>
+          <label style="display:flex;align-items:center;gap:4px;font-size:11px;cursor:pointer;white-space:nowrap;">
+            <input type="checkbox" class="em-esp-chk" value="Dermatologia" style="accent-color:var(--blue);">Dermatologia
+          </label>
+          <label style="display:flex;align-items:center;gap:4px;font-size:11px;cursor:pointer;white-space:nowrap;">
+            <input type="checkbox" class="em-esp-chk" value="Endocrinologia" style="accent-color:var(--blue);">Endocrinologia
+          </label>
+          <label style="display:flex;align-items:center;gap:4px;font-size:11px;cursor:pointer;white-space:nowrap;">
+            <input type="checkbox" class="em-esp-chk" value="Gastroenterologia" style="accent-color:var(--blue);">Gastroenterologia
+          </label>
+          <label style="display:flex;align-items:center;gap:4px;font-size:11px;cursor:pointer;white-space:nowrap;">
+            <input type="checkbox" class="em-esp-chk" value="Geriatria" style="accent-color:var(--blue);">Geriatria
+          </label>
+          <label style="display:flex;align-items:center;gap:4px;font-size:11px;cursor:pointer;white-space:nowrap;">
+            <input type="checkbox" class="em-esp-chk" value="Ginecologia e Obstetrícia" style="accent-color:var(--blue);">Ginecologia e Obstetrícia
+          </label>
+          <label style="display:flex;align-items:center;gap:4px;font-size:11px;cursor:pointer;white-space:nowrap;">
+            <input type="checkbox" class="em-esp-chk" value="Hematologia" style="accent-color:var(--blue);">Hematologia
+          </label>
+          <label style="display:flex;align-items:center;gap:4px;font-size:11px;cursor:pointer;white-space:nowrap;">
+            <input type="checkbox" class="em-esp-chk" value="Infectologia" style="accent-color:var(--blue);">Infectologia
+          </label>
+          <label style="display:flex;align-items:center;gap:4px;font-size:11px;cursor:pointer;white-space:nowrap;">
+            <input type="checkbox" class="em-esp-chk" value="Medicina Intensiva (UTI)" style="accent-color:var(--blue);">Medicina Intensiva (UTI)
+          </label>
+          <label style="display:flex;align-items:center;gap:4px;font-size:11px;cursor:pointer;white-space:nowrap;">
+            <input type="checkbox" class="em-esp-chk" value="Medicina do Trabalho" style="accent-color:var(--blue);">Medicina do Trabalho
+          </label>
+          <label style="display:flex;align-items:center;gap:4px;font-size:11px;cursor:pointer;white-space:nowrap;">
+            <input type="checkbox" class="em-esp-chk" value="Nefrologia" style="accent-color:var(--blue);">Nefrologia
+          </label>
+          <label style="display:flex;align-items:center;gap:4px;font-size:11px;cursor:pointer;white-space:nowrap;">
+            <input type="checkbox" class="em-esp-chk" value="Neurologia" style="accent-color:var(--blue);">Neurologia
+          </label>
+          <label style="display:flex;align-items:center;gap:4px;font-size:11px;cursor:pointer;white-space:nowrap;">
+            <input type="checkbox" class="em-esp-chk" value="Neurocirurgia" style="accent-color:var(--blue);">Neurocirurgia
+          </label>
+          <label style="display:flex;align-items:center;gap:4px;font-size:11px;cursor:pointer;white-space:nowrap;">
+            <input type="checkbox" class="em-esp-chk" value="Oftalmologia" style="accent-color:var(--blue);">Oftalmologia
+          </label>
+          <label style="display:flex;align-items:center;gap:4px;font-size:11px;cursor:pointer;white-space:nowrap;">
+            <input type="checkbox" class="em-esp-chk" value="Oncologia" style="accent-color:var(--blue);">Oncologia
+          </label>
+          <label style="display:flex;align-items:center;gap:4px;font-size:11px;cursor:pointer;white-space:nowrap;">
+            <input type="checkbox" class="em-esp-chk" value="Ortopedia e Traumatologia" style="accent-color:var(--blue);">Ortopedia e Traumatologia
+          </label>
+          <label style="display:flex;align-items:center;gap:4px;font-size:11px;cursor:pointer;white-space:nowrap;">
+            <input type="checkbox" class="em-esp-chk" value="Otorrinolaringologia" style="accent-color:var(--blue);">Otorrinolaringologia
+          </label>
+          <label style="display:flex;align-items:center;gap:4px;font-size:11px;cursor:pointer;white-space:nowrap;">
+            <input type="checkbox" class="em-esp-chk" value="Pediatria" style="accent-color:var(--blue);">Pediatria
+          </label>
+          <label style="display:flex;align-items:center;gap:4px;font-size:11px;cursor:pointer;white-space:nowrap;">
+            <input type="checkbox" class="em-esp-chk" value="Pneumologia" style="accent-color:var(--blue);">Pneumologia
+          </label>
+          <label style="display:flex;align-items:center;gap:4px;font-size:11px;cursor:pointer;white-space:nowrap;">
+            <input type="checkbox" class="em-esp-chk" value="Psiquiatria" style="accent-color:var(--blue);">Psiquiatria
+          </label>
+          <label style="display:flex;align-items:center;gap:4px;font-size:11px;cursor:pointer;white-space:nowrap;">
+            <input type="checkbox" class="em-esp-chk" value="Radiologia" style="accent-color:var(--blue);">Radiologia
+          </label>
+          <label style="display:flex;align-items:center;gap:4px;font-size:11px;cursor:pointer;white-space:nowrap;">
+            <input type="checkbox" class="em-esp-chk" value="Reumatologia" style="accent-color:var(--blue);">Reumatologia
+          </label>
+          <label style="display:flex;align-items:center;gap:4px;font-size:11px;cursor:pointer;white-space:nowrap;">
+            <input type="checkbox" class="em-esp-chk" value="Urologia" style="accent-color:var(--blue);">Urologia
+          </label>
+        </div>
+      </div>
+      <input type="hidden" id="em-valor" value="0">
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Razão social <span style="font-weight:400;font-size:11px;color:var(--text3);">(se PJ)</span></label>
+        <input id="em-razao" type="text" placeholder="Empresa LTDA">
+      </div>
+      <div class="form-group">
+        <label>CNPJ <span style="font-weight:400;font-size:11px;color:var(--text3);">(se PJ)</span></label>
+        <input id="em-cnpj" type="text" placeholder="00.000.000/0000-00">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Tipo de chave PIX</label>
+        <select id="em-pix-tipo" onchange="autoPreencherPixEdit()">
+          <option value="">Sem PIX cadastrado</option>
+          <option value="CPF">CPF</option>
+          <option value="CNPJ">CNPJ</option>
+          <option value="EMAIL">E-mail</option>
+          <option value="TELEFONE">Telefone</option>
+          <option value="ALEATORIA">Chave aleatória</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Chave PIX</label>
+        <div style="position:relative;">
+          <input id="em-pix-chave" type="text" placeholder="Digite a chave PIX" oninput="validarPixEdit()" style="width:100%;padding-right:30px;">
+          <span id="em-pix-status" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);font-size:16px;display:none;"></span>
+        </div>
+        <div id="em-pix-aviso" style="display:none;font-size:11px;margin-top:4px;padding:4px 8px;border-radius:4px;"></div>
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Projetos vinculados <span style="font-weight:400;font-size:11px;color:var(--text3);">(plantões disponíveis visíveis no app)</span></label>
+      <div id="em-projetos-check" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="fecharEditarMedico()">Cancelar</button>
+      <button class="btn btn-primary" onclick="salvarEdicaoMedico()">💾 Salvar alterações</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
 
 <!-- MODAL ESQUECI SENHA ADMIN -->
 <div id="modal-esqueci-admin" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:9999;align-items:center;justify-content:center;">
@@ -1734,7 +4058,6 @@ tr:hover td{background:var(--bg3);}
 
 <div id="toast"></div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script>
 // ── HELPERS ──────────────────────────────────────────
@@ -1778,6 +4101,8 @@ const PLANOS_CONFIG = {
 };
 let _assinaturaAtiva = null; // dados da assinatura do admin logado
 let _planoConfig = null;     // config do plano atual
+
+
 
 async function fazerLogin() {
   const email = document.getElementById('l-email').value.trim();
@@ -1897,6 +4222,26 @@ function aplicarRestricoesDePlano() {
   }
 }
 
+// ── VERIFICAR SE PODE CADASTRAR (acesso pendente = somente leitura) ──
+
+
+
+
+// ESQUECI SENHA — ADMIN
+
+
+
+
+
+
+document.getElementById('modal-esqueci-admin').addEventListener('click', function(e) {
+  if (e.target === this) fecharEsqueciSenhaAdmin();
+});
+
+
+
+
+
 function fazerLogout() {
   adminLogado = null;
   document.getElementById('tela-login').style.display = 'flex';
@@ -1917,9 +4262,7 @@ async function carregarTudo() {
 }
 
 async function carregarMedicos() {
-  // Filtrar por admin se não for o admin master (sem assinatura = acesso total)
-  const filtroAdmin = adminLogado?.id && _assinaturaAtiva ? `&admin_id=eq.${adminLogado.id}` : '';
-  const data = await sb('/rest/v1/medicos?select=*&order=nome' + filtroAdmin);
+  const data = await sb('/rest/v1/medicos?select=*&order=nome');
   medicos = data || [];
   renderMedicos();
   popLancSelects();
@@ -1927,8 +4270,7 @@ async function carregarMedicos() {
 }
 
 async function carregarProjetos() {
-  const filtroAdmin = adminLogado?.id && _assinaturaAtiva ? `&admin_id=eq.${adminLogado.id}` : '';
-  const data = await sb('/rest/v1/projetos?select=*&order=nome' + filtroAdmin);
+  const data = await sb('/rest/v1/projetos?select=*&order=nome');
   projetos = data || [];
   renderProjetos();
   popLancSelects();
@@ -1937,8 +4279,7 @@ async function carregarProjetos() {
 }
 
 async function carregarLancamentos(silencioso=false) {
-  const filtroAdmin = adminLogado?.id && _assinaturaAtiva ? `&admin_id=eq.${adminLogado.id}` : '';
-  const data = await sb('/rest/v1/lancamentos?select=*,medicos(nome,crm),projetos(nome)&order=data.desc&limit=200' + filtroAdmin);
+  const data = await sb('/rest/v1/lancamentos?select=*,medicos(nome,crm),projetos(nome)&order=data.desc&limit=200');
   lancamentos = (data || []).map(l => ({
     ...l,
     medico: l.medicos?.nome || '',
@@ -1947,6 +4288,7 @@ async function carregarLancamentos(silencioso=false) {
   }));
   if (!silencioso) renderLancamentos();
   else { const el=document.getElementById('lanc-lista'); if(el&&lancamentos.length) renderLancamentos(); }
+  // Carregar nomes dos aprovados para plantões abertos
   carregarNomesAprovados();
 }
 
@@ -1998,33 +4340,7 @@ async function carregarDashboard() {
   calcularFurosDash();
 }
 
-function calcularFurosDash() {
-  const agora = new Date();
-  const em48h = new Date(agora.getTime() + 48*3600000);
-  const furos = lancamentos.filter(l => {
-    if (!l.data || !l.hora_ini) return false;
-    const ini = new Date(l.data + 'T' + l.hora_ini);
-    return ini > agora && ini <= em48h && !l.confirmado;
-  });
-  const card  = document.getElementById('dash-furos-card');
-  const count = document.getElementById('dash-furos-count');
-  const lista = document.getElementById('dash-furos-lista');
-  if (!card) return;
-  if (furos.length > 0) {
-    card.style.display = 'block';
-    count.textContent = furos.length;
-    lista.innerHTML = furos.slice(0,5).map(l => {
-      const ini = new Date(l.data + 'T' + l.hora_ini);
-      const faltaH = Math.round((ini - agora) / 3600000);
-      return '<div style="font-size:12px;padding:4px 0;border-top:1px solid #f5c0c0;display:flex;justify-content:space-between;">' +
-        '<span><strong>' + (l.medico||'—') + '</strong> · ' + (l.projeto||'—') + ' · ' + fDate(l.data) + ' ' + (l.hora_ini||'').slice(0,5) + '</span>' +
-        '<span style="color:var(--red);font-weight:600;">em ' + faltaH + 'h</span>' +
-        '</div>';
-    }).join('') + (furos.length > 5 ? '<div style="font-size:11px;color:var(--text3);margin-top:4px;">... e mais ' + (furos.length-5) + ' plantões</div>' : '');
-  } else {
-    card.style.display = 'none';
-  }
-}
+
 
 // ── MÉDICOS ───────────────────────────────────────────
 function filtrarMedicosLista() {
@@ -2098,28 +4414,7 @@ function renderMedicos(filtro='') {
     }).join('') + '</tbody></table>';
 }
 
-async function addMedico() {
-  const nome = document.getElementById('mn').value.trim();
-  const crm  = document.getElementById('mc').value.trim();
-  if (!nome||!crm) { toast('Nome e CRM são obrigatórios', true); return; }
-  const payload = { nome, crm,
-    especialidade: document.getElementById('me').value.trim(),
-    valor_hora: parseFloat(document.getElementById('mv').value)||0,
-    tipo: document.getElementById('mt').value,
-    cpf: document.getElementById('mcpf').value.trim(),
-    rqe: document.getElementById('mrqe').value.trim(),
-    data_nascimento: document.getElementById('mnascimento').value || null,
-    email: document.getElementById('memail').value.trim(),
-    telefone: document.getElementById('mtel').value.trim(),
-    ativo: true
-  };
-  const res = await sb('/rest/v1/medicos', { method:'POST', body: JSON.stringify(payload) });
-  if (res) {
-    toast('Médico cadastrado!');
-    ['mn','mc','me','mv','mcpf','mrqe','memail','mtel','mnascimento'].forEach(id=>document.getElementById(id).value='');
-    await carregarMedicos();
-  } else toast('Erro ao cadastrar médico', true);
-}
+
 
 // ─── EXPORTAR / IMPORTAR MÉDICOS ─────────────────────
 function exportarMedicosXLSX() {
@@ -2424,7 +4719,6 @@ function parseBRLField(id) {
   return parseFloat(v.replace(/\./g,'').replace(',','.'))||null;
 }
 async function addProjeto() {
-  if (!podeCadastrar('projetos')) return;
   const nome = document.getElementById('pn').value.trim();
   if (!nome) { toast('Nome obrigatório', true); return; }
   const payload = { nome,
@@ -2438,8 +4732,7 @@ async function addProjeto() {
     valor_padrao_12h: parseBRLField('pval12'),
     valor_padrao_24h: parseBRLField('pval24'),
     valor_padrao_noturno: parseBRLField('pvaln'),
-    valor_padrao_sobreaviso: parseBRLField('pvalsob'),
-    admin_id: adminLogado?.id || null
+    valor_padrao_sobreaviso: parseBRLField('pvalsob')
   };
   const res = await sb('/rest/v1/projetos', { method:'POST', body: JSON.stringify(payload) });
   if (res) {
@@ -2541,19 +4834,7 @@ async function addLancamento() {
   } catch(e) { toast('Erro ao registrar', true); }
 }
 
-function renderLancamentos() {
-  const el=document.getElementById('lanc-lista');
-  if(!lancamentos.length){ el.innerHTML='<div class="empty">Nenhum lançamento registrado.</div>'; return; }
-  el.innerHTML='<table><thead><tr><th>Data</th><th>Médico</th><th>Projeto</th><th>Setor</th><th>Tipo</th><th>Horas</th><th>Honorários</th><th></th></tr></thead><tbody>'+
-    lancamentos.map(l=>`<tr>
-      <td style="font-family:monospace;">${fDate(l.data)}</td><td>${l.medico}</td><td>${l.projeto}</td>
-      <td>${l.setor||'—'}</td>
-      <td><span class="badge badge-${l.tipo?.includes('Noturno')?'purple':l.tipo?.includes('24')?'amber':'green'}">${l.tipo||''}</span></td>
-      <td style="font-family:monospace;">${l.horas}h</td>
-      <td style="font-family:monospace;color:var(--green);font-weight:600;">${fBRL(l.honorario)}</td>
-      <td><button class="btn btn-danger" onclick="delLancamento('${l.id}')">Remover</button></td>
-    </tr>`).join('')+'</tbody></table>';
-}
+
 
 async function delLancamento(id) {
   if(!confirm('Remover lançamento?')) return;
@@ -2745,35 +5026,7 @@ function agruparRel(dados) {
   return porProjeto;
 }
 
-function gerarRelatorio() {
-  const dados=getDadosRel();
-  const el=document.getElementById('rel-resultado');
-  if(!dados.length){ el.innerHTML='<div class="card"><div class="empty">Nenhum dado.</div></div>'; return; }
-  const porProjeto=agruparRel(dados);
-  let html='';
-  Object.entries(porProjeto).sort((a,b)=>a[0].localeCompare(b[0],'pt-BR')).forEach(([proj,pd])=>{
-    const grupos=Object.values(pd.grupos).sort((a,b)=>a.medico.localeCompare(b.medico,'pt-BR'));
-    const projTotal=grupos.reduce((s,g)=>s+g.total,0);
-    const projQtd=grupos.reduce((s,g)=>s+g.qtd,0);
-    html+=`<div class="card" style="margin-bottom:12px;">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-        <div class="card-title" style="margin-bottom:0;">📁 ${proj}</div>
-        <div style="font-size:12px;color:var(--text2);">${projQtd} plantão(ões) · <span style="font-weight:700;color:var(--green);">${fBRL(projTotal)}</span></div>
-      </div>
-      <table><thead><tr><th>Médico / CRM</th><th>Horas/plantão</th><th>Turno</th><th>Setor</th><th style="text-align:center;">Qtd</th><th>Total</th></tr></thead><tbody>
-        ${grupos.map(g=>`<tr>
-          <td>${g.medico}<br><span style="font-size:11px;color:var(--text3);font-family:monospace;">${g.crm}</span></td>
-          <td style="font-family:monospace;">${g.horas}h</td>
-          <td><span class="badge badge-${g.turno==='Noturno'?'purple':g.turno==='24h'?'amber':'green'}">${g.turno}</span></td>
-          <td>${g.setor||'—'}</td>
-          <td style="text-align:center;">${g.qtd}</td>
-          <td style="font-family:monospace;font-weight:700;color:var(--green);">${fBRL(Math.round(g.total*100)/100)}</td>
-        </tr>`).join('')}
-        <tr style="border-top:2px solid var(--border2);"><td colspan="4" style="font-weight:700;">Total do projeto</td><td style="text-align:center;font-weight:700;">${projQtd}</td><td style="font-weight:700;color:var(--green);">${fBRL(projTotal)}</td></tr>
-      </tbody></table></div>`;
-  });
-  el.innerHTML=html;
-}
+
 
 function exportarXLSX() {
   const dados=getDadosRel();
@@ -2855,24 +5108,7 @@ function showTab(id,el){
   if(id==='lote'){ initLote(); }
   if(id==='lotemed'){ initAgenda(); }
   if(id==='candidaturas'){ initCandidaturas(); }
-  if(id==='financeiro'){
-    if (_planoConfig && !_planoConfig.financeiro) {
-      document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
-      document.getElementById('tab-financeiro').classList.add('active');
-      document.getElementById('tab-financeiro').innerHTML = `<div class="page-title">Financeiro</div>
-        <div style="text-align:center;padding:60px 24px;">
-          <div style="font-size:48px;margin-bottom:12px;">💎</div>
-          <div style="font-size:18px;font-weight:700;margin-bottom:8px;">Módulo Financeiro — Plano Pro+</div>
-          <div style="font-size:13px;color:var(--text2);line-height:1.6;max-width:400px;margin:0 auto 20px;">
-            Fechamentos, remessas CNAB 240 PIX, retorno bancário e controle de pagamentos estão disponíveis a partir do plano <strong>Pro</strong>.
-          </div>
-          <a href="/admin/upgrade/" style="display:inline-block;padding:12px 28px;background:var(--blue);color:#fff;border-radius:8px;font-weight:700;text-decoration:none;">Ver planos e fazer upgrade →</a>
-        </div>`;
-      if(el) el.classList.add('active');
-      return;
-    }
-    initFinanceiro();
-  }
+  if(id==='financeiro'){ initFinanceiro(); }
   if(id==='medicos'){ renderMedProjetosCheck(); }
   if(id==='dashboard') { updateDash(); iniciarGraficos(); }
 }
@@ -3072,7 +5308,6 @@ function gerarPreviewAgenda() {
 }
 
 async function confirmarAgenda() {
-  if (!podeCadastrar('plantões')) return;
   const d = window._agdData;
   if (!d) return;
   const btn = document.getElementById('agd-confirmar-btn');
@@ -3649,7 +5884,6 @@ function atualizarPreviewRapido() {
 }
 
 async function salvarLancamentoRapido() {
-  if (!podeCadastrar('plantões')) return;
   const overlay = document.getElementById('modal-rapido');
   const ds    = overlay.dataset.ds;
   const medsSel = getMedsSelecionadosMR();
@@ -4167,7 +6401,6 @@ function renderMedProjetosCheck() {
 // Atualizar addMedico para salvar projetos_vinculados
 const _origAddMedico = addMedico;
 async function addMedico() {
-  if (!podeCadastrar('médicos')) return;
   const nome = document.getElementById('mn').value.trim();
   const crm  = document.getElementById('mc').value.trim();
   if (!nome||!crm) { toast('Nome e CRM são obrigatórios', true); return; }
@@ -4188,8 +6421,7 @@ async function addMedico() {
     pix_tipo: document.getElementById('mn-pix-tipo')?.value||null,
     pix_chave: document.getElementById('mn-pix-chave')?.value.trim()||null,
     ativo: true,
-    projetos_vinculados: projsVinc,
-    admin_id: adminLogado?.id || null
+    projetos_vinculados: projsVinc
   };
   const res = await sb('/rest/v1/medicos', { method:'POST', body: JSON.stringify(payload) });
   if (res) {
@@ -5097,23 +7329,7 @@ function calcularFurosDash(){
 let _relTipoAtivo='detalhado';
 function selecionarRelTipo(tipo,btn){_relTipoAtivo=tipo;document.querySelectorAll('.rel-tipo-btn').forEach(b=>{b.classList.remove('active');b.style.cssText='';});btn.classList.add('active');document.getElementById('rel-resultado').innerHTML='';}
 function filtrarDadosRel(){const pid=document.getElementById('rp').value,mid=document.getElementById('rm').value,d1=document.getElementById('rd1').value,d2=document.getElementById('rd2').value;let dados=[...lancamentos];if(pid)dados=dados.filter(l=>l.projeto_id===pid);if(mid)dados=dados.filter(l=>l.medico_id===mid);if(d1)dados=dados.filter(l=>l.data>=d1);if(d2)dados=dados.filter(l=>l.data<=d2);return dados;}
-function gerarRelatorio(){
-  const el=document.getElementById('rel-resultado');
-  // Verificar acesso por plano
-  const tiposAvancados = ['faltas','atrasos','checkins','risco'];
-  if (tiposAvancados.includes(_relTipoAtivo) && _planoConfig && !_planoConfig.relatoriosAvancados) {
-    el.innerHTML = `<div class="card" style="text-align:center;padding:40px 24px;">
-      <div style="font-size:48px;margin-bottom:12px;">💎</div>
-      <div style="font-size:18px;font-weight:700;margin-bottom:8px;">Recurso exclusivo do plano Pro</div>
-      <div style="font-size:13px;color:var(--text2);line-height:1.6;max-width:400px;margin:0 auto 20px;">
-        Os relatórios de Faltas, Atrasos, Check-ins e Risco Operacional estão disponíveis a partir do plano <strong>Pro</strong> (até 500 profissionais · R$ 1.460/mês).
-      </div>
-      <a href="/admin/upgrade/" style="display:inline-block;padding:12px 28px;background:var(--blue);color:#fff;border-radius:8px;font-weight:700;text-decoration:none;">Ver planos e fazer upgrade →</a>
-    </div>`;
-    return;
-  }
-  switch(_relTipoAtivo){case'detalhado':gerarRelDetalhado(el);break;case'resumo':gerarRelResumo(el);break;case'horas':gerarRelHoras(el);break;case'faltas':gerarRelFaltas(el);break;case'atrasos':gerarRelAtrasos(el);break;case'checkins':gerarRelCheckinsForaTol(el);break;case'medicos':gerarRelMedicos(el);break;case'risco':gerarRelRisco(el);break;}
-}
+function gerarRelatorio(){const el=document.getElementById('rel-resultado');switch(_relTipoAtivo){case'detalhado':gerarRelDetalhado(el);break;case'resumo':gerarRelResumo(el);break;case'horas':gerarRelHoras(el);break;case'faltas':gerarRelFaltas(el);break;case'atrasos':gerarRelAtrasos(el);break;case'checkins':gerarRelCheckinsForaTol(el);break;case'medicos':gerarRelMedicos(el);break;}}
 
 function gerarRelDetalhado(el){const dados=filtrarDadosRel();if(!dados.length){el.innerHTML='<div class="card"><div class="empty">Nenhum dado.</div></div>';return;}const tH=dados.reduce((s,l)=>s+(l.horas||0),0),tR=dados.reduce((s,l)=>s+(l.honorario||0),0),nMeds=new Set(dados.map(l=>l.medico_id)).size;let html=`<div class="metrics"><div class="metric"><div class="metric-label">Plantões</div><div class="metric-val">${dados.length}</div></div><div class="metric"><div class="metric-label">Horas totais</div><div class="metric-val">${Math.round(tH*10)/10}h</div></div><div class="metric"><div class="metric-label">Total honorários</div><div class="metric-val">${fBRL(tR)}</div></div><div class="metric"><div class="metric-label">Médicos</div><div class="metric-val">${nMeds}</div></div></div>`;const porProjeto={};dados.forEach(l=>{const p=l.projeto||'Sem projeto';if(!porProjeto[p])porProjeto[p]=[];porProjeto[p].push(l);});Object.entries(porProjeto).sort((a,b)=>a[0].localeCompare(b[0],'pt-BR')).forEach(([proj,lans])=>{const projH=lans.reduce((s,l)=>s+(l.horas||0),0),projR=lans.reduce((s,l)=>s+(l.honorario||0),0);const grupos={};lans.forEach(l=>{const turno=l.tipo?.includes('Noturno')?'Noturno':l.tipo?.includes('24')?'24h':'Diurno';const chave=`${l.medico}||${l.horas}||${turno}||${l.setor||''}`;if(!grupos[chave])grupos[chave]={medico:l.medico,crm:l.crm,horas:l.horas,turno,setor:l.setor||'',qtd:0,total:0};grupos[chave].qtd++;grupos[chave].total+=l.honorario||0;});const linhas=Object.values(grupos).sort((a,b)=>a.medico.localeCompare(b.medico,'pt-BR')).map(g=>{const badge=g.turno==='Noturno'?'badge-purple':g.turno==='24h'?'badge-amber':'badge-green';return `<tr><td>${g.medico}<br><span class="mono" style="font-size:11px;color:var(--text3);">${g.crm||''}</span></td><td class="mono">${g.horas}h</td><td><span class="badge ${badge}">${g.turno}</span></td><td>${g.setor||'—'}</td><td style="text-align:center;">${g.qtd}</td><td class="mono" style="color:var(--green);font-weight:600;">${fBRL(Math.round(g.total*100)/100)}</td></tr>`;}).join('');html+=`<div class="card" style="margin-bottom:12px;"><div style="display:flex;justify-content:space-between;margin-bottom:10px;"><div class="card-title" style="margin-bottom:0;">📁 ${proj}</div><div style="font-size:12px;color:var(--text2);">${lans.length} plantão(ões) · ${Math.round(projH*10)/10}h · <span style="color:var(--green);font-weight:600;">${fBRL(projR)}</span></div></div><table><thead><tr><th>Médico/CRM</th><th>Hrs/plantão</th><th>Turno</th><th>Setor</th><th style="text-align:center;">Qtd</th><th>Total</th></tr></thead><tbody>${linhas}</tbody><tfoot><tr style="border-top:1.5px solid var(--border2);"><td colspan="4" style="font-weight:600;padding:8px;font-size:12px;">Total</td><td style="text-align:center;font-weight:600;">${lans.length}</td><td class="mono" style="color:var(--green);font-weight:600;">${fBRL(projR)}</td></tr></tfoot></table></div>`;});el.innerHTML=html;}
 
@@ -5128,6 +7344,9 @@ async function gerarRelAtrasos(el){el.innerHTML='<div class="card"><div class="e
 async function gerarRelCheckinsForaTol(el){el.innerHTML='<div class="card"><div class="empty">Carregando...</div></div>';const d1=document.getElementById('rd1').value,d2=document.getElementById('rd2').value;let pathCI='/rest/v1/checkins?select=*,medicos(nome,crm),projetos(nome)';if(d1)pathCI+=`&feito_em=gte.${d1}T00:00:00`;if(d2)pathCI+=`&feito_em=lte.${d2}T23:59:59`;const checkins=await sb(pathCI)||[];const fora=[];checkins.forEach(ci=>{const lanc=lancamentos.find(l=>l.medico_id===ci.medico_id&&l.projeto_id===ci.projeto_id&&l.data===ci.feito_em?.slice(0,10));if(!lanc)return;const diffMin=Math.round((new Date(ci.feito_em)-new Date(`${lanc.data}T${lanc.hora_ini||'00:00'}`))/60000);if(diffMin>15||!ci.aprovado)fora.push({...ci,diffMin,foraRaio:!ci.aprovado,lanc});});if(!fora.length){el.innerHTML='<div class="card"><div style="text-align:center;padding:24px;"><div style="font-size:40px;">✅</div><div style="font-size:14px;color:var(--green);font-weight:600;margin-top:8px;">Todos dentro da tolerância!</div></div></div>';return;}let html=`<div class="card"><table><thead><tr><th>Médico</th><th>Projeto</th><th>Data</th><th>Previsto</th><th>Check-in</th><th>Atraso</th><th>GPS</th></tr></thead><tbody>`;fora.forEach(c=>{const horaReal=new Date(c.feito_em).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});html+=`<tr><td><strong>${c.medicos?.nome||'—'}</strong></td><td>${c.projetos?.nome||'—'}</td><td class="mono">${fDate(c.lanc?.data||'')}</td><td class="mono">${(c.lanc?.hora_ini||'').slice(0,5)}</td><td class="mono">${horaReal}</td><td style="color:${c.diffMin>15?'var(--amber)':'var(--green)'};font-weight:600;">${c.diffMin>0?'+'+c.diffMin+'min':'no prazo'}</td><td>${c.foraRaio?'❌ Fora':'✅ Ok'}</td></tr>`;});html+='</tbody></table></div>';el.innerHTML=html;}
 
 function gerarRelMedicos(el){let lista=[...medicos];const mid=document.getElementById('rm').value;if(mid)lista=lista.filter(m=>m.id===mid);if(!lista.length){el.innerHTML='<div class="card"><div class="empty">Nenhum médico.</div></div>';return;}let html=`<div class="card"><table><thead><tr><th>Nome</th><th>CRM</th><th>Especialidade</th><th>Tipo</th><th>Telefone</th><th>E-mail</th><th>PIX</th><th>Dispositivo</th></tr></thead><tbody>`;lista.sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR')).forEach(m=>{const pix=m.pix_tipo&&m.pix_chave?`${m.pix_tipo}: ${m.pix_chave}`:'—';html+=`<tr><td><strong>${m.nome}</strong></td><td class="mono">${m.crm||'—'}</td><td>${m.especialidade||'—'}</td><td><span class="badge badge-blue">${m.tipo||''}</span></td><td>${m.telefone||'—'}</td><td>${m.email||'—'}</td><td style="font-size:11px;">${pix}</td><td>${m.device_id?'<span class="badge badge-green">✓ Vinculado</span>':'<span class="badge badge-amber">Sem vínculo</span>'}</td></tr>`;});html+='</tbody></table></div>';el.innerHTML=html;}
+
+function exportarRelXLSX(){const tipo=_relTipoAtivo,dados=filtrarDadosRel();if(!dados.length&&tipo!=='medicos'){toast('Nenhum dado',true);return;}const wb=XLSX.utils.book_new();if(tipo==='medicos'){const rows=[['Nome','CRM','Especialidade','Tipo','Telefone','E-mail']];medicos.sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR')).forEach(m=>rows.push([m.nome,m.crm||'',m.especialidade||'',m.tipo||'',m.telefone||'',m.email||'']));XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(rows),'Médicos');}else{const rows=[['Data','Médico','Projeto','Tipo','Horas','Honorários']];dados.sort((a,b)=>b.data.localeCompare(a.data)).forEach(l=>rows.push([fDate(l.data),l.medico,l.projeto,l.tipo||'',l.horas,l.honorario]));XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(rows),'Relatório');}XLSX.writeFile(wb,'relatorio_'+tipo+'_'+new Date().toISOString().slice(0,10)+'.xlsx');toast('XLSX exportado!');}
+
 
 async function gerarRelRisco(el) {
   el.innerHTML = '<div class="card"><div class="empty">Carregando dados de risco...</div></div>';
@@ -5363,9 +7582,6 @@ async function gerarRelRisco(el) {
 
   el.innerHTML = html;
 }
-
-function exportarRelXLSX(){const tipo=_relTipoAtivo,dados=filtrarDadosRel();if(!dados.length&&tipo!=='medicos'){toast('Nenhum dado',true);return;}const wb=XLSX.utils.book_new();if(tipo==='medicos'){const rows=[['Nome','CRM','Especialidade','Tipo','Telefone','E-mail']];medicos.sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR')).forEach(m=>rows.push([m.nome,m.crm||'',m.especialidade||'',m.tipo||'',m.telefone||'',m.email||'']));XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(rows),'Médicos');}else{const rows=[['Data','Médico','Projeto','Tipo','Horas','Honorários']];dados.sort((a,b)=>b.data.localeCompare(a.data)).forEach(l=>rows.push([fDate(l.data),l.medico,l.projeto,l.tipo||'',l.horas,l.honorario]));XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(rows),'Relatório');}XLSX.writeFile(wb,'relatorio_'+tipo+'_'+new Date().toISOString().slice(0,10)+'.xlsx');toast('XLSX exportado!');}
-
 
 // ─── LANÇAMENTO EM LOTE ───────────────────────────────────
 function initLote() {
@@ -6432,56 +8648,6 @@ function selecionarTipoCadastrado() {
   }
 }
 
-</script>
-
-
-
-
-  <!-- MODAL DETALHE FECHAMENTO -->
-  <div class="modal-overlay" id="modal-fechamento" onclick="if(event.target===this)fecharModalFechamento()">
-    <div class="modal" style="max-width:900px;max-height:90vh;overflow-y:auto;">
-      <div class="modal-header">
-        <div>
-          <div class="modal-title" id="mfech-titulo">Fechamento</div>
-          <div style="font-size:12px;color:var(--text3);" id="mfech-sub"></div>
-        </div>
-        <button class="modal-close" onclick="fecharModalFechamento()">✕</button>
-      </div>
-      <div style="display:flex;gap:0;border-bottom:2px solid var(--border);margin-bottom:16px;">
-        <button class="btn btn-ghost mfech-tab-btn active-tab" onclick="mfechTab('fechamento',this)" style="border-radius:4px 4px 0 0;font-size:12px;">📋 Fechamento</button>
-        <button class="btn btn-ghost mfech-tab-btn" onclick="mfechTab('remessa',this)" style="border-radius:4px 4px 0 0;font-size:12px;">📤 Remessa</button>
-        <button class="btn btn-ghost mfech-tab-btn" onclick="mfechTab('retorno',this)" style="border-radius:4px 4px 0 0;font-size:12px;">📥 Retorno</button>
-      </div>
-      <div id="mfech-page-fechamento">
-        <div style="margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
-          <div id="mfech-resumo" style="font-size:12px;color:var(--text2);"></div>
-          <div style="display:flex;gap:6px;">
-            <button class="btn btn-success btn-sm" onclick="gerarRemessa()">📤 Gerar remessa</button>
-            <button class="btn btn-ghost btn-sm" onclick="exportarFechamentoXLSX()">⬇ Excel</button>
-          </div>
-        </div>
-        <div id="mfech-tabela"></div>
-      </div>
-      <div id="mfech-page-remessa" style="display:none;">
-        <div id="mfech-remessas-lista"><div class="empty">Nenhuma remessa gerada ainda.</div></div>
-      </div>
-      <div id="mfech-page-retorno" style="display:none;">
-        <div class="card" style="border:2px dashed var(--border);text-align:center;padding:32px;">
-          <div style="font-size:32px;margin-bottom:8px;">📥</div>
-          <div style="font-size:14px;font-weight:600;margin-bottom:4px;">Upload do arquivo de retorno (.RET)</div>
-          <div style="font-size:12px;color:var(--text2);margin-bottom:16px;">Gerado pelo Bradesco após processar a remessa</div>
-          <input type="file" id="ret-file-input" accept=".ret,.txt,.RET" style="display:none;" onchange="processarRetorno(event)">
-          <button class="btn btn-primary" onclick="document.getElementById('ret-file-input').click()">Selecionar arquivo .RET</button>
-        </div>
-        <div id="ret-resultado" style="margin-top:12px;"></div>
-      </div>
-    </div>
-  </div>
-
-</body>
-</html>
-
-<script>
 // ── MENU PERFIL ───────────────────────────────────────────
 let _upgradeAutoAtivo = false;
 let _planoSelecionadoModal = null;
@@ -6651,6 +8817,8 @@ async function salvarAlteracoesPlano() {
   btn.disabled=false; btn.textContent='💾 Salvar';
 }
 
+
+
 // ESQUECI SENHA — ADMIN
 function abrirEsqueciSenhaAdmin() {
   const email = document.getElementById('l-email').value.trim();
@@ -6699,6 +8867,8 @@ document.getElementById('modal-esqueci-admin').addEventListener('click', functio
   if (e.target === this) fecharEsqueciSenhaAdmin();
 });
 
+
+async function carregarHistoricoPagamentos() {
   if (!adminLogado) return;
   const el=document.getElementById('mp-historico-pag');
   const data=await sb(`/rest/v1/pagamentos_log?admin_id=eq.${adminLogado.id}&order=pago_em.desc&limit=6`);
@@ -6708,3 +8878,50 @@ document.getElementById('modal-esqueci-admin').addEventListener('click', functio
     data.map(p=>`<tr style="border-top:1px solid var(--border);"><td style="padding:7px 8px;">${p.pago_em?new Date(p.pago_em).toLocaleDateString('pt-BR'):'—'}</td><td style="padding:7px 8px;">${formaMap[p.forma]||p.forma||'—'}</td><td style="padding:7px 8px;text-align:right;color:var(--green);font-weight:600;">${fBRL(p.valor)}</td><td style="padding:7px 8px;text-align:right;"><span style="font-size:10px;background:var(--green-bg,#e8f5eb);color:var(--green);padding:2px 6px;border-radius:99px;">${p.status==='pago'?'✅ Pago':p.status}</span></td></tr>`).join('')+'</tbody></table>';
 }
 </script>
+
+
+
+
+  <!-- MODAL DETALHE FECHAMENTO -->
+  <div class="modal-overlay" id="modal-fechamento" onclick="if(event.target===this)fecharModalFechamento()">
+    <div class="modal" style="max-width:900px;max-height:90vh;overflow-y:auto;">
+      <div class="modal-header">
+        <div>
+          <div class="modal-title" id="mfech-titulo">Fechamento</div>
+          <div style="font-size:12px;color:var(--text3);" id="mfech-sub"></div>
+        </div>
+        <button class="modal-close" onclick="fecharModalFechamento()">✕</button>
+      </div>
+      <div style="display:flex;gap:0;border-bottom:2px solid var(--border);margin-bottom:16px;">
+        <button class="btn btn-ghost mfech-tab-btn active-tab" onclick="mfechTab('fechamento',this)" style="border-radius:4px 4px 0 0;font-size:12px;">📋 Fechamento</button>
+        <button class="btn btn-ghost mfech-tab-btn" onclick="mfechTab('remessa',this)" style="border-radius:4px 4px 0 0;font-size:12px;">📤 Remessa</button>
+        <button class="btn btn-ghost mfech-tab-btn" onclick="mfechTab('retorno',this)" style="border-radius:4px 4px 0 0;font-size:12px;">📥 Retorno</button>
+      </div>
+      <div id="mfech-page-fechamento">
+        <div style="margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+          <div id="mfech-resumo" style="font-size:12px;color:var(--text2);"></div>
+          <div style="display:flex;gap:6px;">
+            <button class="btn btn-success btn-sm" onclick="gerarRemessa()">📤 Gerar remessa</button>
+            <button class="btn btn-ghost btn-sm" onclick="exportarFechamentoXLSX()">⬇ Excel</button>
+          </div>
+        </div>
+        <div id="mfech-tabela"></div>
+      </div>
+      <div id="mfech-page-remessa" style="display:none;">
+        <div id="mfech-remessas-lista"><div class="empty">Nenhuma remessa gerada ainda.</div></div>
+      </div>
+      <div id="mfech-page-retorno" style="display:none;">
+        <div class="card" style="border:2px dashed var(--border);text-align:center;padding:32px;">
+          <div style="font-size:32px;margin-bottom:8px;">📥</div>
+          <div style="font-size:14px;font-weight:600;margin-bottom:4px;">Upload do arquivo de retorno (.RET)</div>
+          <div style="font-size:12px;color:var(--text2);margin-bottom:16px;">Gerado pelo Bradesco após processar a remessa</div>
+          <input type="file" id="ret-file-input" accept=".ret,.txt,.RET" style="display:none;" onchange="processarRetorno(event)">
+          <button class="btn btn-primary" onclick="document.getElementById('ret-file-input').click()">Selecionar arquivo .RET</button>
+        </div>
+        <div id="ret-resultado" style="margin-top:12px;"></div>
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>
