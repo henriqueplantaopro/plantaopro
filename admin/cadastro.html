@@ -147,9 +147,40 @@ input:focus,select:focus{border-color:var(--blue);}
       <button onclick="fazerLoginCadastro()" id="btn-login-hero" style="width:100%;padding:12px;background:#fff;color:var(--blue);border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;transition:all 0.15s;">
         Entrar no painel →
       </button>
-      <div style="text-align:center;margin-top:12px;font-size:12px;color:rgba(255,255,255,0.6);">
+      <div style="text-align:center;margin-top:10px;">
+        <button onclick="abrirEsqueciSenha()" style="background:none;border:none;color:rgba(255,255,255,0.65);font-size:12px;cursor:pointer;text-decoration:underline;font-family:inherit;">Esqueci minha senha</button>
+      </div>
+      <div style="text-align:center;margin-top:8px;font-size:12px;color:rgba(255,255,255,0.5);">
         Não tem conta? Role a página para se cadastrar
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL ESQUECI SENHA -->
+<div id="modal-esqueci" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:999;align-items:center;justify-content:center;">
+  <div style="background:#fff;border-radius:16px;padding:32px;width:100%;max-width:420px;margin:24px;box-shadow:0 8px 32px rgba(0,0,0,0.2);">
+    <div style="font-size:18px;font-weight:700;color:var(--text);margin-bottom:6px;">Esqueci minha senha</div>
+    <div id="esqueci-estado-form">
+      <p style="font-size:13px;color:var(--text2);line-height:1.6;margin-bottom:20px;">Digite seu e-mail de cadastro. Nossa equipe entrará em contato com as instruções para redefinir sua senha.</p>
+      <div style="margin-bottom:14px;">
+        <label style="font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:0.4px;display:block;margin-bottom:5px;">E-mail cadastrado</label>
+        <input id="esqueci-email" type="email" placeholder="admin@hospital.com" style="width:100%;padding:10px 12px;font-size:14px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;outline:none;">
+      </div>
+      <div id="esqueci-erro" style="display:none;background:#fdf0f0;color:var(--red);font-size:12px;padding:8px 12px;border-radius:6px;margin-bottom:12px;border:1px solid #f0b8b8;"></div>
+      <div style="display:flex;gap:8px;">
+        <button onclick="fecharEsqueciSenha()" style="flex:1;padding:11px;background:#fff;border:1.5px solid var(--border);border-radius:8px;font-size:14px;cursor:pointer;font-family:inherit;color:var(--text2);">Cancelar</button>
+        <button onclick="enviarEsqueciSenha()" id="btn-esqueci-enviar" style="flex:1;padding:11px;background:var(--blue);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;">Enviar solicitação</button>
+      </div>
+    </div>
+    <div id="esqueci-estado-ok" style="display:none;text-align:center;padding:8px 0;">
+      <div style="font-size:40px;margin-bottom:12px;">✉️</div>
+      <div style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:8px;">Solicitação enviada!</div>
+      <p style="font-size:13px;color:var(--text2);line-height:1.6;margin-bottom:20px;">Nossa equipe recebeu sua solicitação e entrará em contato em até <strong>1 dia útil</strong> no e-mail cadastrado com as instruções para redefinir sua senha.</p>
+      <div style="background:#fdf3e0;border:1px solid #f0c060;border-radius:8px;padding:12px;font-size:12px;color:var(--amber);margin-bottom:20px;">
+        Caso não receba, entre em contato diretamente pelo suporte: <strong>suporte@plantaopro.com.br</strong>
+      </div>
+      <button onclick="fecharEsqueciSenha()" style="width:100%;padding:11px;background:var(--blue);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;">Fechar</button>
     </div>
   </div>
 </div>
@@ -527,6 +558,55 @@ function toast(msg, err=false) {
   const t = document.getElementById('toast');
   t.textContent = msg; t.style.background = err ? '#b03030' : '#2d7a3a';
   t.style.display = 'block'; setTimeout(()=>t.style.display='none', 3500);
+// ESQUECI MINHA SENHA
+function abrirEsqueciSenha() {
+  const email = document.getElementById('login-email').value.trim();
+  if (email) document.getElementById('esqueci-email').value = email;
+  document.getElementById('esqueci-estado-form').style.display = 'block';
+  document.getElementById('esqueci-estado-ok').style.display = 'none';
+  document.getElementById('esqueci-erro').style.display = 'none';
+  const modal = document.getElementById('modal-esqueci');
+  modal.style.display = 'flex';
+}
+
+function fecharEsqueciSenha() {
+  document.getElementById('modal-esqueci').style.display = 'none';
+}
+
+async function enviarEsqueciSenha() {
+  const email = document.getElementById('esqueci-email').value.trim();
+  const erroEl = document.getElementById('esqueci-erro');
+  const btn = document.getElementById('btn-esqueci-enviar');
+  erroEl.style.display = 'none';
+  if (!email) { erroEl.textContent = 'Digite seu e-mail.'; erroEl.style.display = 'block'; return; }
+  btn.disabled = true; btn.textContent = 'Verificando...';
+  try {
+    const res = await sbFetch('/rest/v1/admins?email=eq.' + encodeURIComponent(email) + '&select=id,nome');
+    if (!res || !res.length) {
+      erroEl.textContent = 'E-mail não encontrado. Verifique se digitou corretamente.';
+      erroEl.style.display = 'block';
+      btn.disabled = false; btn.textContent = 'Enviar solicitação';
+      return;
+    }
+    // Registrar solicitação no Supabase
+    await sbFetch('/rest/v1/solicitacoes_senha', {
+      method: 'POST',
+      body: JSON.stringify({ email, admin_id: res[0].id, criado_em: new Date().toISOString(), status: 'pendente' })
+    });
+    document.getElementById('esqueci-estado-form').style.display = 'none';
+    document.getElementById('esqueci-estado-ok').style.display = 'block';
+  } catch(e) {
+    erroEl.textContent = 'Erro ao processar. Tente novamente.';
+    erroEl.style.display = 'block';
+    btn.disabled = false; btn.textContent = 'Enviar solicitação';
+  }
+}
+
+// Fechar modal ao clicar fora
+document.getElementById('modal-esqueci').addEventListener('click', function(e) {
+  if (e.target === this) fecharEsqueciSenha();
+});
+
 // LOGIN DIRETO NA PÁGINA DE CADASTRO
 async function fazerLoginCadastro() {
   const email = document.getElementById('login-email').value.trim();
