@@ -460,9 +460,28 @@ async function sb(path, opts={}) {
 }
 
 function getDeviceId() {
-  let d=localStorage.getItem('plantaopro_device_id');
-  if(!d){d=btoa(navigator.userAgent+screen.width).slice(0,16)+'_'+Math.random().toString(36).slice(2)+'_'+Date.now().toString(36);localStorage.setItem('plantaopro_device_id',d);}
-  return d;
+  // Gerar ID baseado em características fixas do dispositivo
+  // Isso garante o mesmo ID no Safari normal E no modo standalone (PWA)
+  const fingerprint = [
+    navigator.platform || '',
+    navigator.language || '',
+    screen.width + 'x' + screen.height,
+    screen.colorDepth || '',
+    navigator.hardwareConcurrency || '',
+    Intl.DateTimeFormat().resolvedOptions().timeZone || '',
+  ].join('|');
+
+  // Hash simples do fingerprint
+  let hash = 0;
+  for (let i = 0; i < fingerprint.length; i++) {
+    hash = ((hash << 5) - hash) + fingerprint.charCodeAt(i);
+    hash |= 0;
+  }
+  const deviceId = 'dev_' + Math.abs(hash).toString(36) + '_' + screen.width + screen.height;
+
+  // Salvar também no localStorage como fallback
+  try { localStorage.setItem('plantaopro_device_id', deviceId); } catch(e) {}
+  return deviceId;
 }
 
 async function vincularDispositivo() {
