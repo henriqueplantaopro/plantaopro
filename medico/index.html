@@ -227,6 +227,9 @@ html,body{height:100%;background:#f0f4f8;font-family:-apple-system,BlinkMacSyste
     <span class="tab-icon">&#128276;</span>Notif.
     <span id="badge-notif" style="display:none;background:var(--red);color:#fff;font-size:9px;font-weight:700;border-radius:99px;padding:1px 5px;margin-left:2px;vertical-align:top;margin-top:2px;"></span>
   </div>
+  <div class="tab" onclick="showPage('perfil',this)">
+    <span class="tab-icon">&#128100;</span>Perfil
+  </div>
 </div>
 
 <div class="content" id="main-content" style="display:none;">
@@ -315,7 +318,7 @@ html,body{height:100%;background:#f0f4f8;font-family:-apple-system,BlinkMacSyste
         <input id="login-senha-med" type="password" placeholder="••••••••" onkeydown="if(event.key==='Enter')fazerLoginMedico()" style="width:100%;padding:12px 14px;font-size:15px;border:1.5px solid #e0e0e0;border-radius:10px;font-family:inherit;outline:none;box-sizing:border-box;">
       </div>
       <div style="text-align:right;margin-bottom:18px;">
-        <button onclick="mostrarEsqueciSenhaMed()" style="background:none;border:none;color:#1a5fad;font-size:12px;cursor:pointer;padding:0;font-family:inherit;">Esqueci minha senha</button>
+        <button onclick="document.getElementById('modal-esqueci-med').classList.remove('oculto')" style="background:none;border:none;color:#1a5fad;font-size:12px;cursor:pointer;padding:0;font-family:inherit;">Esqueci minha senha</button>
       </div>
       <div id="login-erro-med" style="display:none;background:#fdf0f0;color:#b03030;font-size:13px;padding:10px 12px;border-radius:8px;border:1px solid #f0b8b8;margin-bottom:14px;"></div>
       <button id="btn-login-med" onclick="fazerLoginMedico()" style="width:100%;padding:14px;background:#1a5fad;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;">Entrar</button>
@@ -376,6 +379,96 @@ html,body{height:100%;background:#f0f4f8;font-family:-apple-system,BlinkMacSyste
   <div style="font-size:14px;color:#555;line-height:1.7;margin-bottom:24px;">Este e o primeiro acesso. Seu celular sera vinculado a sua conta para garantir a seguranca do check-in.</div>
   <div style="font-size:13px;color:#888;margin-bottom:28px;">Apos vincular, o app so funcionara neste dispositivo.</div>
   <button onclick="vincularDispositivo()" style="background:#1a5fad;color:#fff;border:none;padding:16px 40px;border-radius:12px;font-size:16px;font-weight:700;cursor:pointer;width:100%;max-width:280px;">Vincular este celular</button>
+</div>
+
+<!-- MODAL EDITAR PERFIL -->
+<div class="modal-overlay oculto" id="modal-editar-perfil" onclick="if(event.target===this)this.classList.add('oculto')">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <div class="modal-title">Editar dados cadastrais</div>
+    </div>
+    <div class="modal-body">
+      <label class="modal-label">Nome completo</label>
+      <input class="modal-textarea" id="ep-nome" type="text" style="width:100%;padding:10px 12px;font-size:14px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-family:inherit;margin-bottom:14px;">
+      <label class="modal-label">CRM</label>
+      <input class="modal-textarea" id="ep-crm" type="text" style="width:100%;padding:10px 12px;font-size:14px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-family:inherit;margin-bottom:14px;">
+      <label class="modal-label">Especialidade</label>
+      <input class="modal-textarea" id="ep-esp" type="text" style="width:100%;padding:10px 12px;font-size:14px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-family:inherit;margin-bottom:14px;">
+      <label class="modal-label">Telefone / WhatsApp</label>
+      <input class="modal-textarea" id="ep-tel" type="tel" oninput="mascaraTelMed(this)" style="width:100%;padding:10px 12px;font-size:14px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-family:inherit;margin-bottom:14px;">
+      <label class="modal-label">Chave PIX</label>
+      <input class="modal-textarea" id="ep-pix" type="text" placeholder="CPF, e-mail, telefone ou chave aleatória" style="width:100%;padding:10px 12px;font-size:14px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-family:inherit;margin-bottom:4px;">
+    </div>
+    <div class="modal-footer">
+      <button class="btn-modal azul" onclick="salvarPerfil()">Salvar alterações</button>
+      <button class="btn-modal cancel" onclick="document.getElementById('modal-editar-perfil').classList.add('oculto')">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL ALTERAR SENHA -->
+<div class="modal-overlay oculto" id="modal-alterar-senha" onclick="if(event.target===this)this.classList.add('oculto')">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <div class="modal-title">Alterar senha</div>
+      <div class="modal-sub" id="alterar-senha-sub">Digite sua senha atual e a nova senha</div>
+    </div>
+    <div class="modal-body">
+      <label class="modal-label">Senha atual</label>
+      <input class="modal-textarea" id="as-atual" type="password" placeholder="Senha atual" style="width:100%;padding:10px 12px;font-size:14px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-family:inherit;margin-bottom:14px;">
+      <label class="modal-label">Nova senha</label>
+      <input class="modal-textarea" id="as-nova" type="password" placeholder="Mínimo 6 caracteres" style="width:100%;padding:10px 12px;font-size:14px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-family:inherit;margin-bottom:14px;">
+      <label class="modal-label">Confirmar nova senha</label>
+      <input class="modal-textarea" id="as-nova2" type="password" placeholder="Repita a nova senha" style="width:100%;padding:10px 12px;font-size:14px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-family:inherit;margin-bottom:4px;">
+      <div id="as-erro" style="display:none;background:var(--red-light);color:var(--red);font-size:12px;padding:8px 12px;border-radius:6px;margin-top:8px;border:1px solid #f0b8b8;"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-modal azul" id="btn-salvar-senha" onclick="salvarNovaSenha()">Salvar nova senha</button>
+      <button class="btn-modal cancel" onclick="document.getElementById('modal-alterar-senha').classList.add('oculto')">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL TROCAR SENHA OBRIGATÓRIO (primeiro login) -->
+<div class="modal-overlay oculto" id="modal-senha-obrig" style="z-index:999;">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <div class="modal-title">Defina sua senha</div>
+      <div class="modal-sub">Por segurança, você precisa criar uma senha pessoal antes de continuar.</div>
+    </div>
+    <div class="modal-body">
+      <label class="modal-label">Nova senha</label>
+      <input class="modal-textarea" id="so-nova" type="password" placeholder="Mínimo 6 caracteres" style="width:100%;padding:10px 12px;font-size:14px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-family:inherit;margin-bottom:14px;">
+      <label class="modal-label">Confirmar senha</label>
+      <input class="modal-textarea" id="so-nova2" type="password" placeholder="Repita a senha" style="width:100%;padding:10px 12px;font-size:14px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-family:inherit;margin-bottom:4px;">
+      <div id="so-erro" style="display:none;background:var(--red-light);color:var(--red);font-size:12px;padding:8px 12px;border-radius:6px;margin-top:8px;border:1px solid #f0b8b8;"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-modal azul" onclick="salvarSenhaObrigatoria()">Criar minha senha</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL ESQUECI SENHA -->
+<div class="modal-overlay oculto" id="modal-esqueci-med" onclick="if(event.target===this)this.classList.add('oculto')">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <div class="modal-title">Esqueci minha senha</div>
+      <div class="modal-sub">Entre em contato com o administrador para redefinir sua senha.</div>
+    </div>
+    <div class="modal-body">
+      <div style="background:var(--amber-light);border:1px solid #f0c060;border-radius:8px;padding:14px;font-size:13px;color:var(--amber);line-height:1.6;">
+        Informe seu CPF ao administrador do sistema e solicite a redefinição de senha. O administrador irá gerar uma nova senha provisória para você.
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-modal cancel" onclick="document.getElementById('modal-esqueci-med').classList.add('oculto')">Fechar</button>
+    </div>
+  </div>
 </div>
 
 <!-- MODAL TRANSFERIR -->
@@ -523,10 +616,12 @@ function mostrarApp() {
   document.getElementById('hdr-nome').textContent=medico.nome;
   document.getElementById('hdr-crm').textContent=medico.crm;
   document.getElementById('hdr-avatar').textContent=medico.nome.split(' ').slice(0,2).map(n=>n[0]).join('');
-  ['splash','tela-primeiro-acesso','tela-device','tela-erro'].forEach(id=>{const el=document.getElementById(id);if(el){el.style.display='none';el.classList.add('hide');}});
+  ['splash','tela-primeiro-acesso','tela-device','tela-erro','tela-cadastro-med'].forEach(id=>{const el=document.getElementById(id);if(el){el.style.display='none';el.classList.add('hide');}});
   document.getElementById('header').style.display='block';
   document.getElementById('tabs').style.display='flex';
   document.getElementById('main-content').style.display='block';
+  preencherPerfil();
+  verificarPrimeiroAcesso();
   carregarProjetos();
   iniciarGPS();
   carregarPlantoes();
@@ -553,8 +648,149 @@ function voltarLogin(){
 }
 
 function mostrarEsqueciSenhaMed(){
-  alert('Para redefinir sua senha, entre em contato com o administrador ou acesse suporte@plantaopro.com.br');
+  document.getElementById('modal-esqueci-med').classList.remove('oculto');
 }
+
+// ── PERFIL DO MÉDICO ─────────────────────────────────────
+
+function preencherPerfil() {
+  if (!medico) return;
+  const iniciais = medico.nome.split(' ').slice(0,2).map(n=>n[0]).join('');
+  const av = document.getElementById('perfil-avatar');
+  if (av) av.textContent = iniciais;
+  const pn = document.getElementById('perfil-nome-exib');
+  if (pn) pn.textContent = medico.nome;
+  const pc = document.getElementById('perfil-crm-exib');
+  if (pc) pc.textContent = medico.crm ? 'CRM ' + medico.crm : '—';
+  const pe = document.getElementById('perfil-esp-exib');
+  if (pe) pe.textContent = medico.especialidade || '';
+}
+
+function abrirEditarPerfil() {
+  if (!medico) return;
+  document.getElementById('ep-nome').value = medico.nome || '';
+  document.getElementById('ep-crm').value  = medico.crm || '';
+  document.getElementById('ep-esp').value  = medico.especialidade || '';
+  document.getElementById('ep-tel').value  = medico.telefone || '';
+  document.getElementById('ep-pix').value  = medico.pix_chave || '';
+  document.getElementById('modal-editar-perfil').classList.remove('oculto');
+}
+
+async function salvarPerfil() {
+  const nome = document.getElementById('ep-nome').value.trim();
+  if (!nome) { toastMed('Nome obrigatório', false); return; }
+  const payload = {
+    nome,
+    crm:         document.getElementById('ep-crm').value.trim(),
+    especialidade: document.getElementById('ep-esp').value.trim(),
+    telefone:    document.getElementById('ep-tel').value.trim(),
+    pix_chave:   document.getElementById('ep-pix').value.trim() || null,
+  };
+  const r = await fetch(SUPABASE_URL+'/rest/v1/medicos?id=eq.'+medico.id, {
+    method:'PATCH',
+    headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},
+    body: JSON.stringify(payload)
+  });
+  if (r.ok || r.status===204) {
+    Object.assign(medico, payload);
+    document.getElementById('modal-editar-perfil').classList.add('oculto');
+    preencherPerfil();
+    toastMed('Dados salvos!');
+    // Atualizar header
+    document.getElementById('hdr-nome').textContent = medico.nome;
+    document.getElementById('hdr-avatar').textContent = medico.nome.split(' ').slice(0,2).map(n=>n[0]).join('');
+  } else {
+    toastMed('Erro ao salvar', false);
+  }
+}
+
+function abrirAlterarSenha() {
+  document.getElementById('as-atual').value = '';
+  document.getElementById('as-nova').value  = '';
+  document.getElementById('as-nova2').value = '';
+  document.getElementById('as-erro').style.display = 'none';
+  document.getElementById('alterar-senha-sub').textContent = 'Digite sua senha atual e a nova senha';
+  document.getElementById('modal-alterar-senha').classList.remove('oculto');
+}
+
+async function salvarNovaSenha() {
+  const atual  = document.getElementById('as-atual').value;
+  const nova   = document.getElementById('as-nova').value;
+  const nova2  = document.getElementById('as-nova2').value;
+  const erroEl = document.getElementById('as-erro');
+  const btn    = document.getElementById('btn-salvar-senha');
+  erroEl.style.display = 'none';
+  if (atual !== medico.senha_hash) { erroEl.textContent='Senha atual incorreta.'; erroEl.style.display='block'; return; }
+  if (nova.length < 6) { erroEl.textContent='A nova senha deve ter pelo menos 6 caracteres.'; erroEl.style.display='block'; return; }
+  if (nova !== nova2) { erroEl.textContent='As senhas não coincidem.'; erroEl.style.display='block'; return; }
+  btn.disabled=true; btn.textContent='Salvando...';
+  const r = await fetch(SUPABASE_URL+'/rest/v1/medicos?id=eq.'+medico.id, {
+    method:'PATCH',
+    headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},
+    body: JSON.stringify({senha_hash: nova, primeiro_acesso: false})
+  });
+  if (r.ok || r.status===204) {
+    medico.senha_hash = nova;
+    medico.primeiro_acesso = false;
+    document.getElementById('modal-alterar-senha').classList.add('oculto');
+    toastMed('Senha alterada!');
+  } else {
+    erroEl.textContent='Erro ao salvar. Tente novamente.'; erroEl.style.display='block';
+  }
+  btn.disabled=false; btn.textContent='Salvar nova senha';
+}
+
+// ── SENHA OBRIGATÓRIA (primeiro login) ───────────────────
+
+function verificarPrimeiroAcesso() {
+  if (medico && medico.primeiro_acesso) {
+    setTimeout(() => {
+      document.getElementById('so-nova').value = '';
+      document.getElementById('so-nova2').value = '';
+      document.getElementById('so-erro').style.display = 'none';
+      document.getElementById('modal-senha-obrig').classList.remove('oculto');
+    }, 800);
+  }
+}
+
+async function salvarSenhaObrigatoria() {
+  const nova   = document.getElementById('so-nova').value;
+  const nova2  = document.getElementById('so-nova2').value;
+  const erroEl = document.getElementById('so-erro');
+  erroEl.style.display = 'none';
+  if (nova.length < 6) { erroEl.textContent='Senha mínima: 6 caracteres.'; erroEl.style.display='block'; return; }
+  if (nova !== nova2)  { erroEl.textContent='As senhas não coincidem.'; erroEl.style.display='block'; return; }
+  const r = await fetch(SUPABASE_URL+'/rest/v1/medicos?id=eq.'+medico.id, {
+    method:'PATCH',
+    headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},
+    body: JSON.stringify({senha_hash: nova, primeiro_acesso: false})
+  });
+  if (r.ok || r.status===204) {
+    medico.senha_hash = nova;
+    medico.primeiro_acesso = false;
+    document.getElementById('modal-senha-obrig').classList.add('oculto');
+    toastMed('Senha criada! Bem-vindo ao PlantãoPro.');
+  } else {
+    erroEl.textContent='Erro ao salvar. Tente novamente.'; erroEl.style.display='block';
+  }
+}
+
+// ── LOGOUT ───────────────────────────────────────────────
+
+function fazerLogout() {
+  if (!confirm('Deseja sair do aplicativo?')) return;
+  try { localStorage.removeItem('plantaopro_token'); } catch(e) {}
+  try { localStorage.removeItem('plantaopro_device_id'); } catch(e) {}
+  medico = null;
+  // Esconder app e mostrar login
+  document.getElementById('header').style.display = 'none';
+  document.getElementById('tabs').style.display = 'none';
+  document.getElementById('main-content').style.display = 'none';
+  document.getElementById('tela-erro').style.display = 'block';
+  document.getElementById('login-cpf').value = '';
+  document.getElementById('login-senha-med').value = '';
+}
+
 
 function mascaraCPF(el){
   let v=el.value.replace(/\D/g,'').slice(0,11);
@@ -615,8 +851,10 @@ async function cadastrarMedico(){
   const existe=await sb('/rest/v1/medicos?cpf=eq.'+cpf+'&select=id');
   if(existe?.length){erroEl.textContent='Este CPF já está cadastrado. Faça login.';erroEl.style.display='block';btn.disabled=false;btn.textContent='Criar conta';return;}
   // Criar médico
-  const token=Math.random().toString(36).slice(2)+Math.random().toString(36).slice(2);
-  const res=await sb('/rest/v1/medicos',{method:'POST',headers:{'Prefer':'return=representation'},body:JSON.stringify({nome,cpf,crm,telefone:tel,senha_hash:senha,token_acesso:token,ativo:true})});
+  const token=Math.random().toString(36).slice(2)+Math.random().toString(36).slice(2)+Date.now().toString(36);
+  const res=await sb('/rest/v1/medicos',{method:'POST',headers:{'Prefer':'return=representation'},body:JSON.stringify({
+    nome, cpf, crm, telefone:tel, senha_hash:senha, token_acesso:token, ativo:true, primeiro_acesso:false
+  })});
   if(!res?.length){erroEl.textContent='Erro ao criar conta. Tente novamente.';erroEl.style.display='block';btn.disabled=false;btn.textContent='Criar conta';return;}
   medico=res[0];
   try{localStorage.setItem('plantaopro_token',token);}catch(e){}
@@ -904,6 +1142,7 @@ function showPage(id,el) {
   if(id==='notificacoes')carregarNotificacoes();
   if(id==='plantoes')carregarPlantoes();
   if(id==='disponiveis')carregarDisponiveis();
+  if(id==='perfil')preencherPerfil();
 }
 
 function toastMed(msg,ok=true){const t=document.getElementById('toast-med');if(!t)return;t.textContent=msg;t.style.background=ok?'#2d7a3a':'#b03030';t.style.display='block';setTimeout(()=>t.style.display='none',3000);}
