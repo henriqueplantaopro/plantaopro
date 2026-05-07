@@ -385,15 +385,9 @@ html,body{height:100%;background:#f0f4f8;font-family:-apple-system,BlinkMacSyste
         <input id="cad-crm" type="text" placeholder="CRM/SP 123456" style="width:100%;padding:12px 14px;font-size:14px;border:1.5px solid #e0e0e0;border-radius:10px;font-family:inherit;outline:none;box-sizing:border-box;">
       </div>
       <div style="margin-bottom:12px;">
-        <label style="font-size:11px;font-weight:600;color:#555;text-transform:uppercase;letter-spacing:0.4px;display:block;margin-bottom:5px;">Especialidade principal *</label>
-        <select id="cad-esp" style="width:100%;padding:12px 14px;font-size:14px;border:1.5px solid #e0e0e0;border-radius:10px;font-family:inherit;outline:none;box-sizing:border-box;background:#fff;-webkit-appearance:none;">
-          <option value="">Selecione...</option>
-          <option>Clínica Médica</option><option>Medicina de Emergência</option><option>Medicina Intensiva / UTI</option>
-          <option>Cirurgia Geral</option><option>Pediatria</option><option>Ginecologia e Obstetrícia</option>
-          <option>Ortopedia</option><option>Cardiologia</option><option>Neurologia</option>
-          <option>Psiquiatria</option><option>Anestesiologia</option><option>Radiologia</option>
-          <option>Medicina da Família</option><option>Medicina do Trabalho</option><option>Outra</option>
-        </select>
+        <label style="font-size:11px;font-weight:600;color:#555;text-transform:uppercase;letter-spacing:0.4px;display:block;margin-bottom:5px;">Especialidades *</label>
+        <div style="font-size:12px;color:#888;margin-bottom:8px;">Selecione uma ou mais especialidades</div>
+        <div id="cad-esp-grid" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:4px;"></div>
       </div>
       <div style="margin-bottom:12px;">
         <label style="font-size:11px;font-weight:600;color:#555;text-transform:uppercase;letter-spacing:0.4px;display:block;margin-bottom:5px;">RQE <span style="font-weight:400;color:#999;">(se possuir)</span></label>
@@ -448,15 +442,9 @@ html,body{height:100%;background:#f0f4f8;font-family:-apple-system,BlinkMacSyste
       <input class="modal-textarea" id="ep-nome" type="text" style="width:100%;padding:10px 12px;font-size:14px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-family:inherit;margin-bottom:14px;">
       <label class="modal-label">CRM</label>
       <input class="modal-textarea" id="ep-crm" type="text" style="width:100%;padding:10px 12px;font-size:14px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-family:inherit;margin-bottom:14px;">
-      <label class="modal-label">Especialidade principal</label>
-      <select id="ep-esp" style="width:100%;padding:10px 12px;font-size:14px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-family:inherit;margin-bottom:14px;background:#fff;-webkit-appearance:none;">
-        <option value="">Selecione...</option>
-        <option>Clínica Médica</option><option>Medicina de Emergência</option><option>Medicina Intensiva / UTI</option>
-        <option>Cirurgia Geral</option><option>Pediatria</option><option>Ginecologia e Obstetrícia</option>
-        <option>Ortopedia</option><option>Cardiologia</option><option>Neurologia</option>
-        <option>Psiquiatria</option><option>Anestesiologia</option><option>Radiologia</option>
-        <option>Medicina da Família</option><option>Medicina do Trabalho</option><option>Outra</option>
-      </select>
+      <label class="modal-label">Especialidades</label>
+      <div style="font-size:11px;color:var(--text3);margin-bottom:8px;">Selecione uma ou mais</div>
+      <div id="ep-esp-grid" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;"></div>
       <label class="modal-label">RQE <span style="font-weight:400;color:var(--text3);">(se possuir)</span></label>
       <input class="modal-textarea" id="ep-rqe" type="text" placeholder="Ex: RQE 12345" style="width:100%;padding:10px 12px;font-size:14px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-family:inherit;margin-bottom:14px;">
       <label class="modal-label">Telefone / WhatsApp</label>
@@ -696,7 +684,42 @@ function mostrarErro(){
   document.getElementById('tela-erro').style.display='block';
 }
 
-// ── UFs DE INTERESSE ─────────────────────────────────────
+// ── ESPECIALIDADES ───────────────────────────────────────
+const ESPECIALIDADES = [
+  'Clínica Médica','Medicina de Emergência','Medicina Intensiva / UTI',
+  'Cirurgia Geral','Pediatria','Ginecologia e Obstetrícia',
+  'Ortopedia','Cardiologia','Neurologia','Psiquiatria',
+  'Anestesiologia','Radiologia','Medicina da Família',
+  'Medicina do Trabalho','Dermatologia','Oftalmologia',
+  'Otorrinolaringologia','Urologia','Oncologia','Outra'
+];
+
+function renderEspGrid(containerId, selecionadas=[]) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  el.innerHTML = ESPECIALIDADES.map(esp => {
+    const sel = selecionadas.includes(esp);
+    return `<button type="button" onclick="toggleEsp(this,'${containerId}')"
+      style="padding:7px 10px;font-size:12px;font-weight:500;border-radius:99px;border:1.5px solid ${sel?'#1a5fad':'#e0e0e0'};background:${sel?'#e8f0fb':'#fff'};color:${sel?'#1a5fad':'#555'};cursor:pointer;transition:all 0.1s;white-space:nowrap;"
+      data-esp="${esp}" data-sel="${sel?'1':'0'}">${esp}</button>`;
+  }).join('');
+}
+
+function toggleEsp(btn, containerId) {
+  const sel = btn.dataset.sel === '1';
+  btn.dataset.sel = sel ? '0' : '1';
+  btn.style.borderColor = sel ? '#e0e0e0' : '#1a5fad';
+  btn.style.background  = sel ? '#fff' : '#e8f0fb';
+  btn.style.color       = sel ? '#555' : '#1a5fad';
+}
+
+function getEspSelecionadas(containerId) {
+  return [...document.querySelectorAll(`#${containerId} [data-esp]`)]
+    .filter(b => b.dataset.sel === '1')
+    .map(b => b.dataset.esp);
+}
+
+// UFs DE INTERESSE
 const UFS_BR = ['AC','AL','AM','AP','BA','CE','DF','ES','GO','MA','MG','MS','MT','PA','PB','PE','PI','PR','RJ','RN','RO','RR','RS','SC','SE','SP','TO'];
 
 function renderUFsGrid(containerId, selecionadas=[]) {
@@ -727,6 +750,7 @@ function getUFsSelecionadas(containerId) {
 function mostrarCadastroMed() {
   document.getElementById('tela-erro').style.display='none';
   document.getElementById('tela-cadastro-med').style.display='block';
+  renderEspGrid('cad-esp-grid', []);
   renderUFsGrid('cad-ufs-grid', []);
 }
 
@@ -759,24 +783,24 @@ function abrirEditarPerfil() {
   if (!medico) return;
   document.getElementById('ep-nome').value = medico.nome || '';
   document.getElementById('ep-crm').value  = medico.crm || '';
-  document.getElementById('ep-esp').value  = medico.especialidade || '';
   document.getElementById('ep-rqe').value  = medico.rqe || '';
   document.getElementById('ep-tel').value  = medico.telefone || '';
   document.getElementById('ep-pix').value  = medico.pix_chave || '';
+  renderEspGrid('ep-esp-grid', medico.especialidades || (medico.especialidade ? [medico.especialidade] : []));
   renderUFsGrid('ep-ufs-grid', medico.ufs_interesse || []);
   document.getElementById('modal-editar-perfil').classList.remove('oculto');
 }
 
 async function salvarPerfil() {
   const nome = document.getElementById('ep-nome').value.trim();
-  const esp  = document.getElementById('ep-esp').value;
   if (!nome) { toastMed('Nome obrigatório', false); return; }
-  const ufs = getUFsSelecionadas('ep-ufs-grid');
+  const esps = getEspSelecionadas('ep-esp-grid');
+  const ufs  = getUFsSelecionadas('ep-ufs-grid');
   const payload = {
     nome,
     crm:            document.getElementById('ep-crm').value.trim(),
-    especialidade:  esp || null,
-    especialidades: esp ? [esp] : [],
+    especialidade:  esps[0] || null,
+    especialidades: esps,
     rqe:            document.getElementById('ep-rqe').value.trim() || null,
     telefone:       document.getElementById('ep-tel').value.trim(),
     pix_chave:      document.getElementById('ep-pix').value.trim() || null,
@@ -970,12 +994,12 @@ async function cadastrarMedico(){
   // Criar médico
   const token=Math.random().toString(36).slice(2)+Math.random().toString(36).slice(2)+Date.now().toString(36);
   const ufs = getUFsSelecionadas('cad-ufs-grid');
-  const esp = document.getElementById('cad-esp')?.value || '';
+  const esps = getEspSelecionadas('cad-esp-grid');
   const rqe = document.getElementById('cad-rqe')?.value.trim() || null;
   const res=await sb('/rest/v1/medicos',{method:'POST',headers:{'Prefer':'return=representation'},body:JSON.stringify({
     nome, cpf, crm, telefone:tel,
-    especialidade: esp || null,
-    especialidades: esp ? [esp] : [],
+    especialidade: esps[0] || null,
+    especialidades: esps,
     rqe,
     ufs_interesse: ufs,
     senha_hash:senha, token_acesso:token, ativo:true, primeiro_acesso:false
