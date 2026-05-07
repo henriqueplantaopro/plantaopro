@@ -386,8 +386,10 @@ html,body{height:100%;background:#f0f4f8;font-family:-apple-system,BlinkMacSyste
       </div>
       <div style="margin-bottom:12px;">
         <label style="font-size:11px;font-weight:600;color:#555;text-transform:uppercase;letter-spacing:0.4px;display:block;margin-bottom:5px;">Especialidades *</label>
-        <div style="font-size:12px;color:#888;margin-bottom:8px;">Selecione uma ou mais especialidades</div>
-        <div id="cad-esp-grid" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:4px;"></div>
+        <button type="button" onclick="abrirSeletorEsp('cad')" style="width:100%;padding:12px 14px;font-size:14px;border:1.5px solid #e0e0e0;border-radius:10px;font-family:inherit;background:#fff;color:#555;text-align:left;cursor:pointer;display:flex;justify-content:space-between;align-items:center;">
+          <span id="cad-esp-label">Selecionar especialidades...</span><span style="color:#aaa;">&#9660;</span>
+        </button>
+        <div id="cad-esp-tags" style="display:flex;flex-wrap:wrap;gap:4px;margin-top:6px;"></div>
       </div>
       <div style="margin-bottom:12px;">
         <label style="font-size:11px;font-weight:600;color:#555;text-transform:uppercase;letter-spacing:0.4px;display:block;margin-bottom:5px;">RQE <span style="font-weight:400;color:#999;">(se possuir)</span></label>
@@ -396,9 +398,11 @@ html,body{height:100%;background:#f0f4f8;font-family:-apple-system,BlinkMacSyste
 
       <!-- UFs de interesse -->
       <div style="font-size:11px;font-weight:700;color:#1a5fad;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;margin-top:16px;">UFs de interesse</div>
-      <div style="font-size:12px;color:#888;margin-bottom:10px;">Selecione os estados onde quer receber ofertas de plantão (pode marcar mais de um)</div>
-      <div id="cad-ufs-grid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:16px;">
-      </div>
+      <div style="font-size:12px;color:#888;margin-bottom:8px;">Estados onde quer receber ofertas de plantão</div>
+      <button type="button" onclick="abrirSeletorUF('cad')" style="width:100%;padding:12px 14px;font-size:14px;border:1.5px solid #e0e0e0;border-radius:10px;font-family:inherit;background:#fff;color:#555;text-align:left;cursor:pointer;display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+        <span id="cad-ufs-label">Selecionar estados...</span><span style="color:#aaa;">&#9660;</span>
+      </button>
+      <div id="cad-ufs-tags" style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:10px;"></div>
 
       <!-- Senha -->
       <div style="font-size:11px;font-weight:700;color:#1a5fad;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px;margin-top:4px;">Acesso</div>
@@ -443,8 +447,10 @@ html,body{height:100%;background:#f0f4f8;font-family:-apple-system,BlinkMacSyste
       <label class="modal-label">CRM</label>
       <input class="modal-textarea" id="ep-crm" type="text" style="width:100%;padding:10px 12px;font-size:14px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-family:inherit;margin-bottom:14px;">
       <label class="modal-label">Especialidades</label>
-      <div style="font-size:11px;color:var(--text3);margin-bottom:8px;">Selecione uma ou mais</div>
-      <div id="ep-esp-grid" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;"></div>
+      <button type="button" onclick="abrirSeletorEsp('ep')" style="width:100%;padding:10px 12px;font-size:14px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-family:inherit;background:#fff;color:var(--text2);text-align:left;cursor:pointer;display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+        <span id="ep-esp-label">Selecionar...</span><span style="color:#aaa;">&#9660;</span>
+      </button>
+      <div id="ep-esp-tags" style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:14px;"></div>
       <label class="modal-label">RQE <span style="font-weight:400;color:var(--text3);">(se possuir)</span></label>
       <input class="modal-textarea" id="ep-rqe" type="text" placeholder="Ex: RQE 12345" style="width:100%;padding:10px 12px;font-size:14px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-family:inherit;margin-bottom:14px;">
       <label class="modal-label">Telefone / WhatsApp</label>
@@ -452,8 +458,10 @@ html,body{height:100%;background:#f0f4f8;font-family:-apple-system,BlinkMacSyste
       <label class="modal-label">Chave PIX</label>
       <input class="modal-textarea" id="ep-pix" type="text" placeholder="CPF, e-mail, telefone ou chave aleatória" style="width:100%;padding:10px 12px;font-size:14px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-family:inherit;margin-bottom:14px;">
       <label class="modal-label">UFs de interesse</label>
-      <div style="font-size:12px;color:var(--text3);margin-bottom:8px;">Estados onde quer receber ofertas de plantão</div>
-      <div id="ep-ufs-grid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:5px;margin-bottom:4px;"></div>
+      <button type="button" onclick="abrirSeletorUF('ep')" style="width:100%;padding:10px 12px;font-size:14px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-family:inherit;background:#fff;color:var(--text2);text-align:left;cursor:pointer;display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+        <span id="ep-ufs-label">Selecionar...</span><span style="color:#aaa;">&#9660;</span>
+      </button>
+      <div id="ep-ufs-tags" style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:4px;"></div>
     </div>
     <div class="modal-footer">
       <button class="btn-modal azul" onclick="salvarPerfil()">Salvar alterações</button>
@@ -522,6 +530,25 @@ html,body{height:100%;background:#f0f4f8;font-family:-apple-system,BlinkMacSyste
     </div>
     <div class="modal-footer">
       <button class="btn-modal cancel" onclick="document.getElementById('modal-esqueci-med').classList.add('oculto')">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL SELETOR GENÉRICO (Especialidades e UFs) -->
+<div class="modal-overlay oculto" id="modal-seletor" onclick="if(event.target===this)fecharSeletor()">
+  <div class="modal-sheet" style="max-height:85vh;">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <div class="modal-title" id="seletor-titulo">Selecionar</div>
+      <div class="modal-sub" id="seletor-sub">Toque para selecionar ou remover</div>
+    </div>
+    <div style="padding:12px 20px 8px;">
+      <input id="seletor-busca" type="text" placeholder="Buscar..." oninput="filtrarSeletor()"
+        style="width:100%;padding:10px 14px;font-size:14px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-family:inherit;outline:none;box-sizing:border-box;">
+    </div>
+    <div id="seletor-lista" style="padding:0 12px 12px;overflow-y:auto;max-height:50vh;"></div>
+    <div class="modal-footer" style="padding-top:8px;">
+      <button class="btn-modal azul" onclick="confirmarSeletor()">Confirmar seleção</button>
     </div>
   </div>
 </div>
@@ -684,75 +711,128 @@ function mostrarErro(){
   document.getElementById('tela-erro').style.display='block';
 }
 
-// ── ESPECIALIDADES ───────────────────────────────────────
+// ── SELETOR GENÉRICO (Especialidades e UFs) ──────────────
 const ESPECIALIDADES = [
   'Clínica Médica','Medicina de Emergência','Medicina Intensiva / UTI',
   'Cirurgia Geral','Pediatria','Ginecologia e Obstetrícia',
-  'Ortopedia','Cardiologia','Neurologia','Psiquiatria',
-  'Anestesiologia','Radiologia','Medicina da Família',
-  'Medicina do Trabalho','Dermatologia','Oftalmologia',
-  'Otorrinolaringologia','Urologia','Oncologia','Outra'
+  'Ortopedia e Traumatologia','Cardiologia','Neurologia','Psiquiatria',
+  'Anestesiologia','Radiologia e Diagnóstico por Imagem',
+  'Medicina da Família e Comunidade','Medicina do Trabalho',
+  'Dermatologia','Oftalmologia','Otorrinolaringologia',
+  'Urologia','Oncologia','Reumatologia','Endocrinologia',
+  'Gastroenterologia','Pneumologia','Nefrologia','Hematologia',
+  'Infectologia','Geriatria','Medicina Esportiva','Outra'
 ];
 
-function renderEspGrid(containerId, selecionadas=[]) {
-  const el = document.getElementById(containerId);
-  if (!el) return;
-  el.innerHTML = ESPECIALIDADES.map(esp => {
-    const sel = selecionadas.includes(esp);
-    return `<button type="button" onclick="toggleEsp(this,'${containerId}')"
-      style="padding:7px 10px;font-size:12px;font-weight:500;border-radius:99px;border:1.5px solid ${sel?'#1a5fad':'#e0e0e0'};background:${sel?'#e8f0fb':'#fff'};color:${sel?'#1a5fad':'#555'};cursor:pointer;transition:all 0.1s;white-space:nowrap;"
-      data-esp="${esp}" data-sel="${sel?'1':'0'}">${esp}</button>`;
+const UFS_BR = ['AC','AL','AM','AP','BA','CE','DF','ES','GO','MA',
+  'MG','MS','MT','PA','PB','PE','PI','PR','RJ','RN',
+  'RO','RR','RS','SC','SE','SP','TO'];
+
+let _seletorCtx = null; // { prefixo, tipo, opcoes, selecionadas }
+
+function abrirSeletorEsp(prefixo) {
+  const atual = _getSelecionadas(prefixo + '-esp');
+  _seletorCtx = { prefixo, tipo: 'esp', opcoes: ESPECIALIDADES, selecionadas: [...atual] };
+  document.getElementById('seletor-titulo').textContent = 'Especialidades';
+  document.getElementById('seletor-sub').textContent = 'Selecione uma ou mais especialidades';
+  document.getElementById('seletor-busca').value = '';
+  _renderSeletorLista('');
+  document.getElementById('modal-seletor').classList.remove('oculto');
+}
+
+function abrirSeletorUF(prefixo) {
+  const atual = _getSelecionadas(prefixo + '-ufs');
+  _seletorCtx = { prefixo, tipo: 'ufs', opcoes: UFS_BR, selecionadas: [...atual] };
+  document.getElementById('seletor-titulo').textContent = 'Estados de interesse';
+  document.getElementById('seletor-sub').textContent = 'Selecione os estados onde quer receber plantões';
+  document.getElementById('seletor-busca').value = '';
+  _renderSeletorLista('');
+  document.getElementById('modal-seletor').classList.remove('oculto');
+}
+
+function filtrarSeletor() {
+  const q = document.getElementById('seletor-busca').value;
+  _renderSeletorLista(q);
+}
+
+function _renderSeletorLista(busca) {
+  if (!_seletorCtx) return;
+  const el = document.getElementById('seletor-lista');
+  const q = busca.toLowerCase();
+  const filtradas = _seletorCtx.opcoes.filter(o => o.toLowerCase().includes(q));
+  el.innerHTML = filtradas.map(op => {
+    const sel = _seletorCtx.selecionadas.includes(op);
+    return `<div onclick="_toggleSeletorItem('${op.replace(/'/g,"\\'")}')"
+      style="display:flex;align-items:center;gap:12px;padding:13px 8px;border-bottom:1px solid var(--border);cursor:pointer;">
+      <div style="width:22px;height:22px;border-radius:6px;border:2px solid ${sel?'var(--blue)':'var(--border)'};background:${sel?'var(--blue)':'#fff'};display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+        ${sel?'<span style="color:#fff;font-size:13px;line-height:1;">&#10003;</span>':''}
+      </div>
+      <span style="font-size:14px;color:var(--text);">${op}</span>
+    </div>`;
   }).join('');
 }
 
-function toggleEsp(btn, containerId) {
-  const sel = btn.dataset.sel === '1';
-  btn.dataset.sel = sel ? '0' : '1';
-  btn.style.borderColor = sel ? '#e0e0e0' : '#1a5fad';
-  btn.style.background  = sel ? '#fff' : '#e8f0fb';
-  btn.style.color       = sel ? '#555' : '#1a5fad';
+function _toggleSeletorItem(op) {
+  if (!_seletorCtx) return;
+  const idx = _seletorCtx.selecionadas.indexOf(op);
+  if (idx >= 0) _seletorCtx.selecionadas.splice(idx, 1);
+  else _seletorCtx.selecionadas.push(op);
+  _renderSeletorLista(document.getElementById('seletor-busca').value);
 }
 
-function getEspSelecionadas(containerId) {
-  return [...document.querySelectorAll(`#${containerId} [data-esp]`)]
-    .filter(b => b.dataset.sel === '1')
-    .map(b => b.dataset.esp);
+function confirmarSeletor() {
+  if (!_seletorCtx) return;
+  const { prefixo, tipo, selecionadas } = _seletorCtx;
+  const chave = prefixo + '-' + tipo;
+  _setSelecionadas(chave, selecionadas);
+  fecharSeletor();
 }
 
-// UFs DE INTERESSE
-const UFS_BR = ['AC','AL','AM','AP','BA','CE','DF','ES','GO','MA','MG','MS','MT','PA','PB','PE','PI','PR','RJ','RN','RO','RR','RS','SC','SE','SP','TO'];
-
-function renderUFsGrid(containerId, selecionadas=[]) {
-  const el = document.getElementById(containerId);
-  if (!el) return;
-  el.innerHTML = UFS_BR.map(uf => {
-    const sel = selecionadas.includes(uf);
-    return `<button type="button" onclick="toggleUF(this,'${uf}','${containerId}')"
-      style="padding:7px 4px;font-size:12px;font-weight:600;border-radius:6px;border:1.5px solid ${sel?'#1a5fad':'#e0e0e0'};background:${sel?'#e8f0fb':'#fff'};color:${sel?'#1a5fad':'#555'};cursor:pointer;transition:all 0.1s;"
-      data-uf="${uf}" data-sel="${sel?'1':'0'}">${uf}</button>`;
-  }).join('');
+function fecharSeletor() {
+  document.getElementById('modal-seletor').classList.add('oculto');
 }
 
-function toggleUF(btn, uf, containerId) {
-  const sel = btn.dataset.sel === '1';
-  btn.dataset.sel = sel ? '0' : '1';
-  btn.style.borderColor = sel ? '#e0e0e0' : '#1a5fad';
-  btn.style.background  = sel ? '#fff' : '#e8f0fb';
-  btn.style.color       = sel ? '#555' : '#1a5fad';
+// Armazenar seleções em memória por chave
+const _selecoes = {};
+
+function _setSelecionadas(chave, lista) {
+  _selecoes[chave] = lista;
+  // Atualizar label e tags
+  const labelEl = document.getElementById(chave.replace('-ufs','-ufs-label').replace('-esp','-esp-label'));
+  const tagsEl  = document.getElementById(chave.replace('-ufs','-ufs-tags').replace('-esp','-esp-tags'));
+  if (labelEl) labelEl.textContent = lista.length > 0 ? lista.length + ' selecionado(s)' : 'Selecionar...';
+  if (tagsEl) {
+    tagsEl.innerHTML = lista.map(v =>
+      `<span style="background:var(--blue-light);color:var(--blue);border:1px solid #a0c4f0;padding:3px 10px;border-radius:99px;font-size:12px;font-weight:500;">${v}</span>`
+    ).join('');
+  }
 }
 
-function getUFsSelecionadas(containerId) {
-  return [...document.querySelectorAll(`#${containerId} [data-uf]`)]
-    .filter(b => b.dataset.sel === '1')
-    .map(b => b.dataset.uf);
+function _getSelecionadas(chave) {
+  return _selecoes[chave] || [];
+}
+
+function getEspSelecionadas(prefixo) {
+  return _getSelecionadas(prefixo + '-esp');
+}
+
+function getUFsSelecionadas(prefixo) {
+  return _getSelecionadas(prefixo + '-ufs');
+}
+
+// Inicializar seletor com valores existentes (ao abrir modal de editar)
+function _initSeletor(chave, valores) {
+  _selecoes[chave] = valores || [];
+  _setSelecionadas(chave, _selecoes[chave]);
 }
 
 function mostrarCadastroMed() {
   document.getElementById('tela-erro').style.display='none';
   document.getElementById('tela-cadastro-med').style.display='block';
-  renderEspGrid('cad-esp-grid', []);
-  renderUFsGrid('cad-ufs-grid', []);
+  _initSeletor('cad-esp', []);
+  _initSeletor('cad-ufs', []);
 }
+
 
 
 function voltarLogin(){
@@ -786,16 +866,16 @@ function abrirEditarPerfil() {
   document.getElementById('ep-rqe').value  = medico.rqe || '';
   document.getElementById('ep-tel').value  = medico.telefone || '';
   document.getElementById('ep-pix').value  = medico.pix_chave || '';
-  renderEspGrid('ep-esp-grid', medico.especialidades || (medico.especialidade ? [medico.especialidade] : []));
-  renderUFsGrid('ep-ufs-grid', medico.ufs_interesse || []);
+  _initSeletor('ep-esp', medico.especialidades || (medico.especialidade ? [medico.especialidade] : []));
+  _initSeletor('ep-ufs', medico.ufs_interesse || []);
   document.getElementById('modal-editar-perfil').classList.remove('oculto');
 }
 
 async function salvarPerfil() {
   const nome = document.getElementById('ep-nome').value.trim();
   if (!nome) { toastMed('Nome obrigatório', false); return; }
-  const esps = getEspSelecionadas('ep-esp-grid');
-  const ufs  = getUFsSelecionadas('ep-ufs-grid');
+  const esps = getEspSelecionadas('ep');
+  const ufs  = getUFsSelecionadas('ep');
   const payload = {
     nome,
     crm:            document.getElementById('ep-crm').value.trim(),
@@ -993,8 +1073,8 @@ async function cadastrarMedico(){
   if(existe?.length){erroEl.textContent='Este CPF já está cadastrado. Faça login.';erroEl.style.display='block';btn.disabled=false;btn.textContent='Criar conta';return;}
   // Criar médico
   const token=Math.random().toString(36).slice(2)+Math.random().toString(36).slice(2)+Date.now().toString(36);
-  const ufs = getUFsSelecionadas('cad-ufs-grid');
-  const esps = getEspSelecionadas('cad-esp-grid');
+  const ufs = getUFsSelecionadas('cad');
+  const esps = getEspSelecionadas('cad');
   const rqe = document.getElementById('cad-rqe')?.value.trim() || null;
   const res=await sb('/rest/v1/medicos',{method:'POST',headers:{'Prefer':'return=representation'},body:JSON.stringify({
     nome, cpf, crm, telefone:tel,
