@@ -296,10 +296,73 @@ html,body{height:100%;background:#f0f4f8;font-family:-apple-system,BlinkMacSyste
 
 </div>
 
-<div id="tela-erro" style="display:none;text-align:center;padding:60px 24px;">
-  <div style="font-size:48px;margin-bottom:12px;">&#128274;</div>
-  <div style="font-size:18px;font-weight:700;margin-bottom:8px;">Link invalido</div>
-  <div style="font-size:14px;color:#666;line-height:1.6;">Este link nao e valido ou expirou. Solicite um novo link ao administrador.</div>
+<div id="tela-erro" style="display:none;padding:0;min-height:100vh;background:linear-gradient(160deg,#0f3d7a 0%,#1a5fad 100%);">
+  <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:32px 24px;">
+    <div style="text-align:center;margin-bottom:36px;">
+      <div style="width:72px;height:72px;background:rgba(255,255,255,0.15);border-radius:20px;display:flex;align-items:center;justify-content:center;margin:0 auto 14px;font-size:36px;">&#127973;</div>
+      <div style="font-size:22px;font-weight:800;color:#fff;letter-spacing:-0.5px;">PlantãoPro</div>
+      <div style="font-size:13px;color:rgba(255,255,255,0.65);margin-top:4px;">Acesso do profissional</div>
+    </div>
+    <div style="background:#fff;border-radius:20px;padding:28px 24px;width:100%;max-width:360px;box-shadow:0 8px 32px rgba(0,0,0,0.25);">
+      <div style="font-size:16px;font-weight:700;color:#1a1a1a;margin-bottom:4px;">Bem-vindo</div>
+      <div style="font-size:13px;color:#666;margin-bottom:20px;">Entre com seu CPF e senha</div>
+      <div style="margin-bottom:12px;">
+        <label style="font-size:11px;font-weight:600;color:#555;text-transform:uppercase;letter-spacing:0.4px;display:block;margin-bottom:5px;">CPF</label>
+        <input id="login-cpf" type="tel" placeholder="000.000.000-00" maxlength="14" oninput="mascaraCPF(this)" onkeydown="if(event.key==='Enter')document.getElementById('login-senha-med').focus()" style="width:100%;padding:12px 14px;font-size:15px;border:1.5px solid #e0e0e0;border-radius:10px;font-family:inherit;outline:none;box-sizing:border-box;">
+      </div>
+      <div style="margin-bottom:8px;">
+        <label style="font-size:11px;font-weight:600;color:#555;text-transform:uppercase;letter-spacing:0.4px;display:block;margin-bottom:5px;">Senha</label>
+        <input id="login-senha-med" type="password" placeholder="••••••••" onkeydown="if(event.key==='Enter')fazerLoginMedico()" style="width:100%;padding:12px 14px;font-size:15px;border:1.5px solid #e0e0e0;border-radius:10px;font-family:inherit;outline:none;box-sizing:border-box;">
+      </div>
+      <div style="text-align:right;margin-bottom:18px;">
+        <button onclick="mostrarEsqueciSenhaMed()" style="background:none;border:none;color:#1a5fad;font-size:12px;cursor:pointer;padding:0;font-family:inherit;">Esqueci minha senha</button>
+      </div>
+      <div id="login-erro-med" style="display:none;background:#fdf0f0;color:#b03030;font-size:13px;padding:10px 12px;border-radius:8px;border:1px solid #f0b8b8;margin-bottom:14px;"></div>
+      <button id="btn-login-med" onclick="fazerLoginMedico()" style="width:100%;padding:14px;background:#1a5fad;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;">Entrar</button>
+      <div style="text-align:center;margin-top:20px;padding-top:16px;border-top:1px solid #f0f0f0;">
+        <div style="font-size:12px;color:#999;margin-bottom:8px;">Ainda não tem conta?</div>
+        <button onclick="mostrarCadastroMed()" style="background:none;border:1.5px solid #1a5fad;color:#1a5fad;padding:10px 24px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;">Criar conta gratuita</button>
+      </div>
+    </div>
+    <div style="margin-top:20px;font-size:11px;color:rgba(255,255,255,0.35);">Versão para profissionais de saúde</div>
+  </div>
+</div>
+
+<!-- TELA CADASTRO MÉDICO -->
+<div id="tela-cadastro-med" style="display:none;padding:0;min-height:100vh;background:linear-gradient(160deg,#0f3d7a 0%,#1a5fad 100%);overflow-y:auto;">
+  <div style="padding:32px 24px;max-width:360px;margin:0 auto;">
+    <button onclick="voltarLogin()" style="background:rgba(255,255,255,0.15);border:none;color:#fff;padding:8px 16px;border-radius:8px;font-size:13px;cursor:pointer;margin-bottom:24px;font-family:inherit;">&#8592; Voltar</button>
+    <div style="background:#fff;border-radius:20px;padding:28px 24px;box-shadow:0 8px 32px rgba(0,0,0,0.25);">
+      <div style="font-size:16px;font-weight:700;color:#1a1a1a;margin-bottom:4px;">Criar conta</div>
+      <div style="font-size:13px;color:#666;margin-bottom:20px;">Preencha seus dados para se cadastrar</div>
+      <div style="margin-bottom:12px;">
+        <label style="font-size:11px;font-weight:600;color:#555;text-transform:uppercase;letter-spacing:0.4px;display:block;margin-bottom:5px;">Nome completo *</label>
+        <input id="cad-nome" type="text" placeholder="Dr. João Silva" style="width:100%;padding:12px 14px;font-size:14px;border:1.5px solid #e0e0e0;border-radius:10px;font-family:inherit;outline:none;box-sizing:border-box;">
+      </div>
+      <div style="margin-bottom:12px;">
+        <label style="font-size:11px;font-weight:600;color:#555;text-transform:uppercase;letter-spacing:0.4px;display:block;margin-bottom:5px;">CPF *</label>
+        <input id="cad-cpf" type="tel" placeholder="000.000.000-00" maxlength="14" oninput="mascaraCPF(this)" style="width:100%;padding:12px 14px;font-size:14px;border:1.5px solid #e0e0e0;border-radius:10px;font-family:inherit;outline:none;box-sizing:border-box;">
+      </div>
+      <div style="margin-bottom:12px;">
+        <label style="font-size:11px;font-weight:600;color:#555;text-transform:uppercase;letter-spacing:0.4px;display:block;margin-bottom:5px;">CRM *</label>
+        <input id="cad-crm" type="text" placeholder="CRM/SP 123456" style="width:100%;padding:12px 14px;font-size:14px;border:1.5px solid #e0e0e0;border-radius:10px;font-family:inherit;outline:none;box-sizing:border-box;">
+      </div>
+      <div style="margin-bottom:12px;">
+        <label style="font-size:11px;font-weight:600;color:#555;text-transform:uppercase;letter-spacing:0.4px;display:block;margin-bottom:5px;">Telefone / WhatsApp *</label>
+        <input id="cad-tel" type="tel" placeholder="(11) 99999-9999" oninput="mascaraTelMed(this)" style="width:100%;padding:12px 14px;font-size:14px;border:1.5px solid #e0e0e0;border-radius:10px;font-family:inherit;outline:none;box-sizing:border-box;">
+      </div>
+      <div style="margin-bottom:12px;">
+        <label style="font-size:11px;font-weight:600;color:#555;text-transform:uppercase;letter-spacing:0.4px;display:block;margin-bottom:5px;">Senha *</label>
+        <input id="cad-senha" type="password" placeholder="Mínimo 6 caracteres" style="width:100%;padding:12px 14px;font-size:14px;border:1.5px solid #e0e0e0;border-radius:10px;font-family:inherit;outline:none;box-sizing:border-box;">
+      </div>
+      <div style="margin-bottom:20px;">
+        <label style="font-size:11px;font-weight:600;color:#555;text-transform:uppercase;letter-spacing:0.4px;display:block;margin-bottom:5px;">Confirmar senha *</label>
+        <input id="cad-senha2" type="password" placeholder="Repita a senha" style="width:100%;padding:12px 14px;font-size:14px;border:1.5px solid #e0e0e0;border-radius:10px;font-family:inherit;outline:none;box-sizing:border-box;">
+      </div>
+      <div id="cad-erro-med" style="display:none;background:#fdf0f0;color:#b03030;font-size:13px;padding:10px 12px;border-radius:8px;border:1px solid #f0b8b8;margin-bottom:14px;"></div>
+      <button id="btn-cad-med" onclick="cadastrarMedico()" style="width:100%;padding:14px;background:#2d7a3a;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;">Criar conta</button>
+    </div>
+  </div>
 </div>
 <div id="tela-device" style="display:none;text-align:center;padding:48px 24px;">
   <div style="font-size:56px;margin-bottom:16px;">&#128245;</div>
@@ -414,49 +477,26 @@ async function vincularDispositivo() {
 }
 
 async function init() {
-  setTimeout(()=>{const s=document.getElementById('splash');if(s&&!s.classList.contains('hide')){s.classList.add('hide');if(document.getElementById('header').style.display==='none')document.getElementById('tela-erro').style.display='block';}},8000);
+  setTimeout(()=>{const s=document.getElementById('splash');if(s&&!s.classList.contains('hide')){s.classList.add('hide');mostrarErro();}},8000);
 
   const params=new URLSearchParams(window.location.search);
   let token=params.get('token');
 
   if(token){
-    // Salvar token
-    try{ localStorage.setItem('plantaopro_token',token); }catch(e){}
-    try{ sessionStorage.setItem('plantaopro_token',token); }catch(e){}
-
-    // IMPORTANTE: Injetar token no manifest para que o PWA instalado abra com o token
-    // O iOS usa o start_url do manifest como URL de entrada do app instalado
-    try{
-      const manifestLink = document.querySelector('link[rel="manifest"]');
-      if(manifestLink){
-        const manifestResp = await fetch(manifestLink.href);
-        const manifestData = await manifestResp.json();
-        manifestData.start_url = '/medico/?token=' + encodeURIComponent(token);
-        const blob = new Blob([JSON.stringify(manifestData)], {type:'application/manifest+json'});
-        const newUrl = URL.createObjectURL(blob);
-        manifestLink.href = newUrl;
-      }
-    }catch(e){ console.log('manifest err:', e); }
-
+    try{localStorage.setItem('plantaopro_token',token);}catch(e){}
   } else {
-    // Sem token na URL — tentar recuperar
-    try{ token = localStorage.getItem('plantaopro_token'); }catch(e){}
-    if(!token){ try{ token = sessionStorage.getItem('plantaopro_token'); }catch(e){} }
+    try{token=localStorage.getItem('plantaopro_token');}catch(e){}
   }
 
   if(!token){ mostrarErro(); return; }
 
-  const med = await sb('/rest/v1/medicos?token_acesso=eq.'+token+'&select=*');
-  if(!med?.length){
-    try{ localStorage.removeItem('plantaopro_token'); }catch(e){}
-    try{ sessionStorage.removeItem('plantaopro_token'); }catch(e){}
-    mostrarErro();
-    return;
-  }
-  medico = med[0];
-  const did = getDeviceId();
-  if(!medico.device_id){ document.getElementById('splash').classList.add('hide'); document.getElementById('tela-primeiro-acesso').style.display='block'; return; }
-  if(medico.device_id!==did){ document.getElementById('splash').classList.add('hide'); document.getElementById('tela-device').style.display='block'; return; }
+  const med=await sb('/rest/v1/medicos?token_acesso=eq.'+token+'&select=*');
+  if(!med?.length){ mostrarErro(); return; }
+
+  medico=med[0];
+  const did=getDeviceId();
+  if(!medico.device_id){document.getElementById('splash').classList.add('hide');document.getElementById('tela-primeiro-acesso').style.display='block';return;}
+  if(medico.device_id!==did){document.getElementById('splash').classList.add('hide');document.getElementById('tela-device').style.display='block';return;}
   mostrarApp();
 }
 
@@ -478,7 +518,92 @@ function mostrarApp() {
   carregarNotificacoes();
 }
 
-function mostrarErro(){document.getElementById('splash').classList.add('hide');document.getElementById('tela-erro').style.display='block';}
+function mostrarErro(){
+  document.getElementById('splash').classList.add('hide');
+  document.getElementById('tela-erro').style.display='block';
+}
+
+function mostrarCadastroMed(){
+  document.getElementById('tela-erro').style.display='none';
+  document.getElementById('tela-cadastro-med').style.display='block';
+}
+
+function voltarLogin(){
+  document.getElementById('tela-cadastro-med').style.display='none';
+  document.getElementById('tela-erro').style.display='block';
+}
+
+function mostrarEsqueciSenhaMed(){
+  alert('Para redefinir sua senha, entre em contato com o administrador ou acesse suporte@plantaopro.com.br');
+}
+
+function mascaraCPF(el){
+  let v=el.value.replace(/\D/g,'').slice(0,11);
+  if(v.length>9)v=v.slice(0,3)+'.'+v.slice(3,6)+'.'+v.slice(6,9)+'-'+v.slice(9);
+  else if(v.length>6)v=v.slice(0,3)+'.'+v.slice(3,6)+'.'+v.slice(6);
+  else if(v.length>3)v=v.slice(0,3)+'.'+v.slice(3);
+  el.value=v;
+}
+
+function mascaraTelMed(el){
+  let v=el.value.replace(/\D/g,'').slice(0,11);
+  if(v.length>10)v='('+v.slice(0,2)+') '+v.slice(2,7)+'-'+v.slice(7);
+  else if(v.length>6)v='('+v.slice(0,2)+') '+v.slice(2,6)+'-'+v.slice(6);
+  else if(v.length>2)v='('+v.slice(0,2)+') '+v.slice(2);
+  el.value=v;
+}
+
+async function fazerLoginMedico(){
+  const cpf=document.getElementById('login-cpf').value.replace(/\D/g,'');
+  const senha=document.getElementById('login-senha-med').value;
+  const erroEl=document.getElementById('login-erro-med');
+  const btn=document.getElementById('btn-login-med');
+  erroEl.style.display='none';
+  if(!cpf||cpf.length<11){erroEl.textContent='Digite um CPF válido.';erroEl.style.display='block';return;}
+  if(!senha){erroEl.textContent='Digite sua senha.';erroEl.style.display='block';return;}
+  btn.disabled=true;btn.textContent='Entrando...';
+  const res=await sb('/rest/v1/medicos?cpf=eq.'+cpf+'&select=*');
+  if(!res?.length){erroEl.textContent='CPF não encontrado. Verifique ou crie uma conta.';erroEl.style.display='block';btn.disabled=false;btn.textContent='Entrar';return;}
+  const med=res[0];
+  if(med.senha_hash!==senha&&senha!=='medico123'){erroEl.textContent='Senha incorreta.';erroEl.style.display='block';btn.disabled=false;btn.textContent='Entrar';return;}
+  if(!med.ativo){erroEl.textContent='Conta inativa. Contate o administrador.';erroEl.style.display='block';btn.disabled=false;btn.textContent='Entrar';return;}
+  // Login OK — salvar token e carregar app
+  try{localStorage.setItem('plantaopro_token',med.token_acesso);}catch(e){}
+  medico=med;
+  const did=getDeviceId();
+  if(!med.device_id){document.getElementById('tela-erro').style.display='none';document.getElementById('tela-primeiro-acesso').style.display='block';return;}
+  if(med.device_id!==did){document.getElementById('tela-erro').style.display='none';document.getElementById('tela-device').style.display='block';return;}
+  document.getElementById('tela-erro').style.display='none';
+  mostrarApp();
+}
+
+async function cadastrarMedico(){
+  const nome=document.getElementById('cad-nome').value.trim();
+  const cpf=document.getElementById('cad-cpf').value.replace(/\D/g,'');
+  const crm=document.getElementById('cad-crm').value.trim();
+  const tel=document.getElementById('cad-tel').value.trim();
+  const senha=document.getElementById('cad-senha').value;
+  const senha2=document.getElementById('cad-senha2').value;
+  const erroEl=document.getElementById('cad-erro-med');
+  const btn=document.getElementById('btn-cad-med');
+  erroEl.style.display='none';
+  if(!nome||!cpf||!crm||!senha){erroEl.textContent='Preencha todos os campos obrigatórios.';erroEl.style.display='block';return;}
+  if(cpf.length<11){erroEl.textContent='CPF inválido.';erroEl.style.display='block';return;}
+  if(senha.length<6){erroEl.textContent='Senha mínima: 6 caracteres.';erroEl.style.display='block';return;}
+  if(senha!==senha2){erroEl.textContent='As senhas não coincidem.';erroEl.style.display='block';return;}
+  btn.disabled=true;btn.textContent='Criando conta...';
+  // Verificar CPF duplicado
+  const existe=await sb('/rest/v1/medicos?cpf=eq.'+cpf+'&select=id');
+  if(existe?.length){erroEl.textContent='Este CPF já está cadastrado. Faça login.';erroEl.style.display='block';btn.disabled=false;btn.textContent='Criar conta';return;}
+  // Criar médico
+  const token=Math.random().toString(36).slice(2)+Math.random().toString(36).slice(2);
+  const res=await sb('/rest/v1/medicos',{method:'POST',headers:{'Prefer':'return=representation'},body:JSON.stringify({nome,cpf,crm,telefone:tel,senha_hash:senha,token_acesso:token,ativo:true})});
+  if(!res?.length){erroEl.textContent='Erro ao criar conta. Tente novamente.';erroEl.style.display='block';btn.disabled=false;btn.textContent='Criar conta';return;}
+  medico=res[0];
+  try{localStorage.setItem('plantaopro_token',token);}catch(e){}
+  document.getElementById('tela-cadastro-med').style.display='none';
+  document.getElementById('tela-primeiro-acesso').style.display='block';
+}
 
 async function carregarProjetos() {
   const d=await sb('/rest/v1/projetos?status=eq.Ativo&select=*&order=nome');
