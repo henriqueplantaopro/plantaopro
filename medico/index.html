@@ -596,28 +596,20 @@ async function sb(path, opts={}) {
 }
 
 function getDeviceId() {
-  // Gerar ID baseado em características fixas do dispositivo
-  // Isso garante o mesmo ID no Safari normal E no modo standalone (PWA)
-  const fingerprint = [
-    navigator.platform || '',
-    navigator.language || '',
-    screen.width + 'x' + screen.height,
-    screen.colorDepth || '',
-    navigator.hardwareConcurrency || '',
-    Intl.DateTimeFormat().resolvedOptions().timeZone || '',
-  ].join('|');
+  // Chave para o device ID
+  const KEY = 'plantaopro_device_uid';
 
-  // Hash simples do fingerprint
-  let hash = 0;
-  for (let i = 0; i < fingerprint.length; i++) {
-    hash = ((hash << 5) - hash) + fingerprint.charCodeAt(i);
-    hash |= 0;
+  // Tentar recuperar ID já existente
+  let id = null;
+  try { id = localStorage.getItem(KEY); } catch(e) {}
+
+  // Se não tem, gerar um novo ID único e salvar
+  if (!id) {
+    id = 'dev_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2) + '_' + Math.random().toString(36).slice(2);
+    try { localStorage.setItem(KEY, id); } catch(e) {}
   }
-  const deviceId = 'dev_' + Math.abs(hash).toString(36) + '_' + screen.width + screen.height;
 
-  // Salvar também no localStorage como fallback
-  try { localStorage.setItem('plantaopro_device_id', deviceId); } catch(e) {}
-  return deviceId;
+  return id;
 }
 
 async function vincularDispositivo() {
@@ -901,12 +893,34 @@ async function fazerLoginMedico(){
   const med=res[0];
   if(med.senha_hash!==senha&&senha!=='medico123'){erroEl.textContent='Senha incorreta.';erroEl.style.display='block';btn.disabled=false;btn.textContent='Entrar';return;}
   if(!med.ativo){erroEl.textContent='Conta inativa. Contate o administrador.';erroEl.style.display='block';btn.disabled=false;btn.textContent='Entrar';return;}
-  // Login OK — salvar token e carregar app
-  try{localStorage.setItem('plantaopro_token',med.token_acesso);}catch(e){}
-  medico=med;
-  const did=getDeviceId();
-  if(!med.device_id){document.getElementById('tela-erro').style.display='none';document.getElementById('tela-primeiro-acesso').style.display='block';return;}
-  if(med.device_id!==did){document.getElementById('tela-erro').style.display='none';document.getElementById('tela-device').style.display='block';return;}
+
+  // Salvar token
+  try{localStorage.setItem('plantaopro_token', med.token_acesso);}catch(e){}
+  medico = med;
+
+  // Verificação de dispositivo:
+  // - Médicos cadastrados pelo ADMIN (device_id já vinculado) → verificar dispositivo
+  // - Médicos cadastrados pelo APP (sem device_id ou cpf próprio) → sem restrição de dispositivo
+  const did = getDeviceId();
+  const cadastradoPeloAdmin = med.device_id && !med.cpf_proprio;
+
+  if (cadastradoPeloAdmin) {
+    // Verificar se é o dispositivo correto
+    if(med.device_id !== did){
+      erroEl.textContent='Este app está vinculado a outro dispositivo. Contate o administrador.';
+      erroEl.style.display='block';btn.disabled=false;btn.textContent='Entrar';
+      return;
+    }
+  } else if (!med.device_id) {
+    // Primeiro acesso — vincular dispositivo silenciosamente
+    await fetch(SUPABASE_URL+'/rest/v1/medicos?id=eq.'+med.id,{
+      method:'PATCH',
+      headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},
+      body:JSON.stringify({device_id: did, device_registrado_em: new Date().toISOString()})
+    });
+    medico.device_id = did;
+  }
+
   document.getElementById('tela-erro').style.display='none';
   mostrarApp();
 }
