@@ -333,11 +333,14 @@ html,body{height:100%;background:#f0f4f8;font-family:-apple-system,BlinkMacSyste
 
 <!-- TELA CADASTRO MÉDICO -->
 <div id="tela-cadastro-med" style="display:none;padding:0;min-height:100vh;background:linear-gradient(160deg,#0f3d7a 0%,#1a5fad 100%);overflow-y:auto;">
-  <div style="padding:32px 24px;max-width:360px;margin:0 auto;">
+  <div style="padding:32px 24px;max-width:400px;margin:0 auto;">
     <button onclick="voltarLogin()" style="background:rgba(255,255,255,0.15);border:none;color:#fff;padding:8px 16px;border-radius:8px;font-size:13px;cursor:pointer;margin-bottom:24px;font-family:inherit;">&#8592; Voltar</button>
     <div style="background:#fff;border-radius:20px;padding:28px 24px;box-shadow:0 8px 32px rgba(0,0,0,0.25);">
       <div style="font-size:16px;font-weight:700;color:#1a1a1a;margin-bottom:4px;">Criar conta</div>
       <div style="font-size:13px;color:#666;margin-bottom:20px;">Preencha seus dados para se cadastrar</div>
+
+      <!-- Dados pessoais -->
+      <div style="font-size:11px;font-weight:700;color:#1a5fad;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px;">Dados pessoais</div>
       <div style="margin-bottom:12px;">
         <label style="font-size:11px;font-weight:600;color:#555;text-transform:uppercase;letter-spacing:0.4px;display:block;margin-bottom:5px;">Nome completo *</label>
         <input id="cad-nome" type="text" placeholder="Dr. João Silva" style="width:100%;padding:12px 14px;font-size:14px;border:1.5px solid #e0e0e0;border-radius:10px;font-family:inherit;outline:none;box-sizing:border-box;">
@@ -347,13 +350,40 @@ html,body{height:100%;background:#f0f4f8;font-family:-apple-system,BlinkMacSyste
         <input id="cad-cpf" type="tel" placeholder="000.000.000-00" maxlength="14" oninput="mascaraCPF(this)" style="width:100%;padding:12px 14px;font-size:14px;border:1.5px solid #e0e0e0;border-radius:10px;font-family:inherit;outline:none;box-sizing:border-box;">
       </div>
       <div style="margin-bottom:12px;">
+        <label style="font-size:11px;font-weight:600;color:#555;text-transform:uppercase;letter-spacing:0.4px;display:block;margin-bottom:5px;">Telefone / WhatsApp *</label>
+        <input id="cad-tel" type="tel" placeholder="(11) 99999-9999" oninput="mascaraTelMed(this)" style="width:100%;padding:12px 14px;font-size:14px;border:1.5px solid #e0e0e0;border-radius:10px;font-family:inherit;outline:none;box-sizing:border-box;">
+      </div>
+
+      <!-- Dados profissionais -->
+      <div style="font-size:11px;font-weight:700;color:#1a5fad;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px;margin-top:16px;">Dados profissionais</div>
+      <div style="margin-bottom:12px;">
         <label style="font-size:11px;font-weight:600;color:#555;text-transform:uppercase;letter-spacing:0.4px;display:block;margin-bottom:5px;">CRM *</label>
         <input id="cad-crm" type="text" placeholder="CRM/SP 123456" style="width:100%;padding:12px 14px;font-size:14px;border:1.5px solid #e0e0e0;border-radius:10px;font-family:inherit;outline:none;box-sizing:border-box;">
       </div>
       <div style="margin-bottom:12px;">
-        <label style="font-size:11px;font-weight:600;color:#555;text-transform:uppercase;letter-spacing:0.4px;display:block;margin-bottom:5px;">Telefone / WhatsApp *</label>
-        <input id="cad-tel" type="tel" placeholder="(11) 99999-9999" oninput="mascaraTelMed(this)" style="width:100%;padding:12px 14px;font-size:14px;border:1.5px solid #e0e0e0;border-radius:10px;font-family:inherit;outline:none;box-sizing:border-box;">
+        <label style="font-size:11px;font-weight:600;color:#555;text-transform:uppercase;letter-spacing:0.4px;display:block;margin-bottom:5px;">Especialidade principal *</label>
+        <select id="cad-esp" style="width:100%;padding:12px 14px;font-size:14px;border:1.5px solid #e0e0e0;border-radius:10px;font-family:inherit;outline:none;box-sizing:border-box;background:#fff;-webkit-appearance:none;">
+          <option value="">Selecione...</option>
+          <option>Clínica Médica</option><option>Medicina de Emergência</option><option>Medicina Intensiva / UTI</option>
+          <option>Cirurgia Geral</option><option>Pediatria</option><option>Ginecologia e Obstetrícia</option>
+          <option>Ortopedia</option><option>Cardiologia</option><option>Neurologia</option>
+          <option>Psiquiatria</option><option>Anestesiologia</option><option>Radiologia</option>
+          <option>Medicina da Família</option><option>Medicina do Trabalho</option><option>Outra</option>
+        </select>
       </div>
+      <div style="margin-bottom:12px;">
+        <label style="font-size:11px;font-weight:600;color:#555;text-transform:uppercase;letter-spacing:0.4px;display:block;margin-bottom:5px;">RQE <span style="font-weight:400;color:#999;">(se possuir)</span></label>
+        <input id="cad-rqe" type="text" placeholder="Ex: RQE 12345" style="width:100%;padding:12px 14px;font-size:14px;border:1.5px solid #e0e0e0;border-radius:10px;font-family:inherit;outline:none;box-sizing:border-box;">
+      </div>
+
+      <!-- UFs de interesse -->
+      <div style="font-size:11px;font-weight:700;color:#1a5fad;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;margin-top:16px;">UFs de interesse</div>
+      <div style="font-size:12px;color:#888;margin-bottom:10px;">Selecione os estados onde quer receber ofertas de plantão (pode marcar mais de um)</div>
+      <div id="cad-ufs-grid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:16px;">
+      </div>
+
+      <!-- Senha -->
+      <div style="font-size:11px;font-weight:700;color:#1a5fad;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px;margin-top:4px;">Acesso</div>
       <div style="margin-bottom:12px;">
         <label style="font-size:11px;font-weight:600;color:#555;text-transform:uppercase;letter-spacing:0.4px;display:block;margin-bottom:5px;">Senha *</label>
         <input id="cad-senha" type="password" placeholder="Mínimo 6 caracteres" style="width:100%;padding:12px 14px;font-size:14px;border:1.5px solid #e0e0e0;border-radius:10px;font-family:inherit;outline:none;box-sizing:border-box;">
@@ -362,6 +392,7 @@ html,body{height:100%;background:#f0f4f8;font-family:-apple-system,BlinkMacSyste
         <label style="font-size:11px;font-weight:600;color:#555;text-transform:uppercase;letter-spacing:0.4px;display:block;margin-bottom:5px;">Confirmar senha *</label>
         <input id="cad-senha2" type="password" placeholder="Repita a senha" style="width:100%;padding:12px 14px;font-size:14px;border:1.5px solid #e0e0e0;border-radius:10px;font-family:inherit;outline:none;box-sizing:border-box;">
       </div>
+
       <div id="cad-erro-med" style="display:none;background:#fdf0f0;color:#b03030;font-size:13px;padding:10px 12px;border-radius:8px;border:1px solid #f0b8b8;margin-bottom:14px;"></div>
       <button id="btn-cad-med" onclick="cadastrarMedico()" style="width:100%;padding:14px;background:#2d7a3a;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;">Criar conta</button>
     </div>
@@ -393,12 +424,24 @@ html,body{height:100%;background:#f0f4f8;font-family:-apple-system,BlinkMacSyste
       <input class="modal-textarea" id="ep-nome" type="text" style="width:100%;padding:10px 12px;font-size:14px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-family:inherit;margin-bottom:14px;">
       <label class="modal-label">CRM</label>
       <input class="modal-textarea" id="ep-crm" type="text" style="width:100%;padding:10px 12px;font-size:14px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-family:inherit;margin-bottom:14px;">
-      <label class="modal-label">Especialidade</label>
-      <input class="modal-textarea" id="ep-esp" type="text" style="width:100%;padding:10px 12px;font-size:14px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-family:inherit;margin-bottom:14px;">
+      <label class="modal-label">Especialidade principal</label>
+      <select id="ep-esp" style="width:100%;padding:10px 12px;font-size:14px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-family:inherit;margin-bottom:14px;background:#fff;-webkit-appearance:none;">
+        <option value="">Selecione...</option>
+        <option>Clínica Médica</option><option>Medicina de Emergência</option><option>Medicina Intensiva / UTI</option>
+        <option>Cirurgia Geral</option><option>Pediatria</option><option>Ginecologia e Obstetrícia</option>
+        <option>Ortopedia</option><option>Cardiologia</option><option>Neurologia</option>
+        <option>Psiquiatria</option><option>Anestesiologia</option><option>Radiologia</option>
+        <option>Medicina da Família</option><option>Medicina do Trabalho</option><option>Outra</option>
+      </select>
+      <label class="modal-label">RQE <span style="font-weight:400;color:var(--text3);">(se possuir)</span></label>
+      <input class="modal-textarea" id="ep-rqe" type="text" placeholder="Ex: RQE 12345" style="width:100%;padding:10px 12px;font-size:14px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-family:inherit;margin-bottom:14px;">
       <label class="modal-label">Telefone / WhatsApp</label>
       <input class="modal-textarea" id="ep-tel" type="tel" oninput="mascaraTelMed(this)" style="width:100%;padding:10px 12px;font-size:14px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-family:inherit;margin-bottom:14px;">
       <label class="modal-label">Chave PIX</label>
-      <input class="modal-textarea" id="ep-pix" type="text" placeholder="CPF, e-mail, telefone ou chave aleatória" style="width:100%;padding:10px 12px;font-size:14px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-family:inherit;margin-bottom:4px;">
+      <input class="modal-textarea" id="ep-pix" type="text" placeholder="CPF, e-mail, telefone ou chave aleatória" style="width:100%;padding:10px 12px;font-size:14px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-family:inherit;margin-bottom:14px;">
+      <label class="modal-label">UFs de interesse</label>
+      <div style="font-size:12px;color:var(--text3);margin-bottom:8px;">Estados onde quer receber ofertas de plantão</div>
+      <div id="ep-ufs-grid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:5px;margin-bottom:4px;"></div>
     </div>
     <div class="modal-footer">
       <button class="btn-modal azul" onclick="salvarPerfil()">Salvar alterações</button>
@@ -637,10 +680,40 @@ function mostrarErro(){
   document.getElementById('tela-erro').style.display='block';
 }
 
-function mostrarCadastroMed(){
+// ── UFs DE INTERESSE ─────────────────────────────────────
+const UFS_BR = ['AC','AL','AM','AP','BA','CE','DF','ES','GO','MA','MG','MS','MT','PA','PB','PE','PI','PR','RJ','RN','RO','RR','RS','SC','SE','SP','TO'];
+
+function renderUFsGrid(containerId, selecionadas=[]) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  el.innerHTML = UFS_BR.map(uf => {
+    const sel = selecionadas.includes(uf);
+    return `<button type="button" onclick="toggleUF(this,'${uf}','${containerId}')"
+      style="padding:7px 4px;font-size:12px;font-weight:600;border-radius:6px;border:1.5px solid ${sel?'#1a5fad':'#e0e0e0'};background:${sel?'#e8f0fb':'#fff'};color:${sel?'#1a5fad':'#555'};cursor:pointer;transition:all 0.1s;"
+      data-uf="${uf}" data-sel="${sel?'1':'0'}">${uf}</button>`;
+  }).join('');
+}
+
+function toggleUF(btn, uf, containerId) {
+  const sel = btn.dataset.sel === '1';
+  btn.dataset.sel = sel ? '0' : '1';
+  btn.style.borderColor = sel ? '#e0e0e0' : '#1a5fad';
+  btn.style.background  = sel ? '#fff' : '#e8f0fb';
+  btn.style.color       = sel ? '#555' : '#1a5fad';
+}
+
+function getUFsSelecionadas(containerId) {
+  return [...document.querySelectorAll(`#${containerId} [data-uf]`)]
+    .filter(b => b.dataset.sel === '1')
+    .map(b => b.dataset.uf);
+}
+
+function mostrarCadastroMed() {
   document.getElementById('tela-erro').style.display='none';
   document.getElementById('tela-cadastro-med').style.display='block';
+  renderUFsGrid('cad-ufs-grid', []);
 }
+
 
 function voltarLogin(){
   document.getElementById('tela-cadastro-med').style.display='none';
@@ -671,20 +744,27 @@ function abrirEditarPerfil() {
   document.getElementById('ep-nome').value = medico.nome || '';
   document.getElementById('ep-crm').value  = medico.crm || '';
   document.getElementById('ep-esp').value  = medico.especialidade || '';
+  document.getElementById('ep-rqe').value  = medico.rqe || '';
   document.getElementById('ep-tel').value  = medico.telefone || '';
   document.getElementById('ep-pix').value  = medico.pix_chave || '';
+  renderUFsGrid('ep-ufs-grid', medico.ufs_interesse || []);
   document.getElementById('modal-editar-perfil').classList.remove('oculto');
 }
 
 async function salvarPerfil() {
   const nome = document.getElementById('ep-nome').value.trim();
+  const esp  = document.getElementById('ep-esp').value;
   if (!nome) { toastMed('Nome obrigatório', false); return; }
+  const ufs = getUFsSelecionadas('ep-ufs-grid');
   const payload = {
     nome,
-    crm:         document.getElementById('ep-crm').value.trim(),
-    especialidade: document.getElementById('ep-esp').value.trim(),
-    telefone:    document.getElementById('ep-tel').value.trim(),
-    pix_chave:   document.getElementById('ep-pix').value.trim() || null,
+    crm:            document.getElementById('ep-crm').value.trim(),
+    especialidade:  esp || null,
+    especialidades: esp ? [esp] : [],
+    rqe:            document.getElementById('ep-rqe').value.trim() || null,
+    telefone:       document.getElementById('ep-tel').value.trim(),
+    pix_chave:      document.getElementById('ep-pix').value.trim() || null,
+    ufs_interesse:  ufs,
   };
   const r = await fetch(SUPABASE_URL+'/rest/v1/medicos?id=eq.'+medico.id, {
     method:'PATCH',
@@ -696,7 +776,6 @@ async function salvarPerfil() {
     document.getElementById('modal-editar-perfil').classList.add('oculto');
     preencherPerfil();
     toastMed('Dados salvos!');
-    // Atualizar header
     document.getElementById('hdr-nome').textContent = medico.nome;
     document.getElementById('hdr-avatar').textContent = medico.nome.split(' ').slice(0,2).map(n=>n[0]).join('');
   } else {
@@ -852,8 +931,16 @@ async function cadastrarMedico(){
   if(existe?.length){erroEl.textContent='Este CPF já está cadastrado. Faça login.';erroEl.style.display='block';btn.disabled=false;btn.textContent='Criar conta';return;}
   // Criar médico
   const token=Math.random().toString(36).slice(2)+Math.random().toString(36).slice(2)+Date.now().toString(36);
+  const ufs = getUFsSelecionadas('cad-ufs-grid');
+  const esp = document.getElementById('cad-esp')?.value || '';
+  const rqe = document.getElementById('cad-rqe')?.value.trim() || null;
   const res=await sb('/rest/v1/medicos',{method:'POST',headers:{'Prefer':'return=representation'},body:JSON.stringify({
-    nome, cpf, crm, telefone:tel, senha_hash:senha, token_acesso:token, ativo:true, primeiro_acesso:false
+    nome, cpf, crm, telefone:tel,
+    especialidade: esp || null,
+    especialidades: esp ? [esp] : [],
+    rqe,
+    ufs_interesse: ufs,
+    senha_hash:senha, token_acesso:token, ativo:true, primeiro_acesso:false
   })});
   if(!res?.length){erroEl.textContent='Erro ao criar conta. Tente novamente.';erroEl.style.display='block';btn.disabled=false;btn.textContent='Criar conta';return;}
   medico=res[0];
@@ -1077,32 +1164,69 @@ async function responderTransf(transId, lancId, resp) {
 async function carregarDisponiveis() {
   const el=document.getElementById('disponiveis-lista');if(!el||!medico)return;
   el.innerHTML='<div class="empty"><div class="empty-icon">&#128226;</div>Carregando...</div>';
-  const projVinc=medico.projetos_vinculados||[];
   const hoje=new Date().toISOString().slice(0,10);
-  let path='/rest/v1/lancamentos?aberto=eq.true&data=gte.'+hoje+'&select=*,projetos(nome)&order=data,hora_ini';
-  if(projVinc.length>0)path+='&projeto_id=in.('+projVinc.join(',')+')';
-  let abertos=[],cands=[],meus=[];
-  try{abertos=(await sb(path))||[];}catch(e){}
+
+  // Buscar plantões abertos — sem filtro de projeto (público geral e por UF também aparecem)
+  const abertos = await sb('/rest/v1/lancamentos?aberto=eq.true&data=gte.'+hoje+'&select=*,projetos(nome,admin_id)&order=data,hora_ini') || [];
+
+  // Filtrar por público-alvo do médico
+  const ufsMediaco = medico.ufs_interesse || [];
+  const projVinc   = medico.projetos_vinculados || [];
+  const espMedico  = medico.especialidade || '';
+  const temRQE     = !!(medico.rqe);
+
+  const plantoesFiltrados = abertos.filter(l => {
+    const pub = l.publico_alvo || 'projeto';
+
+    // Verificar se exige RQE e médico não tem
+    if (l.exige_rqe && !temRQE) return false;
+
+    // Verificar especialidade exigida
+    if (l.especialidades_alvo?.length > 0 && !l.especialidades_alvo.includes(espMedico)) return false;
+
+    if (pub === 'projeto') {
+      // Só médicos vinculados ao projeto
+      return projVinc.includes(l.projeto_id);
+    } else if (pub === 'ufs') {
+      // Médicos de determinadas UFs
+      const ufsAlvo = l.ufs_alvo || [];
+      return ufsAlvo.some(uf => ufsMediaco.includes(uf));
+    } else {
+      // 'geral' — todos os médicos cadastrados
+      return true;
+    }
+  });
+
+  let cands=[], meus=[];
   try{cands=(await sb('/rest/v1/candidaturas?medico_id=eq.'+medico.id+'&select=*'))||[];}catch(e){}
   try{meus=(await sb('/rest/v1/lancamentos?medico_id=eq.'+medico.id+'&data=gte.'+hoje+'&select=data,hora_ini,hora_fim,horas,tipo,projeto_id,projetos(nome)'))||[];}catch(e){}
+
   const bdDisp=document.getElementById('badge-disp');
-  if(bdDisp){bdDisp.textContent=abertos.length;bdDisp.style.display=abertos.length>0?'inline':'none';}
-  if(!abertos.length){el.innerHTML='<div class="empty"><div class="empty-icon">&#128226;</div>Nenhum plantao disponivel agora</div>';return;}
-  el.innerHTML=abertos.map(l=>{
+  if(bdDisp){bdDisp.textContent=plantoesFiltrados.length;bdDisp.style.display=plantoesFiltrados.length>0?'inline':'none';}
+
+  if(!plantoesFiltrados.length){
+    el.innerHTML='<div class="empty"><div class="empty-icon">&#128226;</div>Nenhum plantão disponível no momento</div>';
+    return;
+  }
+
+  el.innerHTML=plantoesFiltrados.map(l=>{
     const d=new Date(l.data+'T12:00:00');
     const dataFmt=d.toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'long'});
     const proj=l.projetos?.nome||'';
     const vagas=(l.vagas||1)-(l.vagas_preenchidas||0),cheia=vagas<=0;
     const mc=cands.find(c=>c.lancamento_id===l.id);
     const conf=verificarConflito(l,meus);
+    const pubTag = l.publico_alvo==='geral' ? '<span style="font-size:10px;background:#e8f5eb;color:#2d7a3a;padding:2px 6px;border-radius:99px;margin-left:4px;">Público geral</span>'
+                 : l.publico_alvo==='ufs'   ? '<span style="font-size:10px;background:#e8f0fb;color:#1a5fad;padding:2px 6px;border-radius:99px;margin-left:4px;">Por estado</span>' : '';
+    const rqeTag = l.exige_rqe ? '<span style="font-size:10px;background:#fdf3e0;color:#8a5500;padding:2px 6px;border-radius:99px;margin-left:4px;">Exige RQE</span>' : '';
     let btnH='';
-    if(mc){if(mc.status==='aprovado')btnH='<button class="btn-candidatar inscrito" disabled>Aprovado - voce esta escalado</button>';else if(mc.status==='recusado')btnH='<button class="btn-candidatar recusado" disabled>Candidatura recusada</button>';else btnH='<button class="btn-candidatar inscrito" disabled>Candidatura enviada - aguardando</button>';}
+    if(mc){if(mc.status==='aprovado')btnH='<button class="btn-candidatar inscrito" disabled>Aprovado - você está escalado</button>';else if(mc.status==='recusado')btnH='<button class="btn-candidatar recusado" disabled>Candidatura recusada</button>';else btnH='<button class="btn-candidatar inscrito" disabled>Candidatura enviada — aguardando aprovação</button>';}
     else if(cheia)btnH='<button class="btn-candidatar inscrito" disabled>Vagas preenchidas</button>';
-    else if(conf?.bloqueio)btnH='<div class="conflito-aviso">'+conf.msg+'</div><button class="btn-candidatar recusado" disabled>Nao e possivel se candidatar</button>';
-    else if(conf&&!conf.bloqueio){const ak='alerta_'+l.id;window[ak]=conf.msg;btnH='<div class="conflito-aviso" style="background:#fff3e0;border-color:#ffb74d;color:#e65100;">'+conf.msg+'</div><button class="btn-candidatar disponivel" onclick="candidatar(\''+l.id+'\',this,window[\''+ak+'\'])">Estou ciente - me candidatar</button>';}
-    else btnH='<button class="btn-candidatar disponivel" onclick="candidatar(\''+l.id+'\',this,null)">Me candidatar para este plantao</button>';
+    else if(conf?.bloqueio)btnH='<div class="conflito-aviso">'+conf.msg+'</div><button class="btn-candidatar recusado" disabled>Não é possível se candidatar</button>';
+    else if(conf&&!conf.bloqueio){const ak='alerta_'+l.id;window[ak]=conf.msg;btnH='<div class="conflito-aviso" style="background:#fff3e0;border-color:#ffb74d;color:#e65100;">'+conf.msg+'</div><button class="btn-candidatar disponivel" onclick="candidatar(\''+l.id+'\',this,window[\''+ak+'\'])">Estou ciente — me candidatar</button>';}
+    else btnH='<button class="btn-candidatar disponivel" onclick="candidatar(\''+l.id+'\',this,null)">Me candidatar para este plantão</button>';
     const turno=l.tipo?.includes('Noturno')?'badge-purple':l.tipo?.includes('24')?'badge-amber':'badge-green';
-    return '<div class="plantao-aberto-card"><div class="plantao-aberto-header"><div class="plantao-aberto-proj">'+proj+'</div><div class="plantao-aberto-data" style="text-transform:capitalize;">'+dataFmt+'</div></div><div class="plantao-body"><div><div class="plantao-info-label">Horario</div><div class="plantao-info-val">'+(l.hora_ini||'').slice(0,5)+'-'+(l.hora_fim||'').slice(0,5)+'</div></div><div><div class="plantao-info-label">Horas</div><div class="plantao-info-val">'+l.horas+'h</div></div><div><div class="plantao-info-label">Vagas</div><div class="plantao-info-val" style="color:'+(cheia?'var(--green)':'var(--amber)')+';">'+(cheia?'Preenchido':vagas+' disponivel(is)')+'</div></div></div>'+(l.setor?'<div style="padding:0 16px 8px;font-size:12px;color:var(--text2);">'+l.setor+'</div>':'')+(l.honorario?'<div style="padding:0 16px 8px;font-size:13px;font-weight:700;color:var(--green);">'+fBRL(l.honorario)+'</div>':'')+'<span class="badge '+turno+'" style="margin:0 16px 10px;display:inline-block;">'+(l.tipo||'')+'</span>'+btnH+'</div>';
+    return '<div class="plantao-aberto-card"><div class="plantao-aberto-header"><div class="plantao-aberto-proj">'+proj+pubTag+rqeTag+'</div><div class="plantao-aberto-data" style="text-transform:capitalize;">'+dataFmt+'</div></div><div class="plantao-body"><div><div class="plantao-info-label">Horário</div><div class="plantao-info-val">'+(l.hora_ini||'').slice(0,5)+'-'+(l.hora_fim||'').slice(0,5)+'</div></div><div><div class="plantao-info-label">Horas</div><div class="plantao-info-val">'+l.horas+'h</div></div><div><div class="plantao-info-label">Vagas</div><div class="plantao-info-val" style="color:'+(cheia?'var(--green)':'var(--amber)')+';">'+(cheia?'Preenchido':vagas+' disponível')+'</div></div></div>'+(l.setor?'<div style="padding:0 16px 8px;font-size:12px;color:var(--text2);">'+l.setor+'</div>':'')+(l.honorario?'<div style="padding:0 16px 8px;font-size:13px;font-weight:700;color:var(--green);">'+fBRL(l.honorario)+'</div>':'')+'<span class="badge '+turno+'" style="margin:0 16px 10px;display:inline-block;">'+(l.tipo||'')+'</span>'+btnH+'</div>';
   }).join('');
 }
 
