@@ -339,6 +339,37 @@ tr:hover td{background:var(--bg3);}
   .esp-tags{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px;}
   .esp-tag{display:inline-flex;align-items:center;gap:4px;background:var(--blue-light);color:var(--blue);border:1px solid #a8c4f0;padding:2px 8px;border-radius:99px;font-size:11px;font-weight:500;}
   .esp-tag button{background:none;border:none;cursor:pointer;color:var(--blue);font-size:13px;line-height:1;padding:0;}
+
+/* ── Modais de perfil / planos ──────────────────────────────────────── */
+.modal-perfil-overlay {
+  position: fixed !important;
+  inset: 0 !important;
+  background: rgba(0,0,0,0.45) !important;
+  z-index: 1200 !important;
+  display: none !important;
+  align-items: center;
+  justify-content: center;
+}
+.modal-perfil-overlay.open { display: flex !important; }
+.modal-perfil {
+  background: #fff;
+  border-radius: 12px;
+  padding: 28px 32px;
+  width: 90%;
+  max-width: 520px;
+  max-height: 88vh;
+  overflow-y: auto;
+  position: relative;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.18);
+}
+.modal-perfil-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 18px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #e0dbd2;
+}
 </style>
 </head>
 <body>
@@ -5863,6 +5894,15 @@ function abrirLancamentoRapido(ds, projId) {
 
   // Preencher valor padrão se projeto já selecionado
   if (projId) atualizarValorRapido();
+
+  // Fechar qualquer modal de perfil/planos aberto antes de abrir o de lançamento
+  ['modal-perfil','modal-planos','modal-setores'].forEach(function(id) {
+    var m = document.getElementById(id);
+    if (m) { m.classList.remove('open'); }
+  });
+  // Fechar dropdown de perfil se aberto
+  var dd = document.getElementById('perfil-dropdown');
+  if (dd) dd.classList.remove('open');
 
   overlay.classList.add('open');
   setTimeout(() => { const el = document.getElementById('mr-med-busca'); if(el) el.focus(); }, 100);
