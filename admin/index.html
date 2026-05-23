@@ -523,32 +523,39 @@ tr:hover td{background:var(--bg3);}
         <button class="btn btn-ghost btn-sm" onclick="exportarMedicosXLSX()">⬇ Exportar Excel</button>
         <label class="btn btn-ghost btn-sm" style="cursor:pointer;" title="Importar médicos via Excel">
           ⬆ Importar Excel
-          <input type="file" id="import-med-file" accept=".xlsx,.xls" style="display:none;" onchange="importarMedicosXLSX(event)">
+          <input type="file" id="import-med-file" accept=".xlsx,.xls" style="display:none;" onchange="importarMedicosXLSX_v2(event)">
         </label>
       </div>
     </div>
     <div class="page-sub">Cadastro e links de acesso ao app</div>
     <div class="card">
       <div class="card-title">Novo médico</div>
+
+      <!-- IDENTIFICAÇÃO -->
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--text2);margin-bottom:10px;">Identificação</div>
       <div class="form-row">
-        <div class="form-group"><label>Nome completo</label><input id="mn" type="text" placeholder="Dr. João Silva"></div>
-        <div class="form-group"><label>E-mail</label><input id="memail" type="email" placeholder="medico@hospital.com"></div>
+        <div class="form-group"><label>Nome completo <span style="color:var(--red)">*</span></label><input id="mn" type="text" placeholder="Dr. João Silva" required></div>
+        <div class="form-group"><label>CPF <span style="color:var(--red)">*</span></label><input id="mcpf" type="text" placeholder="000.000.000-00" oninput="mascaraCPF(this);if(document.getElementById('mn-pix-tipo')?.value==='CPF') autoPreencherPixNovo()"></div>
       </div>
       <div class="form-row four">
-        <div class="form-group"><label>Telefone celular</label><input id="mtel" type="text" placeholder="(21) 99999-9999"></div>
-        <div class="form-group"><label>Data de nascimento</label><input id="mnascimento" type="date"></div>
-        <div class="form-group"><label>CPF</label><input id="mcpf" type="text" placeholder="000.000.000-00" oninput="if(document.getElementById('mn-pix-tipo')?.value==='CPF') autoPreencherPixNovo()"></div>
+        <div class="form-group"><label>Telefone <span style="color:var(--red)">*</span></label><input id="mtel" type="text" placeholder="(21) 99999-9999" oninput="mascaraTelefone(this)"></div>
+        <div class="form-group"><label>Data de nascimento <span style="color:var(--red)">*</span></label><input id="mnascimento" type="date"></div>
+        <div class="form-group"><label>E-mail</label><input id="memail" type="email" placeholder="medico@email.com"></div>
         <div class="form-group"><label>Tipo</label><select id="mt"><option>Plantonista</option><option>Diarista</option><option>Coordenador</option><option>Residente</option></select></div>
       </div>
+
+      <!-- CRM / ESPECIALIDADE -->
+      <div style="border-top:1px solid var(--border);margin:12px 0;padding-top:12px;">
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--text2);margin-bottom:10px;">Registro profissional</div>
+      </div>
       <div class="form-row four">
-        <div class="form-group"><label>CRM</label><input id="mc" type="text" placeholder="CRM/RJ 000001"></div>
+        <div class="form-group"><label>CRM <span style="color:var(--red)">*</span></label><input id="mc" type="text" placeholder="CRM/RJ 000001"></div>
         <div class="form-group"><label>RQE</label><input id="mrqe" type="text" placeholder="RQE 00000"></div>
         <input type="hidden" id="me" value="">
         <input type="hidden" id="mv" value="0">
       </div>
-      <!-- Especialidades múltiplas — dropdown compacto -->
-      <div class="form-group" style="margin-top:10px;">
-        <label>Especialidades <span style="font-weight:400;font-size:11px;color:var(--text3);">(selecione todas que se aplicam)</span></label>
+      <div class="form-group" style="margin-top:4px;">
+        <label>Especialidades <span style="font-weight:400;font-size:11px;color:var(--text3);">(vazio = Clínico Geral / Plantonista generalista)</span></label>
         <div class="esp-dropdown" id="esp-dropdown-novo">
           <div class="esp-trigger" onclick="toggleEspDropdown('novo')" id="esp-trigger-novo">
             <span id="esp-label-novo" style="color:var(--text3);">Clique para selecionar...</span>
@@ -586,14 +593,44 @@ tr:hover td{background:var(--bg3);}
         </div>
         <div class="esp-tags" id="esp-tags-novo"></div>
       </div>
-      <!-- Dados bancários / PIX -->
-      <div style="border-top:1px solid var(--border);margin-top:12px;padding-top:12px;">
-        <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px;">Dados bancários</div>
-        <div class="form-row">
-          <div class="form-group"><label>Razão social <span style="font-weight:400;color:var(--text3);font-size:11px;">(se PJ)</span></label><input id="mn-razao" type="text" placeholder="Empresa LTDA"></div>
-          <div class="form-group"><label>CNPJ <span style="font-weight:400;color:var(--text3);font-size:11px;">(se PJ)</span></label><input id="mn-cnpj" type="text" placeholder="00.000.000/0000-00"></div>
+
+      <!-- ENDEREÇO -->
+      <div style="border-top:1px solid var(--border);margin:12px 0;padding-top:12px;">
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--text2);margin-bottom:10px;">Endereço</div>
+      </div>
+      <div class="form-row">
+        <div class="form-group" style="flex:2;"><label>Logradouro</label><input id="mn-rua" type="text" placeholder="Rua, Av., Estrada..."></div>
+        <div class="form-group"><label>Número</label><input id="mn-numero" type="text" placeholder="123"></div>
+        <div class="form-group"><label>Complemento</label><input id="mn-comp" type="text" placeholder="Apto, Bloco..."></div>
+      </div>
+      <div class="form-row four">
+        <div class="form-group"><label>Bairro</label><input id="mn-bairro" type="text" placeholder="Centro"></div>
+        <div class="form-group"><label>Cidade</label><input id="mn-cidade" type="text" placeholder="Rio de Janeiro"></div>
+        <div class="form-group"><label>UF</label><select id="mn-uf"><option value="">—</option><option>AC</option><option>AL</option><option>AM</option><option>AP</option><option>BA</option><option>CE</option><option>DF</option><option>ES</option><option>GO</option><option>MA</option><option>MG</option><option>MS</option><option>MT</option><option>PA</option><option>PB</option><option>PE</option><option>PI</option><option>PR</option><option>RJ</option><option>RN</option><option>RO</option><option>RR</option><option>RS</option><option>SC</option><option>SE</option><option>SP</option><option>TO</option></select></div>
+        <div class="form-group"><label>CEP</label><input id="mn-cep" type="text" placeholder="00000-000" oninput="mascaraCEP(this)"></div>
+      </div>
+
+      <!-- DADOS BANCÁRIOS -->
+      <div style="border-top:1px solid var(--border);margin:12px 0;padding-top:12px;">
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--text2);margin-bottom:10px;">Dados bancários</div>
+        <div class="form-row" style="margin-bottom:10px;">
+          <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;margin-bottom:0;">
+            <input type="radio" name="mn-pessoa" value="pf" checked onchange="togglePessoaBancario('novo',this.value)">
+            Pessoa física (CPF)
+          </label>
+          <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;margin-bottom:0;">
+            <input type="radio" name="mn-pessoa" value="pj" onchange="togglePessoaBancario('novo',this.value)">
+            Pessoa jurídica (CNPJ)
+          </label>
         </div>
-        <div class="form-row">
+        <div id="mn-pj-row" style="display:none;">
+          <div class="form-row">
+            <div class="form-group"><label>Razão social</label><input id="mn-razao" type="text" placeholder="Empresa LTDA"></div>
+            <div class="form-group"><label>CNPJ</label><input id="mn-cnpj" type="text" placeholder="00.000.000/0000-00" oninput="mascaraCNPJ(this);if(document.getElementById('mn-pix-tipo')?.value==='CNPJ') autoPreencherPixNovo()"></div>
+          </div>
+        </div>
+        <!-- PIX -->
+        <div class="form-row" style="margin-top:8px;">
           <div class="form-group"><label>Tipo de chave PIX</label>
             <select id="mn-pix-tipo" onchange="autoPreencherPixNovo()">
               <option value="">Sem PIX cadastrado</option>
@@ -613,12 +650,62 @@ tr:hover td{background:var(--bg3);}
             <div id="mn-pix-aviso" style="display:none;font-size:11px;margin-top:4px;padding:4px 8px;border-radius:4px;"></div>
           </div>
         </div>
+        <!-- Dados bancários tradicionais (alternativa ao PIX) -->
+        <div style="margin-top:4px;">
+          <details>
+            <summary style="font-size:12px;color:var(--text2);cursor:pointer;user-select:none;">+ Dados bancários (banco / agência / conta)</summary>
+            <div class="form-row four" style="margin-top:10px;">
+              <div class="form-group"><label>Banco</label><input id="mn-banco" type="text" placeholder="Bradesco, Itaú..."></div>
+              <div class="form-group"><label>Agência</label><input id="mn-ag" type="text" placeholder="0000"></div>
+              <div class="form-group"><label>Conta</label><input id="mn-cc" type="text" placeholder="00000-0"></div>
+              <div class="form-group"><label>Tipo de conta</label><select id="mn-tipo-cc"><option value="corrente">Corrente</option><option value="poupanca">Poupança</option></select></div>
+            </div>
+          </details>
+        </div>
       </div>
-      <!-- Projetos vinculados -->
+
+      <!-- DOCUMENTAÇÃO (ANEXOS) -->
+      <div style="border-top:1px solid var(--border);margin:12px 0;padding-top:12px;">
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--text2);margin-bottom:10px;">Documentação <span style="font-weight:400;font-size:10px;color:var(--text3);">(PDF, JPG ou PNG — máx. 5MB cada)</span></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+          <div class="form-group">
+            <label>Documento de identidade (RG / CNH)</label>
+            <div class="upload-doc-slot" onclick="triggerDocUpload('mn-doc-id')">
+              <span id="mn-doc-id-label">📎 Clique para anexar</span>
+              <input type="file" id="mn-doc-id" accept=".pdf,.jpg,.jpeg,.png" style="display:none;" onchange="previewDocLabel('mn-doc-id')">
+            </div>
+          </div>
+          <div class="form-group">
+            <label>CRM (carteira / certidão)</label>
+            <div class="upload-doc-slot" onclick="triggerDocUpload('mn-doc-crm')">
+              <span id="mn-doc-crm-label">📎 Clique para anexar</span>
+              <input type="file" id="mn-doc-crm" accept=".pdf,.jpg,.jpeg,.png" style="display:none;" onchange="previewDocLabel('mn-doc-crm')">
+            </div>
+          </div>
+          <div class="form-group">
+            <label>RQE (se aplicável)</label>
+            <div class="upload-doc-slot" onclick="triggerDocUpload('mn-doc-rqe')">
+              <span id="mn-doc-rqe-label">📎 Clique para anexar</span>
+              <input type="file" id="mn-doc-rqe" accept=".pdf,.jpg,.jpeg,.png" style="display:none;" onchange="previewDocLabel('mn-doc-rqe')">
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Título de especialista</label>
+            <div class="upload-doc-slot" onclick="triggerDocUpload('mn-doc-titulo')">
+              <span id="mn-doc-titulo-label">📎 Clique para anexar</span>
+              <input type="file" id="mn-doc-titulo" accept=".pdf,.jpg,.jpeg,.png" style="display:none;" onchange="previewDocLabel('mn-doc-titulo')">
+            </div>
+          </div>
+        </div>
+        <div style="font-size:11px;color:var(--text3);margin-top:6px;">⚠️ Os documentos ficam armazenados no Supabase Storage. Certifique-se de que o bucket <code>medico-docs</code> existe com política de acesso privado.</div>
+      </div>
+
+      <!-- PROJETOS VINCULADOS -->
       <div class="form-group" style="margin-top:8px;">
         <label>Projetos vinculados <span style="font-weight:400;font-size:11px;color:var(--text3);">(médico verá plantões abertos destes projetos)</span></label>
         <div id="med-projetos-check" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;"></div>
       </div>
+
       <button class="btn btn-primary" onclick="addMedico()">+ Adicionar médico</button>
     </div>
     <div class="card">
@@ -986,9 +1073,9 @@ tr:hover td{background:var(--bg3);}
     <div id="imp-proj" style="display:none;">
       <div class="card">
         <div class="card-title">Importar projetos</div>
-        <p style="font-size:13px;color:var(--text2);margin-bottom:14px;">Colunas: <code>nome · codigo_cc · contratante · status · cnpj · contrato</code></p>
+        <p style="font-size:13px;color:var(--text2);margin-bottom:14px;">Planilha inteligente: <code>hospital · setor · tipo_plantao · hora_inicio · hora_fim · valor</code> — cria hospital, setor e tipo automaticamente se não existirem.</p>
         <div class="upload-zone" onclick="document.getElementById('file-upload-proj').click()">
-          <input type="file" id="file-upload-proj" accept=".csv" onchange="handleUploadProj(this)" style="display:none;">
+          <input type="file" id="file-upload-proj" accept=".csv,.xlsx,.xls" onchange="handleUploadProj(this)" style="display:none;">
           <div style="font-size:28px;margin-bottom:8px;">📂</div>
           <div style="font-size:14px;font-weight:600;color:var(--text);">Clique para selecionar CSV de projetos</div>
           <div style="font-size:12px;color:var(--text3);margin-top:4px;">Separador ; ou , · UTF-8 ou ANSI</div>
@@ -1329,7 +1416,7 @@ tr:hover td{background:var(--bg3);}
           </div>
           <div class="form-group">
             <label>Setor</label>
-            <select id="mr-setor" style="width:100%;" onchange="onMrSetorChange()"><option value="">Selecione o setor...</option></select>
+            <input id="mr-setor" style="width:100%;" onchange="onMrSetorChange()" type="text" placeholder="Emergência, UTI...">
           </div>
         </div>
       </div>
@@ -1722,7 +1809,7 @@ tr:hover td{background:var(--bg3);}
         <button class="btn btn-ghost btn-sm" onclick="exportarMedicosXLSX()">⬇ Exportar Excel</button>
         <label class="btn btn-ghost btn-sm" style="cursor:pointer;" title="Importar médicos via Excel">
           ⬆ Importar Excel
-          <input type="file" id="import-med-file" accept=".xlsx,.xls" style="display:none;" onchange="importarMedicosXLSX(event)">
+          <input type="file" id="import-med-file" accept=".xlsx,.xls" style="display:none;" onchange="importarMedicosXLSX_v2(event)">
         </label>
       </div>
     </div>
@@ -2185,9 +2272,9 @@ tr:hover td{background:var(--bg3);}
     <div id="imp-proj" style="display:none;">
       <div class="card">
         <div class="card-title">Importar projetos</div>
-        <p style="font-size:13px;color:var(--text2);margin-bottom:14px;">Colunas: <code>nome · codigo_cc · contratante · status · cnpj · contrato</code></p>
+        <p style="font-size:13px;color:var(--text2);margin-bottom:14px;">Planilha inteligente: <code>hospital · setor · tipo_plantao · hora_inicio · hora_fim · valor</code> — cria hospital, setor e tipo automaticamente se não existirem.</p>
         <div class="upload-zone" onclick="document.getElementById('file-upload-proj').click()">
-          <input type="file" id="file-upload-proj" accept=".csv" onchange="handleUploadProj(this)" style="display:none;">
+          <input type="file" id="file-upload-proj" accept=".csv,.xlsx,.xls" onchange="handleUploadProj(this)" style="display:none;">
           <div style="font-size:28px;margin-bottom:8px;">📂</div>
           <div style="font-size:14px;font-weight:600;color:var(--text);">Clique para selecionar CSV de projetos</div>
           <div style="font-size:12px;color:var(--text3);margin-top:4px;">Separador ; ou , · UTF-8 ou ANSI</div>
@@ -3049,7 +3136,7 @@ tr:hover td{background:var(--bg3);}
         <button class="btn btn-ghost btn-sm" onclick="exportarMedicosXLSX()">⬇ Exportar Excel</button>
         <label class="btn btn-ghost btn-sm" style="cursor:pointer;" title="Importar médicos via Excel">
           ⬆ Importar Excel
-          <input type="file" id="import-med-file" accept=".xlsx,.xls" style="display:none;" onchange="importarMedicosXLSX(event)">
+          <input type="file" id="import-med-file" accept=".xlsx,.xls" style="display:none;" onchange="importarMedicosXLSX_v2(event)">
         </label>
       </div>
     </div>
@@ -3512,9 +3599,9 @@ tr:hover td{background:var(--bg3);}
     <div id="imp-proj" style="display:none;">
       <div class="card">
         <div class="card-title">Importar projetos</div>
-        <p style="font-size:13px;color:var(--text2);margin-bottom:14px;">Colunas: <code>nome · codigo_cc · contratante · status · cnpj · contrato</code></p>
+        <p style="font-size:13px;color:var(--text2);margin-bottom:14px;">Planilha inteligente: <code>hospital · setor · tipo_plantao · hora_inicio · hora_fim · valor</code> — cria hospital, setor e tipo automaticamente se não existirem.</p>
         <div class="upload-zone" onclick="document.getElementById('file-upload-proj').click()">
-          <input type="file" id="file-upload-proj" accept=".csv" onchange="handleUploadProj(this)" style="display:none;">
+          <input type="file" id="file-upload-proj" accept=".csv,.xlsx,.xls" onchange="handleUploadProj(this)" style="display:none;">
           <div style="font-size:28px;margin-bottom:8px;">📂</div>
           <div style="font-size:14px;font-weight:600;color:var(--text);">Clique para selecionar CSV de projetos</div>
           <div style="font-size:12px;color:var(--text3);margin-top:4px;">Separador ; ou , · UTF-8 ou ANSI</div>
@@ -5084,7 +5171,22 @@ function exportarPDF() {
       </table></div>`;
   }).join('');
   const html=`<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>Relatório</title>
-  <style>*{box-sizing:border-box;margin:0;padding:0;}body{font-family:Arial,sans-serif;font-size:11px;padding:24px;}h1{font-size:16px;font-weight:700;margin-bottom:3px;}.sub{font-size:10px;color:#777;margin-bottom:16px;}.summary{background:#f5f5f5;padding:10px 14px;border-radius:6px;margin-bottom:18px;font-size:12px;}.proj-block{margin-bottom:18px;page-break-inside:avoid;}.proj-header{display:flex;justify-content:space-between;background:#fdf6e3;border-left:4px solid #e6a817;padding:8px 12px;border-radius:4px 4px 0 0;}.proj-nome{font-size:12px;font-weight:700;}.proj-meta{font-size:11px;color:#555;}table{width:100%;border-collapse:collapse;}th{background:#1a5fad;color:#fff;font-size:9px;padding:5px 8px;text-align:left;}td{padding:6px 8px;border-bottom:0.5px solid #e0e0e0;font-size:10px;}tfoot td{border-top:2px solid #ccc;background:#f5f5f5;font-weight:700;}tr:nth-child(even) td{background:#fafafa;}.badge{display:inline-block;padding:1px 6px;border-radius:10px;font-size:9px;font-weight:700;}.badge-g{background:#e8f5eb;color:#2d7a3a;}.badge-p{background:#f0eeff;color:#5040a0;}.badge-a{background:#fdf3e0;color:#8a5500;}.footer{margin-top:18px;font-size:9px;color:#aaa;border-top:0.5px solid #e0e0e0;padding-top:8px;text-align:right;}@page{margin:1.5cm;}</style>
+  <style>*{box-sizing:border-box;margin:0;padding:0;}body{font-family:Arial,sans-serif;font-size:11px;padding:24px;}h1{font-size:16px;font-weight:700;margin-bottom:3px;}.sub{font-size:10px;color:#777;margin-bottom:16px;}.summary{background:#f5f5f5;padding:10px 14px;border-radius:6px;margin-bottom:18px;font-size:12px;}.proj-block{margin-bottom:18px;page-break-inside:avoid;}.proj-header{display:flex;justify-content:space-between;background:#fdf6e3;border-left:4px solid #e6a817;padding:8px 12px;border-radius:4px 4px 0 0;}.proj-nome{font-size:12px;font-weight:700;}.proj-meta{font-size:11px;color:#555;}table{width:100%;border-collapse:collapse;}th{background:#1a5fad;color:#fff;font-size:9px;padding:5px 8px;text-align:left;}td{padding:6px 8px;border-bottom:0.5px solid #e0e0e0;font-size:10px;}tfoot td{border-top:2px solid #ccc;background:#f5f5f5;font-weight:700;}tr:nth-child(even) td{background:#fafafa;}.badge{display:inline-block;padding:1px 6px;border-radius:10px;font-size:9px;font-weight:700;}.badge-g{background:#e8f5eb;color:#2d7a3a;}.badge-p{background:#f0eeff;color:#5040a0;}.badge-a{background:#fdf3e0;color:#8a5500;}.footer{margin-top:18px;font-size:9px;color:#aaa;border-top:0.5px solid #e0e0e0;padding-top:8px;text-align:right;}@page{margin:1.5cm;}
+  /* Upload de documentos do médico */
+  .upload-doc-slot {
+    border: 2px dashed var(--border2);
+    border-radius: var(--radius);
+    padding: 10px 14px;
+    cursor: pointer;
+    font-size: 12px;
+    color: var(--text2);
+    transition: all 0.15s;
+    background: var(--bg3);
+    text-align: center;
+  }
+  .upload-doc-slot:hover { border-color: var(--blue); background: var(--blue-light); color: var(--blue); }
+  .upload-doc-slot.ok { border-color: var(--green); background: var(--green-bg); color: var(--green); }
+</style>
   </head><body>
   <h1>Relatório de Produção Médica</h1>
   <div class="sub">Período: ${periodo} · Gerado em: ${new Date().toLocaleString('pt-BR')}</div>
@@ -6411,39 +6513,84 @@ function renderMedProjetosCheck() {
 // Atualizar addMedico para salvar projetos_vinculados
 const _origAddMedico = addMedico;
 async function addMedico() {
-  const nome = document.getElementById('mn').value.trim();
-  const crm  = document.getElementById('mc').value.trim();
-  if (!nome||!crm) { toast('Nome e CRM são obrigatórios', true); return; }
+  const nome = (document.getElementById('mn')?.value||'').trim();
+  const cpf  = (document.getElementById('mcpf')?.value||'').trim();
+  const tel  = (document.getElementById('mtel')?.value||'').trim();
+  const nasc = document.getElementById('mnascimento')?.value||'';
+  const crm  = (document.getElementById('mc')?.value||'').trim();
+  if (!nome) { toast('Nome é obrigatório', true); return; }
+  if (!cpf)  { toast('CPF é obrigatório', true);  return; }
+  if (!tel)  { toast('Telefone é obrigatório', true); return; }
+  if (!nasc) { toast('Data de nascimento é obrigatória', true); return; }
+  if (!crm)  { toast('CRM é obrigatório', true);  return; }
+
+  const pessoa = document.querySelector('input[name="mn-pessoa"]:checked')?.value || 'pf';
   const projsVinc = [...document.querySelectorAll('.med-proj-chk:checked')].map(c=>c.value);
   const espsVinc  = [...document.querySelectorAll('.med-esp-chk:checked')].map(c=>c.value);
-  const payload = { nome, crm,
-    especialidade: espsVinc.join(', ') || document.getElementById('me').value.trim(),
+
+  const g = id => (document.getElementById(id)?.value||'').trim();
+
+  const payload = {
+    nome, crm,
+    cpf,
+    telefone: tel,
+    data_nascimento: nasc||null,
+    email: g('memail'),
+    tipo: g('mt') || 'Plantonista',
+    rqe:  g('mrqe'),
+    especialidade: espsVinc.join(', ') || '',
     especialidades: espsVinc,
-    valor_hora: parseFloat(document.getElementById('mv').value)||0,
-    tipo: document.getElementById('mt').value,
-    cpf: document.getElementById('mcpf').value.trim(),
-    rqe: document.getElementById('mrqe').value.trim(),
-    data_nascimento: document.getElementById('mnascimento').value || null,
-    email: document.getElementById('memail').value.trim(),
-    telefone: document.getElementById('mtel').value.trim(),
-    razao_social: document.getElementById('mn-razao')?.value.trim()||null,
-    cnpj: document.getElementById('mn-cnpj')?.value.trim()||null,
-    pix_tipo: document.getElementById('mn-pix-tipo')?.value||null,
-    pix_chave: document.getElementById('mn-pix-chave')?.value.trim()||null,
+    valor_hora: 0,
+    // endereço
+    endereco_rua:   g('mn-rua'),
+    endereco_numero:g('mn-numero'),
+    endereco_comp:  g('mn-comp'),
+    endereco_bairro:g('mn-bairro'),
+    endereco_cidade:g('mn-cidade'),
+    endereco_uf:    g('mn-uf'),
+    endereco_cep:   g('mn-cep'),
+    // dados bancários
+    pessoa_juridica: pessoa === 'pj',
+    razao_social: pessoa === 'pj' ? g('mn-razao') : null,
+    cnpj:         pessoa === 'pj' ? g('mn-cnpj')  : null,
+    pix_tipo:  g('mn-pix-tipo')||null,
+    pix_chave: g('mn-pix-chave')||null,
+    banco: g('mn-banco')||null,
+    agencia: g('mn-ag')||null,
+    conta_corrente: g('mn-cc')||null,
+    tipo_conta: g('mn-tipo-cc')||'corrente',
     ativo: true,
     projetos_vinculados: projsVinc
   };
+
+  const btn = document.querySelector('.btn[onclick="addMedico()"]');
+  if (btn) { btn.disabled=true; btn.textContent='Salvando...'; }
+
   const res = await sb('/rest/v1/medicos', { method:'POST', body: JSON.stringify(payload) });
   if (res) {
+    // Upload de documentos (se selecionados)
+    const medId = res[0]?.id;
+    if (medId) await uploadDocsMedico(medId, 'novo');
     toast('Médico cadastrado!');
-    ['mn','mc','me','mv','mcpf','mrqe','memail','mtel','mnascimento'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
+    // Limpar formulário
+    ['mn','mc','mcpf','mrqe','memail','mtel','mnascimento',
+     'mn-rua','mn-numero','mn-comp','mn-bairro','mn-cidade','mn-cep',
+     'mn-razao','mn-cnpj','mn-pix-chave','mn-banco','mn-ag','mn-cc']
+      .forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
     document.querySelectorAll('.med-proj-chk').forEach(c=>c.checked=false);
     document.querySelectorAll('.med-esp-chk').forEach(c=>c.checked=false);
     atualizarTagsEsp('novo');
-    ['mn-razao','mn-cnpj','mn-pix-chave'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
-    const pt=document.getElementById('mn-pix-tipo');if(pt)pt.value='';
+    const pt = document.getElementById('mn-pix-tipo'); if(pt) pt.value='';
+    const pj = document.getElementById('mn-pj-row'); if(pj) pj.style.display='none';
+    document.querySelectorAll('input[name="mn-pessoa"]').forEach((r,i) => r.checked = i===0);
+    ['mn-doc-id','mn-doc-crm','mn-doc-rqe','mn-doc-titulo'].forEach(id => {
+      const inp = document.getElementById(id); if(inp) inp.value='';
+      const lbl = document.getElementById(id+'-label'); if(lbl) lbl.textContent='📎 Clique para anexar';
+      const slot = lbl?.closest('.upload-doc-slot'); if(slot) slot.classList.remove('ok');
+    });
     await carregarMedicos();
-  } else toast('Erro ao cadastrar médico', true);
+  } else toast('Erro ao cadastrar médico. Verifique se o CPF ou CRM já está cadastrado.', true);
+  if (btn) { btn.disabled=false; btn.textContent='+ Adicionar médico'; }
 }
 
 // ─── CANDIDATURAS — ADMIN ─────────────────────────────
@@ -7934,37 +8081,154 @@ async function importarMedicosSupabase(novos) {
 }
 
 function handleUploadProj(input) {
+  // Delega para importação inteligente de hospitais+setores+tipos
+  handleUploadHospitaisSetoresTipos(input);
+}
+
+async function handleUploadHospitaisSetoresTipos(input) {
   const file = input.files[0]; if (!file) return;
   const reader = new FileReader();
-  reader.onload = async e => {
-    const enc = detectEncoding(e.target.result);
-    const text = new TextDecoder(enc).decode(e.target.result);
-    const rows = parseCSV(text);
-    if (rows.length < 2) { toast('Arquivo inválido', true); return; }
-    const hdr = rows[0].map(h => h.toLowerCase());
-    const nI=hdr.findIndex(h=>h.includes('nome'));
-    const ccI=hdr.findIndex(h=>h.includes('codigo')||h.includes('cc'));
-    const coI=hdr.findIndex(h=>h.includes('contratante'));
-    const stI=hdr.findIndex(h=>h.includes('status'));
-    if (nI<0) { toast('Coluna nome não encontrada', true); return; }
-    const novos = [];
-    for (let i=1; i<rows.length; i++) {
-      const c = rows[i]; if (!c[nI]) continue;
-      const st = stI>=0?c[stI]:'Ativo';
-      novos.push({nome:c[nI], codigo_cc:ccI>=0?c[ccI]:'', contratante:coI>=0?c[coI]:'', status:['Ativo','Encerrado','Em negociação'].includes(st)?st:'Ativo'});
+  reader.onload = async function(e) {
+    try {
+      let rows;
+      if (file.name.endsWith('.csv')) {
+        const text = new TextDecoder(detectEncoding(e.target.result)).decode(e.target.result);
+        rows = parseCSV(text).slice(1); // remover header
+      } else {
+        const wb = XLSX.read(e.target.result, {type:'array'});
+        const ws = wb.Sheets[wb.SheetNames[0]];
+        rows = XLSX.utils.sheet_to_json(ws, {header:1, defval:''}).slice(1);
+      }
+
+      const header = (() => {
+        if (file.name.endsWith('.csv')) return null;
+        const wb = XLSX.read(e.target.result, {type:'array'});
+        const ws = wb.Sheets[wb.SheetNames[0]];
+        return XLSX.utils.sheet_to_json(ws, {header:1, defval:''})[0].map(h => String(h).toLowerCase().trim());
+      })();
+
+      const col = (row, names) => {
+        if (!header) return String(row[0] || '').trim();
+        for (const n of names) {
+          const idx = header.findIndex(h => h.includes(n));
+          if (idx >= 0 && row[idx] !== undefined) return String(row[idx]).trim();
+        }
+        return '';
+      };
+
+      // Processar linhas
+      let criadosH = 0, criadosS = 0, criadosT = 0, erros = [];
+      const _hosp = {}; // cache nome→id
+
+      // Carregar projetos existentes
+      await carregarProjetos();
+      const projetosLocais = [...projetos];
+
+      for (let i = 0; i < rows.length; i++) {
+        const row = rows[i];
+        if (!row || !row.some(c => String(c).trim())) continue; // linha vazia
+
+        let hospNome, setorNome, tipoNome, horaIni, horaFim, valor, codCC, contratante, lat, lon, raio;
+
+        if (header) {
+          hospNome   = col(row, ['hospital','projeto','nome do hospital']);
+          setorNome  = col(row, ['setor']);
+          tipoNome   = col(row, ['tipo','tipo_plantao','tipo de plantão']);
+          horaIni    = col(row, ['hora_inicio','hora inicio','início','ini']);
+          horaFim    = col(row, ['hora_fim','hora fim','fim']);
+          valor      = parseFloat(String(col(row, ['valor'])).replace(/[^0-9,.]/g,'').replace(',','.')) || null;
+          codCC      = col(row, ['codigo_cc','codigo cc','cc']);
+          contratante = col(row, ['contratante']);
+          lat        = parseFloat(col(row, ['latitude','lat'])) || null;
+          lon        = parseFloat(col(row, ['longitude','lon'])) || null;
+          raio       = parseInt(col(row, ['raio','raio_checkin'])) || 100;
+        } else {
+          [hospNome, setorNome, tipoNome, horaIni, horaFim, valor, codCC, contratante] = row.map(c => String(c||'').trim());
+          valor = parseFloat(String(valor).replace(/[^0-9,.]/g,'').replace(',','.')) || null;
+          lat = null; lon = null; raio = 100;
+        }
+
+        if (!hospNome || !tipoNome) { erros.push('Linha '+(i+2)+': sem hospital ou tipo'); continue; }
+        horaIni = horaIni || '07:00';
+        horaFim = horaFim || '19:00';
+
+        // 1. Criar/encontrar hospital (projeto)
+        let proj = projetosLocais.find(p => p.nome.toLowerCase() === hospNome.toLowerCase());
+        if (!proj) {
+          if (_hosp[hospNome]) {
+            proj = _hosp[hospNome];
+          } else {
+            const payload = { nome: hospNome, ativo: true };
+            if (codCC) payload.codigo_cc = codCC;
+            if (contratante) payload.contratante = contratante;
+            if (lat) payload.latitude = lat;
+            if (lon) payload.longitude = lon;
+            if (raio) payload.raio_checkin = raio;
+            const res = await sb('/rest/v1/projetos', {method:'POST', body:JSON.stringify(payload)});
+            if (!res || !res[0]) { erros.push('Erro ao criar hospital: '+hospNome); continue; }
+            proj = res[0];
+            projetosLocais.push(proj);
+            criadosH++;
+            _hosp[hospNome] = proj;
+          }
+        } else {
+          _hosp[hospNome] = proj;
+        }
+
+        // 2. Criar/encontrar setor (se informado)
+        let setorId = null;
+        if (setorNome) {
+          const setores = await carregarSetoresProjeto(proj.id);
+          let setor = setores.find(s => s.nome.toLowerCase() === setorNome.toLowerCase());
+          if (!setor) {
+            const rs = await sb('/rest/v1/setores', {
+              method:'POST', headers:{'Prefer':'return=representation'},
+              body: JSON.stringify({projeto_id: proj.id, admin_id: adminLogado.id, nome: setorNome, ativo: true})
+            });
+            setor = rs && rs[0] ? rs[0] : null;
+            if (setor) { criadosS++; _setoresCache[proj.id] = [...(setores||[]), setor]; }
+          }
+          setorId = setor ? setor.id : null;
+        }
+
+        // 3. Criar tipo de plantão
+        const [hI,mI] = horaIni.split(':').map(Number);
+        const [hF,mF] = horaFim.split(':').map(Number);
+        let mins = (hF*60+mF)-(hI*60+mI);
+        if (mins < 0) mins += 24*60;
+        const horas = mins/60;
+
+        const rt = await sb('/rest/v1/tipos_plantao', {
+          method:'POST', headers:{'Prefer':'return=minimal'},
+          body: JSON.stringify({
+            projeto_id: proj.id, admin_id: adminLogado.id,
+            nome: tipoNome, setor_nome: setorNome||null,
+            hora_ini: horaIni, hora_fim: horaFim, horas,
+            valor: valor||null, ativo: true
+          })
+        });
+        if (rt !== null) criadosT++; else erros.push('Tipo já existe ou erro: '+tipoNome);
+      }
+
+      // Recarregar
+      await carregarProjetos();
+      await carregarTiposPlantao();
+
+      toast(
+        criadosH + ' hospital(is) · ' + criadosS + ' setor(es) · ' + criadosT + ' tipo(s) criados' +
+        (erros.length ? ' — ' + erros.length + ' aviso(s)' : ''),
+        erros.length > 0
+      );
+      document.getElementById('import-preview-proj').innerHTML =
+        erros.length ? '<div style="color:var(--amber);font-size:12px;margin-top:8px;">' + erros.slice(0,10).join('<br>') + '</div>' : '';
+
+    } catch(err) {
+      toast('Erro ao processar planilha: ' + err.message, true);
+      console.error(err);
     }
-    const prev = document.getElementById('import-preview-proj');
-    prev.innerHTML = `<div class="card"><div class="card-title">Pré-visualização — ${novos.length} projeto(s)</div>
-      <table><thead><tr><th>Nome</th><th>Cód. CC</th><th>Contratante</th><th>Status</th></tr></thead><tbody>
-      ${novos.slice(0,6).map(p=>`<tr><td>${p.nome}</td><td class="mono">${p.codigo_cc||'—'}</td><td>${p.contratante||'—'}</td><td>${p.status}</td></tr>`).join('')}
-      </tbody></table>
-      <div style="margin-top:12px;display:flex;gap:8px;">
-        <button class="btn btn-primary" id="imp-proj-btn">Importar ${novos.length} projeto(s)</button>
-        <button class="btn btn-ghost" onclick="document.getElementById('import-preview-proj').innerHTML='';document.getElementById('file-upload-proj').value='';">Cancelar</button>
-      </div></div>`;
-    document.getElementById('imp-proj-btn').onclick = () => importarProjetosSupabase(novos);
   };
   reader.readAsArrayBuffer(file);
+  input.value = '';
 }
 
 async function importarProjetosSupabase(novos) {
@@ -7984,11 +8248,77 @@ async function importarProjetosSupabase(novos) {
 
 function downloadModeloExcel() {
   const wb = XLSX.utils.book_new();
-  const wsMed = XLSX.utils.aoa_to_sheet([['nome','crm','especialidade','valor_hora','tipo','cpf'],['Dr. João Silva','CRM/RJ 000001','Clínica Geral',150,'Plantonista','000.000.000-00']]);
+
+  // Aba 1: Médicos
+  const wsMed = XLSX.utils.aoa_to_sheet([
+    ['nome','cpf','telefone','data_nascimento','email','crm','rqe','especialidade','tipo',
+     'logradouro','numero','complemento','bairro','cidade','uf','cep',
+     'pessoa_juridica','razao_social','cnpj',
+     'pix_tipo','pix_chave','banco','agencia','conta','tipo_conta'],
+    ['Dr. João Silva','000.000.000-00','(21) 99999-9999','1980-05-15','joao@email.com',
+     'CRM/RJ 000001','RQE 00000','Clínica Geral / Emergência','Plantonista',
+     'Rua das Flores','123','Apto 201','Centro','Rio de Janeiro','RJ','20000-000',
+     'NÃO','','','CPF','000.000.000-00','','','','corrente'],
+  ]);
   XLSX.utils.book_append_sheet(wb, wsMed, 'Médicos');
-  const wsProj = XLSX.utils.aoa_to_sheet([['nome','codigo_cc','contratante','status'],['Hospital Central','CC-001','Secretaria de Saúde','Ativo']]);
-  XLSX.utils.book_append_sheet(wb, wsProj, 'Projetos');
-  XLSX.writeFile(wb, 'modelo_importacao_plantaoplus.xlsx');
+
+  // Aba 2: Projetos + Setores + Tipos
+  // Uma linha = hospital + setor + tipo de plantão
+  // O sistema criará o hospital e o setor se não existirem
+  const wsProjTipos = XLSX.utils.aoa_to_sheet([
+    ['hospital','setor','tipo_plantao','hora_inicio','hora_fim','valor',
+     'codigo_cc','contratante','latitude','longitude','raio_checkin_m'],
+    ['Hospital Bonsucesso','Emergência Adulto - Rotina','Diurno Dia de Semana','07:00','19:00',1200,
+     'CC-001','SMS Rio','','','100'],
+    ['Hospital Bonsucesso','Emergência Adulto - Rotina','Noturno Dia de Semana','19:00','07:00',1300,
+     '','','','',''],
+    ['Hospital Bonsucesso','Emergência Adulto - Rotina','Diurno Fim de Semana','07:00','19:00',1300,
+     '','','','',''],
+    ['Hospital Bonsucesso','Emergência Adulto - Rotina','Noturno Fim de Semana','19:00','07:00',1400,
+     '','','','',''],
+    ['Hospital Bonsucesso','CTIP','Diurno Dia de Semana','07:00','19:00',1500,
+     '','','','',''],
+    ['Hospital Bonsucesso','CTIP','Noturno Dia de Semana','19:00','07:00',1600,
+     '','','','',''],
+    ['Hospital Y','Setor A','Plantão Tipo 1 Diurno','07:00','19:00',1375,
+     'CC-002','CETHID','','','150'],
+    ['Hospital Y','Setor A','Plantão Tipo 2 Diurno','07:00','19:00',1100,
+     '','','','',''],
+  ]);
+  XLSX.utils.book_append_sheet(wb, wsProjTipos, 'Hospitais-Setores-Tipos');
+
+  // Aba 3: Lançamentos
+  const wsLanc = XLSX.utils.aoa_to_sheet([
+    ['medico','hospital','setor','tipo_plantao','data','hora_inicio','hora_fim','valor','obs'],
+    ['Dr. João Silva','Hospital Bonsucesso','Emergência Adulto - Rotina','Diurno Dia de Semana','2026-06-01','07:00','19:00',1200,''],
+  ]);
+  XLSX.utils.book_append_sheet(wb, wsLanc, 'Lançamentos');
+
+  // Aba com instruções
+  const wsInfo = XLSX.utils.aoa_to_sheet([
+    ['INSTRUÇÕES DE IMPORTAÇÃO'],
+    [''],
+    ['Aba Médicos:'],
+    ['  - nome, cpf, telefone, data_nascimento e crm são OBRIGATÓRIOS'],
+    ['  - tipo: Plantonista | Diarista | Coordenador | Residente'],
+    ['  - pessoa_juridica: SIM ou NÃO (se SIM, preencher razao_social e cnpj)'],
+    ['  - pix_tipo: CPF | CNPJ | EMAIL | TELEFONE | ALEATORIA'],
+    ['  - tipo_conta: corrente | poupanca'],
+    [''],
+    ['Aba Hospitais-Setores-Tipos:'],
+    ['  - hospital: nome do hospital (será criado se não existir)'],
+    ['  - setor: nome do setor (será criado se não existir no hospital)'],
+    ['  - tipo_plantao: nome do tipo (será criado se não existir no setor)'],
+    ['  - Nas linhas 2+ do mesmo hospital, deixe codigo_cc, contratante, lat, lon em branco'],
+    [''],
+    ['Aba Lançamentos:'],
+    ['  - medico: nome exato como cadastrado no sistema'],
+    ['  - hospital, setor, tipo_plantao: devem existir no sistema (use a aba acima primeiro)'],
+    ['  - data: formato AAAA-MM-DD'],
+  ]);
+  XLSX.utils.book_append_sheet(wb, wsInfo, 'Instruções');
+
+  XLSX.writeFile(wb, 'modelo_plantaopro.xlsx');
   toast('Modelo Excel baixado!');
 }
 
@@ -8889,7 +9219,181 @@ async function carregarHistoricoPagamentos() {
 }
 
 
-// ── SETORES POR PROJETO ──────────────────────────────────────────────────────
+// ── HELPERS DE FORMULÁRIO ─────────────────────────────────────────────────────
+
+function mascaraCPF(el) {
+  let v = el.value.replace(/\D/g,'').slice(0,11);
+  v = v.replace(/(\d{3})(\d)/, '$1.$2');
+  v = v.replace(/(\d{3})\.(\d{3})(\d)/, '$1.$2.$3');
+  v = v.replace(/(\d{3})\.(\d{3})\.(\d{3})(\d)/, '$1.$2.$3-$4');
+  el.value = v;
+}
+
+function mascaraCNPJ(el) {
+  let v = el.value.replace(/\D/g,'').slice(0,14);
+  v = v.replace(/(\d{2})(\d)/, '$1.$2');
+  v = v.replace(/(\d{2})\.(\d{3})(\d)/, '$1.$2.$3');
+  v = v.replace(/(\d{3})\.(\d{3})\.(\d{2})(\d)/, '$1.$2.$3/$4');
+  v = v.replace(/(\d{4})(\d)/, '$1-$2');
+  el.value = v;
+}
+
+function mascaraTelefone(el) {
+  let v = el.value.replace(/\D/g,'').slice(0,11);
+  if (v.length <= 10) {
+    v = v.replace(/(\d{2})(\d)/, '($1) $2');
+    v = v.replace(/(\d{4})(\d)/, '$1-$2');
+  } else {
+    v = v.replace(/(\d{2})(\d)/, '($1) $2');
+    v = v.replace(/(\d{5})(\d)/, '$1-$2');
+  }
+  el.value = v;
+}
+
+function mascaraCEP(el) {
+  let v = el.value.replace(/\D/g,'').slice(0,8);
+  v = v.replace(/(\d{5})(\d)/, '$1-$2');
+  el.value = v;
+}
+
+function togglePessoaBancario(ctx, val) {
+  var rowId = ctx === 'novo' ? 'mn-pj-row' : 'em-pj-row';
+  var el = document.getElementById(rowId);
+  if (el) el.style.display = val === 'pj' ? 'block' : 'none';
+  // Se PJ, sugerir CNPJ como PIX
+  if (ctx === 'novo' && val === 'pj') {
+    var pt = document.getElementById('mn-pix-tipo');
+    if (pt && !pt.value) pt.value = 'CNPJ';
+  }
+}
+
+function triggerDocUpload(inputId) {
+  document.getElementById(inputId).click();
+}
+
+function previewDocLabel(inputId) {
+  var inp = document.getElementById(inputId);
+  var lbl = document.getElementById(inputId + '-label');
+  var slot = lbl ? lbl.closest('.upload-doc-slot') : null;
+  if (!inp || !inp.files || !inp.files.length) return;
+  var file = inp.files[0];
+  if (lbl) lbl.textContent = '✅ ' + file.name;
+  if (slot) slot.classList.add('ok');
+}
+
+async function uploadDocsMedico(medId, ctx) {
+  // Upload para Supabase Storage — bucket 'medico-docs'
+  var docs = [
+    {inputId: ctx === 'novo' ? 'mn-doc-id'     : 'em-doc-id',     tipo: 'identidade'},
+    {inputId: ctx === 'novo' ? 'mn-doc-crm'    : 'em-doc-crm',    tipo: 'crm'},
+    {inputId: ctx === 'novo' ? 'mn-doc-rqe'    : 'em-doc-rqe',    tipo: 'rqe'},
+    {inputId: ctx === 'novo' ? 'mn-doc-titulo' : 'em-doc-titulo',  tipo: 'titulo'},
+  ];
+  for (var i = 0; i < docs.length; i++) {
+    var d = docs[i];
+    var inp = document.getElementById(d.inputId);
+    if (!inp || !inp.files || !inp.files.length) continue;
+    var file = inp.files[0];
+    var ext = file.name.split('.').pop();
+    var path = medId + '/' + d.tipo + '.' + ext;
+    try {
+      await fetch(SUPABASE_URL + '/storage/v1/object/medico-docs/' + path, {
+        method: 'POST',
+        headers: {
+          'apikey': SUPABASE_KEY,
+          'Authorization': 'Bearer ' + SUPABASE_KEY,
+          'Content-Type': file.type,
+        },
+        body: file
+      });
+    } catch(e) {
+      console.warn('Erro upload doc ' + d.tipo + ':', e);
+    }
+  }
+}
+
+// ── IMPORTAR MÉDICOS via planilha (versão estendida) ─────────────────────────
+
+async function importarMedicosXLSX_v2(event) {
+  const file = event.target.files[0]; if (!file) return;
+  const buf = await file.arrayBuffer();
+  const wb  = XLSX.read(buf, {type:'array'});
+  const ws  = wb.Sheets[wb.SheetNames[0]];
+  const rows = XLSX.utils.sheet_to_json(ws, {defval:''});
+  if (!rows.length) { toast('Planilha vazia', true); return; }
+
+  const hdr = Object.keys(rows[0]).map(h => h.toLowerCase().trim());
+  const col = (row, names) => {
+    for (const n of names) {
+      const k = Object.keys(row).find(k => k.toLowerCase().trim() === n.toLowerCase());
+      if (k !== undefined) return String(row[k]||'').trim();
+    }
+    return '';
+  };
+
+  const existCPFs = medicos.map(m => (m.cpf||'').replace(/\D/g,''));
+  const existCRMs = medicos.map(m => (m.crm||'').toLowerCase());
+
+  var ok = 0, erros = [];
+
+  for (const row of rows) {
+    const nome = col(row, ['nome']);
+    const cpf  = col(row, ['cpf']).replace(/\D/g,'');
+    const crm  = col(row, ['crm']);
+    const tel  = col(row, ['telefone']);
+    const nasc = col(row, ['data_nascimento','nascimento']);
+    const email= col(row, ['email']);
+    const tipo = col(row, ['tipo']) || 'Plantonista';
+    const rqe  = col(row, ['rqe']);
+    const esp  = col(row, ['especialidade']);
+    const rua  = col(row, ['logradouro','rua','endereco']);
+    const numero= col(row, ['numero','n']);
+    const comp = col(row, ['complemento','comp']);
+    const bairro= col(row, ['bairro']);
+    const cidade= col(row, ['cidade']);
+    const uf   = col(row, ['uf','estado']);
+    const cep  = col(row, ['cep']).replace(/\D/g,'');
+    const pj   = col(row, ['pessoa_juridica']).toUpperCase() === 'SIM';
+    const razao= col(row, ['razao_social']);
+    const cnpj = col(row, ['cnpj']).replace(/\D/g,'');
+    const pixTipo = col(row, ['pix_tipo']);
+    const pixChave= col(row, ['pix_chave']);
+    const banco= col(row, ['banco']);
+    const ag   = col(row, ['agencia']);
+    const cc   = col(row, ['conta']);
+    const tipoConta = col(row, ['tipo_conta']) || 'corrente';
+
+    if (!nome || !cpf || !crm) { erros.push('Linha sem nome/CPF/CRM'); continue; }
+    if (existCPFs.includes(cpf)) { erros.push('CPF já cadastrado: ' + cpf); continue; }
+
+    const payload = {
+      nome, cpf, crm,
+      telefone: tel||null, data_nascimento: nasc||null, email: email||null,
+      tipo: ['Plantonista','Diarista','Coordenador','Residente'].includes(tipo)?tipo:'Plantonista',
+      rqe: rqe||null,
+      especialidade: esp||'', especialidades: esp ? esp.split(';').map(s=>s.trim()).filter(Boolean) : [],
+      endereco_rua: rua||null, endereco_numero: numero||null, endereco_comp: comp||null,
+      endereco_bairro: bairro||null, endereco_cidade: cidade||null, endereco_uf: uf||null,
+      endereco_cep: cep?cep.replace(/(\d{5})(\d{3})/,'$1-$2'):null,
+      pessoa_juridica: pj,
+      razao_social: pj&&razao?razao:null,
+      cnpj: pj&&cnpj?cnpj:null,
+      pix_tipo: pixTipo||null, pix_chave: pixChave||null,
+      banco: banco||null, agencia: ag||null, conta_corrente: cc||null, tipo_conta: tipoConta||'corrente',
+      ativo: true, projetos_vinculados: []
+    };
+
+    const res = await sb('/rest/v1/medicos', {method:'POST', body:JSON.stringify(payload)});
+    if (res) { ok++; existCPFs.push(cpf); }
+    else erros.push('Erro ao cadastrar: ' + nome);
+  }
+
+  event.target.value = '';
+  toast(ok + ' médico(s) importado(s)' + (erros.length ? ' — ' + erros.length + ' erro(s)' : ''), erros.length > 0);
+  if (ok > 0) await carregarMedicos();
+}
+
+
 
 var _setoresCache = {};
 
@@ -8909,14 +9413,12 @@ async function popularSelectSetor(selectId, projetoId, valorAtual) {
   var setores = await carregarSetoresProjeto(projetoId);
   setores.forEach(function(s) {
     var opt = document.createElement('option');
-    opt.value = s.nome;
-    opt.textContent = s.nome;
+    opt.value = s.nome; opt.textContent = s.nome;
     if (s.nome === valorAtual) opt.selected = true;
     sel.appendChild(opt);
   });
   var outro = document.createElement('option');
-  outro.value = '_outro';
-  outro.textContent = '+ Outro (digitar livremente)';
+  outro.value = '_outro'; outro.textContent = '+ Outro (digitar)';
   sel.appendChild(outro);
 }
 
@@ -8928,10 +9430,7 @@ async function onMrProjChange() {
 
 async function onMrSetorChange() {
   var setor = document.getElementById('mr-setor') ? document.getElementById('mr-setor').value : '';
-  if (setor === '_outro') {
-    document.getElementById('mr-setor-custom-row').style.display = 'block';
-    return;
-  }
+  if (setor === '_outro') { document.getElementById('mr-setor-custom-row').style.display = 'block'; return; }
   document.getElementById('mr-setor-custom-row').style.display = 'none';
   await tentarPreencherValorAuto();
 }
@@ -8973,10 +9472,8 @@ function renderMrUFsSelect() {
   if (!el || el.children.length > 0) return;
   UFS_BRASIL.forEach(function(uf) {
     var btn = document.createElement('button');
-    btn.type = 'button';
-    btn.textContent = uf;
-    btn.dataset.uf = uf;
-    btn.dataset.sel = '0';
+    btn.type = 'button'; btn.textContent = uf;
+    btn.dataset.uf = uf; btn.dataset.sel = '0';
     btn.style.cssText = 'padding:3px 7px;font-size:11px;font-weight:600;border-radius:4px;border:1.5px solid var(--border);background:#fff;color:var(--text2);cursor:pointer;margin:2px;';
     btn.onclick = function() {
       var isSel = btn.dataset.sel === '1';
@@ -8989,20 +9486,10 @@ function renderMrUFsSelect() {
   });
 }
 
-function getMrUFsSelecionadas() {
-  return Array.from(document.querySelectorAll('#mr-ufs-select [data-uf]'))
-    .filter(function(b){ return b.dataset.sel === '1'; })
-    .map(function(b){ return b.dataset.uf; });
-}
-
-// ── GERENCIAR SETORES ─────────────────────────────────────────────────────────
-
 var _setorProjId = null;
-var _setorProjNome = '';
 
 async function abrirModalSetores(projId, projNome) {
   _setorProjId = projId;
-  _setorProjNome = projNome;
   var el = document.getElementById('modal-setores-proj-nome');
   if (el) el.textContent = projNome;
   var inp = document.getElementById('novo-setor-nome');
@@ -9021,10 +9508,7 @@ async function renderSetoresList() {
   if (!el) return;
   el.innerHTML = '<div class="empty">Carregando...</div>';
   var res = await sb('/rest/v1/setores?projeto_id=eq.' + _setorProjId + '&order=nome&select=*') || [];
-  if (!res.length) {
-    el.innerHTML = '<div class="empty">Nenhum setor cadastrado ainda.</div>';
-    return;
-  }
+  if (!res.length) { el.innerHTML = '<div class="empty">Nenhum setor ainda.</div>'; return; }
   el.innerHTML = res.map(function(s) {
     var ativoBtn = s.ativo ? 'Desativar' : 'Ativar';
     var ativoVal = s.ativo ? 'false' : 'true';
@@ -9032,8 +9516,8 @@ async function renderSetoresList() {
     return '<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:var(--bg3);border-radius:var(--radius);border:1px solid var(--border);">' +
       '<span style="font-size:14px;font-weight:500;">' + nomeHtml + '</span>' +
       '<div style="display:flex;gap:6px;">' +
-      '<button class="btn btn-sm btn-ghost" onclick="toggleSetor(\''+s.id+'\','+ativoVal+')">' + ativoBtn + '</button>' +
-      '<button class="btn btn-sm btn-danger" onclick="deletarSetor(\''+s.id+'\')">&#10005;</button>' +
+      '<button class="btn btn-sm btn-ghost" onclick="toggleSetor(\'' + s.id + '\',' + ativoVal + ')">' + ativoBtn + '</button>' +
+      '<button class="btn btn-sm btn-danger" onclick="deletarSetor(\'' + s.id + '\')">&#10005;</button>' +
       '</div></div>';
   }).join('');
 }
@@ -9042,11 +9526,7 @@ async function adicionarSetor() {
   var inp = document.getElementById('novo-setor-nome');
   var nome = inp ? inp.value.trim() : '';
   if (!nome) { toast('Digite o nome do setor', true); return; }
-  await sb('/rest/v1/setores', {
-    method: 'POST',
-    headers: {'Prefer': 'return=minimal'},
-    body: JSON.stringify({projeto_id: _setorProjId, admin_id: adminLogado.id, nome: nome, ativo: true})
-  });
+  await sb('/rest/v1/setores', {method:'POST', headers:{'Prefer':'return=minimal'}, body:JSON.stringify({projeto_id:_setorProjId, admin_id:adminLogado.id, nome:nome, ativo:true})});
   if (inp) inp.value = '';
   _setoresCache = {};
   await renderSetoresList();
@@ -9054,66 +9534,56 @@ async function adicionarSetor() {
 }
 
 async function toggleSetor(id, ativo) {
-  await sb('/rest/v1/setores?id=eq.' + id, {method: 'PATCH', headers: {'Prefer': 'return=minimal'}, body: JSON.stringify({ativo: ativo})});
+  await sb('/rest/v1/setores?id=eq.' + id, {method:'PATCH', headers:{'Prefer':'return=minimal'}, body:JSON.stringify({ativo:ativo})});
   _setoresCache = {};
   await renderSetoresList();
 }
 
 async function deletarSetor(id) {
   if (!confirm('Excluir este setor?')) return;
-  await sb('/rest/v1/setores?id=eq.' + id, {method: 'DELETE'});
+  await sb('/rest/v1/setores?id=eq.' + id, {method:'DELETE'});
   _setoresCache = {};
   await renderSetoresList();
   toast('Setor exclu\u00eddo');
 }
 
-// ── IMPORTAR TIPOS POR PLANILHA ───────────────────────────────────────────────
-
 async function importarTiposPlanilha(input) {
   if (!input.files || !input.files.length) return;
   var file = input.files[0];
   input.value = '';
-  if (typeof XLSX === 'undefined') { toast('Biblioteca XLSX n\u00e3o dispon\u00edvel', true); return; }
+  if (typeof XLSX === 'undefined') { toast('XLSX n\u00e3o dispon\u00edvel', true); return; }
   var reader = new FileReader();
   reader.onload = async function(e) {
     try {
-      var wb = XLSX.read(e.target.result, {type: 'array'});
+      var wb = XLSX.read(e.target.result, {type:'array'});
       var ws = wb.Sheets[wb.SheetNames[0]];
-      var rows = XLSX.utils.sheet_to_json(ws, {defval: ''});
+      var rows = XLSX.utils.sheet_to_json(ws, {defval:''});
       if (!rows.length) { toast('Planilha vazia', true); return; }
       var ok = 0; var erros = [];
       for (var i = 0; i < rows.length; i++) {
         var row = rows[i];
-        var projNome = String(row['Projeto'] || row['projeto'] || '').trim();
-        var nome = String(row['Nome'] || row['nome'] || '').trim();
-        var setor = String(row['Setor'] || row['setor'] || '').trim();
-        var ini = String(row['Início'] || row['Inicio'] || row['inicio'] || '07:00').trim();
-        var fim = String(row['Fim'] || row['fim'] || '19:00').trim();
-        var valorRaw = row['Valor'] || row['valor'] || 0;
+        var projNome = String(row['Projeto']||row['projeto']||'').trim();
+        var nome = String(row['Nome']||row['nome']||'').trim();
+        var setor = String(row['Setor']||row['setor']||'').trim();
+        var ini = String(row['\u00cdnicio']||row['Inicio']||row['inicio']||row['hora_inicio']||'07:00').trim();
+        var fim = String(row['Fim']||row['fim']||row['hora_fim']||'19:00').trim();
+        var valorRaw = row['Valor']||row['valor']||0;
         var valor = parseFloat(String(valorRaw).replace(/[^0-9,.]/g,'').replace(',','.')) || 0;
-        if (!projNome || !nome) { erros.push('Linha ' + (i+2) + ': sem projeto ou nome'); continue; }
-        var proj = projetos.find(function(p){ return p.nome.toLowerCase() === projNome.toLowerCase(); });
-        if (!proj) { erros.push('Projeto n\u00e3o encontrado: ' + projNome); continue; }
-        var partsI = ini.split(':'); var partsF = fim.split(':');
-        var hI = parseInt(partsI[0])||7; var mI = parseInt(partsI[1])||0;
-        var hF = parseInt(partsF[0])||19; var mF = parseInt(partsF[1])||0;
-        var mins = (hF*60+mF)-(hI*60+mI);
-        if (mins < 0) mins += 24*60;
-        var horas = mins/60;
-        var res = await sb('/rest/v1/tipos_plantao', {
-          method: 'POST',
-          headers: {'Prefer': 'return=minimal'},
-          body: JSON.stringify({projeto_id: proj.id, admin_id: adminLogado.id, nome: nome, setor_nome: setor||null, hora_ini: ini, hora_fim: fim, horas: horas, valor: valor||null, ativo: true})
-        });
-        if (res !== null) ok++; else erros.push('Erro: ' + nome);
+        if (!projNome || !nome) { erros.push('L.'+(i+2)+': sem projeto/nome'); continue; }
+        var proj = projetos.find(function(p){ return p.nome.toLowerCase()===projNome.toLowerCase(); });
+        if (!proj) { erros.push('Projeto n\u00e3o encontrado: '+projNome); continue; }
+        var partsI=ini.split(':'); var partsF=fim.split(':');
+        var mins=(parseInt(partsF[0])*60+parseInt(partsF[1]||0))-(parseInt(partsI[0])*60+parseInt(partsI[1]||0));
+        if (mins<0) mins+=24*60;
+        var res = await sb('/rest/v1/tipos_plantao', {method:'POST', headers:{'Prefer':'return=minimal'},
+          body:JSON.stringify({projeto_id:proj.id,admin_id:adminLogado.id,nome:nome,setor_nome:setor||null,hora_ini:ini,hora_fim:fim,horas:mins/60,valor:valor||null,ativo:true})});
+        if (res!==null) ok++; else erros.push('Erro: '+nome);
       }
-      toast(ok + ' tipo(s) importado(s)' + (erros.length ? ' — ' + erros.length + ' erro(s)' : ''), erros.length > 0);
+      toast(ok+' tipo(s) importado(s)'+(erros.length?' — '+erros.length+' erro(s)':''), erros.length>0);
       _setoresCache = {};
       carregarTiposLista();
       await carregarTiposPlantao();
-    } catch(err) {
-      toast('Erro ao ler planilha: ' + err.message, true);
-    }
+    } catch(err) { toast('Erro: '+err.message, true); }
   };
   reader.readAsArrayBuffer(file);
 }
