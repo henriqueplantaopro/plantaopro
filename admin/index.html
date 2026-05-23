@@ -677,9 +677,9 @@ tr:hover td{background:var(--bg3);}
     <div class="card">
       <div class="card-title">Novo tipo</div>
       <div class="form-row">
-        <div class="form-group"><label>Projeto</label><select id="tp-proj" onchange="carregarTiposLista()"><option value="">Selecione...</option></select></div>
+        <div class="form-group"><label>Projeto</label><select id="tp-proj" onchange="carregarTiposLista();onTpProjChange()"><option value="">Selecione...</option></select></div>
         <div class="form-group"><label>Nome</label><input id="tp-nome" type="text" placeholder="Ex: Diurno 12h — Emergência"></div>
-        <div class="form-group"><label>Setor</label><input id="tp-setor" type="text" placeholder="Ex: Emergência, UTI"></div>
+        <div class="form-group"><label>Setor</label><select id="tp-setor" style="width:100%;"><option value="">Selecione...</option></select></div>
       </div>
       <div class="form-row four">
         <div class="form-group"><label>Início</label><input id="tp-ini" type="time" value="07:00" oninput="calcDuracaoTipo()"></div>
@@ -688,6 +688,9 @@ tr:hover td{background:var(--bg3);}
         <div class="form-group"><label>Valor (R$)</label><input id="tp-valor" type="text" placeholder="1.800,00"></div>
       </div>
       <button class="btn btn-primary" onclick="salvarTipoPlantao()">+ Adicionar tipo</button>
+      <button class="btn btn-ghost" style="margin-left:8px;" onclick="document.getElementById('import-tipos-file').click()">&#128196; Importar planilha</button>
+      <input type="file" id="import-tipos-file" accept=".xlsx,.csv" style="display:none" onchange="importarTiposPlanilha(this)">
+      <button class="btn btn-ghost" style="margin-left:4px;font-size:12px;" onclick="downloadModeloTipos()">&#11015; Baixar modelo</button>
     </div>
     <div class="card" style="margin-top:12px;">
       <div class="card-title">Tipos cadastrados</div>
@@ -1278,7 +1281,7 @@ tr:hover td{background:var(--bg3);}
       </div>
       <div class="form-group" style="margin-bottom:10px;">
         <label>Projeto</label>
-        <select id="mr-proj" onchange="atualizarValorRapido();atualizarPreviewRapido()">
+        <select id="mr-proj" onchange="onMrProjChange();atualizarValorRapido();atualizarPreviewRapido()">
           <option value="">Selecione...</option>
         </select>
       </div>
@@ -1326,7 +1329,7 @@ tr:hover td{background:var(--bg3);}
           </div>
           <div class="form-group">
             <label>Setor</label>
-            <input id="mr-setor" type="text" placeholder="Emergência, UTI...">
+            <select id="mr-setor" style="width:100%;" onchange="onMrSetorChange()"><option value="">Selecione o setor...</option></select>
           </div>
         </div>
       </div>
@@ -1357,6 +1360,7 @@ tr:hover td{background:var(--bg3);}
           <span>📢 Publicar como plantão aberto (sem médico vinculado)</span>
         </label>
         <div id="mr-aberto-opts" style="display:none;margin-top:10px;padding:10px;background:var(--amber-bg);border-radius:var(--radius);border:1px solid #f0c060;">
+<div style="margin-top:10px;"><label style="font-size:11px;font-weight:600;color:var(--text2);display:block;margin-bottom:6px;">PÚBLICO-ALVO</label><div style="display:flex;gap:8px;flex-wrap:wrap;"><label style="cursor:pointer;font-size:13px;"><input type="radio" name="mr-publico" value="projeto" checked onchange="onMrPublicoChange(this.value)"> Médicos do projeto</label><label style="cursor:pointer;font-size:13px;"><input type="radio" name="mr-publico" value="ufs" onchange="onMrPublicoChange(this.value)"> Por estado (UF)</label><label style="cursor:pointer;font-size:13px;"><input type="radio" name="mr-publico" value="geral" onchange="onMrPublicoChange(this.value)"> Público geral</label></div><div id="mr-ufs-row" style="display:none;margin-top:8px;"><div id="mr-ufs-select" style="display:flex;flex-wrap:wrap;gap:4px;"></div></div><label style="cursor:pointer;margin-top:8px;display:block;font-size:13px;"><input type="checkbox" id="mr-exige-rqe"> Exige RQE</label></div>
           <div class="form-group">
             <label style="color:var(--amber);">Número de vagas</label>
             <input id="mr-vagas" type="number" min="1" max="20" value="1" style="max-width:100px;padding:6px 10px;border:1px solid var(--border);border-radius:var(--radius);">
@@ -1872,7 +1876,7 @@ tr:hover td{background:var(--bg3);}
     <div class="card">
       <div class="card-title">Novo tipo</div>
       <div class="form-row">
-        <div class="form-group"><label>Projeto</label><select id="tp-proj" onchange="carregarTiposLista()"><option value="">Selecione...</option></select></div>
+        <div class="form-group"><label>Projeto</label><select id="tp-proj" onchange="carregarTiposLista();onTpProjChange()"><option value="">Selecione...</option></select></div>
         <div class="form-group"><label>Nome</label><input id="tp-nome" type="text" placeholder="Ex: Diurno 12h — Emergência"></div>
         <div class="form-group"><label>Setor</label><input id="tp-setor" type="text" placeholder="Ex: Emergência, UTI"></div>
       </div>
@@ -1883,6 +1887,9 @@ tr:hover td{background:var(--bg3);}
         <div class="form-group"><label>Valor (R$)</label><input id="tp-valor" type="text" placeholder="1.800,00"></div>
       </div>
       <button class="btn btn-primary" onclick="salvarTipoPlantao()">+ Adicionar tipo</button>
+      <button class="btn btn-ghost" style="margin-left:8px;" onclick="document.getElementById('import-tipos-file').click()">&#128196; Importar planilha</button>
+      <input type="file" id="import-tipos-file" accept=".xlsx,.csv" style="display:none" onchange="importarTiposPlanilha(this)">
+      <button class="btn btn-ghost" style="margin-left:4px;font-size:12px;" onclick="downloadModeloTipos()">&#11015; Baixar modelo</button>
     </div>
     <div class="card" style="margin-top:12px;">
       <div class="card-title">Tipos cadastrados</div>
@@ -2473,7 +2480,7 @@ tr:hover td{background:var(--bg3);}
       </div>
       <div class="form-group" style="margin-bottom:10px;">
         <label>Projeto</label>
-        <select id="mr-proj" onchange="atualizarValorRapido();atualizarPreviewRapido()">
+        <select id="mr-proj" onchange="onMrProjChange();atualizarValorRapido();atualizarPreviewRapido()">
           <option value="">Selecione...</option>
         </select>
       </div>
@@ -3196,7 +3203,7 @@ tr:hover td{background:var(--bg3);}
     <div class="card">
       <div class="card-title">Novo tipo</div>
       <div class="form-row">
-        <div class="form-group"><label>Projeto</label><select id="tp-proj" onchange="carregarTiposLista()"><option value="">Selecione...</option></select></div>
+        <div class="form-group"><label>Projeto</label><select id="tp-proj" onchange="carregarTiposLista();onTpProjChange()"><option value="">Selecione...</option></select></div>
         <div class="form-group"><label>Nome</label><input id="tp-nome" type="text" placeholder="Ex: Diurno 12h — Emergência"></div>
         <div class="form-group"><label>Setor</label><input id="tp-setor" type="text" placeholder="Ex: Emergência, UTI"></div>
       </div>
@@ -3207,6 +3214,9 @@ tr:hover td{background:var(--bg3);}
         <div class="form-group"><label>Valor (R$)</label><input id="tp-valor" type="text" placeholder="1.800,00"></div>
       </div>
       <button class="btn btn-primary" onclick="salvarTipoPlantao()">+ Adicionar tipo</button>
+      <button class="btn btn-ghost" style="margin-left:8px;" onclick="document.getElementById('import-tipos-file').click()">&#128196; Importar planilha</button>
+      <input type="file" id="import-tipos-file" accept=".xlsx,.csv" style="display:none" onchange="importarTiposPlanilha(this)">
+      <button class="btn btn-ghost" style="margin-left:4px;font-size:12px;" onclick="downloadModeloTipos()">&#11015; Baixar modelo</button>
     </div>
     <div class="card" style="margin-top:12px;">
       <div class="card-title">Tipos cadastrados</div>
@@ -3797,7 +3807,7 @@ tr:hover td{background:var(--bg3);}
       </div>
       <div class="form-group" style="margin-bottom:10px;">
         <label>Projeto</label>
-        <select id="mr-proj" onchange="atualizarValorRapido();atualizarPreviewRapido()">
+        <select id="mr-proj" onchange="onMrProjChange();atualizarValorRapido();atualizarPreviewRapido()">
           <option value="">Selecione...</option>
         </select>
       </div>
@@ -4709,7 +4719,7 @@ function renderProjetos() {
         <td style="font-size:12px;color:var(--green);">${rem.length?rem.join('<br>'):'<span style="color:var(--text3);">Não configurada</span>'}</td>
         <td style="font-size:11px;font-family:monospace;">${p.latitude&&p.longitude?'✅ OK':'<span style="color:var(--amber);">⚠ Sem GPS</span>'}</td>
         <td><span class="badge badge-${p.status==='Ativo'?'green':p.status==='Encerrado'?'red':'amber'}">${p.status}</span></td>
-        <td><button class="btn btn-danger" onclick="delProjeto('${p.id}')">Remover</button></td>
+        <td><button class="btn btn-danger" <button class="btn btn-ghost btn-sm" onclick="abrirModalSetores('${p.id}', '${p.nome}')">&#9881; Setores</button> <button onclick="delProjeto('${p.id}')">Remover</button></td>
       </tr>`;
     }).join('') + '</tbody></table>';
 }
@@ -8877,6 +8887,237 @@ async function carregarHistoricoPagamentos() {
   el.innerHTML='<table style="width:100%;border-collapse:collapse;font-size:12px;"><thead><tr><th style="text-align:left;padding:4px 8px;color:var(--text3);font-size:11px;">Data</th><th style="padding:4px 8px;color:var(--text3);font-size:11px;">Forma</th><th style="text-align:right;padding:4px 8px;color:var(--text3);font-size:11px;">Valor</th><th style="text-align:right;padding:4px 8px;color:var(--text3);font-size:11px;">Status</th></tr></thead><tbody>'+
     data.map(p=>`<tr style="border-top:1px solid var(--border);"><td style="padding:7px 8px;">${p.pago_em?new Date(p.pago_em).toLocaleDateString('pt-BR'):'—'}</td><td style="padding:7px 8px;">${formaMap[p.forma]||p.forma||'—'}</td><td style="padding:7px 8px;text-align:right;color:var(--green);font-weight:600;">${fBRL(p.valor)}</td><td style="padding:7px 8px;text-align:right;"><span style="font-size:10px;background:var(--green-bg,#e8f5eb);color:var(--green);padding:2px 6px;border-radius:99px;">${p.status==='pago'?'✅ Pago':p.status}</span></td></tr>`).join('')+'</tbody></table>';
 }
+
+
+// ── SETORES POR PROJETO ──────────────────────────────────────────────────────
+
+var _setoresCache = {};
+
+async function carregarSetoresProjeto(projetoId) {
+  if (!projetoId) return [];
+  if (_setoresCache[projetoId]) return _setoresCache[projetoId];
+  var res = await sb('/rest/v1/setores?projeto_id=eq.' + projetoId + '&ativo=eq.true&select=id,nome&order=nome');
+  _setoresCache[projetoId] = res || [];
+  return _setoresCache[projetoId];
+}
+
+async function popularSelectSetor(selectId, projetoId, valorAtual) {
+  var sel = document.getElementById(selectId);
+  if (!sel) return;
+  sel.innerHTML = '<option value="">Selecione o setor...</option>';
+  if (!projetoId) return;
+  var setores = await carregarSetoresProjeto(projetoId);
+  setores.forEach(function(s) {
+    var opt = document.createElement('option');
+    opt.value = s.nome;
+    opt.textContent = s.nome;
+    if (s.nome === valorAtual) opt.selected = true;
+    sel.appendChild(opt);
+  });
+  var outro = document.createElement('option');
+  outro.value = '_outro';
+  outro.textContent = '+ Outro (digitar livremente)';
+  sel.appendChild(outro);
+}
+
+async function onMrProjChange() {
+  var projId = document.getElementById('mr-proj') ? document.getElementById('mr-proj').value : '';
+  await popularSelectSetor('mr-setor', projId, '');
+  await atualizarTiposNoModal();
+}
+
+async function onMrSetorChange() {
+  var setor = document.getElementById('mr-setor') ? document.getElementById('mr-setor').value : '';
+  if (setor === '_outro') {
+    document.getElementById('mr-setor-custom-row').style.display = 'block';
+    return;
+  }
+  document.getElementById('mr-setor-custom-row').style.display = 'none';
+  await tentarPreencherValorAuto();
+}
+
+async function tentarPreencherValorAuto() {
+  var projId = document.getElementById('mr-proj') ? document.getElementById('mr-proj').value : '';
+  var setor  = document.getElementById('mr-setor') ? document.getElementById('mr-setor').value : '';
+  var tipoNm = document.getElementById('mr-tipo')  ? document.getElementById('mr-tipo').value  : '';
+  if (!projId || !setor || !tipoNm || tipoNm === 'Personalizado') return;
+  var tipos = await sb('/rest/v1/tipos_plantao?projeto_id=eq.' + projId + '&ativo=eq.true&select=*');
+  if (!tipos || !tipos.length) return;
+  var match = tipos.find(function(t){ return t.setor_nome === setor && t.nome === tipoNm; });
+  if (!match) match = tipos.find(function(t){ return t.setor_nome === setor; });
+  if (!match) match = tipos.find(function(t){ return t.nome === tipoNm; });
+  if (!match || !match.valor) return;
+  var valEl = document.getElementById('mr-valor');
+  if (valEl) {
+    valEl.value = match.valor.toLocaleString('pt-BR', {minimumFractionDigits:2});
+    var badge = document.getElementById('mr-valor-badge');
+    if (badge) { badge.textContent = '\u2713 Valor preenchido automaticamente'; badge.style.display = 'block'; }
+  }
+}
+
+async function onTpProjChange() {
+  var projId = document.getElementById('tp-proj') ? document.getElementById('tp-proj').value : '';
+  await popularSelectSetor('tp-setor', projId, '');
+}
+
+function onMrPublicoChange(val) {
+  var ufsRow = document.getElementById('mr-ufs-row');
+  if (ufsRow) ufsRow.style.display = val === 'ufs' ? 'block' : 'none';
+  if (val === 'ufs') renderMrUFsSelect();
+}
+
+var UFS_BRASIL = ['AC','AL','AM','AP','BA','CE','DF','ES','GO','MA','MG','MS','MT','PA','PB','PE','PI','PR','RJ','RN','RO','RR','RS','SC','SE','SP','TO'];
+
+function renderMrUFsSelect() {
+  var el = document.getElementById('mr-ufs-select');
+  if (!el || el.children.length > 0) return;
+  UFS_BRASIL.forEach(function(uf) {
+    var btn = document.createElement('button');
+    btn.type = 'button';
+    btn.textContent = uf;
+    btn.dataset.uf = uf;
+    btn.dataset.sel = '0';
+    btn.style.cssText = 'padding:3px 7px;font-size:11px;font-weight:600;border-radius:4px;border:1.5px solid var(--border);background:#fff;color:var(--text2);cursor:pointer;margin:2px;';
+    btn.onclick = function() {
+      var isSel = btn.dataset.sel === '1';
+      btn.dataset.sel = isSel ? '0' : '1';
+      btn.style.borderColor = isSel ? 'var(--border)' : 'var(--blue)';
+      btn.style.background  = isSel ? '#fff' : 'var(--blue-light)';
+      btn.style.color       = isSel ? 'var(--text2)' : 'var(--blue)';
+    };
+    el.appendChild(btn);
+  });
+}
+
+function getMrUFsSelecionadas() {
+  return Array.from(document.querySelectorAll('#mr-ufs-select [data-uf]'))
+    .filter(function(b){ return b.dataset.sel === '1'; })
+    .map(function(b){ return b.dataset.uf; });
+}
+
+// ── GERENCIAR SETORES ─────────────────────────────────────────────────────────
+
+var _setorProjId = null;
+var _setorProjNome = '';
+
+async function abrirModalSetores(projId, projNome) {
+  _setorProjId = projId;
+  _setorProjNome = projNome;
+  var el = document.getElementById('modal-setores-proj-nome');
+  if (el) el.textContent = projNome;
+  var inp = document.getElementById('novo-setor-nome');
+  if (inp) inp.value = '';
+  document.getElementById('modal-setores').classList.remove('oculto');
+  await renderSetoresList();
+}
+
+function fecharModalSetores() {
+  document.getElementById('modal-setores').classList.add('oculto');
+  _setoresCache = {};
+}
+
+async function renderSetoresList() {
+  var el = document.getElementById('setores-lista');
+  if (!el) return;
+  el.innerHTML = '<div class="empty">Carregando...</div>';
+  var res = await sb('/rest/v1/setores?projeto_id=eq.' + _setorProjId + '&order=nome&select=*') || [];
+  if (!res.length) {
+    el.innerHTML = '<div class="empty">Nenhum setor cadastrado ainda.</div>';
+    return;
+  }
+  el.innerHTML = res.map(function(s) {
+    var ativoBtn = s.ativo ? 'Desativar' : 'Ativar';
+    var ativoVal = s.ativo ? 'false' : 'true';
+    var nomeHtml = s.nome + (s.ativo ? '' : ' <span style="font-size:11px;color:var(--text3);">(inativo)</span>');
+    return '<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:var(--bg3);border-radius:var(--radius);border:1px solid var(--border);">' +
+      '<span style="font-size:14px;font-weight:500;">' + nomeHtml + '</span>' +
+      '<div style="display:flex;gap:6px;">' +
+      '<button class="btn btn-sm btn-ghost" onclick="toggleSetor(\''+s.id+'\','+ativoVal+')">' + ativoBtn + '</button>' +
+      '<button class="btn btn-sm btn-danger" onclick="deletarSetor(\''+s.id+'\')">&#10005;</button>' +
+      '</div></div>';
+  }).join('');
+}
+
+async function adicionarSetor() {
+  var inp = document.getElementById('novo-setor-nome');
+  var nome = inp ? inp.value.trim() : '';
+  if (!nome) { toast('Digite o nome do setor', true); return; }
+  await sb('/rest/v1/setores', {
+    method: 'POST',
+    headers: {'Prefer': 'return=minimal'},
+    body: JSON.stringify({projeto_id: _setorProjId, admin_id: adminLogado.id, nome: nome, ativo: true})
+  });
+  if (inp) inp.value = '';
+  _setoresCache = {};
+  await renderSetoresList();
+  toast('Setor adicionado!');
+}
+
+async function toggleSetor(id, ativo) {
+  await sb('/rest/v1/setores?id=eq.' + id, {method: 'PATCH', headers: {'Prefer': 'return=minimal'}, body: JSON.stringify({ativo: ativo})});
+  _setoresCache = {};
+  await renderSetoresList();
+}
+
+async function deletarSetor(id) {
+  if (!confirm('Excluir este setor?')) return;
+  await sb('/rest/v1/setores?id=eq.' + id, {method: 'DELETE'});
+  _setoresCache = {};
+  await renderSetoresList();
+  toast('Setor exclu\u00eddo');
+}
+
+// ── IMPORTAR TIPOS POR PLANILHA ───────────────────────────────────────────────
+
+async function importarTiposPlanilha(input) {
+  if (!input.files || !input.files.length) return;
+  var file = input.files[0];
+  input.value = '';
+  if (typeof XLSX === 'undefined') { toast('Biblioteca XLSX n\u00e3o dispon\u00edvel', true); return; }
+  var reader = new FileReader();
+  reader.onload = async function(e) {
+    try {
+      var wb = XLSX.read(e.target.result, {type: 'array'});
+      var ws = wb.Sheets[wb.SheetNames[0]];
+      var rows = XLSX.utils.sheet_to_json(ws, {defval: ''});
+      if (!rows.length) { toast('Planilha vazia', true); return; }
+      var ok = 0; var erros = [];
+      for (var i = 0; i < rows.length; i++) {
+        var row = rows[i];
+        var projNome = String(row['Projeto'] || row['projeto'] || '').trim();
+        var nome = String(row['Nome'] || row['nome'] || '').trim();
+        var setor = String(row['Setor'] || row['setor'] || '').trim();
+        var ini = String(row['Início'] || row['Inicio'] || row['inicio'] || '07:00').trim();
+        var fim = String(row['Fim'] || row['fim'] || '19:00').trim();
+        var valorRaw = row['Valor'] || row['valor'] || 0;
+        var valor = parseFloat(String(valorRaw).replace(/[^0-9,.]/g,'').replace(',','.')) || 0;
+        if (!projNome || !nome) { erros.push('Linha ' + (i+2) + ': sem projeto ou nome'); continue; }
+        var proj = projetos.find(function(p){ return p.nome.toLowerCase() === projNome.toLowerCase(); });
+        if (!proj) { erros.push('Projeto n\u00e3o encontrado: ' + projNome); continue; }
+        var partsI = ini.split(':'); var partsF = fim.split(':');
+        var hI = parseInt(partsI[0])||7; var mI = parseInt(partsI[1])||0;
+        var hF = parseInt(partsF[0])||19; var mF = parseInt(partsF[1])||0;
+        var mins = (hF*60+mF)-(hI*60+mI);
+        if (mins < 0) mins += 24*60;
+        var horas = mins/60;
+        var res = await sb('/rest/v1/tipos_plantao', {
+          method: 'POST',
+          headers: {'Prefer': 'return=minimal'},
+          body: JSON.stringify({projeto_id: proj.id, admin_id: adminLogado.id, nome: nome, setor_nome: setor||null, hora_ini: ini, hora_fim: fim, horas: horas, valor: valor||null, ativo: true})
+        });
+        if (res !== null) ok++; else erros.push('Erro: ' + nome);
+      }
+      toast(ok + ' tipo(s) importado(s)' + (erros.length ? ' — ' + erros.length + ' erro(s)' : ''), erros.length > 0);
+      _setoresCache = {};
+      carregarTiposLista();
+      await carregarTiposPlantao();
+    } catch(err) {
+      toast('Erro ao ler planilha: ' + err.message, true);
+    }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
 </script>
 
 
@@ -8923,5 +9164,29 @@ async function carregarHistoricoPagamentos() {
     </div>
   </div>
 
+
+<!-- MODAL SETORES -->
+<div class="modal-overlay oculto" id="modal-setores" onclick="if(event.target===this)fecharModalSetores()">
+  <div class="modal" style="max-width:480px;">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title">Setores do projeto</div>
+        <div style="font-size:12px;color:var(--text3);margin-top:2px;" id="modal-setores-proj-nome"></div>
+      </div>
+      <button class="modal-close" onclick="fecharModalSetores()">&#10005;</button>
+    </div>
+    <div style="padding:0 24px 20px;">
+      <div style="display:flex;gap:8px;margin-bottom:16px;">
+        <input id="novo-setor-nome" type="text" placeholder="Nome do setor (ex: Emerg&ecirc;ncia, UTI...)"
+          style="flex:1;padding:9px 12px;border:1.5px solid var(--border);border-radius:var(--radius);font-size:14px;font-family:inherit;"
+          onkeydown="if(event.key==='Enter')adicionarSetor()">
+        <button class="btn btn-primary" onclick="adicionarSetor()">+ Adicionar</button>
+      </div>
+      <div id="setores-lista" style="display:flex;flex-direction:column;gap:6px;"></div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-ghost" onclick="fecharModalSetores()">Fechar</button></div>
+  </div>
+</div>
+<style>.modal-overlay.oculto{display:none!important;}</style>
 </body>
 </html>
