@@ -8201,8 +8201,8 @@ async function handleUploadHospitaisSetoresTipos(input) {
         const rt = await sb('/rest/v1/tipos_plantao', {
           method:'POST', headers:{'Prefer':'return=minimal'},
           body: JSON.stringify({
-            projeto_id: proj.id, admin_id: adminLogado.id,
-            nome: tipoNome, setor_nome: setorNome||null,
+            projeto_id: proj.id,
+            nome: tipoNome, setor: setorNome||null,
             hora_ini: horaIni, hora_fim: horaFim, horas,
             valor: valor||null, ativo: true
           })
@@ -9442,8 +9442,8 @@ async function tentarPreencherValorAuto() {
   if (!projId || !setor || !tipoNm || tipoNm === 'Personalizado') return;
   var tipos = await sb('/rest/v1/tipos_plantao?projeto_id=eq.' + projId + '&ativo=eq.true&select=*');
   if (!tipos || !tipos.length) return;
-  var match = tipos.find(function(t){ return t.setor_nome === setor && t.nome === tipoNm; });
-  if (!match) match = tipos.find(function(t){ return t.setor_nome === setor; });
+  var match = tipos.find(function(t){ return t.setor === setor && t.nome === tipoNm; });
+  if (!match) match = tipos.find(function(t){ return t.setor === setor; });
   if (!match) match = tipos.find(function(t){ return t.nome === tipoNm; });
   if (!match || !match.valor) return;
   var valEl = document.getElementById('mr-valor');
@@ -9576,7 +9576,7 @@ async function importarTiposPlanilha(input) {
         var mins=(parseInt(partsF[0])*60+parseInt(partsF[1]||0))-(parseInt(partsI[0])*60+parseInt(partsI[1]||0));
         if (mins<0) mins+=24*60;
         var res = await sb('/rest/v1/tipos_plantao', {method:'POST', headers:{'Prefer':'return=minimal'},
-          body:JSON.stringify({projeto_id:proj.id,admin_id:adminLogado.id,nome:nome,setor_nome:setor||null,hora_ini:ini,hora_fim:fim,horas:mins/60,valor:valor||null,ativo:true})});
+          body:JSON.stringify({projeto_id:proj.id,nome:nome,setor:setor||null,hora_ini:ini,hora_fim:fim,horas:mins/60,valor:valor||null,ativo:true})});
         if (res!==null) ok++; else erros.push('Erro: '+nome);
       }
       toast(ok+' tipo(s) importado(s)'+(erros.length?' — '+erros.length+' erro(s)':''), erros.length>0);
