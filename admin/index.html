@@ -5850,8 +5850,8 @@ function abrirLancamentoRapido(ds, projId) {
   document.getElementById('mr-proj').innerHTML = '<option value="">Selecione...</option>' +
     sortedProjetos().map(p=>`<option value="${p.id}">${p.nome}</option>`).join('');
 
-  // Pré-preencher projeto se filtrado
-  if (projId) document.getElementById('mr-proj').value = projId;
+  // Projeto sempre começa em 'Selecione' para evitar lançamento no hospital errado
+  // (projId ignorado — usuário deve selecionar manualmente)
 
   // Data label
   const d = new Date(ds+'T12:00:00');
@@ -5892,8 +5892,7 @@ function abrirLancamentoRapido(ds, projId) {
   const suc = document.getElementById('mr-sucesso'); if(suc) suc.style.display='none';
   const badge = document.getElementById('mr-valor-badge'); if(badge) badge.style.display='none';
 
-  // Preencher valor padrão se projeto já selecionado
-  if (projId) atualizarValorRapido();
+  // valor não pré-calculado (projeto não pré-selecionado)
 
   // Fechar qualquer modal de perfil/planos aberto antes de abrir o de lançamento
   ['modal-perfil','modal-planos','modal-setores'].forEach(function(id) {
