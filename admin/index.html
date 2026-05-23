@@ -1500,6 +1500,21 @@ tr:hover td{background:var(--bg3);}
         <label>Observações</label>
         <input id="mr-obs" type="text" placeholder="Opcional">
       </div>
+      <!-- Vagas — visível sempre, tanto modo normal quanto livre -->
+      <div style="margin-bottom:10px;display:flex;align-items:center;gap:12px;">
+        <div>
+          <label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.4px;color:var(--text2);display:block;margin-bottom:4px;">Vagas</label>
+          <div style="display:flex;align-items:center;gap:6px;">
+            <button type="button" onclick="var v=document.getElementById('mr-vagas-global');if(v&&parseInt(v.value)>1)v.value=parseInt(v.value)-1;"
+              style="width:28px;height:28px;border-radius:50%;border:1.5px solid var(--border);background:#fff;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;">−</button>
+            <input id="mr-vagas-global" type="number" min="1" max="50" value="1"
+              style="width:52px;text-align:center;padding:5px 6px;border:1.5px solid var(--border);border-radius:var(--radius);font-size:15px;font-weight:600;">
+            <button type="button" onclick="var v=document.getElementById('mr-vagas-global');if(v)v.value=parseInt(v.value)+1;"
+              style="width:28px;height:28px;border-radius:50%;border:1.5px solid var(--border);background:#fff;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;">+</button>
+          </div>
+        </div>
+        <div style="font-size:11px;color:var(--text3);margin-top:14px;">plantão(ões) para esta data</div>
+      </div>
       <!-- Plantão aberto -->
       <div style="border-top:1px solid var(--border);padding-top:10px;margin-top:4px;">
         <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;">
@@ -2692,6 +2707,21 @@ tr:hover td{background:var(--bg3);}
       <div class="form-group" style="margin-bottom:10px;">
         <label>Observações</label>
         <input id="mr-obs" type="text" placeholder="Opcional">
+      </div>
+      <!-- Vagas — visível sempre, tanto modo normal quanto livre -->
+      <div style="margin-bottom:10px;display:flex;align-items:center;gap:12px;">
+        <div>
+          <label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.4px;color:var(--text2);display:block;margin-bottom:4px;">Vagas</label>
+          <div style="display:flex;align-items:center;gap:6px;">
+            <button type="button" onclick="var v=document.getElementById('mr-vagas-global');if(v&&parseInt(v.value)>1)v.value=parseInt(v.value)-1;"
+              style="width:28px;height:28px;border-radius:50%;border:1.5px solid var(--border);background:#fff;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;">−</button>
+            <input id="mr-vagas-global" type="number" min="1" max="50" value="1"
+              style="width:52px;text-align:center;padding:5px 6px;border:1.5px solid var(--border);border-radius:var(--radius);font-size:15px;font-weight:600;">
+            <button type="button" onclick="var v=document.getElementById('mr-vagas-global');if(v)v.value=parseInt(v.value)+1;"
+              style="width:28px;height:28px;border-radius:50%;border:1.5px solid var(--border);background:#fff;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;">+</button>
+          </div>
+        </div>
+        <div style="font-size:11px;color:var(--text3);margin-top:14px;">plantão(ões) para esta data</div>
       </div>
       <!-- Plantão aberto -->
       <div style="border-top:1px solid var(--border);padding-top:10px;margin-top:4px;">
@@ -4013,6 +4043,21 @@ tr:hover td{background:var(--bg3);}
       <div class="form-group" style="margin-bottom:10px;">
         <label>Observações</label>
         <input id="mr-obs" type="text" placeholder="Opcional">
+      </div>
+      <!-- Vagas — visível sempre, tanto modo normal quanto livre -->
+      <div style="margin-bottom:10px;display:flex;align-items:center;gap:12px;">
+        <div>
+          <label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.4px;color:var(--text2);display:block;margin-bottom:4px;">Vagas</label>
+          <div style="display:flex;align-items:center;gap:6px;">
+            <button type="button" onclick="var v=document.getElementById('mr-vagas-global');if(v&&parseInt(v.value)>1)v.value=parseInt(v.value)-1;"
+              style="width:28px;height:28px;border-radius:50%;border:1.5px solid var(--border);background:#fff;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;">−</button>
+            <input id="mr-vagas-global" type="number" min="1" max="50" value="1"
+              style="width:52px;text-align:center;padding:5px 6px;border:1.5px solid var(--border);border-radius:var(--radius);font-size:15px;font-weight:600;">
+            <button type="button" onclick="var v=document.getElementById('mr-vagas-global');if(v)v.value=parseInt(v.value)+1;"
+              style="width:28px;height:28px;border-radius:50%;border:1.5px solid var(--border);background:#fff;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;">+</button>
+          </div>
+        </div>
+        <div style="font-size:11px;color:var(--text3);margin-top:14px;">plantão(ões) para esta data</div>
       </div>
       <!-- Plantão aberto -->
       <div style="border-top:1px solid var(--border);padding-top:10px;margin-top:4px;">
@@ -5896,6 +5941,7 @@ function abrirLancamentoRapido(ds, projId) {
   var setorCustom=document.getElementById('mr-setor-custom-row');
   if(setorCustom) setorCustom.style.display='none';
   document.getElementById('mr-setor').value = '';
+  var _vg = document.getElementById('mr-vagas-global'); if(_vg) _vg.value = '1';
   var _sc2 = document.getElementById('mr-setor-custom');
   if (_sc2) { _sc2.value = ''; _sc2.style.display = 'none'; }
   var _tlm2 = document.getElementById('mr-tipo-livre-mode');
@@ -6125,7 +6171,7 @@ async function salvarLancamentoRapido() {
 
   // Verificar se é plantão aberto (sem médico vinculado)
   const ehAberto = document.getElementById('mr-aberto')?.checked || false;
-  const vagas    = parseInt(document.getElementById('mr-vagas')?.value||'1');
+  const vagas    = parseInt(document.getElementById('mr-vagas-global')?.value||document.getElementById('mr-vagas')?.value||'1');
 
   if (ehAberto) {
     // Plantão aberto: sem médico selecionado
@@ -6215,7 +6261,7 @@ async function salvarLancamentoRapido() {
       }
     }
     try {
-      const vagas2 = parseInt(document.getElementById('mr-vagas')?.value||'1');
+      const vagas2 = parseInt(document.getElementById('mr-vagas-global')?.value||document.getElementById('mr-vagas')?.value||'1');
       const res2 = await fetch(SUPABASE_URL+'/rest/v1/lancamentos', {
         method:'POST',
         headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},
