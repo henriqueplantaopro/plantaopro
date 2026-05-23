@@ -1541,12 +1541,14 @@ tr:hover td{background:var(--bg3);}
 
 <!-- MENU DE CONTEXTO — Calendário semanal -->
 <div class="ctx-menu" id="ctx-menu">
+  <div class="ctx-item" id="ctx-editar" onclick="ctxEditar()" style="display:none;">✏️ Editar plantão</div>
   <div class="ctx-item" id="ctx-copiar" onclick="ctxCopiar()">📋 Copiar plantão</div>
   <div class="ctx-sep"></div>
   <div class="ctx-item" id="ctx-colar" onclick="ctxColar()" style="display:none;">📌 Colar aqui</div>
   <div class="ctx-item" id="ctx-colar-dia" style="font-size:11px;color:var(--text3);padding:4px 14px;cursor:default;display:none;"></div>
   <div class="ctx-sep" id="ctx-sep-colar" style="display:none;"></div>
   <div class="ctx-item" onclick="ctxNovoPlantao()">+ Novo plantão</div>
+  <div class="ctx-sep" id="ctx-sep-remover"></div>
   <div class="ctx-item danger" id="ctx-remover" onclick="ctxRemover()" style="display:none;">🗑️ Remover plantão</div>
 </div>
 
@@ -2748,12 +2750,14 @@ tr:hover td{background:var(--bg3);}
 
 <!-- MENU DE CONTEXTO — Calendário semanal -->
 <div class="ctx-menu" id="ctx-menu">
+  <div class="ctx-item" id="ctx-editar" onclick="ctxEditar()" style="display:none;">✏️ Editar plantão</div>
   <div class="ctx-item" id="ctx-copiar" onclick="ctxCopiar()">📋 Copiar plantão</div>
   <div class="ctx-sep"></div>
   <div class="ctx-item" id="ctx-colar" onclick="ctxColar()" style="display:none;">📌 Colar aqui</div>
   <div class="ctx-item" id="ctx-colar-dia" style="font-size:11px;color:var(--text3);padding:4px 14px;cursor:default;display:none;"></div>
   <div class="ctx-sep" id="ctx-sep-colar" style="display:none;"></div>
   <div class="ctx-item" onclick="ctxNovoPlantao()">+ Novo plantão</div>
+  <div class="ctx-sep" id="ctx-sep-remover"></div>
   <div class="ctx-item danger" id="ctx-remover" onclick="ctxRemover()" style="display:none;">🗑️ Remover plantão</div>
 </div>
 
@@ -4084,12 +4088,14 @@ tr:hover td{background:var(--bg3);}
 
 <!-- MENU DE CONTEXTO — Calendário semanal -->
 <div class="ctx-menu" id="ctx-menu">
+  <div class="ctx-item" id="ctx-editar" onclick="ctxEditar()" style="display:none;">✏️ Editar plantão</div>
   <div class="ctx-item" id="ctx-copiar" onclick="ctxCopiar()">📋 Copiar plantão</div>
   <div class="ctx-sep"></div>
   <div class="ctx-item" id="ctx-colar" onclick="ctxColar()" style="display:none;">📌 Colar aqui</div>
   <div class="ctx-item" id="ctx-colar-dia" style="font-size:11px;color:var(--text3);padding:4px 14px;cursor:default;display:none;"></div>
   <div class="ctx-sep" id="ctx-sep-colar" style="display:none;"></div>
   <div class="ctx-item" onclick="ctxNovoPlantao()">+ Novo plantão</div>
+  <div class="ctx-sep" id="ctx-sep-remover"></div>
   <div class="ctx-item danger" id="ctx-remover" onclick="ctxRemover()" style="display:none;">🗑️ Remover plantão</div>
 </div>
 
@@ -6615,8 +6621,10 @@ function abrirCtxChip(e, lancId, ds, projId) {
   _ctxProjId     = projId;
 
   const menu = document.getElementById('ctx-menu');
-  document.getElementById('ctx-copiar').style.display = lanc ? 'flex' : 'none';
+  document.getElementById('ctx-editar').style.display  = lanc ? 'flex' : 'none';
+  document.getElementById('ctx-copiar').style.display  = lanc ? 'flex' : 'none';
   document.getElementById('ctx-remover').style.display = lanc ? 'flex' : 'none';
+  document.getElementById('ctx-sep-remover').style.display = lanc ? 'block' : 'none';
   document.getElementById('ctx-novoPlantao') && (document.getElementById('ctx-novoPlantao').style.display='flex');
 
   // Mostrar opção colar se tiver algo copiado
@@ -6697,6 +6705,93 @@ async function ctxColar() {
       toast('✓ Plantão colado em ' + new Date(ds+'T12:00:00').toLocaleDateString('pt-BR',{day:'2-digit',month:'short'}));
     } else { toast('Erro ao colar plantão', true); }
   } catch(e) { toast('Erro de conexão', true); }
+}
+
+async function ctxEditar() {
+  if (!_ctxLancamento) return;
+  fecharCtxMenu();
+  const l = _ctxLancamento;
+  abrirModalEditarLanc(l);
+}
+
+function abrirModalEditarLanc(l) {
+  // Preencher o modal de edição
+  var g = function(id) { return document.getElementById(id); };
+  g('el-id').value    = l.id;
+  g('el-data').value  = l.data || '';
+  g('el-ini').value   = (l.hora_ini||'').slice(0,5);
+  g('el-fim').value   = (l.hora_fim||'').slice(0,5);
+  g('el-tipo').value  = l.tipo || '';
+  g('el-setor').value = l.setor || '';
+  g('el-valor').value = l.honorario ? l.honorario.toLocaleString('pt-BR',{minimumFractionDigits:2}) : '';
+  g('el-obs').value   = l.obs || '';
+  g('el-vagas').value = l.vagas || 1;
+  // Médico
+  var medSel = g('el-medico');
+  if (medSel) {
+    medSel.innerHTML = '<option value="">Sem médico (plantão aberto)</option>' +
+      sortedMedicos().map(function(m) {
+        return '<option value="' + m.id + '"' + (m.id === l.medico_id ? ' selected' : '') + '>' + m.nome + ' — ' + m.crm + '</option>';
+      }).join('');
+  }
+  g('modal-editar-lanc').classList.add('open');
+}
+
+function fecharModalEditarLanc() {
+  document.getElementById('modal-editar-lanc').classList.remove('open');
+}
+
+async function salvarEdicaoLanc() {
+  var g = function(id) { return document.getElementById(id); };
+  var id    = g('el-id').value;
+  var data  = g('el-data').value;
+  var ini   = g('el-ini').value;
+  var fim   = g('el-fim').value;
+  var tipo  = g('el-tipo').value.trim();
+  var setor = g('el-setor').value.trim();
+  var valor = parseBRL(g('el-valor').value);
+  var obs   = g('el-obs').value.trim();
+  var vagas = parseInt(g('el-vagas').value) || 1;
+  var medId = g('el-medico').value || null;
+
+  if (!data || !ini || !fim) { toast('Preencha data e horários', true); return; }
+
+  var [hi,mi] = ini.split(':').map(Number);
+  var [hf,mf] = fim.split(':').map(Number);
+  var mins = (hf*60+mf)-(hi*60+mi);
+  if (mins < 0) mins += 1440;
+  var horas = mins/60;
+
+  var payload = {
+    data: data, hora_ini: ini, hora_fim: fim, horas: horas,
+    tipo: tipo||null, setor: setor||null,
+    honorario: valor||0,
+    valor_hora: horas>0&&valor>0 ? Math.round(valor/horas*100)/100 : 0,
+    obs: obs||null, vagas: vagas,
+    medico_id: medId||null,
+    aberto: !medId
+  };
+
+  var btn = document.querySelector('#modal-editar-lanc .btn-primary');
+  if (btn) { btn.disabled=true; btn.textContent='Salvando...'; }
+
+  var res = await sb('/rest/v1/lancamentos?id=eq.' + id, {
+    method: 'PATCH',
+    headers: {'Prefer': 'return=minimal'},
+    body: JSON.stringify(payload)
+  });
+
+  if (btn) { btn.disabled=false; btn.textContent='Salvar alterações'; }
+
+  if (res !== null) {
+    toast('Plantão atualizado!');
+    fecharModalEditarLanc();
+    await carregarLancamentos(true);
+    renderSemana();
+    if (document.getElementById('escala-grid')) renderEscala();
+  } else {
+    toast('Erro ao salvar', true);
+  }
 }
 
 async function ctxRemover() {
@@ -9985,5 +10080,66 @@ async function importarTiposPlanilha(input) {
   </div>
 </div>
 <style>.modal-overlay.oculto{display:none!important;}</style>
+
+<!-- MODAL EDITAR LANÇAMENTO -->
+<div class="modal-overlay" id="modal-editar-lanc" onclick="if(event.target===this)fecharModalEditarLanc()">
+  <div class="modal" style="max-width:480px;">
+    <div class="modal-header">
+      <div class="modal-title">✏️ Editar plantão</div>
+      <button class="modal-close" onclick="fecharModalEditarLanc()">&#10005;</button>
+    </div>
+    <div style="padding:0 24px 20px;display:flex;flex-direction:column;gap:12px;">
+      <input type="hidden" id="el-id">
+      <div class="form-row">
+        <div class="form-group">
+          <label>Data</label>
+          <input id="el-data" type="date">
+        </div>
+        <div class="form-group">
+          <label>Início</label>
+          <input id="el-ini" type="time">
+        </div>
+        <div class="form-group">
+          <label>Fim</label>
+          <input id="el-fim" type="time">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Tipo de plantão</label>
+          <input id="el-tipo" type="text" placeholder="Diurno, Noturno...">
+        </div>
+        <div class="form-group">
+          <label>Setor</label>
+          <input id="el-setor" type="text" placeholder="Emergência, UTI...">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Médico</label>
+        <select id="el-medico" style="width:100%;">
+          <option value="">Sem médico (plantão aberto)</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Valor (R$)</label>
+          <input id="el-valor" type="text" placeholder="0,00">
+        </div>
+        <div class="form-group">
+          <label>Vagas</label>
+          <input id="el-vagas" type="number" min="1" max="50" value="1" style="max-width:80px;">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Observações</label>
+        <input id="el-obs" type="text" placeholder="Opcional">
+      </div>
+    </div>
+    <div class="modal-footer" style="display:flex;gap:8px;justify-content:flex-end;">
+      <button class="btn btn-ghost" onclick="fecharModalEditarLanc()">Cancelar</button>
+      <button class="btn btn-primary" onclick="salvarEdicaoLanc()">Salvar alterações</button>
+    </div>
+  </div>
+</div>
 </body>
 </html>
