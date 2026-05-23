@@ -8193,9 +8193,10 @@ async function handleUploadHospitaisSetoresTipos(input) {
           lat = null; lon = null; raio = 100;
         }
 
-        if (!hospNome || !tipoNome) { erros.push('Linha '+(i+2)+': sem hospital ou tipo'); continue; }
-        horaIni = horaIni || '07:00';
-        horaFim = horaFim || '19:00';
+        if (!hospNome) { erros.push('Linha '+(i+2)+': sem hospital'); continue; }
+        // Tipo vazio → usar 'Normal' sem horário predefinido
+        if (!tipoNome) { tipoNome = 'Normal'; horaIni = ''; horaFim = ''; }
+        else { horaIni = horaIni || ''; horaFim = horaFim || ''; }
 
         // 1. Criar/encontrar hospital (projeto)
         let proj = projetosLocais.find(p => p.nome.toLowerCase() === hospNome.toLowerCase());
@@ -8237,18 +8238,21 @@ async function handleUploadHospitaisSetoresTipos(input) {
         }
 
         // 3. Criar tipo de plantão
-        const [hI,mI] = horaIni.split(':').map(Number);
-        const [hF,mF] = horaFim.split(':').map(Number);
-        let mins = (hF*60+mF)-(hI*60+mI);
-        if (mins < 0) mins += 24*60;
-        const horas = mins/60;
+        let horas = null;
+        if (horaIni && horaFim) {
+          const [hI,mI] = horaIni.split(':').map(Number);
+          const [hF,mF] = horaFim.split(':').map(Number);
+          let mins = (hF*60+mF)-(hI*60+mI);
+          if (mins < 0) mins += 24*60;
+          horas = mins/60;
+        }
 
         const rt = await sb('/rest/v1/tipos_plantao', {
           method:'POST', headers:{'Prefer':'return=minimal'},
           body: JSON.stringify({
             projeto_id: proj.id,
             nome: tipoNome, setor: setorNome||null,
-            hora_ini: horaIni, hora_fim: horaFim, horas,
+            hora_ini: horaIni||null, hora_fim: horaFim||null, horas,
             valor: valor||null, ativo: true
           })
         });
@@ -9529,6 +9533,11 @@ async function onMrSetorChange() {
         }).join('');
       selectWrap.style.display = 'block';
       btnsWrap.style.display = 'none';
+      // Auto-selecionar se só há 1 tipo OU se o único é 'Normal'
+      if (tiposExibir.length === 1) {
+        tipoSelect.value = tiposExibir[0].id;
+        selecionarTipoCadastrado();
+      }
     } else {
       // Sem tipos cadastrados para este setor — mostrar botões padrão
       selectWrap.style.display = 'none';
