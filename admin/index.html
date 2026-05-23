@@ -1372,11 +1372,18 @@ tr:hover td{background:var(--bg3);}
           <option value="">Selecione...</option>
         </select>
       </div>
-      <!-- Tipo de plantão — determina duração e horário automaticamente -->
-      <div class="form-group" style="margin-bottom:10px;">
+      <!-- SETOR — aparece após selecionar o projeto -->
+      <div class="form-group" style="margin-bottom:10px;" id="mr-setor-row">
+        <label>Setor</label>
+        <select id="mr-setor" style="width:100%;" onchange="onMrSetorChange()">
+          <option value="">Selecione o projeto primeiro...</option>
+        </select>
+      </div>
+      <!-- Tipo de plantão — filtrado pelo setor selecionado -->
+      <div class="form-group" style="margin-bottom:10px;" id="mr-tipo-row">
         <label>Tipo de plantão</label>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:6px;" id="mr-tipo-grid">
-          <!-- Select de tipos cadastrados (aparece quando há tipos para o projeto) -->
+          <!-- Select de tipos cadastrados (aparece quando há tipos para o setor) -->
           <div id="mr-tipos-select-wrap" style="display:none;grid-column:1/-1;margin-bottom:6px;">
             <select id="mr-tipo-select" onchange="selecionarTipoCadastrado()"
               style="width:100%;padding:10px 12px;border:2px solid var(--blue);border-radius:var(--radius);font-size:14px;font-weight:500;background:#fff;cursor:pointer;">
@@ -1415,9 +1422,7 @@ tr:hover td{background:var(--bg3);}
             <span style="font-size:11px;color:var(--text3);margin-top:3px;display:block;">⚑ Horário fixo para este tipo</span>
           </div>
           <div class="form-group">
-            <label>Setor</label>
-            <input id="mr-setor" style="width:100%;" onchange="onMrSetorChange()" type="text" placeholder="Emergência, UTI...">
-          </div>
+     
         </div>
       </div>
       <!-- Setor para personalizado -->
@@ -8952,38 +8957,45 @@ function selecionarTipoCadastrado() {
   const setor = opt.dataset.setor || '';
   const nome  = opt.dataset.nome || '';
 
-  // Preencher campos do modal
-  document.getElementById('mr-tipo').value = nome;
-  const iniEl = document.getElementById('mr-ini-custom');
-  if (iniEl) iniEl.value = ini;
+  // Atualizar tipo hidden
+  const tipoEl = document.getElementById('mr-tipo');
+  if (tipoEl) tipoEl.value = nome;
 
-  // Setor
-  const setorEl = document.getElementById('mr-setor-custom') || document.getElementById('mr-setor');
-  if (setorEl) setorEl.value = setor;
+  // Atualizar setor (já selecionado, mas confirmar)
+  const setorEl = document.getElementById('mr-setor');
+  if (setorEl && setor && !setorEl.value) setorEl.value = setor;
 
-  // Valor
-  if (valor) {
-    const vEl = document.getElementById('mr-valor');
-    if (vEl) {
-      vEl.value = valor.toLocaleString('pt-BR', {minimumFractionDigits:2});
-      vEl.dataset.manual = '1';
-    }
-  } else {
-    // Buscar valor padrão do projeto
-    atualizarValorRapido();
-  }
+  // Atualizar horário fixo
+  const fixoEl = document.getElementById('mr-ini-fixo');
+  if (fixoEl) fixoEl.value = ini.slice(0,5);
+  const fixoRow = document.getElementById('mr-ini-fixo-row');
+  if (fixoRow) fixoRow.style.display = 'block';
+  const customRow = document.getElementById('mr-horas-custom-row');
+  if (customRow) customRow.style.display = 'none';
 
-  // Mostrar resumo
+  // Mostrar horário calculado
   const calc = document.getElementById('mr-horario-calc');
-  if (calc) {
-    calc.textContent = `Início: ${ini.slice(0,5)} · Fim: ${fim.slice(0,5)} · ${horas}h`;
+  const calcTxt = document.getElementById('mr-horario-calc-txt');
+  if (calc && calcTxt) {
+    calcTxt.textContent = 'Início: ' + ini.slice(0,5) + ' · Fim: ' + fim.slice(0,5) + ' · ' + horas + 'h';
     calc.style.display = 'block';
   }
 
-  // Atualizar preview
+  // Preencher valor
+  const vEl = document.getElementById('mr-valor');
+  const badge = document.getElementById('mr-valor-badge');
+  if (valor && vEl) {
+    vEl.value = valor.toLocaleString('pt-BR', {minimumFractionDigits:2});
+    vEl.dataset.manual = '1';
+    if (badge) { badge.textContent = '✓ Valor do tipo cadastrado'; badge.style.display = 'inline'; }
+  } else {
+    atualizarValorRapido();
+  }
+
+  // Preview
   const prev = document.getElementById('mr-preview');
   if (prev) {
-    prev.textContent = `${nome} · ${ini.slice(0,5)}–${fim.slice(0,5)} · ${horas}h`;
+    prev.textContent = nome + ' · ' + ini.slice(0,5) + '–' + fim.slice(0,5) + ' · ' + horas + 'h';
     prev.style.display = 'block';
   }
 }
@@ -9424,15 +9436,76 @@ async function popularSelectSetor(selectId, projetoId, valorAtual) {
 
 async function onMrProjChange() {
   var projId = document.getElementById('mr-proj') ? document.getElementById('mr-proj').value : '';
+  // 1. Popular setores
   await popularSelectSetor('mr-setor', projId, '');
-  await atualizarTiposNoModal();
+  // 2. Limpar seleção de tipo
+  var tipoSel = document.getElementById('mr-tipo-select');
+  if (tipoSel) tipoSel.innerHTML = '<option value="">— Selecione o tipo de plantão —</option>';
+  var tipoWrap = document.getElementById('mr-tipos-select-wrap');
+  if (tipoWrap) tipoWrap.style.display = 'none';
+  var btnsWrap = document.getElementById('mr-tipos-btns-wrap');
+  if (btnsWrap) btnsWrap.style.display = 'contents';
+  // 3. Limpar valor
+  var valEl = document.getElementById('mr-valor');
+  if (valEl) { valEl.value = ''; delete valEl.dataset.manual; }
+  var badge = document.getElementById('mr-valor-badge');
+  if (badge) badge.style.display = 'none';
 }
 
 async function onMrSetorChange() {
   var setor = document.getElementById('mr-setor') ? document.getElementById('mr-setor').value : '';
-  if (setor === '_outro') { document.getElementById('mr-setor-custom-row').style.display = 'block'; return; }
-  document.getElementById('mr-setor-custom-row').style.display = 'none';
-  await tentarPreencherValorAuto();
+  var projId = document.getElementById('mr-proj') ? document.getElementById('mr-proj').value : '';
+
+  if (setor === '_outro') {
+    document.getElementById('mr-setor-custom-row').style.display = 'block';
+  } else {
+    document.getElementById('mr-setor-custom-row').style.display = 'none';
+  }
+
+  // Filtrar tipos pelo setor selecionado
+  var selectWrap = document.getElementById('mr-tipos-select-wrap');
+  var btnsWrap   = document.getElementById('mr-tipos-btns-wrap');
+  var tipoSelect = document.getElementById('mr-tipo-select');
+
+  if (projId && setor && setor !== '_outro') {
+    // Filtrar tiposPlantao por projeto E setor
+    var tiposFiltrados = tiposPlantao.filter(function(t) {
+      return t.projeto_id === projId && (t.setor === setor || !t.setor);
+    });
+    // Preferir tipos do setor específico; se não houver, mostrar todos do projeto
+    var tiposDoSetor = tiposPlantao.filter(function(t) {
+      return t.projeto_id === projId && t.setor === setor;
+    });
+    var tiposExibir = tiposDoSetor.length > 0 ? tiposDoSetor : tiposFiltrados;
+
+    if (tiposExibir.length > 0) {
+      tipoSelect.innerHTML = '<option value="">— Selecione o tipo —</option>' +
+        tiposExibir.map(function(t) {
+          var horario = (t.hora_ini||'').slice(0,5) + '–' + (t.hora_fim||'').slice(0,5);
+          var valorStr = t.valor ? ' · ' + fBRL(t.valor) : '';
+          return '<option value="' + t.id + '" data-ini="' + (t.hora_ini||'') + '" data-fim="' + (t.hora_fim||'') +
+            '" data-horas="' + (t.horas||12) + '" data-valor="' + (t.valor||'') + '" data-setor="' + (t.setor||'') +
+            '" data-nome="' + t.nome + '">' + t.nome + ' (' + horario + valorStr + ')</option>';
+        }).join('');
+      selectWrap.style.display = 'block';
+      btnsWrap.style.display = 'none';
+    } else {
+      // Sem tipos cadastrados para este setor — mostrar botões padrão
+      selectWrap.style.display = 'none';
+      btnsWrap.style.display = 'contents';
+      tipoSelect.innerHTML = '<option value="">— Selecione o tipo —</option>';
+    }
+  } else if (projId && !setor) {
+    // Sem setor selecionado — mostrar todos os tipos do projeto
+    await atualizarTiposNoModal();
+  } else {
+    selectWrap.style.display = 'none';
+    btnsWrap.style.display = 'contents';
+  }
+
+  // Limpar valor anterior
+  var valEl = document.getElementById('mr-valor');
+  if (valEl && !valEl.dataset.manual) { valEl.value = ''; }
 }
 
 async function tentarPreencherValorAuto() {
