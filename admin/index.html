@@ -1404,11 +1404,16 @@ tr:hover td{background:var(--bg3);}
         </select>
       </div>
       <!-- SETOR — aparece após selecionar o projeto -->
-      <div class="form-group" style="margin-bottom:10px;" id="mr-setor-row">
-        <label>Setor</label>
+      <div style="margin-bottom:10px;" id="mr-setor-row">
+        <label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.4px;color:var(--text2);display:block;margin-bottom:6px;">Setor</label>
         <select id="mr-setor" style="width:100%;" onchange="onMrSetorChange()">
           <option value="">Selecione o projeto primeiro...</option>
         </select>
+        <input id="mr-setor-custom" type="text"
+          placeholder="Digite o nome do setor..."
+          style="display:none;margin-top:8px;width:100%;padding:9px 12px;
+                 border:2px solid var(--blue);border-radius:var(--radius);
+                 font-size:14px;font-family:inherit;box-sizing:border-box;">
       </div>
       <!-- Tipo de plantão — filtrado pelo setor selecionado -->
       <div id="mr-tipo-row">
@@ -1481,13 +1486,7 @@ tr:hover td{background:var(--bg3);}
      
         </div>
       </div>
-      <!-- Setor para personalizado -->
-      <div id="mr-setor-custom-row" style="display:none;margin-bottom:10px;">
-        <div class="form-group">
-          <label>Setor</label>
-          <input id="mr-setor-custom" type="text" placeholder="Emergência, UTI...">
-        </div>
-      </div>
+
       <!-- Preview calculado -->
       <div id="mr-horario-calc" style="background:var(--blue-light);border:1px solid #a0c4f0;border-radius:var(--radius);padding:8px 12px;font-size:12px;color:var(--blue);margin-bottom:10px;display:none;">
         <span id="mr-horario-calc-txt"></span>
@@ -2680,13 +2679,7 @@ tr:hover td{background:var(--bg3);}
           </div>
         </div>
       </div>
-      <!-- Setor para personalizado -->
-      <div id="mr-setor-custom-row" style="display:none;margin-bottom:10px;">
-        <div class="form-group">
-          <label>Setor</label>
-          <input id="mr-setor-custom" type="text" placeholder="Emergência, UTI...">
-        </div>
-      </div>
+
       <!-- Preview calculado -->
       <div id="mr-horario-calc" style="background:var(--blue-light);border:1px solid #a0c4f0;border-radius:var(--radius);padding:8px 12px;font-size:12px;color:var(--blue);margin-bottom:10px;display:none;">
         <span id="mr-horario-calc-txt"></span>
@@ -4007,13 +4000,7 @@ tr:hover td{background:var(--bg3);}
           </div>
         </div>
       </div>
-      <!-- Setor para personalizado -->
-      <div id="mr-setor-custom-row" style="display:none;margin-bottom:10px;">
-        <div class="form-group">
-          <label>Setor</label>
-          <input id="mr-setor-custom" type="text" placeholder="Emergência, UTI...">
-        </div>
-      </div>
+
       <!-- Preview calculado -->
       <div id="mr-horario-calc" style="background:var(--blue-light);border:1px solid #a0c4f0;border-radius:var(--radius);padding:8px 12px;font-size:12px;color:var(--blue);margin-bottom:10px;display:none;">
         <span id="mr-horario-calc-txt"></span>
@@ -5875,8 +5862,7 @@ function abrirLancamentoRapido(ds, projId) {
   document.getElementById('mr-proj').innerHTML = '<option value="">Selecione...</option>' +
     sortedProjetos().map(p=>`<option value="${p.id}">${p.nome}</option>`).join('');
 
-  // Pré-preencher projeto se filtrado
-  if (projId) document.getElementById('mr-proj').value = projId;
+  // Projeto não pré-selecionado — usuário escolhe manualmente para evitar erro
 
   // Data label
   const d = new Date(ds+'T12:00:00');
@@ -5910,6 +5896,15 @@ function abrirLancamentoRapido(ds, projId) {
   var setorCustom=document.getElementById('mr-setor-custom-row');
   if(setorCustom) setorCustom.style.display='none';
   document.getElementById('mr-setor').value = '';
+  var _sc2 = document.getElementById('mr-setor-custom');
+  if (_sc2) { _sc2.value = ''; _sc2.style.display = 'none'; }
+  var _tlm2 = document.getElementById('mr-tipo-livre-mode');
+  var _tsm2 = document.getElementById('mr-tipo-select-mode');
+  if (_tlm2) _tlm2.style.display = 'none';
+  if (_tsm2) _tsm2.style.display = 'block';
+  ['mr-tipo-custom','mr-tipo-custom-ini','mr-tipo-custom-fim','mr-tipo-custom-valor'].forEach(function(id){
+    var el = document.getElementById(id); if(el) el.value = '';
+  });
   // Reset modo livre
   var _sc = document.getElementById('mr-setor-custom');
   if (_sc) { _sc.value = ''; _sc.style.display = 'none'; }
@@ -9551,20 +9546,25 @@ async function onMrSetorChange() {
   var selectWrap       = document.getElementById('mr-tipos-select-wrap');
   var btnsWrap         = document.getElementById('mr-tipos-btns-wrap');
   var tipoSelect       = document.getElementById('mr-tipo-select');
+  var iniFixoRow       = document.getElementById('mr-ini-fixo-row');
+  var horarioCalc      = document.getElementById('mr-horario-calc');
 
   if (setor === '_outro') {
-    // Mostrar campo livre de setor
+    // Mostrar campo de texto do setor imediatamente abaixo do select
     if (setorCustomInput) {
       setorCustomInput.style.display = 'block';
       setTimeout(function() { setorCustomInput.focus(); }, 50);
     }
-    // Mostrar campos livres de tipo, esconder select/botões
+    // Esconder modo normal, mostrar campos livres
     if (tipoSelectMode) tipoSelectMode.style.display = 'none';
     if (tipoLivreMode)  tipoLivreMode.style.display  = 'block';
+    // Esconder horário fixo e preview (não aplicam no modo livre)
+    if (iniFixoRow)    iniFixoRow.style.display    = 'none';
+    if (horarioCalc)   horarioCalc.style.display   = 'none';
     return;
   }
 
-  // Setor normal: esconder campo livre, mostrar select/botões
+  // Setor normal: esconder campo de texto, mostrar select/botões
   if (setorCustomInput) setorCustomInput.style.display = 'none';
   if (tipoSelectMode)   tipoSelectMode.style.display   = 'block';
   if (tipoLivreMode)    tipoLivreMode.style.display    = 'none';
