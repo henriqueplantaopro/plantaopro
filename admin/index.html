@@ -5991,11 +5991,30 @@ function selecionarTipoRapido(btn) {
 }
 
 function getIniRapido() {
+  // Modo livre (setor novo): usar o campo mr-tipo-custom-ini
+  var _tlm = document.getElementById('mr-tipo-livre-mode');
+  if (_tlm && _tlm.style.display !== 'none') {
+    return document.getElementById('mr-tipo-custom-ini')?.value || '';
+  }
   var tipo = document.getElementById('mr-tipo').value;
   if (tipo === 'Personalizado') return document.getElementById('mr-ini')?.value || '07:00';
   return document.getElementById('mr-ini-fixo')?.value || '07:00';
 }
 function getHorasRapido() {
+  // Modo livre: calcular a partir de ini e fim digitados
+  var _tlm = document.getElementById('mr-tipo-livre-mode');
+  if (_tlm && _tlm.style.display !== 'none') {
+    var ini = document.getElementById('mr-tipo-custom-ini')?.value || '';
+    var fim = document.getElementById('mr-tipo-custom-fim')?.value || '';
+    if (ini && fim) {
+      var [hi,mi] = ini.split(':').map(Number);
+      var [hf,mf] = fim.split(':').map(Number);
+      var mins = (hf*60+mf) - (hi*60+mi);
+      if (mins < 0) mins += 24*60;
+      return mins/60;
+    }
+    return 12; // fallback
+  }
   const tipo = document.getElementById('mr-tipo').value;
   if (tipo === 'Personalizado') return parseFloat(document.getElementById('mr-horas-custom')?.value)||0;
   if (tipo.includes('24')) return 24;
@@ -6079,7 +6098,11 @@ async function salvarLancamentoRapido() {
   const medsSel = getMedsSelecionadosMR();
   const projId= document.getElementById('mr-proj').value;
   const ini   = getIniRapido();
-  const tipo  = document.getElementById('mr-tipo').value;
+  // Tipo: no modo livre, usar o nome digitado pelo usuário
+  const _tlmSal = document.getElementById('mr-tipo-livre-mode');
+  const _ehModoLivreSal = _tlmSal && _tlmSal.style.display !== 'none';
+  const _tipoCustomNomeSal = _ehModoLivreSal ? (document.getElementById('mr-tipo-custom')?.value||'').trim() : '';
+  const tipo = _ehModoLivreSal ? (_tipoCustomNomeSal || 'Normal') : document.getElementById('mr-tipo').value;
   const horas = getHorasRapido();
   const fim   = calcFimRapido(ini, horas);
   // Setor: usar o campo visível (fixo ou personalizado)
