@@ -1411,22 +1411,47 @@ tr:hover td{background:var(--bg3);}
         </select>
       </div>
       <!-- Tipo de plantão — filtrado pelo setor selecionado -->
-      <div class="form-group" style="margin-bottom:10px;" id="mr-tipo-row">
-        <label>Tipo de plantão</label>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:6px;" id="mr-tipo-grid">
-          <!-- Select de tipos cadastrados (aparece quando há tipos para o setor) -->
-          <div id="mr-tipos-select-wrap" style="display:none;grid-column:1/-1;margin-bottom:6px;">
-            <select id="mr-tipo-select" onchange="selecionarTipoCadastrado()"
-              style="width:100%;padding:10px 12px;border:2px solid var(--blue);border-radius:var(--radius);font-size:14px;font-weight:500;background:#fff;cursor:pointer;">
-              <option value="">— Selecione o tipo de plantão —</option>
-            </select>
+      <div id="mr-tipo-row">
+        <!-- MODO NORMAL: select de tipos do setor -->
+        <div id="mr-tipo-select-mode" class="form-group" style="margin-bottom:10px;">
+          <label>Tipo de plantão</label>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:6px;" id="mr-tipo-grid">
+            <div id="mr-tipos-select-wrap" style="display:none;grid-column:1/-1;margin-bottom:6px;">
+              <select id="mr-tipo-select" onchange="selecionarTipoCadastrado()"
+                style="width:100%;padding:10px 12px;border:2px solid var(--blue);border-radius:var(--radius);font-size:14px;font-weight:500;background:#fff;cursor:pointer;">
+                <option value="">— Selecione o tipo de plantão —</option>
+              </select>
+            </div>
+            <div id="mr-tipos-btns-wrap" style="display:contents;">
+              <button type="button" id="mr-btn-diurno" data-tipo="Diurno 12h" data-horas="12" data-ini="07:00" onclick="selecionarTipoRapido(this)">☀️ Diurno 12h</button>
+              <button type="button" id="mr-btn-noturno" data-tipo="Noturno 12h" data-horas="12" data-ini="19:00" onclick="selecionarTipoRapido(this)">🌙 Noturno 12h</button>
+              <button type="button" id="mr-btn-24h" data-tipo="24h" data-horas="24" data-ini="07:00" onclick="selecionarTipoRapido(this)">🔄 Plantão 24h</button>
+              <button type="button" id="mr-btn-custom" data-tipo="Personalizado" data-horas="0" data-ini="" onclick="selecionarTipoRapido(this)">✏️ Personalizado</button>
+            </div>
           </div>
-          <!-- Botões padrão (fallback quando não há tipos cadastrados) -->
-          <div id="mr-tipos-btns-wrap" style="display:contents;">
-            <button type="button" id="mr-btn-diurno" data-tipo="Diurno 12h" data-horas="12" data-ini="07:00" onclick="selecionarTipoRapido(this)">☀️ Diurno 12h</button>
-            <button type="button" id="mr-btn-noturno" data-tipo="Noturno 12h" data-horas="12" data-ini="19:00" onclick="selecionarTipoRapido(this)">🌙 Noturno 12h</button>
-            <button type="button" id="mr-btn-24h" data-tipo="24h" data-horas="24" data-ini="07:00" onclick="selecionarTipoRapido(this)">🔄 Plantão 24h</button>
-            <button type="button" id="mr-btn-custom" data-tipo="Personalizado" data-horas="0" data-ini="" onclick="selecionarTipoRapido(this)">✏️ Personalizado</button>
+        </div>
+        <!-- MODO LIVRE: campos de texto (quando setor é novo) -->
+        <div id="mr-tipo-livre-mode" style="display:none;">
+          <div class="form-group" style="margin-bottom:8px;">
+            <label>Nome do tipo de plantão <span style="font-size:11px;color:var(--text3);">(obrigatório)</span></label>
+            <input id="mr-tipo-custom" type="text"
+              placeholder="Ex: Diurno Dia de Semana, Noturno FDS..."
+              style="width:100%;padding:9px 12px;border:2px solid var(--blue);border-radius:var(--radius);font-size:14px;font-family:inherit;">
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">
+            <div class="form-group">
+              <label style="font-size:11px;font-weight:600;">Início</label>
+              <input id="mr-tipo-custom-ini" type="time" style="width:100%;">
+            </div>
+            <div class="form-group">
+              <label style="font-size:11px;font-weight:600;">Fim</label>
+              <input id="mr-tipo-custom-fim" type="time" style="width:100%;">
+            </div>
+            <div class="form-group">
+              <label style="font-size:11px;font-weight:600;">Valor (R$)</label>
+              <input id="mr-tipo-custom-valor" type="text" placeholder="0,00"
+                style="width:100%;" oninput="this.value=this.value.replace(/[^0-9,]/g,'')">
+            </div>
           </div>
         </div>
         <input type="hidden" id="mr-tipo" value="Diurno 12h">
@@ -5850,8 +5875,8 @@ function abrirLancamentoRapido(ds, projId) {
   document.getElementById('mr-proj').innerHTML = '<option value="">Selecione...</option>' +
     sortedProjetos().map(p=>`<option value="${p.id}">${p.nome}</option>`).join('');
 
-  // Projeto sempre começa em 'Selecione' para evitar lançamento no hospital errado
-  // (projId ignorado — usuário deve selecionar manualmente)
+  // Pré-preencher projeto se filtrado
+  if (projId) document.getElementById('mr-proj').value = projId;
 
   // Data label
   const d = new Date(ds+'T12:00:00');
@@ -5885,6 +5910,19 @@ function abrirLancamentoRapido(ds, projId) {
   var setorCustom=document.getElementById('mr-setor-custom-row');
   if(setorCustom) setorCustom.style.display='none';
   document.getElementById('mr-setor').value = '';
+  // Reset modo livre
+  var _sc = document.getElementById('mr-setor-custom');
+  if (_sc) { _sc.value = ''; _sc.style.display = 'none'; }
+  var _tsm = document.getElementById('mr-tipo-select-mode');
+  var _tlm = document.getElementById('mr-tipo-livre-mode');
+  if (_tsm) _tsm.style.display = 'block';
+  if (_tlm) _tlm.style.display = 'none';
+  var _tc = document.getElementById('mr-tipo-custom');
+  var _tci = document.getElementById('mr-tipo-custom-ini');
+  var _tcf = document.getElementById('mr-tipo-custom-fim');
+  var _tcv = document.getElementById('mr-tipo-custom-valor');
+  if (_tc) _tc.value = ''; if (_tci) _tci.value = '';
+  if (_tcf) _tcf.value = ''; if (_tcv) _tcv.value = '';
   document.getElementById('mr-valor').value = '';
   document.getElementById('mr-obs').value = '';
   const prev = document.getElementById('mr-preview'); if(prev) prev.style.display='none';
@@ -5892,7 +5930,8 @@ function abrirLancamentoRapido(ds, projId) {
   const suc = document.getElementById('mr-sucesso'); if(suc) suc.style.display='none';
   const badge = document.getElementById('mr-valor-badge'); if(badge) badge.style.display='none';
 
-  // valor não pré-calculado (projeto não pré-selecionado)
+  // Preencher valor padrão se projeto já selecionado
+  if (projId) atualizarValorRapido();
 
   // Fechar qualquer modal de perfil/planos aberto antes de abrir o de lançamento
   ['modal-perfil','modal-planos','modal-setores'].forEach(function(id) {
@@ -6049,15 +6088,22 @@ async function salvarLancamentoRapido() {
   const horas = getHorasRapido();
   const fim   = calcFimRapido(ini, horas);
   // Setor: usar o campo visível (fixo ou personalizado)
+  // Captura setor: se select = '_outro', usar input customizado
+  const _setorSel = document.getElementById('mr-setor');
+  const _ehSetorNovo = _setorSel && _setorSel.value === '_outro';
   const setor = (() => {
-    const sCustom = document.getElementById('mr-setor-custom');
-    const sFix    = document.getElementById('mr-setor');
-    const sCustomRow = document.getElementById('mr-setor-custom-row');
-    if (sCustomRow && sCustomRow.style.display !== 'none' && sCustom) return sCustom.value.trim();
-    return (sFix?.value||'').trim();
+    if (_ehSetorNovo) {
+      return (document.getElementById('mr-setor-custom')?.value || '').trim();
+    }
+    return (_setorSel?.value || '').trim();
   })();
   const obs   = document.getElementById('mr-obs').value.trim();
-  const valor = parseBRL(document.getElementById('mr-valor').value);
+  // Valor: modo livre usa o campo do tipo custom, modo normal usa mr-valor
+  const _tipoLivre = document.getElementById('mr-tipo-livre-mode');
+  const _ehModoLivre = _tipoLivre && _tipoLivre.style.display !== 'none';
+  const valor = _ehModoLivre
+    ? parseBRL(document.getElementById('mr-tipo-custom-valor')?.value || '0')
+    : parseBRL(document.getElementById('mr-valor').value);
 
   // Verificar se é plantão aberto (sem médico vinculado)
   const ehAberto = document.getElementById('mr-aberto')?.checked || false;
@@ -9499,61 +9545,69 @@ async function onMrSetorChange() {
   var setor = document.getElementById('mr-setor') ? document.getElementById('mr-setor').value : '';
   var projId = document.getElementById('mr-proj') ? document.getElementById('mr-proj').value : '';
 
+  var setorCustomInput = document.getElementById('mr-setor-custom');
+  var tipoSelectMode   = document.getElementById('mr-tipo-select-mode');
+  var tipoLivreMode    = document.getElementById('mr-tipo-livre-mode');
+  var selectWrap       = document.getElementById('mr-tipos-select-wrap');
+  var btnsWrap         = document.getElementById('mr-tipos-btns-wrap');
+  var tipoSelect       = document.getElementById('mr-tipo-select');
+
   if (setor === '_outro') {
-    document.getElementById('mr-setor-custom-row').style.display = 'block';
-  } else {
-    document.getElementById('mr-setor-custom-row').style.display = 'none';
-  }
-
-  // Filtrar tipos pelo setor selecionado
-  var selectWrap = document.getElementById('mr-tipos-select-wrap');
-  var btnsWrap   = document.getElementById('mr-tipos-btns-wrap');
-  var tipoSelect = document.getElementById('mr-tipo-select');
-
-  if (projId && setor && setor !== '_outro') {
-    // Filtrar tiposPlantao por projeto E setor
-    var tiposFiltrados = tiposPlantao.filter(function(t) {
-      return t.projeto_id === projId && (t.setor === setor || !t.setor);
-    });
-    // Preferir tipos do setor específico; se não houver, mostrar todos do projeto
-    var tiposDoSetor = tiposPlantao.filter(function(t) {
-      return t.projeto_id === projId && t.setor === setor;
-    });
-    var tiposExibir = tiposDoSetor.length > 0 ? tiposDoSetor : tiposFiltrados;
-
-    if (tiposExibir.length > 0) {
-      tipoSelect.innerHTML = '<option value="">— Selecione o tipo —</option>' +
-        tiposExibir.map(function(t) {
-          var horario = (t.hora_ini||'').slice(0,5) + '–' + (t.hora_fim||'').slice(0,5);
-          var valorStr = t.valor ? ' · ' + fBRL(t.valor) : '';
-          return '<option value="' + t.id + '" data-ini="' + (t.hora_ini||'') + '" data-fim="' + (t.hora_fim||'') +
-            '" data-horas="' + (t.horas||12) + '" data-valor="' + (t.valor||'') + '" data-setor="' + (t.setor||'') +
-            '" data-nome="' + t.nome + '">' + t.nome + ' (' + horario + valorStr + ')</option>';
-        }).join('');
-      selectWrap.style.display = 'block';
-      btnsWrap.style.display = 'none';
-      // Auto-selecionar se só há 1 tipo OU se o único é 'Normal'
-      if (tiposExibir.length === 1) {
-        tipoSelect.value = tiposExibir[0].id;
-        selecionarTipoCadastrado();
-      }
-    } else {
-      // Sem tipos cadastrados para este setor — mostrar botões padrão
-      selectWrap.style.display = 'none';
-      btnsWrap.style.display = 'contents';
-      tipoSelect.innerHTML = '<option value="">— Selecione o tipo —</option>';
+    // Mostrar campo livre de setor
+    if (setorCustomInput) {
+      setorCustomInput.style.display = 'block';
+      setTimeout(function() { setorCustomInput.focus(); }, 50);
     }
-  } else if (projId && !setor) {
-    // Sem setor selecionado — mostrar todos os tipos do projeto
-    await atualizarTiposNoModal();
-  } else {
-    selectWrap.style.display = 'none';
-    btnsWrap.style.display = 'contents';
+    // Mostrar campos livres de tipo, esconder select/botões
+    if (tipoSelectMode) tipoSelectMode.style.display = 'none';
+    if (tipoLivreMode)  tipoLivreMode.style.display  = 'block';
+    return;
   }
+
+  // Setor normal: esconder campo livre, mostrar select/botões
+  if (setorCustomInput) setorCustomInput.style.display = 'none';
+  if (tipoSelectMode)   tipoSelectMode.style.display   = 'block';
+  if (tipoLivreMode)    tipoLivreMode.style.display    = 'none';
 
   // Limpar valor anterior
   var valEl = document.getElementById('mr-valor');
-  if (valEl && !valEl.dataset.manual) { valEl.value = ''; }
+  if (valEl && !valEl.dataset.manual) valEl.value = '';
+
+  if (!projId || !setor) {
+    if (selectWrap) selectWrap.style.display = 'none';
+    if (btnsWrap)   btnsWrap.style.display   = 'contents';
+    return;
+  }
+
+  // Filtrar tipos pelo setor selecionado
+  var tiposDoSetor = tiposPlantao.filter(function(t) {
+    return t.projeto_id === projId && t.setor === setor;
+  });
+  var tiposFallback = tiposDoSetor.length > 0 ? tiposDoSetor :
+    tiposPlantao.filter(function(t) { return t.projeto_id === projId && !t.setor; });
+  var tiposExibir = tiposDoSetor.length > 0 ? tiposDoSetor : tiposFallback;
+
+  if (tiposExibir.length > 0) {
+    tipoSelect.innerHTML = '<option value="">— Selecione o tipo —</option>' +
+      tiposExibir.map(function(t) {
+        var horario = (t.hora_ini||'').slice(0,5) + '–' + (t.hora_fim||'').slice(0,5);
+        var valorStr = t.valor ? ' · ' + fBRL(t.valor) : '';
+        return '<option value="' + t.id + '" data-ini="' + (t.hora_ini||'') + '" data-fim="' + (t.hora_fim||'') +
+          '" data-horas="' + (t.horas||12) + '" data-valor="' + (t.valor||'') + '" data-setor="' + (t.setor||'') +
+          '" data-nome="' + t.nome + '">' + t.nome + (horario !== '–' ? ' (' + horario + valorStr + ')' : '') + '</option>';
+      }).join('');
+    if (selectWrap) selectWrap.style.display = 'block';
+    if (btnsWrap)   btnsWrap.style.display   = 'none';
+    // Auto-selecionar se só 1 tipo
+    if (tiposExibir.length === 1) {
+      tipoSelect.value = tiposExibir[0].id;
+      selecionarTipoCadastrado();
+    }
+  } else {
+    if (selectWrap) selectWrap.style.display = 'none';
+    if (btnsWrap)   btnsWrap.style.display   = 'contents';
+    tipoSelect.innerHTML = '<option value="">— Selecione o tipo —</option>';
+  }
 }
 
 async function tentarPreencherValorAuto() {
