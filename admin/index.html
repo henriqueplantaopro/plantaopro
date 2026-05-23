@@ -6131,7 +6131,30 @@ async function salvarLancamentoRapido() {
     // Plantão aberto: sem médico selecionado
     if (!projId) { toast('Selecione um projeto', true); return; }
     if (!ds)     { toast('Data inválida', true); return; }
-    if (horas <= 0) { toast('Informe a duração', true); return; }
+    if (horas <= 0) { toast('Informe início e fim do plantão', true); return; }
+    // Criar setor e tipo se modo livre
+    if (_ehModoLivre && _ehSetorNovo && setor) {
+      const _setEx = await sb('/rest/v1/setores?projeto_id=eq.'+projId+'&nome=eq.'+encodeURIComponent(setor)+'&select=id');
+      if (!_setEx || !_setEx.length) {
+        await sb('/rest/v1/setores', {method:'POST', headers:{'Prefer':'return=minimal'},
+          body:JSON.stringify({projeto_id:projId, admin_id:adminLogado.id, nome:setor, ativo:true})});
+        _setoresCache = {};
+      }
+    }
+    const _tipoNomeAb2 = _ehModoLivre ? ((document.getElementById('mr-tipo-custom')?.value||'').trim()||'Normal') : tipo;
+    if (_ehModoLivre && _tipoNomeAb2) {
+      const _tpEx = await sb('/rest/v1/tipos_plantao?projeto_id=eq.'+projId+'&nome=eq.'+encodeURIComponent(_tipoNomeAb2)+'&select=id');
+      if (!_tpEx || !_tpEx.length) {
+        const hIAb2=document.getElementById('mr-tipo-custom-ini')?.value||'';
+        const hFAb2=document.getElementById('mr-tipo-custom-fim')?.value||'';
+        let hrsAb2=null;
+        if(hIAb2&&hFAb2){const[hi,mi]=hIAb2.split(':').map(Number),[hf,mf]=hFAb2.split(':').map(Number);let mn=(hf*60+mf)-(hi*60+mi);if(mn<0)mn+=1440;hrsAb2=mn/60;}
+        await sb('/rest/v1/tipos_plantao', {method:'POST', headers:{'Prefer':'return=minimal'},
+          body:JSON.stringify({projeto_id:projId, nome:_tipoNomeAb2, setor:setor||null,
+            hora_ini:hIAb2||null, hora_fim:hFAb2||null, horas:hrsAb2, valor:valor||null, ativo:true})});
+        await carregarTiposPlantao();
+      }
+    }
     const btn2 = document.querySelector('#modal-rapido .btn-primary');
     if (btn2) { btn2.disabled=true; btn2.textContent='Publicando...'; }
     try {
@@ -6151,6 +6174,66 @@ async function salvarLancamentoRapido() {
     return;
   }
 
+  // No modo livre sem médico: tratar como plantão aberto automaticamente
+  if (!medsSel.length && _ehModoLivre) {
+    document.getElementById('mr-aberto').checked = true;
+    // Re-disparar o fluxo de plantão aberto
+    const ehAberto2 = true;
+    if (!projId) { toast('Selecione um projeto', true); return; }
+    if (!ds)     { toast('Data inválida', true); return; }
+    if (horas <= 0) { toast('Informe início e fim do plantão', true); return; }
+    const btn3 = document.querySelector('#modal-rapido .btn-primary');
+    if (btn3) { btn3.disabled=true; btn3.textContent='Publicando...'; }
+    // Criar setor e tipo antes de publicar
+    let setorFinalAb = setor;
+    if (_ehSetorNovo && setor) {
+      const setAbEx = await sb('/rest/v1/setores?projeto_id=eq.'+projId+'&nome=eq.'+encodeURIComponent(setor)+'&select=id');
+      if (!setAbEx || !setAbEx.length) {
+        await sb('/rest/v1/setores', {method:'POST', headers:{'Prefer':'return=minimal'},
+          body:JSON.stringify({projeto_id:projId, admin_id:adminLogado.id, nome:setor, ativo:true})});
+        _setoresCache = {};
+        toast('Setor "'+setor+'" criado!');
+      }
+      setorFinalAb = setor;
+    }
+    const _tipoNomeAb = (document.getElementById('mr-tipo-custom')?.value||'').trim() || 'Normal';
+    const hIAb = document.getElementById('mr-tipo-custom-ini')?.value||'';
+    const hFAb = document.getElementById('mr-tipo-custom-fim')?.value||'';
+    if (_tipoNomeAb) {
+      const tpAbEx = await sb('/rest/v1/tipos_plantao?projeto_id=eq.'+projId+'&nome=eq.'+encodeURIComponent(_tipoNomeAb)+'&select=id');
+      if (!tpAbEx || !tpAbEx.length) {
+        let hrsAb = null;
+        if (hIAb && hFAb) {
+          const [hi,mi]=hIAb.split(':').map(Number), [hf,mf]=hFAb.split(':').map(Number);
+          let mn=(hf*60+mf)-(hi*60+mi); if(mn<0)mn+=1440; hrsAb=mn/60;
+        }
+        await sb('/rest/v1/tipos_plantao', {method:'POST', headers:{'Prefer':'return=minimal'},
+          body:JSON.stringify({projeto_id:projId, nome:_tipoNomeAb, setor:setorFinalAb||null,
+            hora_ini:hIAb||null, hora_fim:hFAb||null, horas:hrsAb, valor:valor||null, ativo:true})});
+        await carregarTiposPlantao();
+        toast('Tipo "'+_tipoNomeAb+'" criado!');
+      }
+    }
+    try {
+      const vagas2 = parseInt(document.getElementById('mr-vagas')?.value||'1');
+      const res2 = await fetch(SUPABASE_URL+'/rest/v1/lancamentos', {
+        method:'POST',
+        headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},
+        body: JSON.stringify({projeto_id:projId, data:ds, hora_ini:ini, hora_fim:fim, horas, tipo:_tipoNomeAb,
+          setor:setorFinalAb||null, honorario:valor||0,
+          valor_hora:horas>0&&valor>0?Math.round(valor/horas*100)/100:0,
+          obs:obs||null, aberto:true, vagas:vagas2, vagas_preenchidas:0})
+      });
+      if (res2.ok || res2.status===204 || res2.status===201) {
+        toast('✅ Plantão publicado! Médicos podem se candidatar.');
+        fecharModalRapido();
+        await carregarLancamentos(true);
+        renderSemana();
+      } else { toast('Erro ao publicar plantão', true); }
+    } catch(e) { toast('Erro de conexão', true); }
+    if (btn3) { btn3.disabled=false; btn3.textContent='+ Registrar plantão'; }
+    return;
+  }
   if (!medsSel.length) { toast('Selecione ao menos um médico',true); return; }
   if (!projId) { toast('Selecione um projeto',true); return; }
   if (!ds)     { toast('Data inválida',true); return; }
