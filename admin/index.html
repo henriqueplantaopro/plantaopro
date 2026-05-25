@@ -457,7 +457,7 @@ tr:hover td{background:var(--bg3);}
     </div>
 
   </nav>
-  <div class="sidebar-footer" onclick="togglePerfilMenu()" style="cursor:pointer;padding:12px 16px;display:flex;align-items:center;gap:10px;border-top:1px solid var(--border);transition:background 0.15s;" onmouseenter="this.style.background='var(--bg3)'" onmouseleave="this.style.background=''">
+  <div class="sidebar-footer" onclick="showTab('perfil')" style="cursor:pointer;padding:12px 16px;display:flex;align-items:center;gap:10px;border-top:1px solid var(--border);transition:background 0.15s;" onmouseenter="this.style.background='var(--bg3)'" onmouseleave="this.style.background=''">
     <div id="sidebar-avatar" style="width:34px;height:34px;border-radius:50%;background:var(--blue);color:#fff;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;flex-shrink:0;">H</div>
     <div style="flex:1;min-width:0;">
       <div id="admin-nome" style="font-weight:600;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"></div>
@@ -1436,6 +1436,134 @@ tr:hover td{background:var(--bg3);}
     </div>
   </div>
 
+  <!-- TELA: PERFIL -->
+  <div id="tab-perfil" class="section" style="display:none;">
+    <!-- Cabeçalho com título + botão Sair -->
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px;">
+      <div>
+        <div class="page-title">⚙️ Configurações da conta</div>
+        <div class="page-sub" style="color:var(--text3);margin-bottom:0;">Gerencie seus dados, plano e acesso</div>
+      </div>
+      <button onclick="confirmarLogout()" style="background:#fff;border:1.5px solid var(--red);color:var(--red);padding:8px 16px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:6px;transition:all 0.15s;" onmouseenter="this.style.background='var(--red)';this.style.color='#fff'" onmouseleave="this.style.background='#fff';this.style.color='var(--red)'">
+        🚪 Sair
+      </button>
+    </div>
+
+    <!-- Abas internas -->
+    <div class="perfil-tabs" style="display:flex;gap:4px;border-bottom:2px solid var(--border);margin:20px 0 24px;">
+      <div class="perfil-tab active" id="perfil-tab-empresa" onclick="switchPerfilTab('empresa', this)" style="padding:10px 18px;cursor:pointer;font-size:13px;font-weight:600;color:var(--text);border-bottom:2px solid var(--blue);margin-bottom:-2px;transition:all 0.15s;">
+        🏢 Dados da empresa
+      </div>
+      <div class="perfil-tab" id="perfil-tab-usuario" onclick="switchPerfilTab('usuario', this)" style="padding:10px 18px;cursor:pointer;font-size:13px;font-weight:500;color:var(--text2);border-bottom:2px solid transparent;margin-bottom:-2px;transition:all 0.15s;">
+        👤 Dados do usuário
+      </div>
+      <div class="perfil-tab" id="perfil-tab-plano" onclick="switchPerfilTab('plano', this)" style="padding:10px 18px;cursor:pointer;font-size:13px;font-weight:500;color:var(--text2);border-bottom:2px solid transparent;margin-bottom:-2px;transition:all 0.15s;">
+        💎 Plano e cobrança
+      </div>
+    </div>
+
+    <!-- SUB-ABA: DADOS DA EMPRESA (só admin) -->
+    <div id="perfil-sec-empresa" class="perfil-sec">
+      <div class="card" style="max-width:880px;">
+        <div class="card-title" style="font-size:15px;font-weight:700;margin-bottom:16px;">Informações da empresa</div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Nome da empresa</label>
+            <input id="mp-empresa" type="text" placeholder="Razão social ou nome fantasia">
+          </div>
+          <div class="form-group">
+            <label>CNPJ</label>
+            <input id="mp-cnpj" type="text" placeholder="00.000.000/0000-00">
+          </div>
+        </div>
+        <div style="display:flex;justify-content:flex-end;margin-top:16px;">
+          <button class="btn btn-primary" onclick="salvarPerfil()">💾 Salvar dados da empresa</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- SUB-ABA: DADOS DO USUÁRIO -->
+    <div id="perfil-sec-usuario" class="perfil-sec" style="display:none;">
+      <div class="card" style="max-width:880px;margin-bottom:16px;">
+        <div class="card-title" style="font-size:15px;font-weight:700;margin-bottom:16px;">Meus dados</div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Nome completo <span style="color:var(--red)">*</span></label>
+            <input id="mp-nome" type="text" placeholder="Seu nome">
+          </div>
+          <div class="form-group">
+            <label>E-mail</label>
+            <input id="mp-email" type="email" placeholder="seu@email.com">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Telefone</label>
+            <input id="mp-tel" type="text" placeholder="(21) 99999-9999">
+          </div>
+          <div class="form-group mp-campo-empresa">
+            <label>Cargo</label>
+            <input id="mp-cargo" type="text" placeholder="Ex: Diretor, Gerente...">
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="max-width:880px;">
+        <div class="card-title" style="font-size:15px;font-weight:700;margin-bottom:8px;">Alterar senha</div>
+        <div style="font-size:12px;color:var(--text3);margin-bottom:16px;">Deixe em branco para manter a senha atual</div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Nova senha</label>
+            <input id="mp-senha" type="password" placeholder="Mínimo 6 caracteres">
+          </div>
+          <div class="form-group">
+            <label>Confirmar senha</label>
+            <input id="mp-senha2" type="password" placeholder="Repita a senha">
+          </div>
+        </div>
+        <div style="display:flex;justify-content:flex-end;margin-top:16px;">
+          <button class="btn btn-primary" onclick="salvarPerfil()">💾 Salvar meus dados</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- SUB-ABA: PLANO E COBRANÇA (só admin) -->
+    <div id="perfil-sec-plano" class="perfil-sec" style="display:none;">
+      <div class="card" style="max-width:880px;">
+        <!-- Status atual -->
+        <div id="mp-status-atual" style="margin-bottom:20px;"></div>
+
+        <!-- Upgrade automático -->
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;background:var(--bg3);border-radius:10px;border:1px solid var(--border);margin:16px 0;">
+          <div style="display:flex;align-items:center;gap:12px;">
+            <label style="display:flex;align-items:center;gap:10px;cursor:pointer;margin:0;" onclick="toggleUpgradeAuto()">
+              <div class="toggle-switch" id="toggle-upgrade-auto"></div>
+              <span style="font-size:13px;font-weight:600;color:var(--text);" id="toggle-upgrade-label">Upgrade automático de plano</span>
+            </label>
+          </div>
+          <button onclick="mostrarInfoUpgrade()" style="background:none;border:1px solid var(--border);border-radius:6px;padding:4px 10px;font-size:12px;color:var(--text2);cursor:pointer;white-space:nowrap;">ℹ️ Mais informações</button>
+        </div>
+        <div id="upgrade-info-box" style="display:none;background:#fffbf0;border:1px solid #f0c060;border-radius:8px;padding:12px 14px;font-size:13px;color:var(--text2);line-height:1.6;margin:-8px 0 16px;">
+          Quando o número de profissionais cadastrados ultrapassar o limite do seu plano atual, o sistema realiza o upgrade automaticamente para o próximo plano e ajusta a cobrança mensal.
+        </div>
+
+        <!-- Lista de planos -->
+        <div style="font-size:13px;font-weight:600;margin-bottom:12px;color:var(--text2);">Planos disponíveis</div>
+        <div id="mp-planos-lista"></div>
+
+        <!-- Histórico de pagamentos -->
+        <div style="margin-top:20px;border-top:1px solid var(--border);padding-top:16px;">
+          <div style="font-size:13px;font-weight:600;margin-bottom:10px;color:var(--text2);">Histórico de pagamentos</div>
+          <div id="mp-historico-pag" style="font-size:13px;color:var(--text3);">Carregando...</div>
+        </div>
+
+        <div style="display:flex;justify-content:flex-end;margin-top:20px;">
+          <button class="btn btn-primary" id="btn-salvar-plano" onclick="salvarAlteracoesPlano()">💾 Salvar alterações no plano</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
 </div><!-- /main -->
 
 <!-- MODAL LINK MÉDICO -->
@@ -1802,85 +1930,6 @@ tr:hover td{background:var(--bg3);}
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
-<!-- MODAL PERFIL DA EMPRESA -->
-<div class="modal-perfil-overlay" id="modal-perfil" onclick="if(event.target===this)this.classList.remove('open')">
-  <div class="modal-perfil">
-    <div class="modal-perfil-header">
-      <div id="mp-titulo" style="font-size:16px;font-weight:700;">👤 Dados da empresa</div>
-      <button onclick="document.getElementById('modal-perfil').classList.remove('open')" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--text3);">✕</button>
-    </div>
-    <div class="modal-perfil-body">
-      <div class="form-row">
-        <div class="form-group"><label>Nome da empresa</label><input id="mp-empresa" type="text"></div>
-        <div class="form-group"><label>CNPJ</label><input id="mp-cnpj" type="text"></div>
-      </div>
-      <div class="form-row">
-        <div class="form-group"><label>Nome do responsável</label><input id="mp-nome" type="text"></div>
-        <div class="form-group"><label>E-mail</label><input id="mp-email" type="email"></div>
-      </div>
-      <div class="form-row">
-        <div class="form-group"><label>Telefone</label><input id="mp-tel" type="text"></div>
-        <div class="form-group"><label>Cargo</label><input id="mp-cargo" type="text"></div>
-      </div>
-      <hr>
-      <div style="font-size:13px;font-weight:600;margin-bottom:10px;">Alterar senha</div>
-      <div class="form-row">
-        <div class="form-group"><label>Nova senha</label><input id="mp-senha" type="password" placeholder="Mínimo 8 caracteres"></div>
-        <div class="form-group"><label>Confirmar senha</label><input id="mp-senha2" type="password" placeholder="Repita a senha"></div>
-      </div>
-      <div style="display:flex;gap:8px;margin-top:16px;justify-content:flex-end;">
-        <button class="btn btn-ghost" onclick="document.getElementById('modal-perfil').classList.remove('open')">Cancelar</button>
-        <button class="btn btn-primary" onclick="salvarPerfil()">💾 Salvar alterações</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-
-<!-- MODAL PLANOS -->
-<div class="modal-perfil-overlay" id="modal-planos" onclick="if(event.target===this)this.classList.remove('open')">
-  <div class="modal-perfil" style="max-width:620px;">
-    <div class="modal-perfil-header">
-      <div style="font-size:16px;font-weight:700;">💎 Plano e cobrança</div>
-      <button onclick="document.getElementById('modal-planos').classList.remove('open')" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--text3);">✕</button>
-    </div>
-    <div class="modal-perfil-body">
-
-      <!-- Status atual -->
-      <div id="mp-status-atual" style="margin-bottom:20px;"></div>
-
-      <!-- Upgrade automático — simplificado -->
-      <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;background:var(--bg3);border-radius:10px;border:1px solid var(--border);margin:16px 0;">
-        <div style="display:flex;align-items:center;gap:12px;">
-          <label style="display:flex;align-items:center;gap:10px;cursor:pointer;margin:0;" onclick="toggleUpgradeAuto()">
-            <div class="toggle-switch" id="toggle-upgrade-auto"></div>
-            <span style="font-size:13px;font-weight:600;color:var(--text);" id="toggle-upgrade-label">Upgrade automático de plano</span>
-          </label>
-        </div>
-        <button onclick="mostrarInfoUpgrade()" style="background:none;border:1px solid var(--border);border-radius:6px;padding:4px 10px;font-size:12px;color:var(--text2);cursor:pointer;white-space:nowrap;">ℹ️ Mais informações</button>
-      </div>
-      <!-- Popover de informações (oculto por padrão) -->
-      <div id="upgrade-info-box" style="display:none;background:#fffbf0;border:1px solid #f0c060;border-radius:8px;padding:12px 14px;font-size:13px;color:var(--text2);line-height:1.6;margin:-8px 0 16px;">
-        Quando o número de profissionais cadastrados ultrapassar o limite do seu plano atual, o sistema realiza o upgrade automaticamente para o próximo plano e ajusta a cobrança mensal.
-      </div>
-
-      <!-- Lista de planos -->
-      <div style="font-size:13px;font-weight:600;margin-bottom:12px;color:var(--text2);">Planos disponíveis</div>
-      <div id="mp-planos-lista"></div>
-
-      <!-- Histórico de pagamentos -->
-      <div style="margin-top:20px;border-top:1px solid var(--border);padding-top:16px;">
-        <div style="font-size:13px;font-weight:600;margin-bottom:10px;color:var(--text2);">Histórico de pagamentos</div>
-        <div id="mp-historico-pag" style="font-size:13px;color:var(--text3);">Carregando...</div>
-      </div>
-
-      <div style="display:flex;gap:8px;margin-top:20px;justify-content:flex-end;">
-        <button class="btn btn-ghost" onclick="document.getElementById('modal-planos').classList.remove('open')">Fechar</button>
-        <button class="btn btn-primary" id="btn-salvar-plano" onclick="salvarAlteracoesPlano()">💾 Salvar</button>
-      </div>
-    </div>
-  </div>
-</div>
 <!-- MODAL ESQUECI SENHA ADMIN -->
 <div id="modal-esqueci-admin" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:9999;align-items:center;justify-content:center;">
   <div style="background:#fff;border-radius:16px;padding:32px;width:100%;max-width:400px;margin:24px;box-shadow:0 8px 32px rgba(0,0,0,0.25);">
@@ -3028,8 +3077,9 @@ function showTab(id,el){
   if(id==='financeiro'){ initFinanceiro(); }
   if(id==='medicos'){ renderMedProjetosCheck(); }
   if(id==='dashboard') { carregarDashboard(); iniciarGraficos(); }
-  if(id==='usuarios') { carregarUsuarios(); }
-  if(id==='log') { carregarLog(); }
+  if (id==='usuarios') { carregarUsuarios(); }
+  if (id==='log') { carregarLog(); }
+  if (id==='perfil') { popularPerfilTab(); }
 }
 function toast(msg,err){
   const t=document.getElementById('toast');
@@ -7054,17 +7104,10 @@ let _upgradeAutoAtivo = false;
 let _planoSelecionadoModal = null;
 
 function togglePerfilMenu() {
-  const dd = document.getElementById('perfil-dropdown');
-  if (!dd) return;
-  const isOpen = dd.style.display === 'flex';
-  dd.style.display = isOpen ? 'none' : 'flex';
-  dd.style.flexDirection = 'column';
+  // (Mantida por compatibilidade — agora abre a tab-perfil)
+  showTab('perfil');
 }
-function fecharPerfilMenu(){var dd=document.getElementById('perfil-dropdown');if(dd)dd.style.display='none';}
-document.addEventListener('click', e => {
-  const footer = document.querySelector('.sidebar-footer');
-  if (footer && !footer.contains(e.target)) fecharPerfilMenu();
-});
+function fecharPerfilMenu(){ /* no-op: o dropdown foi substituído pela tab-perfil */ }
 
 function preencherPerfilMenu() {
   // Dados do usuário logado (admin master ou usuário da equipe)
@@ -7111,32 +7154,76 @@ function preencherPerfilMenu() {
 }
 
 function abrirModalPerfil() {
-  fecharPerfilMenu();
+  // (Função mantida por compatibilidade — agora redireciona para a tab-perfil)
+  showTab('perfil');
+}
+
+// Popula os campos da tab-perfil com os dados do usuário logado
+function popularPerfilTab() {
   const u = usuarioLogado || adminLogado;
   if (!u) return;
 
-  // Mostrar/ocultar campos de empresa (só para admin master)
-  const camposEmpresa = document.querySelectorAll('.mp-campo-empresa');
-  camposEmpresa.forEach(el => el.style.display = u.isAdmin ? '' : 'none');
+  // Mostrar/ocultar abas e campos restritos a admin
+  const isAdmin = !!u.isAdmin;
+  const tabEmpresa = document.getElementById('perfil-tab-empresa');
+  const tabPlano   = document.getElementById('perfil-tab-plano');
+  if (tabEmpresa) tabEmpresa.style.display = isAdmin ? '' : 'none';
+  if (tabPlano)   tabPlano.style.display   = isAdmin ? '' : 'none';
+
+  // Campos de cargo (já marcados com .mp-campo-empresa) só para admin
+  document.querySelectorAll('.mp-campo-empresa').forEach(el => {
+    el.style.display = isAdmin ? '' : 'none';
+  });
 
   // Preencher campos
   const g = id => document.getElementById(id);
-  if (u.isAdmin) {
+  if (isAdmin) {
     if (g('mp-empresa')) g('mp-empresa').value = adminLogado.empresa_nome||'';
     if (g('mp-cnpj'))    g('mp-cnpj').value    = adminLogado.cnpj||'';
     if (g('mp-cargo'))   g('mp-cargo').value   = adminLogado.cargo||'';
   }
   if (g('mp-nome'))   g('mp-nome').value   = u.nome||'';
   if (g('mp-email'))  g('mp-email').value  = u.email||'';
-  if (g('mp-tel'))    g('mp-tel').value    = (u.isAdmin ? adminLogado.telefone : u.telefone)||'';
+  if (g('mp-tel'))    g('mp-tel').value    = (isAdmin ? adminLogado.telefone : u.telefone)||'';
   if (g('mp-senha'))  g('mp-senha').value  = '';
   if (g('mp-senha2')) g('mp-senha2').value = '';
 
-  // Título do modal
-  const titulo = document.getElementById('mp-titulo');
-  if (titulo) titulo.textContent = u.isAdmin ? '👤 Dados da empresa' : '👤 Meu perfil';
+  // Se for admin → começa na aba "Empresa"; se não → começa em "Usuário"
+  switchPerfilTab(isAdmin ? 'empresa' : 'usuario');
 
-  document.getElementById('modal-perfil').classList.add('open');
+  // Carregar plano (só se admin)
+  if (isAdmin) {
+    popularPerfilPlano();
+  }
+}
+
+// Troca de sub-aba dentro da tela de Perfil
+function switchPerfilTab(aba, el) {
+  // Marcar abas
+  document.querySelectorAll('.perfil-tab').forEach(t => {
+    t.classList.remove('active');
+    t.style.borderBottomColor = 'transparent';
+    t.style.color = 'var(--text2)';
+    t.style.fontWeight = '500';
+  });
+  const tabBtn = el || document.getElementById('perfil-tab-' + aba);
+  if (tabBtn) {
+    tabBtn.classList.add('active');
+    tabBtn.style.borderBottomColor = 'var(--blue)';
+    tabBtn.style.color = 'var(--text)';
+    tabBtn.style.fontWeight = '600';
+  }
+  // Mostrar seção
+  document.querySelectorAll('.perfil-sec').forEach(s => s.style.display = 'none');
+  const sec = document.getElementById('perfil-sec-' + aba);
+  if (sec) sec.style.display = 'block';
+}
+
+// Confirma logout antes de chamar fazerLogout()
+function confirmarLogout() {
+  if (confirm('Tem certeza que deseja sair?')) {
+    fazerLogout();
+  }
 }
 
 async function salvarPerfil() {
@@ -7169,7 +7256,6 @@ async function salvarPerfil() {
       Object.assign(adminLogado, payload);
       Object.assign(usuarioLogado, payload);
       toast('✅ Dados salvos!');
-      document.getElementById('modal-perfil').classList.remove('open');
       preencherPerfilMenu();
     } else toast('Erro ao salvar',true);
   } else {
@@ -7183,7 +7269,6 @@ async function salvarPerfil() {
       Object.assign(usuarioLogado, payload);
       await registrarLog('editar','usuarios',u.id,'Atualizou dados do perfil');
       toast('✅ Dados salvos!');
-      document.getElementById('modal-perfil').classList.remove('open');
       preencherPerfilMenu();
     } else toast('Erro ao salvar',true);
   }
@@ -7198,12 +7283,17 @@ const PLANOS_LISTA = [
 ];
 
 function abrirModalPlanos() {
-  fecharPerfilMenu();
+  // (Função mantida por compatibilidade — agora redireciona para a tab-perfil aba plano)
+  showTab('perfil');
+  setTimeout(() => switchPerfilTab('plano'), 50);
+}
+
+// Popula a sub-aba "Plano e cobrança" da tela de Perfil
+function popularPerfilPlano() {
   _planoSelecionadoModal = _assinaturaAtiva?.plano||'starter';
   atualizarToggleUpgrade();
   renderModalPlanos();
   carregarHistoricoPagamentos();
-  document.getElementById('modal-planos').classList.add('open');
 }
 
 function renderModalPlanos() {
@@ -7268,9 +7358,8 @@ async function salvarAlteracoesPlano() {
   Object.assign(_assinaturaAtiva,payload);
   if (p&&planoNovo!==_assinaturaAtiva.plano) { _planoConfig=PLANOS_CONFIG[planoNovo]||PLANOS_CONFIG['starter']; aplicarRestricoesDePlano(); }
   toast('✅ Configurações salvas!');
-  document.getElementById('modal-planos').classList.remove('open');
   preencherPerfilMenu();
-  btn.disabled=false; btn.textContent='💾 Salvar';
+  btn.disabled=false; btn.textContent='💾 Salvar alterações no plano';
 }
 
 
@@ -7915,31 +8004,6 @@ async function importarTiposPlanilha(input) {
   </div>
 </div>
 
-    <!-- DROPDOWN PERFIL -->
-    <div class="perfil-dropdown" id="perfil-dropdown">
-      <div class="perfil-dropdown-header">
-        <div class="perfil-empresa" id="pd-empresa">—</div>
-        <div class="perfil-email" id="pd-email">—</div>
-        <div class="perfil-plano-info">
-          <div>
-            <div class="perfil-plano-nome" id="pd-plano-nome">—</div>
-            <div class="perfil-plano-limite" id="pd-plano-limite">—</div>
-          </div>
-          <span class="perfil-plano-status" id="pd-status">—</span>
-        </div>
-        <div class="perfil-pico" id="pd-pico-wrap" style="display:none;">
-          <div style="display:flex;justify-content:space-between;margin-bottom:3px;">
-            <span>Profissionais este mês</span>
-            <strong id="pd-pico-txt">0 / 0</strong>
-          </div>
-          <div class="perfil-pico-bar"><div class="perfil-pico-fill" id="pd-pico-fill"></div></div>
-        </div>
-      </div>
-      <button class="perfil-menu-item" onclick="abrirModalPerfil()">👤 Dados da empresa</button>
-      <button class="perfil-menu-item" onclick="abrirModalPlanos()">💎 Plano e cobrança</button>
-      <div class="perfil-menu-sep"></div>
-      <button class="perfil-menu-item danger" onclick="fecharPerfilMenu();fazerLogout()">🚪 Sair</button>
-    </div>
 </body>
 </html>
 <!-- SCRIPT: SISTEMA DE PERFIS E LOG -->
