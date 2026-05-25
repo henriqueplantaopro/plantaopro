@@ -1,5 +1,4 @@
-.perfil-dropdown{position:fixed;bottom:72px;left:0;width:220px;background:#fff;border-radius:12px;box-shadow:0 4px 24px rgba(0,0,0,0.18);border:1px solid var(--border);z-index:500;display:none;flex-direction:column;overflow:hidden;padding:8px 0;}
-.perfil-dropdown.open{display:flex;}<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
@@ -371,6 +370,10 @@ tr:hover td{background:var(--bg3);}
   padding-bottom: 12px;
   border-bottom: 1px solid #e0dbd2;
 }
+
+/* ── Perfil dropdown ─────────────────────────────── */
+.perfil-dropdown{position:fixed;bottom:72px;left:0;width:220px;background:#fff;border-radius:12px;box-shadow:0 4px 24px rgba(0,0,0,0.18);border:1px solid var(--border);z-index:500;display:none;flex-direction:column;overflow:hidden;padding:8px 0;}
+.perfil-dropdown.open{display:flex;}
 </style>
 </head>
 <body>
@@ -5439,7 +5442,7 @@ function showTab(id,el){
   if(id==='candidaturas'){ initCandidaturas(); }
   if(id==='financeiro'){ initFinanceiro(); }
   if(id==='medicos'){ renderMedProjetosCheck(); }
-  if(id==='dashboard') { updateDash(); iniciarGraficos(); }
+  if(id==='dashboard') { carregarDashboard(); iniciarGraficos(); }
   if(id==='usuarios') { carregarUsuarios(); }
   if(id==='log') { carregarLog(); }
 }
