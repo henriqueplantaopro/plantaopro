@@ -9473,8 +9473,26 @@ function togglePerfilMenu() {
   const dd = document.getElementById('perfil-dropdown');
   if (!dd) return;
   const isOpen = dd.style.display === 'flex';
-  dd.style.display = isOpen ? 'none' : 'flex';
-  dd.style.flexDirection = 'column';
+  if (isOpen) {
+    dd.style.display = 'none';
+  } else {
+    const footer = document.querySelector('.sidebar-footer');
+    const rect = footer ? footer.getBoundingClientRect() : {top:0,left:0};
+    dd.style.cssText = [
+      'display:flex',
+      'flex-direction:column',
+      'position:fixed',
+      'bottom:' + (window.innerHeight - rect.top + 4) + 'px',
+      'left:8px',
+      'width:212px',
+      'background:#fff',
+      'border-radius:12px',
+      'box-shadow:0 4px 24px rgba(0,0,0,0.2)',
+      'border:1px solid #e0dbd2',
+      'z-index:9999',
+      'padding:8px 0'
+    ].join(';');
+  }
 }
 function fecharPerfilMenu(){var dd=document.getElementById('perfil-dropdown');if(dd)dd.style.display='none';}
 document.addEventListener('click', e => {
