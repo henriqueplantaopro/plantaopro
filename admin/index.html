@@ -1,4 +1,5 @@
-<!DOCTYPE html>
+.perfil-dropdown{position:fixed;bottom:72px;left:0;width:220px;background:#fff;border-radius:12px;box-shadow:0 4px 24px rgba(0,0,0,0.18);border:1px solid var(--border);z-index:500;display:none;flex-direction:column;overflow:hidden;padding:8px 0;}
+.perfil-dropdown.open{display:flex;}<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
@@ -5439,6 +5440,8 @@ function showTab(id,el){
   if(id==='financeiro'){ initFinanceiro(); }
   if(id==='medicos'){ renderMedProjetosCheck(); }
   if(id==='dashboard') { updateDash(); iniciarGraficos(); }
+  if(id==='usuarios') { carregarUsuarios(); }
+  if(id==='log') { carregarLog(); }
 }
 function toast(msg,err){
   const t=document.getElementById('toast');
@@ -9466,9 +9469,7 @@ function togglePerfilMenu() {
   const dd = document.getElementById('perfil-dropdown');
   dd.classList.toggle('open');
 }
-function fecharPerfilMenu() {
-  document.getElementById('perfil-dropdown').classList.remove('open');
-}
+function fecharPerfilMenu(){var dd=document.getElementById('perfil-dropdown');if(dd)dd.classList.remove('open');}
 document.addEventListener('click', e => {
   const footer = document.querySelector('.sidebar-footer');
   if (footer && !footer.contains(e.target)) fecharPerfilMenu();
@@ -10663,4 +10664,6 @@ async function carregarTudoComPerfil() {
     `Login: ${usuarioLogado?.nome || adminLogado?.nome} (${usuarioLogado?.perfil || 'administrador'})`);
 }
 
+
+document.addEventListener('click',function(e){var dd=document.getElementById('perfil-dropdown');var ft=document.querySelector('.sidebar-footer');if(dd&&dd.classList.contains('open')&&!dd.contains(e.target)&&(!ft||!ft.contains(e.target)))dd.classList.remove('open');});
 </script>
