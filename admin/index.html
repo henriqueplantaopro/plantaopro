@@ -2997,31 +2997,7 @@ tr:hover td{background:var(--bg3);}
 
   </nav>
   <div class="sidebar-footer">
-    <!-- DROPDOWN PERFIL -->
-    <div class="perfil-dropdown" id="perfil-dropdown">
-      <div class="perfil-dropdown-header">
-        <div class="perfil-empresa" id="pd-empresa">—</div>
-        <div class="perfil-email" id="pd-email">—</div>
-        <div class="perfil-plano-info">
-          <div>
-            <div class="perfil-plano-nome" id="pd-plano-nome">—</div>
-            <div class="perfil-plano-limite" id="pd-plano-limite">—</div>
-          </div>
-          <span class="perfil-plano-status" id="pd-status">—</span>
-        </div>
-        <div class="perfil-pico" id="pd-pico-wrap" style="display:none;">
-          <div style="display:flex;justify-content:space-between;margin-bottom:3px;">
-            <span>Profissionais este mês</span>
-            <strong id="pd-pico-txt">0 / 0</strong>
-          </div>
-          <div class="perfil-pico-bar"><div class="perfil-pico-fill" id="pd-pico-fill"></div></div>
-        </div>
-      </div>
-      <button class="perfil-menu-item" onclick="abrirModalPerfil()">👤 Dados da empresa</button>
-      <button class="perfil-menu-item" onclick="abrirModalPlanos()">💎 Plano e cobrança</button>
-      <div class="perfil-menu-sep"></div>
-      <button class="perfil-menu-item danger" onclick="fecharPerfilMenu();fazerLogout()">🚪 Sair</button>
-    </div>
+
 
     <!-- TRIGGER DO PERFIL -->
     <div class="perfil-trigger" onclick="togglePerfilMenu()">
@@ -9473,26 +9449,8 @@ function togglePerfilMenu() {
   const dd = document.getElementById('perfil-dropdown');
   if (!dd) return;
   const isOpen = dd.style.display === 'flex';
-  if (isOpen) {
-    dd.style.display = 'none';
-  } else {
-    const footer = document.querySelector('.sidebar-footer');
-    const rect = footer ? footer.getBoundingClientRect() : {top:0,left:0};
-    dd.style.cssText = [
-      'display:flex',
-      'flex-direction:column',
-      'position:fixed',
-      'bottom:' + (window.innerHeight - rect.top + 4) + 'px',
-      'left:8px',
-      'width:212px',
-      'background:#fff',
-      'border-radius:12px',
-      'box-shadow:0 4px 24px rgba(0,0,0,0.2)',
-      'border:1px solid #e0dbd2',
-      'z-index:9999',
-      'padding:8px 0'
-    ].join(';');
-  }
+  dd.style.display = isOpen ? 'none' : 'flex';
+  dd.style.flexDirection = 'column';
 }
 function fecharPerfilMenu(){var dd=document.getElementById('perfil-dropdown');if(dd)dd.style.display='none';}
 document.addEventListener('click', e => {
@@ -10348,6 +10306,32 @@ async function importarTiposPlanilha(input) {
     </div>
   </div>
 </div>
+
+    <!-- DROPDOWN PERFIL -->
+    <div class="perfil-dropdown" id="perfil-dropdown">
+      <div class="perfil-dropdown-header">
+        <div class="perfil-empresa" id="pd-empresa">—</div>
+        <div class="perfil-email" id="pd-email">—</div>
+        <div class="perfil-plano-info">
+          <div>
+            <div class="perfil-plano-nome" id="pd-plano-nome">—</div>
+            <div class="perfil-plano-limite" id="pd-plano-limite">—</div>
+          </div>
+          <span class="perfil-plano-status" id="pd-status">—</span>
+        </div>
+        <div class="perfil-pico" id="pd-pico-wrap" style="display:none;">
+          <div style="display:flex;justify-content:space-between;margin-bottom:3px;">
+            <span>Profissionais este mês</span>
+            <strong id="pd-pico-txt">0 / 0</strong>
+          </div>
+          <div class="perfil-pico-bar"><div class="perfil-pico-fill" id="pd-pico-fill"></div></div>
+        </div>
+      </div>
+      <button class="perfil-menu-item" onclick="abrirModalPerfil()">👤 Dados da empresa</button>
+      <button class="perfil-menu-item" onclick="abrirModalPlanos()">💎 Plano e cobrança</button>
+      <div class="perfil-menu-sep"></div>
+      <button class="perfil-menu-item danger" onclick="fecharPerfilMenu();fazerLogout()">🚪 Sair</button>
+    </div>
 </body>
 </html>
 <!-- SCRIPT: SISTEMA DE PERFIS E LOG -->
