@@ -4335,6 +4335,9 @@ const BASE_URL = window.location.origin; // URL do site após o deploy
 let adminLogado = null;
 let medicos = [], projetos = [], lancamentos = [];
 let linkMedicoAtual = '';
+let tiposPlantao = [];
+let semOffset = 0;
+const meses = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
 // Calendário — declaradas aqui para evitar TDZ (usadas em showTab)
 let _calTabAtiva = 'mensal';
 let calYear = new Date().getFullYear(), calMonth = new Date().getMonth();
@@ -4368,9 +4371,6 @@ const PLANOS_CONFIG = {
 let _assinaturaAtiva = null; // dados da assinatura do admin logado
 let _planoConfig = null;     // config do plano atual
 
-
-
-async 
 // Wrapper de login: tenta admin master primeiro, depois usuário da equipe
 async function fazerLoginWrapper() {
   const email = document.getElementById('l-email').value.trim();
@@ -5724,7 +5724,7 @@ function renderCalAtual() {
 }
 
 // ─── CALENDÁRIO MENSAL ───────────────────────────────────
-const meses = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+// meses movido para declarações globais
 
 function navCal(d) {
   calMonth += d;
@@ -5809,8 +5809,6 @@ function showDayDetailCal(ds) {
   det.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
-
-let semOffset = 0; // semanas a partir da semana atual
 
 function getSegundaDaSemana(offset) {
   const hj = new Date();
@@ -9265,8 +9263,6 @@ function expandNavGroup(tabId) {
   });
 }
 
-
-let tiposPlantao = []; // cache global
 
 async function carregarTiposPlantao() {
   const data = await sb('/rest/v1/tipos_plantao?ativo=eq.true&order=nome&select=*');
