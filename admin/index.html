@@ -4331,6 +4331,9 @@ const BASE_URL = window.location.origin; // URL do site após o deploy
 let adminLogado = null;
 let medicos = [], projetos = [], lancamentos = [];
 let linkMedicoAtual = '';
+// Calendário — declaradas aqui para evitar TDZ (usadas em showTab)
+let _calTabAtiva = 'mensal';
+let calYear = new Date().getFullYear(), calMonth = new Date().getMonth();
 
 // ── SUPABASE ───────────────────────────────────────────
 async function sb(path, options = {}) {
@@ -5694,7 +5697,6 @@ function limparAgenda() {
 
 
 // ─── CALENDÁRIO — SUB-ABAS ──────────────────────────────
-let _calTabAtiva = 'mensal';
 function popCalSelects() {
   const sp = document.getElementById('cal-proj');
   const sm = document.getElementById('cal-med');
@@ -5718,7 +5720,6 @@ function renderCalAtual() {
 }
 
 // ─── CALENDÁRIO MENSAL ───────────────────────────────────
-let calYear = new Date().getFullYear(), calMonth = new Date().getMonth();
 const meses = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
 
 function navCal(d) {
