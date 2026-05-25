@@ -453,9 +453,13 @@ tr:hover td{background:var(--bg3);}
     </div>
 
   </nav>
-  <div class="sidebar-footer">
-    <div id="admin-nome" style="font-weight:600;"></div>
-    <button class="btn-logout" onclick="fazerLogout()">Sair</button>
+  <div class="sidebar-footer" onclick="togglePerfilMenu()" style="cursor:pointer;padding:12px 16px;display:flex;align-items:center;gap:10px;border-top:1px solid var(--border);transition:background 0.15s;" onmouseenter="this.style.background='var(--bg3)'" onmouseleave="this.style.background=''">
+    <div id="sidebar-avatar" style="width:34px;height:34px;border-radius:50%;background:var(--blue);color:#fff;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;flex-shrink:0;">H</div>
+    <div style="flex:1;min-width:0;">
+      <div id="admin-nome" style="font-weight:600;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"></div>
+      <div id="sidebar-perfil-badge" style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.5px;"></div>
+    </div>
+    <span style="color:var(--text3);font-size:12px;">⚙</span>
   </div>
 </div>
 
@@ -1704,7 +1708,7 @@ tr:hover td{background:var(--bg3);}
 <div class="modal-perfil-overlay" id="modal-perfil" onclick="if(event.target===this)this.classList.remove('open')">
   <div class="modal-perfil">
     <div class="modal-perfil-header">
-      <div style="font-size:16px;font-weight:700;">👤 Dados da empresa</div>
+      <div id="mp-titulo" style="font-size:16px;font-weight:700;">👤 Dados da empresa</div>
       <button onclick="document.getElementById('modal-perfil').classList.remove('open')" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--text3);">✕</button>
     </div>
     <div class="modal-perfil-body">
@@ -3031,7 +3035,7 @@ tr:hover td{background:var(--bg3);}
 <div class="modal-perfil-overlay" id="modal-perfil" onclick="if(event.target===this)this.classList.remove('open')">
   <div class="modal-perfil">
     <div class="modal-perfil-header">
-      <div style="font-size:16px;font-weight:700;">👤 Dados da empresa</div>
+      <div id="mp-titulo" style="font-size:16px;font-weight:700;">👤 Dados da empresa</div>
       <button onclick="document.getElementById('modal-perfil').classList.remove('open')" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--text3);">✕</button>
     </div>
     <div class="modal-perfil-body">
@@ -9475,72 +9479,126 @@ document.addEventListener('click', e => {
 });
 
 function preencherPerfilMenu() {
-  if (!adminLogado) return;
-  const ass = _assinaturaAtiva;
-  const cfg = _planoConfig;
-  const iniciais = adminLogado.nome.split(' ').slice(0,2).map(n=>n[0]).join('');
-  const avEl = document.getElementById('perfil-avatar-mini');
-  if (avEl) avEl.textContent = iniciais;
-  document.getElementById('admin-nome').textContent = adminLogado.nome;
-  const badge = document.getElementById('perfil-plano-badge');
-  if (badge && ass) {
-    const cor = cfg?.relatoriosAvancados ? '#2d7a3a' : '#8a5500';
-    badge.textContent = (ass.plano||'starter').toUpperCase();
-    badge.style.cssText = `display:inline-block;background:${cor};color:#fff;font-size:9px;font-weight:700;padding:1px 6px;border-radius:99px;`;
+  // Dados do usuário logado (admin master ou usuário da equipe)
+  const u = usuarioLogado || adminLogado;
+  if (!u) return;
+
+  // Atualizar sidebar
+  const nomeEl  = document.getElementById('admin-nome');
+  const badge   = document.getElementById('sidebar-perfil-badge');
+  const avatar  = document.getElementById('sidebar-avatar');
+  const perfil  = u.perfil || 'administrador';
+  if (nomeEl)  nomeEl.textContent  = u.nome || u.email || '—';
+  if (badge)   badge.textContent   = perfil;
+  if (avatar)  {
+    avatar.textContent = (u.nome || u.email || 'U')[0].toUpperCase();
+    const cores = {administrador:'#7c3aed',master:'#1a5fad',financeiro:'#059669',operador:'#d97706'};
+    avatar.style.background = cores[perfil] || 'var(--blue)';
   }
-  const pdEmp = document.getElementById('pd-empresa'); if(pdEmp) pdEmp.textContent = adminLogado.empresa_nome || adminLogado.nome;
-  const pdEmail = document.getElementById('pd-email'); if(pdEmail) pdEmail.textContent = adminLogado.email || '';
-  if (ass) {
-    const planos = {starter:'Starter',growth:'Growth',pro:'Pro',business:'Business',enterprise:'Enterprise'};
-    const pdNome = document.getElementById('pd-plano-nome'); if(pdNome) pdNome.textContent = 'Plano ' + (planos[ass.plano]||ass.plano||'—');
-    const pdLim = document.getElementById('pd-plano-limite'); if(pdLim) pdLim.textContent = 'Até ' + (ass.limite_medicos||0).toLocaleString('pt-BR') + ' profissionais';
-    const pdSt = document.getElementById('pd-status');
-    if (pdSt) {
-      const stMap = {ativa:{txt:'Ativa',cls:'status-ativa'},pendente:{txt:'Pendente',cls:'status-pendente'},vencida:{txt:'Vencida',cls:'status-vencida'},suspensa:{txt:'Suspensa',cls:'status-vencida'}};
-      const st = stMap[ass.status]||{txt:ass.status,cls:'status-pendente'};
-      pdSt.textContent = st.txt; pdSt.className = 'perfil-plano-status ' + st.cls;
-    }
-    const pico = ass.pico_mes_atual||0, lim = ass.limite_medicos||100;
-    const pct = Math.min(100, Math.round(pico/lim*100));
-    const picoWrap = document.getElementById('pd-pico-wrap');
-    if (picoWrap) {
-      picoWrap.style.display = 'block';
-      document.getElementById('pd-pico-txt').textContent = pico + ' / ' + lim;
-      const fill = document.getElementById('pd-pico-fill');
-      fill.style.width = pct + '%';
-      fill.style.background = pct>=90?'var(--red)':pct>=70?'var(--amber)':'var(--green)';
-    }
-    _upgradeAutoAtivo = ass.upgrade_automatico || false;
-    atualizarToggleUpgrade();
+
+  // Atualizar dropdown
+  const pdEmpresa = document.getElementById('pd-empresa');
+  const pdEmail   = document.getElementById('pd-email');
+  if (pdEmpresa) pdEmpresa.textContent = u.isAdmin ? (adminLogado.empresa_nome || adminLogado.nome || '—') : u.nome;
+  if (pdEmail)   pdEmail.textContent   = u.email || '—';
+
+  // Plano — só para admin master
+  const planoWrap = document.querySelector('.perfil-plano-info');
+  if (planoWrap) planoWrap.style.display = u.isAdmin ? '' : 'none';
+  const picoWrap = document.getElementById('pd-pico-wrap');
+  if (picoWrap) picoWrap.style.display = u.isAdmin ? '' : 'none';
+
+  // Botão "Plano e cobrança" — só para admin master
+  const btnPlano = document.querySelector('.perfil-menu-item[onclick*="abrirModalPlanos"]');
+  if (btnPlano) btnPlano.style.display = u.isAdmin ? '' : 'none';
+
+  if (u.isAdmin && _planoConfig) {
+    const pdPlanoNome  = document.getElementById('pd-plano-nome');
+    const pdPlanoLim   = document.getElementById('pd-plano-limite');
+    const pdStatus     = document.getElementById('pd-status');
+    if (pdPlanoNome) pdPlanoNome.textContent = _planoConfig.nome || '—';
+    if (pdPlanoLim)  pdPlanoLim.textContent  = _planoConfig.maxMedicos ? 'Até ' + _planoConfig.maxMedicos + ' profissionais' : '';
+    if (pdStatus)    pdStatus.textContent    = _assinaturaAtiva?.status || 'Ativo';
   }
 }
 
 function abrirModalPerfil() {
   fecharPerfilMenu();
-  if (!adminLogado) return;
-  document.getElementById('mp-empresa').value = adminLogado.empresa_nome||'';
-  document.getElementById('mp-cnpj').value    = adminLogado.cnpj||'';
-  document.getElementById('mp-nome').value    = adminLogado.nome||'';
-  document.getElementById('mp-email').value   = adminLogado.email||'';
-  document.getElementById('mp-tel').value     = adminLogado.telefone||'';
-  document.getElementById('mp-cargo').value   = adminLogado.cargo||'';
-  document.getElementById('mp-senha').value   = '';
-  document.getElementById('mp-senha2').value  = '';
+  const u = usuarioLogado || adminLogado;
+  if (!u) return;
+
+  // Mostrar/ocultar campos de empresa (só para admin master)
+  const camposEmpresa = document.querySelectorAll('.mp-campo-empresa');
+  camposEmpresa.forEach(el => el.style.display = u.isAdmin ? '' : 'none');
+
+  // Preencher campos
+  const g = id => document.getElementById(id);
+  if (u.isAdmin) {
+    if (g('mp-empresa')) g('mp-empresa').value = adminLogado.empresa_nome||'';
+    if (g('mp-cnpj'))    g('mp-cnpj').value    = adminLogado.cnpj||'';
+    if (g('mp-cargo'))   g('mp-cargo').value   = adminLogado.cargo||'';
+  }
+  if (g('mp-nome'))   g('mp-nome').value   = u.nome||'';
+  if (g('mp-email'))  g('mp-email').value  = u.email||'';
+  if (g('mp-tel'))    g('mp-tel').value    = (u.isAdmin ? adminLogado.telefone : u.telefone)||'';
+  if (g('mp-senha'))  g('mp-senha').value  = '';
+  if (g('mp-senha2')) g('mp-senha2').value = '';
+
+  // Título do modal
+  const titulo = document.getElementById('mp-titulo');
+  if (titulo) titulo.textContent = u.isAdmin ? '👤 Dados da empresa' : '👤 Meu perfil';
+
   document.getElementById('modal-perfil').classList.add('open');
 }
 
 async function salvarPerfil() {
-  const nome=document.getElementById('mp-nome').value.trim();
-  const senha=document.getElementById('mp-senha').value;
-  const senha2=document.getElementById('mp-senha2').value;
-  if (!nome) { toast('Nome obrigatório',true); return; }
-  if (senha && senha!==senha2) { toast('As senhas não coincidem',true); return; }
-  if (senha && senha.length<8) { toast('Senha mínima: 8 caracteres',true); return; }
-  const payload = {nome,empresa_nome:document.getElementById('mp-empresa').value.trim(),cnpj:document.getElementById('mp-cnpj').value.trim()||null,telefone:document.getElementById('mp-tel').value.trim()||null,cargo:document.getElementById('mp-cargo').value.trim()||null};
-  if (senha) payload.senha_hash = senha;
-  const res = await fetch(SUPABASE_URL+'/rest/v1/admins?id=eq.'+adminLogado.id,{method:'PATCH',headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify(payload)});
-  if (res.ok||res.status===204) { Object.assign(adminLogado,payload); toast('✅ Dados salvos!'); document.getElementById('modal-perfil').classList.remove('open'); preencherPerfilMenu(); }
-  else toast('Erro ao salvar',true);
+  const u = usuarioLogado || adminLogado;
+  if (!u) return;
+  const nome   = document.getElementById('mp-nome')?.value.trim();
+  const email  = document.getElementById('mp-email')?.value.trim();
+  const tel    = document.getElementById('mp-tel')?.value.trim()||null;
+  const senha  = document.getElementById('mp-senha')?.value  || '';
+  const senha2 = document.getElementById('mp-senha2')?.value || '';
+  if (!nome)                     { toast('Nome obrigatório',true); return; }
+  if (senha && senha !== senha2) { toast('As senhas não coincidem',true); return; }
+  if (senha && senha.length < 6) { toast('Senha mínima: 6 caracteres',true); return; }
+
+  if (u.isAdmin) {
+    // Salvar na tabela admins
+    const payload = {
+      nome,
+      email: email||adminLogado.email,
+      telefone: tel,
+      empresa_nome: document.getElementById('mp-empresa')?.value.trim()||null,
+      cnpj:         document.getElementById('mp-cnpj')?.value.trim()||null,
+      cargo:        document.getElementById('mp-cargo')?.value.trim()||null,
+    };
+    if (senha) payload.senha_hash = senha;
+    const res = await sb('/rest/v1/admins?id=eq.'+adminLogado.id, {
+      method:'PATCH', headers:{'Prefer':'return=minimal'}, body:JSON.stringify(payload)
+    });
+    if (res !== null) {
+      Object.assign(adminLogado, payload);
+      Object.assign(usuarioLogado, payload);
+      toast('✅ Dados salvos!');
+      document.getElementById('modal-perfil').classList.remove('open');
+      preencherPerfilMenu();
+    } else toast('Erro ao salvar',true);
+  } else {
+    // Salvar na tabela usuarios
+    const payload = { nome, email: email||u.email, telefone: tel };
+    if (senha) payload.senha_hash = senha;
+    const res = await sb('/rest/v1/usuarios?id=eq.'+u.id, {
+      method:'PATCH', headers:{'Prefer':'return=minimal'}, body:JSON.stringify(payload)
+    });
+    if (res !== null) {
+      Object.assign(usuarioLogado, payload);
+      await registrarLog('editar','usuarios',u.id,'Atualizou dados do perfil');
+      toast('✅ Dados salvos!');
+      document.getElementById('modal-perfil').classList.remove('open');
+      preencherPerfilMenu();
+    } else toast('Erro ao salvar',true);
+  }
 }
 
 const PLANOS_LISTA = [
