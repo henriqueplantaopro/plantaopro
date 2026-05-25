@@ -7274,12 +7274,98 @@ async function salvarPerfil() {
   }
 }
 
+// Lista de planos com features completas
+// Edite os campos `recursos` para ajustar o que cada plano oferece — eles são renderizados como
+// linhas de check (incluído) ou cinza (não incluído) no card de cada plano.
 const PLANOS_LISTA = [
-  {id:'starter',limite:100,nome:'Starter',valor:390,recursos:false},
-  {id:'growth',limite:200,nome:'Growth',valor:690,recursos:false},
-  {id:'pro',limite:500,nome:'Pro',valor:1460,recursos:true},
-  {id:'business',limite:1000,nome:'Business',valor:2780,recursos:true},
-  {id:'enterprise',limite:1500,nome:'Enterprise',valor:3450,recursos:true},
+  {
+    id:'starter', nome:'Starter', valor:390, limite:100,
+    descricao:'Para clínicas pequenas começarem a organizar plantões',
+    recursos:[
+      {label:'Até 100 profissionais cadastrados',                inclui:true},
+      {label:'Agenda e calendário de plantões',                  inclui:true},
+      {label:'Cadastro de médicos, projetos e setores',          inclui:true},
+      {label:'Check-in e check-out de plantões',                 inclui:true},
+      {label:'Relatórios básicos',                               inclui:true},
+      {label:'1 usuário admin (sem equipe)',                     inclui:true},
+      {label:'Suporte por e-mail',                               inclui:true},
+      {label:'Múltiplos usuários por perfil',                    inclui:false},
+      {label:'Módulo financeiro',                                inclui:false},
+      {label:'Relatórios avançados e dashboards',                inclui:false},
+      {label:'Exportação para TOTVS Protheus',                   inclui:false},
+      {label:'API e integrações',                                inclui:false},
+      {label:'Suporte prioritário 24/7',                         inclui:false},
+    ],
+  },
+  {
+    id:'growth', nome:'Growth', valor:690, limite:200,
+    descricao:'Para clínicas em crescimento que precisam de mais equipe',
+    recursos:[
+      {label:'Até 200 profissionais cadastrados',                inclui:true},
+      {label:'Tudo do plano Starter',                            inclui:true},
+      {label:'Até 3 usuários da equipe (operador/financeiro)',   inclui:true},
+      {label:'Log de atividades',                                inclui:true},
+      {label:'Importação em lote de plantões',                   inclui:true},
+      {label:'App do médico (link de acesso)',                   inclui:true},
+      {label:'Suporte por e-mail e WhatsApp',                    inclui:true},
+      {label:'Módulo financeiro',                                inclui:false},
+      {label:'Relatórios avançados e dashboards',                inclui:false},
+      {label:'Exportação para TOTVS Protheus',                   inclui:false},
+      {label:'API e integrações',                                inclui:false},
+      {label:'Suporte prioritário 24/7',                         inclui:false},
+    ],
+  },
+  {
+    id:'pro', nome:'Pro', valor:1460, limite:500, popular:true,
+    descricao:'O mais escolhido — para hospitais e grupos médios',
+    recursos:[
+      {label:'Até 500 profissionais cadastrados',                inclui:true},
+      {label:'Tudo do plano Growth',                             inclui:true},
+      {label:'Até 10 usuários da equipe',                        inclui:true},
+      {label:'Módulo financeiro completo (DRE, contas a pagar)', inclui:true},
+      {label:'Relatórios avançados e dashboards',                inclui:true},
+      {label:'Exportação para TOTVS Protheus (SIGAGCT)',         inclui:true},
+      {label:'Candidaturas de médicos (plantões abertos)',       inclui:true},
+      {label:'Escala automática por setor',                      inclui:true},
+      {label:'Suporte prioritário (horário comercial)',          inclui:true},
+      {label:'API e integrações personalizadas',                 inclui:false},
+      {label:'Gerente de conta dedicado',                        inclui:false},
+      {label:'Suporte 24/7',                                     inclui:false},
+    ],
+  },
+  {
+    id:'business', nome:'Business', valor:2780, limite:1000,
+    descricao:'Para redes hospitalares e grandes operadores',
+    recursos:[
+      {label:'Até 1.000 profissionais cadastrados',              inclui:true},
+      {label:'Tudo do plano Pro',                                inclui:true},
+      {label:'Usuários da equipe ilimitados',                    inclui:true},
+      {label:'API e webhooks',                                   inclui:true},
+      {label:'Integrações personalizadas (1 por trimestre)',     inclui:true},
+      {label:'White-label parcial (logo da empresa)',            inclui:true},
+      {label:'Backup diário com retenção de 90 dias',            inclui:true},
+      {label:'Gerente de conta dedicado',                        inclui:true},
+      {label:'Suporte 24/7 por WhatsApp',                        inclui:true},
+      {label:'SLA contratual (99,5% uptime)',                    inclui:false},
+      {label:'Treinamento presencial',                           inclui:false},
+    ],
+  },
+  {
+    id:'enterprise', nome:'Enterprise', valor:3450, limite:1500,
+    descricao:'Para grupos hospitalares com necessidades específicas',
+    recursos:[
+      {label:'Até 1.500 profissionais cadastrados',              inclui:true},
+      {label:'Tudo do plano Business',                           inclui:true},
+      {label:'SLA contratual (99,9% uptime)',                    inclui:true},
+      {label:'White-label completo (domínio próprio)',           inclui:true},
+      {label:'Integrações personalizadas ilimitadas',            inclui:true},
+      {label:'Treinamento presencial inicial',                   inclui:true},
+      {label:'Auditoria de segurança anual',                     inclui:true},
+      {label:'Ambiente de homologação dedicado',                 inclui:true},
+      {label:'Onboarding com gerente técnico',                   inclui:true},
+      {label:'Suporte 24/7 por telefone + WhatsApp',             inclui:true},
+    ],
+  },
 ];
 
 function abrirModalPlanos() {
@@ -7297,32 +7383,145 @@ function popularPerfilPlano() {
 }
 
 function renderModalPlanos() {
-  const ass=_assinaturaAtiva, planoAtual=ass?.plano||'starter', picoAtual=ass?.pico_mes_atual||0;
-  const stEl=document.getElementById('mp-status-atual');
-  if (stEl&&ass) {
-    const venc=ass.vencimento?new Date(ass.vencimento+'T12:00:00').toLocaleDateString('pt-BR'):'—';
-    const stColor=ass.status==='ativa'?'var(--green)':ass.status==='pendente'?'var(--amber)':'var(--red)';
-    const stTxt={ativa:'✅ Ativa',pendente:'⏳ Pagamento pendente',vencida:'❌ Vencida',suspensa:'⛔ Suspensa'}[ass.status]||ass.status;
-    stEl.innerHTML=`<div style="background:var(--bg3);border-radius:8px;padding:12px 14px;display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;"><div><div style="font-size:12px;color:var(--text2);">Status</div><div style="font-size:14px;font-weight:700;color:${stColor};margin-top:2px;">${stTxt}</div></div><div style="text-align:right;"><div style="font-size:12px;color:var(--text2);">Vencimento</div><div style="font-size:14px;font-weight:700;margin-top:2px;">${venc}</div></div></div>`;
+  const ass = _assinaturaAtiva;
+  const planoAtual = ass?.plano || 'starter';
+  const planoSelec = _planoSelecionadoModal || planoAtual;
+  const picoAtual = ass?.pico_mes_atual || 0;
+
+  // ── STATUS ATUAL DA ASSINATURA ─────────────────────────────
+  const stEl = document.getElementById('mp-status-atual');
+  if (stEl && ass) {
+    const venc = ass.vencimento
+      ? new Date(ass.vencimento + 'T12:00:00').toLocaleDateString('pt-BR')
+      : '—';
+    const stColor = ass.status==='ativa' ? 'var(--green)'
+                  : ass.status==='pendente' ? 'var(--amber)'
+                  : 'var(--red)';
+    const stTxt = {ativa:'✅ Ativa', pendente:'⏳ Pagamento pendente',
+                   vencida:'❌ Vencida', suspensa:'⛔ Suspensa'}[ass.status] || ass.status;
+    const planoAtualNome = (PLANOS_LISTA.find(p=>p.id===planoAtual)||{}).nome || planoAtual;
+    const planoAtualValor = (PLANOS_LISTA.find(p=>p.id===planoAtual)||{}).valor || 0;
+    stEl.innerHTML = `
+      <div style="background:linear-gradient(135deg, var(--blue) 0%, #4a8de0 100%);border-radius:12px;padding:18px 20px;color:#fff;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
+        <div>
+          <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.5px;opacity:0.85;margin-bottom:4px;">Seu plano atual</div>
+          <div style="font-size:22px;font-weight:700;line-height:1.1;">${planoAtualNome}</div>
+          <div style="font-size:13px;opacity:0.9;margin-top:4px;">R$ ${planoAtualValor.toLocaleString('pt-BR')}/mês · ${picoAtual} de ${(PLANOS_CONFIG[planoAtual]?.limite||0).toLocaleString('pt-BR')} profissionais utilizados</div>
+        </div>
+        <div style="text-align:right;">
+          <div style="font-size:11px;opacity:0.85;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;">Status</div>
+          <div style="font-size:15px;font-weight:700;">${stTxt}</div>
+          <div style="font-size:12px;opacity:0.9;margin-top:4px;">Vencimento: ${venc}</div>
+        </div>
+      </div>
+    `;
   }
-  const el=document.getElementById('mp-planos-lista');
-  el.innerHTML=PLANOS_LISTA.map(p=>{
-    const isAtual=p.id===planoAtual;
-    const abaixo=picoAtual>p.limite&&!isAtual;
-    const cls=isAtual?'atual':abaixo?'upgrade-necessario':'';
-    const tag=isAtual?'<span style="font-size:10px;font-weight:700;background:var(--blue);color:#fff;padding:2px 8px;border-radius:99px;margin-left:6px;">Plano atual</span>':abaixo?'<span style="font-size:10px;color:var(--red);margin-left:6px;">⛔ Abaixo do seu uso atual</span>':'';
-    const rec=!p.recursos?'<span style="font-size:10px;color:var(--text3);">· Acesso limitado</span>':'<span style="font-size:10px;color:var(--green);">· Acesso completo</span>';
-    return `<div class="plano-opcao ${cls}" onclick="selecionarPlanoModal('${p.id}',this)"><div><div class="plano-opcao-nome">${p.nome}${tag}</div><div class="plano-opcao-limite">Até ${p.limite.toLocaleString('pt-BR')} profissionais ${rec}</div></div><div class="plano-opcao-valor">R$ ${p.valor.toLocaleString('pt-BR')}<span style="font-size:11px;font-weight:400;color:var(--text2);">/mês</span></div></div>`;
+
+  // ── LISTA DE PLANOS COM FEATURES ───────────────────────────
+  const el = document.getElementById('mp-planos-lista');
+  if (!el) return;
+  el.innerHTML = PLANOS_LISTA.map(p => {
+    const isAtual = p.id === planoAtual;
+    const isSelec = p.id === planoSelec;
+    const abaixo = picoAtual > p.limite && !isAtual;
+
+    // Cor de borda + sombra conforme estado
+    let borderColor = 'var(--border)';
+    let bgColor = '#fff';
+    let shadow = '0 1px 3px rgba(0,0,0,0.04)';
+    if (isSelec && !isAtual) { borderColor = 'var(--blue)'; shadow = '0 4px 16px rgba(74,141,224,0.18)'; }
+    if (isAtual) { borderColor = 'var(--green)'; bgColor = '#f5fbf7'; }
+
+    // Badges
+    let badge = '';
+    if (isAtual) {
+      badge = `<span style="display:inline-block;font-size:10px;font-weight:700;background:var(--green);color:#fff;padding:3px 10px;border-radius:99px;text-transform:uppercase;letter-spacing:0.4px;">✓ Plano atual</span>`;
+    } else if (p.popular) {
+      badge = `<span style="display:inline-block;font-size:10px;font-weight:700;background:#fdf3e0;color:var(--amber);padding:3px 10px;border-radius:99px;text-transform:uppercase;letter-spacing:0.4px;border:1px solid #f0c060;">⭐ Mais escolhido</span>`;
+    }
+
+    // Lista de features (check verde = incluído, X cinza = não)
+    const features = p.recursos.map(r => `
+      <div style="display:flex;align-items:flex-start;gap:8px;padding:5px 0;font-size:13px;line-height:1.4;color:${r.inclui?'var(--text)':'var(--text3)'};">
+        <span style="flex-shrink:0;color:${r.inclui?'var(--green)':'var(--text3)'};font-weight:700;width:14px;">${r.inclui?'✓':'×'}</span>
+        <span style="${r.inclui?'':'text-decoration:line-through;opacity:0.7;'}">${r.label}</span>
+      </div>
+    `).join('');
+
+    // Botão
+    let btnHtml;
+    if (isAtual) {
+      btnHtml = `<button disabled style="width:100%;padding:11px;background:#e8f5ec;color:var(--green);border:1.5px solid var(--green);border-radius:8px;font-size:13px;font-weight:700;cursor:default;font-family:inherit;opacity:0.8;">✓ Seu plano atual</button>`;
+    } else if (isSelec) {
+      btnHtml = `<button disabled style="width:100%;padding:11px;background:var(--blue);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:default;font-family:inherit;">⬇ Plano selecionado</button>`;
+    } else {
+      const acao = PLANOS_LISTA.findIndex(x=>x.id===p.id) > PLANOS_LISTA.findIndex(x=>x.id===planoAtual)
+        ? 'Fazer upgrade'
+        : 'Trocar para este plano';
+      btnHtml = `<button onclick="selecionarPlanoModal('${p.id}')" style="width:100%;padding:11px;background:#fff;color:var(--blue);border:1.5px solid var(--blue);border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;transition:all 0.15s;" onmouseenter="this.style.background='var(--blue)';this.style.color='#fff'" onmouseleave="this.style.background='#fff';this.style.color='var(--blue)'">${acao}</button>`;
+    }
+
+    // Aviso se o pico atual já passou do limite deste plano
+    const avisoAbaixo = abaixo
+      ? `<div style="background:#fdf0f0;border:1px solid #f0b8b8;border-radius:6px;padding:6px 10px;font-size:11px;color:var(--red);margin-top:8px;line-height:1.4;">⚠️ Você já tem ${picoAtual} profissionais — este plano permite até ${p.limite}</div>`
+      : '';
+
+    return `
+      <div style="background:${bgColor};border:2px solid ${borderColor};border-radius:12px;padding:18px 18px 16px;margin-bottom:14px;box-shadow:${shadow};transition:all 0.2s;">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;gap:12px;flex-wrap:wrap;">
+          <div style="flex:1;min-width:200px;">
+            <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:4px;">
+              <span style="font-size:18px;font-weight:700;color:var(--text);">${p.nome}</span>
+              ${badge}
+            </div>
+            <div style="font-size:12px;color:var(--text2);">${p.descricao || ''}</div>
+          </div>
+          <div style="text-align:right;">
+            <div style="font-size:24px;font-weight:800;color:var(--text);line-height:1;">R$ ${p.valor.toLocaleString('pt-BR')}</div>
+            <div style="font-size:11px;color:var(--text3);margin-top:2px;">por mês</div>
+          </div>
+        </div>
+
+        ${avisoAbaixo}
+
+        <div style="margin:14px 0;border-top:1px solid var(--border);padding-top:12px;">
+          ${features}
+        </div>
+
+        ${btnHtml}
+      </div>
+    `;
   }).join('');
+
+  // Atualizar botão "Salvar alterações" (habilitado só se houver mudança)
+  atualizarBtnSalvarPlano();
 }
 
-function selecionarPlanoModal(id,el) {
-  _planoSelecionadoModal=id;
-  document.querySelectorAll('.plano-opcao').forEach(o=>o.classList.remove('selecionado'));
-  el.classList.add('selecionado');
+function selecionarPlanoModal(id) {
+  _planoSelecionadoModal = id;
+  renderModalPlanos();
 }
 
-function toggleUpgradeAuto() { _upgradeAutoAtivo=!_upgradeAutoAtivo; atualizarToggleUpgrade(); }
+function atualizarBtnSalvarPlano() {
+  const btn = document.getElementById('btn-salvar-plano');
+  if (!btn) return;
+  const planoAtual = _assinaturaAtiva?.plano || 'starter';
+  const planoSelec = _planoSelecionadoModal || planoAtual;
+  const mudouPlano = planoSelec !== planoAtual;
+  const mudouToggle = (_upgradeAutoAtivo !== !!_assinaturaAtiva?.upgrade_automatico);
+  const houveMudanca = mudouPlano || mudouToggle;
+  btn.disabled = !houveMudanca;
+  btn.style.opacity = houveMudanca ? '1' : '0.5';
+  btn.style.cursor = houveMudanca ? 'pointer' : 'not-allowed';
+  if (mudouPlano) {
+    const p = PLANOS_LISTA.find(x=>x.id===planoSelec);
+    btn.textContent = `💾 Confirmar mudança para ${p?.nome || planoSelec}`;
+  } else {
+    btn.textContent = '💾 Salvar alterações no plano';
+  }
+}
+
+function toggleUpgradeAuto() { _upgradeAutoAtivo=!_upgradeAutoAtivo; atualizarToggleUpgrade(); atualizarBtnSalvarPlano(); }
 function atualizarToggleUpgrade() {
   const t=document.getElementById('toggle-upgrade-auto'),l=document.getElementById('toggle-upgrade-label');
   if(t)t.classList.toggle('on',_upgradeAutoAtivo);
