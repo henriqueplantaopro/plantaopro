@@ -390,7 +390,7 @@ tr:hover td{background:var(--bg3);}
     <div class="login-title">PlantãoPro</div>
     <div class="login-sub">Painel Administrativo</div>
     <div class="login-field"><label>E-mail</label><input id="l-email" type="email" placeholder="admin@email.com" value="admin@plantaoplus.com"></div>
-    <div class="login-field"><label>Senha</label><input id="l-senha" type="password" placeholder="••••••••" value="admin123"></div>
+    <div class="login-field"><label>Senha</label><input id="l-senha" type="password" placeholder="••••••••"></div>
     <button class="btn-login" onclick="fazerLoginWrapper()">Entrar</button>
     <div class="login-erro" id="login-erro">E-mail ou senha incorretos</div>
   </div>
@@ -2017,66 +2017,60 @@ let _planoConfig = null;     // config do plano atual
 async function fazerLoginWrapper() {
   const email = document.getElementById('l-email').value.trim();
   const senha = document.getElementById('l-senha').value;
-  if (!email || !senha) return;
-
-  // Tenta como usuário da equipe primeiro
-  // (admin master também pode estar na tabela usuarios como administrador)
   const erroEl = document.getElementById('login-erro');
   erroEl.style.display = 'none';
-
-  // Verificar se é usuário da tabela usuarios
-  const loginComoUsuario = await fazerLoginUsuario(email, senha);
-  if (loginComoUsuario) return; // sucesso
-
-  // Não encontrou — tentar como admin master
-  await fazerLogin();
-}
-
-async function fazerLogin() {
-  const email = document.getElementById('l-email').value.trim();
-  const senha = document.getElementById('l-senha').value;
-  if (!email || !senha) return;
-
-  const erroEl = document.getElementById('login-erro');
-  erroEl.style.display = 'none';
-
-  // Busca admin pelo email
-  const admins = await sb(`/rest/v1/admins?email=eq.${encodeURIComponent(email)}&select=*`);
-  if (!admins || !admins.length) { erroEl.textContent = 'E-mail ou senha incorretos'; erroEl.style.display = 'block'; return; }
-
-  const admin = admins[0];
-  if (senha !== 'admin123' && senha !== admin.senha_hash) {
-    erroEl.textContent = 'E-mail ou senha incorretos'; erroEl.style.display = 'block'; return;
+  if (!email || !senha) {
+    erroEl.textContent = 'Preencha e-mail e senha.';
+    erroEl.style.display = 'block';
+    return;
   }
 
+  try {
+    const r = await fetch('/api/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, senha }),
+    });
+    const data = await r.json();
+    if (!r.ok) {
+      erroEl.textContent = data.erro || 'E-mail ou senha incorretos';
+      erroEl.style.display = 'block';
+      return;
+    }
+    // Sucesso — pós-login depende do tipo
+    if (data.usuario.tipo === 'admin') {
+      await posLoginAdmin(data.usuario);
+    } else {
+      await posLoginUsuario(data.usuario);
+    }
+  } catch (e) {
+    erroEl.textContent = 'Erro de conexão. Tente novamente.';
+    erroEl.style.display = 'block';
+  }
+}
+
+// Pós-login admin master: carrega assinatura, plano, e abre o painel
+async function posLoginAdmin(admin) {
   // ── Verificar assinatura ─────────────────────────────
   const assinaturas = await sb(`/rest/v1/assinaturas?admin_id=eq.${admin.id}&order=criado_em.desc&limit=1&select=*`);
   const assinatura = assinaturas?.[0];
 
   if (!assinatura) {
-    // Conta sem assinatura — provavelmente admin master sem cobrança
     _assinaturaAtiva = null;
-    _planoConfig = PLANOS_CONFIG['pro']; // admin master tem acesso completo
+    _planoConfig = PLANOS_CONFIG['pro'];
   } else if (assinatura.status === 'vencida' || assinatura.status === 'suspensa') {
-    // Assinatura vencida — mostrar tela de bloqueio
-    erroEl.style.display = 'none';
     mostrarTelaAssinaturaVencida(assinatura);
     return;
   } else if (assinatura.status === 'pendente') {
-    // Ainda não pagou — dar acesso limitado com aviso
     _assinaturaAtiva = assinatura;
     _planoConfig = PLANOS_CONFIG[assinatura.plano] || PLANOS_CONFIG['starter'];
     toast('⚠️ Pagamento pendente — acesso temporário ativo por 3 dias', true);
   } else {
-    // Ativa
     _assinaturaAtiva = assinatura;
     _planoConfig = PLANOS_CONFIG[assinatura.plano] || PLANOS_CONFIG['starter'];
   }
 
   adminLogado = admin;
-
-  // Verificar se é um usuário da tabela usuarios (não o admin master)
-  // (o admin master logou diretamente pela tabela admins acima)
   usuarioLogado = { ...admin, perfil: 'administrador', isAdmin: true, projetosPermitidos: [] };
 
   document.getElementById('tela-login').style.display = 'none';
@@ -2084,33 +2078,61 @@ async function fazerLogin() {
   document.getElementById('main').style.display = 'block';
   document.getElementById('admin-nome').textContent = admin.nome + ' (Admin)';
 
-  // Aplicar restrições de plano na UI
   aplicarRestricoesDePlano();
   preencherPerfilMenu();
-
   await carregarTudoComPerfil();
 }
 
-// Login alternativo: usuário da tabela usuarios
-async function fazerLoginUsuario(email, senha) {
-  const u = await verificarLoginUsuario(email, senha);
-  if (!u) return false;
-
-  // Carregar o adminLogado do usuário pai (para queries multitenant)
-  const admins = await sb(`/rest/v1/admins?id=eq.${u.admin_id}&select=*`);
-  if (!admins||!admins.length) return false;
+// Pós-login usuário da equipe: carrega admin pai e projetos permitidos
+async function posLoginUsuario(usuario) {
+  // Carregar admin pai (pra queries multitenant)
+  const admins = await sb(`/rest/v1/admins?id=eq.${usuario.admin_id}&select=*`);
+  if (!admins || !admins.length) {
+    document.getElementById('login-erro').textContent = 'Conta corrompida — contate o suporte.';
+    document.getElementById('login-erro').style.display = 'block';
+    return;
+  }
   adminLogado = admins[0];
-  usuarioLogado = u;
+
+  // Carregar projetos permitidos
+  const uprojetos = await sb(`/rest/v1/usuario_projetos?usuario_id=eq.${usuario.id}&select=projeto_id`) || [];
+  usuario.projetosPermitidos = uprojetos.map(p => p.projeto_id);
+  usuario.isAdmin = false;
+  usuarioLogado = usuario;
+
+  // Atualizar ultimo_acesso (não-crítico, segue mesmo se falhar)
+  sb(`/rest/v1/usuarios?id=eq.${usuario.id}`, {
+    method: 'PATCH', headers: { 'Prefer': 'return=minimal' },
+    body: JSON.stringify({ ultimo_acesso: new Date().toISOString(), primeiro_acesso: false }),
+  }).catch(() => {});
+
+  // Carregar assinatura do admin pai (pra restrições de plano)
+  const assinaturas = await sb(`/rest/v1/assinaturas?admin_id=eq.${adminLogado.id}&order=criado_em.desc&limit=1&select=*`);
+  const assinatura = assinaturas?.[0];
+  if (assinatura) {
+    _assinaturaAtiva = assinatura;
+    _planoConfig = PLANOS_CONFIG[assinatura.plano] || PLANOS_CONFIG['starter'];
+  } else {
+    _assinaturaAtiva = null;
+    _planoConfig = PLANOS_CONFIG['pro'];
+  }
 
   document.getElementById('tela-login').style.display = 'none';
   document.getElementById('sidebar').style.display = 'flex';
   document.getElementById('main').style.display = 'block';
-  document.getElementById('admin-nome').textContent = u.nome + ' (' + u.perfil + ')';
+  document.getElementById('admin-nome').textContent = usuario.nome + ' (' + usuario.perfil + ')';
 
   aplicarRestricoesDePlano();
   preencherPerfilMenu();
   await carregarTudoComPerfil();
-  return true;
+}
+
+// Funções antigas (fazerLogin / fazerLoginUsuario) ficam como aliases por compatibilidade
+// caso algum código em outro lugar do projeto ainda chame
+async function fazerLogin() { return fazerLoginWrapper(); }
+async function fazerLoginUsuario(email, senha) {
+  console.warn('[fazerLoginUsuario] DEPRECATED — use /api/login direto');
+  return fazerLoginWrapper();
 }
 
 function mostrarTelaAssinaturaVencida(assinatura) {
@@ -8510,28 +8532,9 @@ async function excluirUsuario(id, nome) {
 // LOGIN: verificar se é admin ou usuário da tabela usuarios
 // ════════════════════════════════════════════════════════════════════════════
 
-async function verificarLoginUsuario(email, senha) {
-  // Primeiro tenta na tabela usuarios
-  const users = await sb(`/rest/v1/usuarios?email=eq.${encodeURIComponent(email)}&ativo=eq.true&select=*`);
-  if (!users||!users.length) return null;
-
-  const u = users[0];
-  // Verificar se pertence ao mesmo admin_id (multitenant)
-  if (u.senha_hash !== senha && senha !== '123456') return null;
-
-  // Carregar projetos autorizados
-  const uprojetos = await sb(`/rest/v1/usuario_projetos?usuario_id=eq.${u.id}&select=projeto_id`) || [];
-  u.projetosPermitidos = uprojetos.map(p=>p.projeto_id);
-  u.isAdmin = false;
-
-  // Atualizar ultimo_acesso
-  await sb(`/rest/v1/usuarios?id=eq.${u.id}`, {
-    method:'PATCH', headers:{'Prefer':'return=minimal'},
-    body: JSON.stringify({ultimo_acesso: new Date().toISOString(), primeiro_acesso: false})
-  });
-
-  return u;
-}
+// verificarLoginUsuario foi removida nesta versão.
+// A autenticação agora é feita server-side via /api/login (bcrypt + JWT).
+// Esta função existia pra comparar senha em texto puro no browser — inseguro.
 
 // Sobrescrever o carregarTudo para respeitar perfil
 const _carregarTudoOriginal = typeof carregarTudo === 'function' ? carregarTudo : null;
