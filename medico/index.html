@@ -1019,7 +1019,7 @@ async function fazerLoginMedico(){
   const res=await sb('/rest/v1/medicos?cpf=eq.'+cpf+'&select=*');
   if(!res?.length){erroEl.textContent='CPF não encontrado. Verifique ou crie uma conta.';erroEl.style.display='block';btn.disabled=false;btn.textContent='Entrar';return;}
   const med=res[0];
-  if(med.senha_hash!==senha&&senha!=='medico123'){erroEl.textContent='Senha incorreta.';erroEl.style.display='block';btn.disabled=false;btn.textContent='Entrar';return;}
+  if(med.senha_hash!==senha){erroEl.textContent='Senha incorreta.';erroEl.style.display='block';btn.disabled=false;btn.textContent='Entrar';return;}
   if(!med.ativo){erroEl.textContent='Conta inativa. Contate o administrador.';erroEl.style.display='block';btn.disabled=false;btn.textContent='Entrar';return;}
 
   // Salvar token
