@@ -1,4 +1,7 @@
 {
+  "rewrites": [
+    { "source": "/", "destination": "/landing.html" }
+  ],
   "crons": [
     {
       "path": "/api/registrar-pico",
