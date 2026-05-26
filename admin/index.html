@@ -374,6 +374,11 @@ tr:hover td{background:var(--bg3);}
 /* ── Perfil dropdown ─────────────────────────────── */
 .perfil-dropdown{position:fixed;bottom:72px;left:0;width:220px;background:#fff;border-radius:12px;box-shadow:0 4px 24px rgba(0,0,0,0.18);border:1px solid var(--border);z-index:500;display:none;flex-direction:column;padding:8px 0;}
 .perfil-dropdown.open{display:flex;}
+
+/* ── Cards de planos (grid responsivo) ─────────────── */
+@media (max-width: 1400px) { #mp-planos-lista { grid-template-columns: repeat(3, minmax(0,1fr)) !important; } }
+@media (max-width: 900px)  { #mp-planos-lista { grid-template-columns: repeat(2, minmax(0,1fr)) !important; } }
+@media (max-width: 600px)  { #mp-planos-lista { grid-template-columns: 1fr !important; } }
 </style>
 </head>
 <body>
@@ -1529,7 +1534,7 @@ tr:hover td{background:var(--bg3);}
 
     <!-- SUB-ABA: PLANO E COBRANÇA (só admin) -->
     <div id="perfil-sec-plano" class="perfil-sec" style="display:none;">
-      <div class="card" style="max-width:880px;">
+      <div class="card">
         <!-- Status atual -->
         <div id="mp-status-atual" style="margin-bottom:20px;"></div>
 
@@ -1547,9 +1552,9 @@ tr:hover td{background:var(--bg3);}
           Quando o número de profissionais cadastrados ultrapassar o limite do seu plano atual, o sistema realiza o upgrade automaticamente para o próximo plano e ajusta a cobrança mensal.
         </div>
 
-        <!-- Lista de planos -->
+        <!-- Lista de planos (cards lado a lado) -->
         <div style="font-size:13px;font-weight:600;margin-bottom:12px;color:var(--text2);">Planos disponíveis</div>
-        <div id="mp-planos-lista"></div>
+        <div id="mp-planos-lista" style="display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;align-items:stretch;"></div>
 
         <!-- Histórico de pagamentos -->
         <div style="margin-top:20px;border-top:1px solid var(--border);padding-top:16px;">
@@ -7432,63 +7437,62 @@ function renderModalPlanos() {
     if (isSelec && !isAtual) { borderColor = 'var(--blue)'; shadow = '0 4px 16px rgba(74,141,224,0.18)'; }
     if (isAtual) { borderColor = 'var(--green)'; bgColor = '#f5fbf7'; }
 
-    // Badges
+    // Badge no topo (acima do nome)
     let badge = '';
     if (isAtual) {
-      badge = `<span style="display:inline-block;font-size:10px;font-weight:700;background:var(--green);color:#fff;padding:3px 10px;border-radius:99px;text-transform:uppercase;letter-spacing:0.4px;">✓ Plano atual</span>`;
+      badge = `<div style="display:inline-block;font-size:9px;font-weight:700;background:var(--green);color:#fff;padding:2px 8px;border-radius:99px;text-transform:uppercase;letter-spacing:0.4px;margin-bottom:6px;">✓ Plano atual</div>`;
     } else if (p.popular) {
-      badge = `<span style="display:inline-block;font-size:10px;font-weight:700;background:#fdf3e0;color:var(--amber);padding:3px 10px;border-radius:99px;text-transform:uppercase;letter-spacing:0.4px;border:1px solid #f0c060;">⭐ Mais escolhido</span>`;
+      badge = `<div style="display:inline-block;font-size:9px;font-weight:700;background:#fdf3e0;color:var(--amber);padding:2px 8px;border-radius:99px;text-transform:uppercase;letter-spacing:0.4px;border:1px solid #f0c060;margin-bottom:6px;">⭐ Popular</div>`;
+    } else {
+      // Espaço reservado pra alinhar
+      badge = `<div style="height:18px;margin-bottom:6px;"></div>`;
     }
 
-    // Lista de features (check verde = incluído, X cinza = não)
+    // Lista de features (check verde / X cinza)
     const features = p.recursos.map(r => `
-      <div style="display:flex;align-items:flex-start;gap:8px;padding:5px 0;font-size:13px;line-height:1.4;color:${r.inclui?'var(--text)':'var(--text3)'};">
-        <span style="flex-shrink:0;color:${r.inclui?'var(--green)':'var(--text3)'};font-weight:700;width:14px;">${r.inclui?'✓':'×'}</span>
-        <span style="${r.inclui?'':'text-decoration:line-through;opacity:0.7;'}">${r.label}</span>
+      <div style="display:flex;align-items:flex-start;gap:5px;padding:3px 0;font-size:11px;line-height:1.35;color:${r.inclui?'var(--text)':'var(--text3)'};">
+        <span style="flex-shrink:0;color:${r.inclui?'var(--green)':'var(--text3)'};font-weight:700;width:10px;">${r.inclui?'✓':'×'}</span>
+        <span style="${r.inclui?'':'text-decoration:line-through;opacity:0.65;'}">${r.label}</span>
       </div>
     `).join('');
 
     // Botão
     let btnHtml;
     if (isAtual) {
-      btnHtml = `<button disabled style="width:100%;padding:11px;background:#e8f5ec;color:var(--green);border:1.5px solid var(--green);border-radius:8px;font-size:13px;font-weight:700;cursor:default;font-family:inherit;opacity:0.8;">✓ Seu plano atual</button>`;
+      btnHtml = `<button disabled style="width:100%;padding:8px;background:#e8f5ec;color:var(--green);border:1.5px solid var(--green);border-radius:6px;font-size:11px;font-weight:700;cursor:default;font-family:inherit;opacity:0.85;">✓ Atual</button>`;
     } else if (isSelec) {
-      btnHtml = `<button disabled style="width:100%;padding:11px;background:var(--blue);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:default;font-family:inherit;">⬇ Plano selecionado</button>`;
+      btnHtml = `<button disabled style="width:100%;padding:8px;background:var(--blue);color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:700;cursor:default;font-family:inherit;">⬇ Selecionado</button>`;
     } else {
-      const acao = PLANOS_LISTA.findIndex(x=>x.id===p.id) > PLANOS_LISTA.findIndex(x=>x.id===planoAtual)
-        ? 'Fazer upgrade'
-        : 'Trocar para este plano';
-      btnHtml = `<button onclick="selecionarPlanoModal('${p.id}')" style="width:100%;padding:11px;background:#fff;color:var(--blue);border:1.5px solid var(--blue);border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;transition:all 0.15s;" onmouseenter="this.style.background='var(--blue)';this.style.color='#fff'" onmouseleave="this.style.background='#fff';this.style.color='var(--blue)'">${acao}</button>`;
+      const idxAtual = PLANOS_LISTA.findIndex(x=>x.id===planoAtual);
+      const idxThis  = PLANOS_LISTA.findIndex(x=>x.id===p.id);
+      const acao = idxThis > idxAtual ? 'Fazer upgrade' : 'Trocar';
+      btnHtml = `<button onclick="selecionarPlanoModal('${p.id}')" style="width:100%;padding:8px;background:#fff;color:var(--blue);border:1.5px solid var(--blue);border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;transition:all 0.15s;" onmouseenter="this.style.background='var(--blue)';this.style.color='#fff'" onmouseleave="this.style.background='#fff';this.style.color='var(--blue)'">${acao}</button>`;
     }
 
     // Aviso se o pico atual já passou do limite deste plano
     const avisoAbaixo = abaixo
-      ? `<div style="background:#fdf0f0;border:1px solid #f0b8b8;border-radius:6px;padding:6px 10px;font-size:11px;color:var(--red);margin-top:8px;line-height:1.4;">⚠️ Você já tem ${picoAtual} profissionais — este plano permite até ${p.limite}</div>`
+      ? `<div style="background:#fdf0f0;border:1px solid #f0b8b8;border-radius:4px;padding:5px 7px;font-size:10px;color:var(--red);margin:8px 0 0;line-height:1.3;">⚠ Você tem ${picoAtual}, limite: ${p.limite}</div>`
       : '';
 
     return `
-      <div style="background:${bgColor};border:2px solid ${borderColor};border-radius:12px;padding:18px 18px 16px;margin-bottom:14px;box-shadow:${shadow};transition:all 0.2s;">
-        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;gap:12px;flex-wrap:wrap;">
-          <div style="flex:1;min-width:200px;">
-            <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:4px;">
-              <span style="font-size:18px;font-weight:700;color:var(--text);">${p.nome}</span>
-              ${badge}
-            </div>
-            <div style="font-size:12px;color:var(--text2);">${p.descricao || ''}</div>
-          </div>
-          <div style="text-align:right;">
-            <div style="font-size:24px;font-weight:800;color:var(--text);line-height:1;">R$ ${p.valor.toLocaleString('pt-BR')}</div>
-            <div style="font-size:11px;color:var(--text3);margin-top:2px;">por mês</div>
-          </div>
+      <div style="background:${bgColor};border:2px solid ${borderColor};border-radius:10px;padding:14px 12px;box-shadow:${shadow};transition:all 0.2s;display:flex;flex-direction:column;height:100%;">
+        ${badge}
+        <div style="font-size:15px;font-weight:700;color:var(--text);line-height:1.1;margin-bottom:2px;">${p.nome}</div>
+        <div style="margin-bottom:8px;">
+          <span style="font-size:18px;font-weight:800;color:var(--text);">R$ ${p.valor.toLocaleString('pt-BR')}</span>
+          <span style="font-size:10px;color:var(--text3);">/mês</span>
+        </div>
+        <div style="font-size:10px;color:var(--text2);line-height:1.35;margin-bottom:10px;min-height:28px;">${p.descricao || ''}</div>
+
+        <div style="border-top:1px solid var(--border);padding-top:10px;margin-bottom:10px;flex:1;">
+          ${features}
         </div>
 
         ${avisoAbaixo}
 
-        <div style="margin:14px 0;border-top:1px solid var(--border);padding-top:12px;">
-          ${features}
+        <div style="margin-top:auto;">
+          ${btnHtml}
         </div>
-
-        ${btnHtml}
       </div>
     `;
   }).join('');
