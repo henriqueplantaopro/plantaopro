@@ -1,0 +1,933 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PlantãoPro — Gestão de plantões médicos</title>
+<meta name="description" content="Plataforma de gestão de plantões médicos. Escalas, check-ins, relatórios e pagamentos em um só lugar. Solicite uma demonstração.">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --blue: #1a5fad; --blue-dark: #0f3d7a; --blue-light: #e8f0fb;
+  --green: #2d7a3a; --green-light: #e8f5eb;
+  --red: #b03030; --amber: #8a5500;
+  --border: #e0dbd2; --bg: #f8f7f4;
+  --text: #1a1a1a; --text2: #555; --text3: #999;
+  --radius: 12px;
+}
+body {
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  line-height: 1.5;
+}
+
+/* ─── HEADER ──────────────────────────────────────── */
+.top-bar {
+  background: var(--blue);
+  padding: 16px 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+}
+.top-logo { color: #fff; font-size: 18px; font-weight: 700; letter-spacing: -0.3px; }
+.top-login {
+  color: rgba(255,255,255,0.9);
+  font-size: 13px;
+  text-decoration: none;
+  padding: 6px 14px;
+  border: 1px solid rgba(255,255,255,0.3);
+  border-radius: 6px;
+  transition: all 0.15s;
+}
+.top-login:hover { background: rgba(255,255,255,0.12); color: #fff; }
+
+/* ─── HERO ──────────────────────────────────────── */
+.hero {
+  background: linear-gradient(135deg, var(--blue-dark) 0%, var(--blue) 100%);
+  color: #fff;
+  padding: 56px 24px 64px;
+  position: relative;
+  overflow: hidden;
+}
+.hero-bg { position: absolute; inset: 0; opacity: 0.08; pointer-events: none; }
+.hero-inner {
+  max-width: 1100px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1fr 420px;
+  gap: 48px;
+  align-items: center;
+  position: relative;
+  z-index: 1;
+}
+.hero h1 {
+  font-size: 32px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  margin-bottom: 14px;
+  line-height: 1.15;
+}
+.hero p {
+  font-size: 15px;
+  opacity: 0.88;
+  line-height: 1.7;
+  max-width: 480px;
+}
+.hero-features {
+  margin-top: 24px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+  font-size: 13px;
+  opacity: 0.85;
+}
+.hero-features span { display: inline-flex; align-items: center; gap: 6px; }
+.hero-features span::before { content: "✓"; color: #a8d8b0; font-weight: 700; }
+
+/* Caixa de login no hero */
+.login-box {
+  background: rgba(255,255,255,0.13);
+  border: 1px solid rgba(255,255,255,0.22);
+  border-radius: var(--radius);
+  padding: 26px 24px;
+  backdrop-filter: blur(8px);
+}
+.login-box-title { font-size: 15px; font-weight: 700; color: #fff; margin-bottom: 4px; }
+.login-box-sub { font-size: 12px; color: rgba(255,255,255,0.7); margin-bottom: 18px; }
+.login-input {
+  width: 100%;
+  padding: 11px 13px;
+  border: none;
+  border-radius: 7px;
+  font-size: 13px;
+  font-family: inherit;
+  margin-bottom: 10px;
+  outline: none;
+}
+.login-btn {
+  width: 100%;
+  padding: 11px;
+  background: #fff;
+  color: var(--blue);
+  border: none;
+  border-radius: 7px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s;
+  font-family: inherit;
+  margin-top: 4px;
+}
+.login-btn:hover { background: #f0f0f0; }
+.login-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+.login-erro {
+  display: none;
+  background: rgba(176,48,48,0.25);
+  color: #ffcccc;
+  font-size: 12px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  margin-bottom: 10px;
+}
+.login-link {
+  background: none;
+  border: none;
+  color: rgba(255,255,255,0.65);
+  font-size: 12px;
+  cursor: pointer;
+  text-decoration: underline;
+  font-family: inherit;
+  margin-top: 10px;
+  display: block;
+  width: 100%;
+  text-align: center;
+}
+.login-link:hover { color: #fff; }
+
+/* ─── PLANOS ──────────────────────────────────────── */
+.planos-wrap { max-width: 1200px; margin: 0 auto; padding: 64px 24px 16px; }
+.planos-titulo {
+  text-align: center;
+  font-size: 26px;
+  font-weight: 700;
+  margin-bottom: 8px;
+  letter-spacing: -0.3px;
+}
+.planos-sub {
+  text-align: center;
+  font-size: 14px;
+  color: var(--text2);
+  margin-bottom: 36px;
+  max-width: 560px;
+  margin-left: auto;
+  margin-right: auto;
+  line-height: 1.6;
+}
+.planos-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 12px;
+}
+.plano {
+  background: #fff;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  padding: 18px 16px;
+  display: flex;
+  flex-direction: column;
+  transition: all 0.2s;
+  position: relative;
+}
+.plano:hover { border-color: var(--blue); box-shadow: 0 4px 16px rgba(26,95,173,0.10); }
+.plano.popular {
+  border-color: var(--blue);
+  box-shadow: 0 0 0 1px var(--blue), 0 4px 16px rgba(26,95,173,0.15);
+}
+.plano-badge {
+  display: inline-block;
+  background: #fdf3e0;
+  color: var(--amber);
+  border: 1px solid #f0c060;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 3px 9px;
+  border-radius: 99px;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  align-self: flex-start;
+  height: 22px;
+}
+.plano-badge-spacer { height: 30px; }
+.plano-nome {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+.plano-preco-linha { display: flex; align-items: baseline; gap: 4px; margin-bottom: 6px; }
+.plano-preco {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--text);
+  line-height: 1;
+}
+.plano-mes { font-size: 11px; color: var(--text3); }
+.plano-desc {
+  font-size: 11px;
+  color: var(--text2);
+  line-height: 1.45;
+  margin-bottom: 12px;
+  min-height: 32px;
+}
+.plano-features {
+  border-top: 1px solid var(--border);
+  padding-top: 12px;
+  margin-top: 0;
+  flex: 1;
+}
+.plano-feat {
+  font-size: 11px;
+  color: var(--text);
+  padding: 4px 0;
+  display: flex;
+  gap: 6px;
+  align-items: flex-start;
+  line-height: 1.4;
+}
+.plano-feat-icon { flex-shrink: 0; width: 12px; font-weight: 700; }
+.plano-feat-icon.ok { color: var(--green); }
+.plano-feat-icon.no { color: var(--text3); }
+.plano-feat.no .plano-feat-text { text-decoration: line-through; opacity: 0.6; color: var(--text3); }
+.plano-btn {
+  width: 100%;
+  padding: 9px;
+  background: #fff;
+  color: var(--blue);
+  border: 1.5px solid var(--blue);
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  margin-top: 14px;
+  font-family: inherit;
+  transition: all 0.15s;
+}
+.plano-btn:hover { background: var(--blue); color: #fff; }
+.plano.popular .plano-btn { background: var(--blue); color: #fff; }
+.plano.popular .plano-btn:hover { background: var(--blue-dark); }
+.plano.selecionado {
+  border-color: var(--blue);
+  background: var(--blue-light);
+  box-shadow: 0 0 0 1px var(--blue);
+}
+.plano.selecionado .plano-btn { background: var(--blue); color: #fff; }
+
+/* ─── FORMULÁRIO ──────────────────────────────────────── */
+.form-section-wrap {
+  max-width: 640px;
+  margin: 48px auto 0;
+  padding: 0 24px 80px;
+}
+.form-titulo {
+  text-align: center;
+  font-size: 22px;
+  font-weight: 700;
+  margin-bottom: 6px;
+  letter-spacing: -0.3px;
+}
+.form-sub {
+  text-align: center;
+  font-size: 13px;
+  color: var(--text2);
+  margin-bottom: 28px;
+  line-height: 1.6;
+}
+.plano-selecionado-card {
+  background: var(--blue-light);
+  border: 1.5px solid #a0c4f0;
+  border-radius: var(--radius);
+  padding: 14px 18px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  gap: 12px;
+}
+.plano-selecionado-card.placeholder { background: #fff8e1; border-color: #f0c060; }
+.plano-selecionado-info { flex: 1; min-width: 0; }
+.plano-selecionado-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--blue);
+  margin-bottom: 2px;
+}
+.plano-selecionado-card.placeholder .plano-selecionado-label { color: var(--amber); }
+.plano-selecionado-nome { font-size: 15px; font-weight: 700; color: var(--text); }
+.plano-selecionado-trocar {
+  background: none;
+  border: none;
+  color: var(--blue);
+  font-size: 12px;
+  text-decoration: underline;
+  cursor: pointer;
+  font-family: inherit;
+  padding: 0;
+  flex-shrink: 0;
+}
+.form-bloco {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 22px 22px 18px;
+  margin-bottom: 14px;
+}
+.form-bloco-titulo {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text2);
+  margin-bottom: 14px;
+}
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+.form-row.full { grid-template-columns: 1fr; }
+.form-row:last-child { margin-bottom: 0; }
+.form-group { display: flex; flex-direction: column; gap: 4px; }
+.form-group label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text2);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+.form-group label .req { color: var(--red); margin-left: 2px; }
+.form-group input,
+.form-group select,
+.form-group textarea {
+  padding: 10px 12px;
+  font-size: 14px;
+  border: 1.5px solid var(--border);
+  border-radius: 7px;
+  background: #fff;
+  color: var(--text);
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus { border-color: var(--blue); }
+.form-group textarea { resize: vertical; min-height: 80px; }
+
+/* ─── BOTÃO CTA + RODAPÉ ──────────────────────────────────────── */
+.btn-cta {
+  width: 100%;
+  padding: 15px;
+  background: var(--blue);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius);
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  letter-spacing: 0.3px;
+  font-family: inherit;
+  transition: background 0.15s;
+  margin-top: 4px;
+}
+.btn-cta:hover { background: var(--blue-dark); }
+.btn-cta:disabled { opacity: 0.6; cursor: not-allowed; }
+.btn-cta-sub {
+  font-size: 12px;
+  color: var(--text3);
+  text-align: center;
+  margin-top: 10px;
+  line-height: 1.6;
+}
+
+/* ─── TELA DE SUCESSO ──────────────────────────────────────── */
+.sucesso-card {
+  max-width: 520px;
+  margin: 80px auto;
+  padding: 40px 32px;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  text-align: center;
+}
+.sucesso-icone {
+  width: 56px;
+  height: 56px;
+  background: var(--green-light);
+  color: var(--green);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 20px;
+  font-size: 28px;
+  font-weight: 700;
+}
+.sucesso-titulo {
+  font-size: 22px;
+  font-weight: 700;
+  margin-bottom: 10px;
+  letter-spacing: -0.3px;
+}
+.sucesso-texto {
+  font-size: 14px;
+  color: var(--text2);
+  line-height: 1.7;
+  margin-bottom: 24px;
+}
+.sucesso-whats {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #25d366;
+  color: #fff;
+  padding: 12px 22px;
+  border-radius: 8px;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 700;
+}
+.sucesso-whats:hover { background: #1eb858; }
+
+/* ─── TOAST ──────────────────────────────────────── */
+.toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 12px 20px;
+  background: var(--green);
+  color: #fff;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  z-index: 1000;
+  display: none;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.18);
+  max-width: 90vw;
+}
+.toast.err { background: var(--red); }
+
+/* ─── RESPONSIVO ──────────────────────────────────────── */
+@media (max-width: 980px) {
+  .hero-inner { grid-template-columns: 1fr; gap: 32px; }
+  .login-box { max-width: 420px; }
+  .planos-grid { grid-template-columns: repeat(3, 1fr); }
+  .planos-grid .plano:nth-child(4),
+  .planos-grid .plano:nth-child(5) { grid-column: span 1; }
+}
+@media (max-width: 720px) {
+  .planos-grid { grid-template-columns: repeat(2, 1fr); }
+  .hero { padding: 40px 20px 48px; }
+  .hero h1 { font-size: 24px; }
+}
+@media (max-width: 500px) {
+  .planos-grid { grid-template-columns: 1fr; }
+  .form-row { grid-template-columns: 1fr; }
+  .top-bar { padding: 14px 18px; }
+}
+</style>
+</head>
+<body>
+
+<div class="top-bar">
+  <div class="top-logo">PlantãoPro</div>
+  <a href="#login" class="top-login" onclick="document.getElementById('login-email').focus();return false;">Já tenho conta — Entrar</a>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════ -->
+<!-- HERO -->
+<!-- ════════════════════════════════════════════════════════════════ -->
+<div class="hero">
+  <svg class="hero-bg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 500" preserveAspectRatio="xMidYMid slice">
+    <pattern id="dots" x="0" y="0" width="40" height="40" patternUnits="userSpaceOnUse">
+      <circle cx="20" cy="20" r="1.5" fill="#fff"/>
+    </pattern>
+    <rect width="1200" height="500" fill="url(#dots)"/>
+    <circle cx="100" cy="60" r="120" fill="none" stroke="#fff" stroke-width="0.8"/>
+    <circle cx="1100" cy="440" r="160" fill="none" stroke="#fff" stroke-width="0.8"/>
+    <circle cx="900" cy="80" r="80" fill="none" stroke="#fff" stroke-width="0.5"/>
+  </svg>
+  <div class="hero-inner">
+    <div>
+      <h1>Gestão de plantões médicos sem complicação</h1>
+      <p>Escalas, check-ins, relatórios e pagamentos em uma plataforma só.
+        Solicite uma demonstração — falamos com você em até 1 dia útil.</p>
+      <div class="hero-features">
+        <span>Escala automatizada</span>
+        <span>App do médico (PWA)</span>
+        <span>Check-in por GPS</span>
+        <span>Integração com TOTVS</span>
+        <span>Suporte em português</span>
+      </div>
+    </div>
+    <div class="login-box" id="login">
+      <div class="login-box-title">Já tem conta?</div>
+      <div class="login-box-sub">Acesse o painel com seu e-mail e senha</div>
+      <input id="login-email" class="login-input" type="email" placeholder="E-mail" autocomplete="email">
+      <input id="login-senha" class="login-input" type="password" placeholder="Senha" autocomplete="current-password"
+        onkeydown="if(event.key==='Enter')fazerLogin()">
+      <div id="login-erro" class="login-erro"></div>
+      <button class="login-btn" id="btn-login" onclick="fazerLogin()">Entrar no painel →</button>
+      <button class="login-link" onclick="esqueciSenha()">Esqueci minha senha</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════ -->
+<!-- PLANOS -->
+<!-- ════════════════════════════════════════════════════════════════ -->
+<div class="planos-wrap">
+  <div class="planos-titulo">Escolha o plano para sua instituição</div>
+  <div class="planos-sub">
+    Clique no plano de interesse e preencha os dados abaixo.
+    Sem cobrança automática — você fala com nosso time antes de ativar.
+  </div>
+  <div class="planos-grid" id="planos-grid">
+    <!-- Renderizado por JS -->
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════ -->
+<!-- FORMULÁRIO DE DEMONSTRAÇÃO -->
+<!-- ════════════════════════════════════════════════════════════════ -->
+<div class="form-section-wrap" id="form-wrap">
+  <div class="form-titulo">Solicite uma demonstração</div>
+  <div class="form-sub">
+    Preencha os dados e nossa equipe entra em contato em até 1 dia útil
+    pra apresentar a plataforma e ativar seu acesso.
+  </div>
+
+  <!-- Plano selecionado -->
+  <div class="plano-selecionado-card placeholder" id="plano-selecionado-card">
+    <div class="plano-selecionado-info">
+      <div class="plano-selecionado-label">Plano de interesse</div>
+      <div class="plano-selecionado-nome" id="plano-selecionado-nome">Nenhum plano selecionado — escolha um acima</div>
+    </div>
+    <button class="plano-selecionado-trocar" onclick="document.getElementById('planos-grid').scrollIntoView({behavior:'smooth',block:'center'})">
+      Escolher
+    </button>
+  </div>
+
+  <!-- Dados da empresa -->
+  <div class="form-bloco">
+    <div class="form-bloco-titulo">Dados da empresa</div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Razão social<span class="req">*</span></label>
+        <input id="f-razao" type="text" placeholder="Hospital São Lucas LTDA">
+      </div>
+      <div class="form-group">
+        <label>CNPJ</label>
+        <input id="f-cnpj" type="text" placeholder="00.000.000/0000-00" oninput="mascaraCNPJ(this)" maxlength="18">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Quantos médicos hoje?</label>
+        <select id="f-qtd">
+          <option value="">Selecione...</option>
+          <option value="ate_50">Até 50</option>
+          <option value="50_200">50 a 200</option>
+          <option value="200_500">200 a 500</option>
+          <option value="500_1000">500 a 1.000</option>
+          <option value="1000_mais">Mais de 1.000</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Cidade / UF</label>
+        <input id="f-cidade" type="text" placeholder="Rio de Janeiro / RJ">
+      </div>
+    </div>
+  </div>
+
+  <!-- Dados do responsável -->
+  <div class="form-bloco">
+    <div class="form-bloco-titulo">Dados do responsável</div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Nome completo<span class="req">*</span></label>
+        <input id="f-nome" type="text" placeholder="Maria Silva">
+      </div>
+      <div class="form-group">
+        <label>Cargo</label>
+        <input id="f-cargo" type="text" placeholder="Diretora administrativa">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>E-mail<span class="req">*</span></label>
+        <input id="f-email" type="email" placeholder="maria@hospital.com" autocomplete="email">
+      </div>
+      <div class="form-group">
+        <label>WhatsApp<span class="req">*</span></label>
+        <input id="f-whats" type="tel" placeholder="(21) 99999-9999" oninput="mascaraTelefone(this)" maxlength="15">
+      </div>
+    </div>
+    <div class="form-row full">
+      <div class="form-group">
+        <label>Como prefere ser contatado?</label>
+        <select id="f-contato">
+          <option value="whatsapp">WhatsApp (preferido)</option>
+          <option value="ligacao">Ligação</option>
+          <option value="email">E-mail</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- Observações -->
+  <div class="form-bloco">
+    <div class="form-bloco-titulo">Observações (opcional)</div>
+    <div class="form-group">
+      <textarea id="f-obs" rows="3" maxlength="1000"
+        placeholder="Conte um pouco sobre sua operação, principais desafios ou dúvidas sobre o plano escolhido..."></textarea>
+    </div>
+  </div>
+
+  <button class="btn-cta" id="btn-enviar" onclick="enviarLead()">Solicitar demonstração →</button>
+  <div class="btn-cta-sub">Sem compromisso · conversamos antes de fechar</div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════ -->
+<!-- TELA DE SUCESSO (oculta inicialmente) -->
+<!-- ════════════════════════════════════════════════════════════════ -->
+<div class="sucesso-card" id="sucesso-card" style="display:none;">
+  <div class="sucesso-icone">✓</div>
+  <div class="sucesso-titulo">Recebemos sua solicitação!</div>
+  <div class="sucesso-texto">
+    Nossa equipe vai analisar suas informações e entrar em contato
+    em até <strong>1 dia útil</strong> pelo canal que você indicou.<br><br>
+    Se preferir, chama direto no WhatsApp:
+  </div>
+  <a href="https://wa.me/5521995953003" target="_blank" rel="noopener" class="sucesso-whats">
+    Falar no WhatsApp agora
+  </a>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ════════════════════════════════════════════════════════════════
+// PLANOS — mesma estrutura do admin, com nomes novos pra landing
+// ════════════════════════════════════════════════════════════════
+const PLANOS = [
+  {
+    id: 'starter', nome: 'Standard', valor: 390, limite: 100,
+    descricao: 'Para clínicas pequenas começarem a organizar plantões',
+    recursos: [
+      { label: 'Até 100 profissionais',           inclui: true },
+      { label: 'Calendário e escalas',            inclui: true },
+      { label: 'Check-in e check-out',            inclui: true },
+      { label: 'Relatórios básicos',              inclui: true },
+      { label: '1 usuário admin',                 inclui: true },
+      { label: 'Módulo financeiro',               inclui: false },
+      { label: 'Exportar TOTVS',                  inclui: false },
+    ],
+  },
+  {
+    id: 'growth', nome: 'Essencial', valor: 690, limite: 200,
+    descricao: 'Para clínicas em crescimento com equipe administrativa',
+    recursos: [
+      { label: 'Até 200 profissionais',           inclui: true },
+      { label: 'Tudo do Standard',                inclui: true },
+      { label: 'Até 3 usuários da equipe',        inclui: true },
+      { label: 'App do médico (PWA)',             inclui: true },
+      { label: 'Log de atividades',               inclui: true },
+      { label: 'Módulo financeiro',               inclui: false },
+      { label: 'Exportar TOTVS',                  inclui: false },
+    ],
+  },
+  {
+    id: 'pro', nome: 'Avançado', valor: 1460, limite: 500, popular: true,
+    descricao: 'Para hospitais e grupos de médio porte',
+    recursos: [
+      { label: 'Até 500 profissionais',           inclui: true },
+      { label: 'Tudo do Essencial',               inclui: true },
+      { label: 'Até 10 usuários',                 inclui: true },
+      { label: 'Módulo financeiro completo',      inclui: true },
+      { label: 'Exportar TOTVS Protheus',         inclui: true },
+      { label: 'Candidaturas de médicos',         inclui: true },
+      { label: 'Suporte prioritário',             inclui: true },
+    ],
+  },
+  {
+    id: 'business', nome: 'Business', valor: 2780, limite: 1000,
+    descricao: 'Para redes hospitalares e operadores grandes',
+    recursos: [
+      { label: 'Até 1.000 profissionais',         inclui: true },
+      { label: 'Tudo do Avançado',                inclui: true },
+      { label: 'Usuários ilimitados',             inclui: true },
+      { label: 'API e webhooks',                  inclui: true },
+      { label: 'Backup com 90 dias',              inclui: true },
+      { label: 'Gerente de conta dedicado',       inclui: true },
+      { label: 'Suporte 24/7 por WhatsApp',       inclui: true },
+    ],
+  },
+  {
+    id: 'enterprise', nome: 'Pro', valor: 3450, limite: 1500,
+    descricao: 'Para grupos hospitalares com necessidades específicas',
+    recursos: [
+      { label: 'Até 1.500 profissionais',         inclui: true },
+      { label: 'Tudo do Business',                inclui: true },
+      { label: 'SLA contratual 99,9% uptime',     inclui: true },
+      { label: 'White-label com domínio próprio', inclui: true },
+      { label: 'Integrações personalizadas',      inclui: true },
+      { label: 'Treinamento presencial',          inclui: true },
+      { label: 'Suporte 24/7 por telefone',       inclui: true },
+    ],
+  },
+];
+
+let planoSelecionado = null;
+
+// ════════════════════════════════════════════════════════════════
+// RENDERIZAÇÃO
+// ════════════════════════════════════════════════════════════════
+function renderPlanos() {
+  const grid = document.getElementById('planos-grid');
+  grid.innerHTML = PLANOS.map(p => {
+    const isSelec = p.id === planoSelecionado;
+    const features = p.recursos.map(r => `
+      <div class="plano-feat ${r.inclui ? '' : 'no'}">
+        <span class="plano-feat-icon ${r.inclui ? 'ok' : 'no'}">${r.inclui ? '✓' : '×'}</span>
+        <span class="plano-feat-text">${r.label}</span>
+      </div>
+    `).join('');
+    const badge = p.popular
+      ? '<span class="plano-badge">Mais escolhido</span>'
+      : '<div class="plano-badge-spacer"></div>';
+    return `
+      <div class="plano ${p.popular ? 'popular' : ''} ${isSelec ? 'selecionado' : ''}" data-id="${p.id}">
+        ${badge}
+        <div class="plano-nome">${p.nome}</div>
+        <div class="plano-preco-linha">
+          <span class="plano-preco">R$ ${p.valor.toLocaleString('pt-BR')}</span>
+          <span class="plano-mes">/mês</span>
+        </div>
+        <div class="plano-desc">${p.descricao}</div>
+        <div class="plano-features">${features}</div>
+        <button class="plano-btn" onclick="selecionarPlano('${p.id}')">
+          ${isSelec ? '✓ Selecionado' : 'Quero este'}
+        </button>
+      </div>
+    `;
+  }).join('');
+}
+
+function selecionarPlano(id) {
+  planoSelecionado = id;
+  renderPlanos();
+  const p = PLANOS.find(x => x.id === id);
+  const card = document.getElementById('plano-selecionado-card');
+  card.classList.remove('placeholder');
+  document.getElementById('plano-selecionado-nome').textContent =
+    `${p.nome} — R$ ${p.valor.toLocaleString('pt-BR')}/mês`;
+  // Rolar suavemente até o formulário
+  setTimeout(() => {
+    document.getElementById('form-wrap').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, 100);
+}
+
+renderPlanos();
+
+// ════════════════════════════════════════════════════════════════
+// MÁSCARAS
+// ════════════════════════════════════════════════════════════════
+function mascaraCNPJ(el) {
+  let v = el.value.replace(/\D/g, '').slice(0, 14);
+  if (v.length > 12) v = v.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{1,2})/, '$1.$2.$3/$4-$5');
+  else if (v.length > 8) v = v.replace(/(\d{2})(\d{3})(\d{3})(\d{1,4})/, '$1.$2.$3/$4');
+  else if (v.length > 5) v = v.replace(/(\d{2})(\d{3})(\d{1,3})/, '$1.$2.$3');
+  else if (v.length > 2) v = v.replace(/(\d{2})(\d{1,3})/, '$1.$2');
+  el.value = v;
+}
+function mascaraTelefone(el) {
+  let v = el.value.replace(/\D/g, '').slice(0, 11);
+  if (v.length > 10) v = v.replace(/(\d{2})(\d{5})(\d{1,4})/, '($1) $2-$3');
+  else if (v.length > 6) v = v.replace(/(\d{2})(\d{4})(\d{1,4})/, '($1) $2-$3');
+  else if (v.length > 2) v = v.replace(/(\d{2})(\d{1,5})/, '($1) $2');
+  el.value = v;
+}
+
+// ════════════════════════════════════════════════════════════════
+// TOAST
+// ════════════════════════════════════════════════════════════════
+function toast(msg, err = false) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast' + (err ? ' err' : '');
+  t.style.display = 'block';
+  setTimeout(() => { t.style.display = 'none'; }, 3500);
+}
+
+// ════════════════════════════════════════════════════════════════
+// ENVIO DO LEAD
+// ════════════════════════════════════════════════════════════════
+async function enviarLead() {
+  const razaoSocial = document.getElementById('f-razao').value.trim();
+  const cnpj        = document.getElementById('f-cnpj').value.trim();
+  const qtdMedicos  = document.getElementById('f-qtd').value;
+  const cidadeUf    = document.getElementById('f-cidade').value.trim();
+  const nome        = document.getElementById('f-nome').value.trim();
+  const cargo       = document.getElementById('f-cargo').value.trim();
+  const email       = document.getElementById('f-email').value.trim();
+  const whatsapp    = document.getElementById('f-whats').value.trim();
+  const contatoPreferido = document.getElementById('f-contato').value;
+  const observacoes = document.getElementById('f-obs').value.trim();
+
+  // Validações
+  if (!razaoSocial) { toast('Preencha a razão social', true); document.getElementById('f-razao').focus(); return; }
+  if (!nome)        { toast('Preencha seu nome', true);       document.getElementById('f-nome').focus(); return; }
+  if (!email || !email.includes('@')) {
+    toast('E-mail inválido', true); document.getElementById('f-email').focus(); return;
+  }
+  const whatsLimpo = whatsapp.replace(/\D/g, '');
+  if (whatsLimpo.length < 10) {
+    toast('WhatsApp inválido', true); document.getElementById('f-whats').focus(); return;
+  }
+
+  const btn = document.getElementById('btn-enviar');
+  btn.disabled = true;
+  btn.textContent = 'Enviando...';
+
+  try {
+    const r = await fetch('/api/lead', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        plano: planoSelecionado || null,
+        razaoSocial, cnpj, qtdMedicos, cidadeUf,
+        nome, cargo, email, whatsapp,
+        contatoPreferido, observacoes,
+      }),
+    });
+    const data = await r.json();
+    if (!r.ok) throw new Error(data.erro || 'Erro ao enviar');
+
+    // Sucesso: esconder o formulário, mostrar a tela de sucesso
+    document.querySelector('.hero').style.display = 'none';
+    document.querySelector('.planos-wrap').style.display = 'none';
+    document.getElementById('form-wrap').style.display = 'none';
+    document.getElementById('sucesso-card').style.display = 'block';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  } catch (e) {
+    toast(e.message || 'Erro ao enviar. Tente novamente.', true);
+    btn.disabled = false;
+    btn.textContent = 'Solicitar demonstração →';
+  }
+}
+
+// ════════════════════════════════════════════════════════════════
+// LOGIN
+// ════════════════════════════════════════════════════════════════
+async function fazerLogin() {
+  const email = document.getElementById('login-email').value.trim();
+  const senha = document.getElementById('login-senha').value;
+  const erroEl = document.getElementById('login-erro');
+  const btn = document.getElementById('btn-login');
+
+  erroEl.style.display = 'none';
+  if (!email || !senha) {
+    erroEl.textContent = 'Preencha e-mail e senha.';
+    erroEl.style.display = 'block';
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = 'Verificando...';
+
+  try {
+    const r = await fetch('/api/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, senha }),
+    });
+    const data = await r.json();
+    if (!r.ok) throw new Error(data.erro || 'E-mail ou senha incorretos');
+
+    // Login OK — redirecionar pro painel correto
+    btn.textContent = 'Redirecionando...';
+    if (data.usuario?.isAdmin === false) {
+      // Usuário da equipe → painel do médico ou admin com permissões limitadas
+      window.location.href = '/admin/';
+    } else {
+      // Admin master
+      window.location.href = '/admin/';
+    }
+  } catch (e) {
+    erroEl.textContent = e.message || 'Erro de conexão. Tente novamente.';
+    erroEl.style.display = 'block';
+    btn.disabled = false;
+    btn.textContent = 'Entrar no painel →';
+  }
+}
+
+// ════════════════════════════════════════════════════════════════
+// ESQUECI MINHA SENHA — versão simples: redireciona pro WhatsApp
+// ════════════════════════════════════════════════════════════════
+function esqueciSenha() {
+  const email = document.getElementById('login-email').value.trim();
+  const msg = encodeURIComponent(
+    'Olá! Esqueci minha senha do PlantãoPro.' +
+    (email ? `\nMeu e-mail cadastrado: ${email}` : '')
+  );
+  window.open(`https://wa.me/5521995953003?text=${msg}`, '_blank', 'noopener');
+}
+</script>
+
+</body>
+</html>
