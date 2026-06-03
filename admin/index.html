@@ -499,6 +499,128 @@ tr:hover td{background:var(--bg3);}
       </div>
     </div>
 
+    <!-- ════════════════════════════════════════════════════════════════ -->
+    <!-- PAINEL DE CUSTOS & COBERTURA (V7 — destaque principal) -->
+    <!-- ════════════════════════════════════════════════════════════════ -->
+    <div id="painel-custos-restrito" style="display:none;" class="card">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 6px 4px;">
+        <div>
+          <div style="font-size:15px;font-weight:700;color:var(--text);">Painel de Custos & Cobertura</div>
+          <div style="font-size:12px;color:var(--text3);margin-top:2px;">Disponível nos planos Avançado, Business e Pro</div>
+        </div>
+        <button class="btn btn-primary" onclick="showTab('perfil');setTimeout(()=>document.querySelector('[data-perfil-tab=\"plano\"]')?.click(),100);">Fazer upgrade</button>
+      </div>
+    </div>
+
+    <div id="painel-custos" style="display:none;margin-bottom:20px;">
+
+      <!-- Filtros do painel -->
+      <div class="card" style="padding:14px 18px;margin-bottom:12px;">
+        <div style="display:flex;flex-wrap:wrap;gap:16px;align-items:flex-end;">
+          <div style="display:flex;flex-direction:column;gap:4px;">
+            <label style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:0.4px;">Período</label>
+            <select id="pc-periodo" onchange="aplicarPeriodoPainel()" style="padding:7px 10px;border:1px solid var(--border);border-radius:5px;font-size:13px;background:#fff;color:var(--text);min-width:200px;font-family:inherit;">
+              <option value="mes-atual">Mês atual</option>
+              <option value="mes-passado">Mês passado</option>
+              <option value="3-meses">Últimos 3 meses</option>
+              <option value="6-meses">Últimos 6 meses</option>
+              <option value="ano">Ano atual</option>
+              <option value="custom">Período customizado</option>
+            </select>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:4px;">
+            <label style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:0.4px;">De</label>
+            <input type="date" id="pc-d1" style="padding:7px 10px;border:1px solid var(--border);border-radius:5px;font-size:13px;font-family:inherit;">
+          </div>
+          <div style="display:flex;flex-direction:column;gap:4px;">
+            <label style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:0.4px;">Até</label>
+            <input type="date" id="pc-d2" style="padding:7px 10px;border:1px solid var(--border);border-radius:5px;font-size:13px;font-family:inherit;">
+          </div>
+          <div style="display:flex;flex-direction:column;gap:4px;">
+            <label style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:0.4px;">Projeto</label>
+            <select id="pc-projeto" style="padding:7px 10px;border:1px solid var(--border);border-radius:5px;font-size:13px;background:#fff;color:var(--text);min-width:180px;font-family:inherit;">
+              <option value="">Todos os projetos</option>
+            </select>
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="carregarPainelCustos()" style="height:34px;">Aplicar</button>
+        </div>
+      </div>
+
+      <!-- KPIs do painel -->
+      <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:12px;" id="pc-kpis">
+        <div class="card pc-kpi pc-kpi-total" style="padding:14px 16px;background:#0f3d7a;color:#fff;border:none;">
+          <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;color:rgba(255,255,255,0.7);margin-bottom:6px;">Custo Total</div>
+          <div style="font-size:22px;font-weight:700;line-height:1.15;letter-spacing:-0.4px;color:#fff;font-variant-numeric:tabular-nums;" id="pc-total">—</div>
+          <div style="font-size:11px;color:rgba(255,255,255,0.7);margin-top:3px;" id="pc-total-meta">Realizado + Previsto</div>
+        </div>
+        <div class="card pc-kpi" style="padding:14px 16px;">
+          <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;color:var(--text3);margin-bottom:6px;">Custo Realizado</div>
+          <div style="font-size:22px;font-weight:700;line-height:1.15;letter-spacing:-0.4px;color:var(--green);font-variant-numeric:tabular-nums;" id="pc-realizado">—</div>
+          <div style="font-size:11px;color:var(--text3);margin-top:3px;" id="pc-realizado-meta">—</div>
+        </div>
+        <div class="card pc-kpi" style="padding:14px 16px;">
+          <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;color:var(--text3);margin-bottom:6px;">Custo Previsto</div>
+          <div style="font-size:22px;font-weight:700;line-height:1.15;letter-spacing:-0.4px;color:var(--amber);font-variant-numeric:tabular-nums;" id="pc-previsto">—</div>
+          <div style="font-size:11px;color:var(--text3);margin-top:3px;" id="pc-previsto-meta">—</div>
+        </div>
+        <div class="card pc-kpi" style="padding:14px 16px;">
+          <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;color:var(--text3);margin-bottom:6px;">Slots vazios</div>
+          <div style="font-size:22px;font-weight:700;line-height:1.15;letter-spacing:-0.4px;color:var(--amber);font-variant-numeric:tabular-nums;" id="pc-slots">—</div>
+          <div style="font-size:11px;color:var(--text3);margin-top:3px;">Plantões sem médico atribuído</div>
+        </div>
+        <div class="card pc-kpi" style="padding:14px 16px;">
+          <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;color:var(--text3);margin-bottom:6px;">Faltas sem cobertura</div>
+          <div style="font-size:22px;font-weight:700;line-height:1.15;letter-spacing:-0.4px;color:var(--red);font-variant-numeric:tabular-nums;" id="pc-faltas">—</div>
+          <div style="font-size:11px;color:var(--text3);margin-top:3px;">Após ausência sem substituto</div>
+        </div>
+      </div>
+
+      <!-- Aviso de faltas sem cobertura -->
+      <div id="pc-aviso" style="display:none;background:var(--amber-bg);border:1px solid #f0c060;border-left:3px solid var(--amber);border-radius:5px;padding:10px 14px;font-size:13px;color:var(--amber);margin-bottom:12px;">
+        <span style="font-weight:600;">Atenção:</span>
+        <span id="pc-aviso-msg">—</span>
+      </div>
+
+      <!-- Tabela por projeto -->
+      <div class="card" style="padding:0;overflow:hidden;">
+        <div style="padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
+          <div style="font-size:14px;font-weight:600;color:var(--text);">Detalhamento por projeto</div>
+          <div style="font-size:12px;color:var(--text3);" id="pc-proj-count">—</div>
+        </div>
+        <div style="overflow-x:auto;">
+          <table style="width:100%;border-collapse:collapse;font-size:13px;" id="pc-tabela">
+            <thead>
+              <tr style="background:#fafbfc;">
+                <th style="text-align:left;padding:10px 18px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.4px;color:var(--text3);border-bottom:1px solid var(--border);">Projeto</th>
+                <th style="text-align:right;padding:10px 18px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.4px;color:var(--text3);border-bottom:1px solid var(--border);">Total</th>
+                <th style="text-align:right;padding:10px 18px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.4px;color:var(--text3);border-bottom:1px solid var(--border);">Realizado</th>
+                <th style="text-align:right;padding:10px 18px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.4px;color:var(--text3);border-bottom:1px solid var(--border);">Previsto</th>
+                <th style="text-align:right;padding:10px 18px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.4px;color:var(--text3);border-bottom:1px solid var(--border);">Slots vazios</th>
+                <th style="text-align:right;padding:10px 18px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.4px;color:var(--text3);border-bottom:1px solid var(--border);">Faltas s/ cob.</th>
+              </tr>
+            </thead>
+            <tbody id="pc-tbody">
+              <tr><td colspan="6" style="padding:30px;text-align:center;color:var(--text3);font-size:13px;">Selecione um período e clique em Aplicar</td></tr>
+            </tbody>
+            <tfoot id="pc-tfoot" style="display:none;">
+              <tr style="background:#f7f9fc;">
+                <td style="padding:12px 18px;font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:0.4px;border-top:2px solid var(--border);">Total geral</td>
+                <td style="padding:12px 18px;font-size:13px;font-weight:700;color:var(--text);text-align:right;font-variant-numeric:tabular-nums;border-top:2px solid var(--border);" id="pc-foot-total">—</td>
+                <td style="padding:12px 18px;font-size:13px;font-weight:700;color:var(--green);text-align:right;font-variant-numeric:tabular-nums;border-top:2px solid var(--border);" id="pc-foot-realizado">—</td>
+                <td style="padding:12px 18px;font-size:13px;font-weight:700;color:var(--amber);text-align:right;font-variant-numeric:tabular-nums;border-top:2px solid var(--border);" id="pc-foot-previsto">—</td>
+                <td style="padding:12px 18px;font-size:13px;font-weight:700;text-align:right;font-variant-numeric:tabular-nums;border-top:2px solid var(--border);" id="pc-foot-slots">—</td>
+                <td style="padding:12px 18px;font-size:13px;font-weight:700;text-align:right;font-variant-numeric:tabular-nums;border-top:2px solid var(--border);" id="pc-foot-faltas">—</td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </div>
+
+    </div>
+    <!-- ════════════════════════════════════════════════════════════════ -->
+    <!-- FIM PAINEL DE CUSTOS & COBERTURA -->
+    <!-- ════════════════════════════════════════════════════════════════ -->
+
     <div class="metrics">
       <div class="metric"><div class="metric-label">Médicos ativos</div><div class="metric-val" id="d-medicos">—</div></div>
       <div class="metric"><div class="metric-label">Plantões este mês</div><div class="metric-val" id="d-plantoes">—</div></div>
@@ -2315,6 +2437,211 @@ async function carregarDashboard() {
     </tr>`).join('') + '</tbody></table>' : '<div class="empty">Nenhum check-in hoje</div>';
   // Calcular alertas de furos
   calcularFurosDash();
+
+  // Atualizar Painel de Custos & Cobertura (apenas se plano permitir)
+  inicializarPainelCustos();
+}
+
+// ════════════════════════════════════════════════════════════════
+// PAINEL DE CUSTOS & COBERTURA — V7
+// ════════════════════════════════════════════════════════════════
+
+// Mostra o painel ou a tela de upgrade dependendo do plano
+function inicializarPainelCustos() {
+  const temAcesso = _planoConfig?.relatoriosAvancados === true;
+  const elRestrito = document.getElementById('painel-custos-restrito');
+  const elPainel   = document.getElementById('painel-custos');
+  if (!elPainel || !elRestrito) return;
+
+  if (!temAcesso) {
+    elRestrito.style.display = 'block';
+    elPainel.style.display = 'none';
+    return;
+  }
+  elRestrito.style.display = 'none';
+  elPainel.style.display = 'block';
+
+  // Popular dropdown de projetos
+  const sel = document.getElementById('pc-projeto');
+  if (sel && sel.options.length <= 1) {
+    sel.innerHTML = '<option value="">Todos os projetos</option>' +
+      projetos.map(p => `<option value="${p.id}">${p.nome}</option>`).join('');
+  }
+
+  // Setar período padrão: mês atual
+  if (!document.getElementById('pc-d1').value) {
+    aplicarPeriodoPainel();
+    carregarPainelCustos();
+  }
+}
+
+// Aplica o período selecionado nos inputs de data
+function aplicarPeriodoPainel() {
+  const periodo = document.getElementById('pc-periodo').value;
+  const hoje = new Date();
+  let d1, d2;
+
+  if (periodo === 'custom') {
+    document.getElementById('pc-d1').readOnly = false;
+    document.getElementById('pc-d2').readOnly = false;
+    return;
+  }
+
+  document.getElementById('pc-d1').readOnly = true;
+  document.getElementById('pc-d2').readOnly = true;
+
+  if (periodo === 'mes-atual') {
+    d1 = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
+    d2 = new Date(hoje.getFullYear(), hoje.getMonth()+1, 0);
+  } else if (periodo === 'mes-passado') {
+    d1 = new Date(hoje.getFullYear(), hoje.getMonth()-1, 1);
+    d2 = new Date(hoje.getFullYear(), hoje.getMonth(), 0);
+  } else if (periodo === '3-meses') {
+    d1 = new Date(hoje.getFullYear(), hoje.getMonth()-2, 1);
+    d2 = new Date(hoje.getFullYear(), hoje.getMonth()+1, 0);
+  } else if (periodo === '6-meses') {
+    d1 = new Date(hoje.getFullYear(), hoje.getMonth()-5, 1);
+    d2 = new Date(hoje.getFullYear(), hoje.getMonth()+1, 0);
+  } else if (periodo === 'ano') {
+    d1 = new Date(hoje.getFullYear(), 0, 1);
+    d2 = new Date(hoje.getFullYear(), 11, 31);
+  }
+
+  document.getElementById('pc-d1').value = d1.toISOString().slice(0,10);
+  document.getElementById('pc-d2').value = d2.toISOString().slice(0,10);
+}
+
+// Função principal: calcula e renderiza o painel completo
+async function carregarPainelCustos() {
+  // Se plano não permite, não faz nada
+  if (!_planoConfig?.relatoriosAvancados) return;
+
+  const d1 = document.getElementById('pc-d1').value;
+  const d2 = document.getElementById('pc-d2').value;
+  const projFiltro = document.getElementById('pc-projeto').value;
+  if (!d1 || !d2) return;
+
+  // Buscar lançamentos do período
+  let urlLancs = `/rest/v1/lancamentos?data=gte.${d1}&data=lte.${d2}&select=id,data,projeto_id,medico_id,honorario,projetos(nome)`;
+  if (projFiltro) urlLancs += `&projeto_id=eq.${projFiltro}`;
+  const lancs = await sb(urlLancs) || [];
+
+  // Buscar ausências do período
+  let urlAus = `/rest/v1/ausencias?select=id,lancamento_id,medico_id,status,lancamentos!inner(id,data,projeto_id,medico_id)`;
+  urlAus += `&lancamentos.data=gte.${d1}&lancamentos.data=lte.${d2}`;
+  if (projFiltro) urlAus += `&lancamentos.projeto_id=eq.${projFiltro}`;
+  const ausencias = await sb(urlAus) || [];
+
+  // Buscar transferências aceitas (pra saber se ausência foi coberta)
+  const idsLancs = ausencias.map(a => a.lancamento_id).filter(Boolean);
+  let transferenciasAceitas = [];
+  if (idsLancs.length) {
+    const filtroIds = `lancamento_id=in.(${idsLancs.join(',')})`;
+    transferenciasAceitas = await sb(`/rest/v1/transferencias?${filtroIds}&status=eq.aceito&select=lancamento_id`) || [];
+  }
+  const coberturasPorTransf = new Set(transferenciasAceitas.map(t => t.lancamento_id));
+
+  // ── Cálculos ──────────────────────────────────────────
+  const hoje = new Date().toISOString().slice(0,10);
+
+  // Realizado vs Previsto (critério A: por data)
+  const realizados = lancs.filter(l => l.data < hoje);
+  const previstos  = lancs.filter(l => l.data >= hoje);
+
+  const custoRealizado = realizados.reduce((s,l) => s + (l.honorario||0), 0);
+  const custoPrevisto  = previstos.reduce((s,l) => s + (l.honorario||0), 0);
+  const custoTotal     = custoRealizado + custoPrevisto;
+
+  // Slots vazios: lançamentos sem medico_id
+  const slotsVazios = lancs.filter(l => !l.medico_id).length;
+
+  // Faltas sem cobertura:
+  // - ausência existe
+  // - E o lançamento original AINDA tem o medico_id que faltou (admin não trocou)
+  // - E NÃO tem transferência aceita pro mesmo lançamento
+  const faltasSemCob = ausencias.filter(a => {
+    const lanc = a.lancamentos;
+    if (!lanc) return false;
+    if (coberturasPorTransf.has(a.lancamento_id)) return false; // foi coberta por transferência
+    if (lanc.medico_id !== a.medico_id) return false; // admin já trocou o médico
+    return true;
+  }).length;
+
+  // ── Renderizar KPIs ──────────────────────────────────
+  document.getElementById('pc-total').textContent     = fBRL(custoTotal);
+  document.getElementById('pc-realizado').textContent = fBRL(custoRealizado);
+  document.getElementById('pc-previsto').textContent  = fBRL(custoPrevisto);
+  document.getElementById('pc-slots').textContent     = slotsVazios;
+  document.getElementById('pc-faltas').textContent    = faltasSemCob;
+
+  document.getElementById('pc-realizado-meta').textContent = `${realizados.length} ${realizados.length === 1 ? 'plantão pago' : 'plantões pagos'}`;
+  document.getElementById('pc-previsto-meta').textContent  = `${previstos.length} ${previstos.length === 1 ? 'plantão agendado' : 'plantões agendados'}`;
+
+  // Aviso se houver faltas sem cobertura
+  const aviso = document.getElementById('pc-aviso');
+  if (faltasSemCob > 0) {
+    aviso.style.display = 'block';
+    document.getElementById('pc-aviso-msg').textContent =
+      `Existe${faltasSemCob === 1 ? '' : 'm'} ${faltasSemCob} ${faltasSemCob === 1 ? 'falta' : 'faltas'} sem substituto no período. Verifique a aba Lançamentos ou Plantões abertos para regularizar.`;
+  } else {
+    aviso.style.display = 'none';
+  }
+
+  // ── Detalhamento por projeto ─────────────────────────
+  // Agrupar por projeto
+  const porProj = {};
+  for (const l of lancs) {
+    const pid = l.projeto_id || 'sem-projeto';
+    const pnome = l.projetos?.nome || 'Sem projeto';
+    if (!porProj[pid]) porProj[pid] = { nome: pnome, realizado: 0, previsto: 0, slots: 0, faltas: 0 };
+    if (l.data < hoje) porProj[pid].realizado += (l.honorario||0);
+    else porProj[pid].previsto += (l.honorario||0);
+    if (!l.medico_id) porProj[pid].slots += 1;
+  }
+  // Contar faltas sem cobertura por projeto
+  for (const a of ausencias) {
+    const lanc = a.lancamentos;
+    if (!lanc) continue;
+    if (coberturasPorTransf.has(a.lancamento_id)) continue;
+    if (lanc.medico_id !== a.medico_id) continue;
+    const pid = lanc.projeto_id || 'sem-projeto';
+    if (!porProj[pid]) {
+      const nome = projetos.find(p => p.id === pid)?.nome || 'Sem projeto';
+      porProj[pid] = { nome, realizado: 0, previsto: 0, slots: 0, faltas: 0 };
+    }
+    porProj[pid].faltas += 1;
+  }
+
+  const linhasProj = Object.values(porProj)
+    .filter(p => p.realizado || p.previsto || p.slots || p.faltas)
+    .sort((a,b) => (b.realizado + b.previsto) - (a.realizado + a.previsto));
+
+  const tbody = document.getElementById('pc-tbody');
+  const tfoot = document.getElementById('pc-tfoot');
+
+  if (!linhasProj.length) {
+    tbody.innerHTML = '<tr><td colspan="6" style="padding:30px;text-align:center;color:var(--text3);font-size:13px;">Nenhum lançamento no período selecionado</td></tr>';
+    tfoot.style.display = 'none';
+  } else {
+    tbody.innerHTML = linhasProj.map(p => `
+      <tr style="border-bottom:1px solid var(--bg3);">
+        <td style="padding:11px 18px;font-weight:600;color:var(--text);">${p.nome}</td>
+        <td style="padding:11px 18px;text-align:right;font-variant-numeric:tabular-nums;color:var(--text);">${fBRL(p.realizado + p.previsto)}</td>
+        <td style="padding:11px 18px;text-align:right;font-variant-numeric:tabular-nums;color:var(--green);">${fBRL(p.realizado)}</td>
+        <td style="padding:11px 18px;text-align:right;font-variant-numeric:tabular-nums;color:var(--amber);">${fBRL(p.previsto)}</td>
+        <td style="padding:11px 18px;text-align:right;font-variant-numeric:tabular-nums;${p.slots > 0 ? 'color:var(--amber);font-weight:600;' : 'color:var(--text3);'}">${p.slots}</td>
+        <td style="padding:11px 18px;text-align:right;font-variant-numeric:tabular-nums;${p.faltas > 0 ? 'color:var(--red);font-weight:600;' : 'color:var(--text3);'}">${p.faltas}</td>
+      </tr>
+    `).join('');
+    document.getElementById('pc-foot-total').textContent     = fBRL(custoTotal);
+    document.getElementById('pc-foot-realizado').textContent = fBRL(custoRealizado);
+    document.getElementById('pc-foot-previsto').textContent  = fBRL(custoPrevisto);
+    document.getElementById('pc-foot-slots').textContent     = slotsVazios;
+    document.getElementById('pc-foot-faltas').textContent    = faltasSemCob;
+    tfoot.style.display = 'table-footer-group';
+  }
+
+  document.getElementById('pc-proj-count').textContent = `${linhasProj.length} ${linhasProj.length === 1 ? 'projeto' : 'projetos'} no período`;
 }
 
 
