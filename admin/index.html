@@ -519,7 +519,7 @@ tr:hover td{background:var(--bg3);}
         <div style="display:flex;flex-wrap:wrap;gap:16px;align-items:flex-end;">
           <div style="display:flex;flex-direction:column;gap:4px;">
             <label style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:0.4px;">Período</label>
-            <select id="pc-periodo" onchange="aplicarPeriodoPainel()" style="padding:7px 10px;border:1px solid var(--border);border-radius:5px;font-size:13px;background:#fff;color:var(--text);min-width:200px;font-family:inherit;">
+            <select id="pc-periodo" onchange="aplicarPeriodoPainel(true)" style="padding:7px 10px;border:1px solid var(--border);border-radius:5px;font-size:13px;background:#fff;color:var(--text);min-width:200px;font-family:inherit;">
               <option value="mes-atual">Mês atual</option>
               <option value="mes-passado">Mês passado</option>
               <option value="3-meses">Últimos 3 meses</option>
@@ -530,19 +530,18 @@ tr:hover td{background:var(--bg3);}
           </div>
           <div style="display:flex;flex-direction:column;gap:4px;">
             <label style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:0.4px;">De</label>
-            <input type="date" id="pc-d1" style="padding:7px 10px;border:1px solid var(--border);border-radius:5px;font-size:13px;font-family:inherit;">
+            <input type="date" id="pc-d1" onchange="onDataManualPainel()" style="padding:7px 10px;border:1px solid var(--border);border-radius:5px;font-size:13px;font-family:inherit;">
           </div>
           <div style="display:flex;flex-direction:column;gap:4px;">
             <label style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:0.4px;">Até</label>
-            <input type="date" id="pc-d2" style="padding:7px 10px;border:1px solid var(--border);border-radius:5px;font-size:13px;font-family:inherit;">
+            <input type="date" id="pc-d2" onchange="onDataManualPainel()" style="padding:7px 10px;border:1px solid var(--border);border-radius:5px;font-size:13px;font-family:inherit;">
           </div>
           <div style="display:flex;flex-direction:column;gap:4px;">
             <label style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:0.4px;">Projeto</label>
-            <select id="pc-projeto" style="padding:7px 10px;border:1px solid var(--border);border-radius:5px;font-size:13px;background:#fff;color:var(--text);min-width:180px;font-family:inherit;">
+            <select id="pc-projeto" onchange="carregarPainelCustos()" style="padding:7px 10px;border:1px solid var(--border);border-radius:5px;font-size:13px;background:#fff;color:var(--text);min-width:180px;font-family:inherit;">
               <option value="">Todos os projetos</option>
             </select>
           </div>
-          <button class="btn btn-primary btn-sm" onclick="carregarPainelCustos()" style="height:34px;">Aplicar</button>
         </div>
       </div>
 
@@ -2468,27 +2467,26 @@ function inicializarPainelCustos() {
       projetos.map(p => `<option value="${p.id}">${p.nome}</option>`).join('');
   }
 
-  // Setar período padrão: mês atual
+  // Garantir mês atual selecionado por padrão e carregar dados toda vez
   if (!document.getElementById('pc-d1').value) {
-    aplicarPeriodoPainel();
-    carregarPainelCustos();
+    document.getElementById('pc-periodo').value = 'mes-atual';
+    aplicarPeriodoPainel(false); // preenche datas mas não recarrega ainda
   }
+  carregarPainelCustos();
 }
 
 // Aplica o período selecionado nos inputs de data
-function aplicarPeriodoPainel() {
+// Se recarregar=true, dispara carregarPainelCustos() depois
+function aplicarPeriodoPainel(recarregar) {
   const periodo = document.getElementById('pc-periodo').value;
   const hoje = new Date();
   let d1, d2;
 
   if (periodo === 'custom') {
-    document.getElementById('pc-d1').readOnly = false;
-    document.getElementById('pc-d2').readOnly = false;
+    // Em modo customizado, só libera os campos — usuário edita manualmente
+    if (recarregar) carregarPainelCustos();
     return;
   }
-
-  document.getElementById('pc-d1').readOnly = true;
-  document.getElementById('pc-d2').readOnly = true;
 
   if (periodo === 'mes-atual') {
     d1 = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
@@ -2507,8 +2505,20 @@ function aplicarPeriodoPainel() {
     d2 = new Date(hoje.getFullYear(), 11, 31);
   }
 
-  document.getElementById('pc-d1').value = d1.toISOString().slice(0,10);
-  document.getElementById('pc-d2').value = d2.toISOString().slice(0,10);
+  if (d1 && d2) {
+    document.getElementById('pc-d1').value = d1.toISOString().slice(0,10);
+    document.getElementById('pc-d2').value = d2.toISOString().slice(0,10);
+  }
+
+  if (recarregar) carregarPainelCustos();
+}
+
+// Quando usuário edita as datas manualmente, vai pra modo "customizado"
+// e recarrega automaticamente
+function onDataManualPainel() {
+  const sel = document.getElementById('pc-periodo');
+  if (sel.value !== 'custom') sel.value = 'custom';
+  carregarPainelCustos();
 }
 
 // Função principal: calcula e renderiza o painel completo
