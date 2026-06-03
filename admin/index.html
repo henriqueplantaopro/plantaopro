@@ -2562,20 +2562,26 @@ async function carregarPainelCustos() {
   const custoPrevisto  = previstos.reduce((s,l) => s + (l.honorario||0), 0);
   const custoTotal     = custoRealizado + custoPrevisto;
 
-  // Slots vazios: lançamentos sem medico_id
-  const slotsVazios = lancs.filter(l => !l.medico_id).length;
+  // Slots sem médico atribuído:
+  // - No passado (data < hoje): é uma FALTA (ninguém cobriu o plantão)
+  // - No futuro (data >= hoje): é um SLOT VAZIO (vaga aguardando médico)
+  const slotsSemMedicoPassado = lancs.filter(l => !l.medico_id && l.data < hoje).length;
+  const slotsVazios            = lancs.filter(l => !l.medico_id && l.data >= hoje).length;
 
-  // Faltas sem cobertura:
+  // Faltas sem cobertura (médico que estava atribuído faltou):
   // - ausência existe
   // - E o lançamento original AINDA tem o medico_id que faltou (admin não trocou)
   // - E NÃO tem transferência aceita pro mesmo lançamento
-  const faltasSemCob = ausencias.filter(a => {
+  const faltasMedicoSemCob = ausencias.filter(a => {
     const lanc = a.lancamentos;
     if (!lanc) return false;
     if (coberturasPorTransf.has(a.lancamento_id)) return false; // foi coberta por transferência
     if (lanc.medico_id !== a.medico_id) return false; // admin já trocou o médico
     return true;
   }).length;
+
+  // Total de faltas = ausências sem cobertura + slots no passado sem médico
+  const faltasSemCob = faltasMedicoSemCob + slotsSemMedicoPassado;
 
   // ── Renderizar KPIs ──────────────────────────────────
   document.getElementById('pc-total').textContent     = fBRL(custoTotal);
@@ -2606,9 +2612,13 @@ async function carregarPainelCustos() {
     if (!porProj[pid]) porProj[pid] = { nome: pnome, realizado: 0, previsto: 0, slots: 0, faltas: 0 };
     if (l.data < hoje) porProj[pid].realizado += (l.honorario||0);
     else porProj[pid].previsto += (l.honorario||0);
-    if (!l.medico_id) porProj[pid].slots += 1;
+    // Slot sem médico: passado conta como falta, futuro como slot vazio
+    if (!l.medico_id) {
+      if (l.data < hoje) porProj[pid].faltas += 1;
+      else porProj[pid].slots += 1;
+    }
   }
-  // Contar faltas sem cobertura por projeto
+  // Adicionar faltas por ausência sem cobertura (médico atribuído faltou)
   for (const a of ausencias) {
     const lanc = a.lancamentos;
     if (!lanc) continue;
