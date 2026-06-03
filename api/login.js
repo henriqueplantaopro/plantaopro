@@ -10,6 +10,28 @@ import {
 export default async function handler(req, res) {
   setCors(res);
   if (req.method === 'OPTIONS') return res.status(204).end();
+
+  // ─── DIAGNÓSTICO TEMPORÁRIO (acessar via GET) ────────────────────────────
+  // REMOVER ESTE BLOCO APÓS RESOLVER O PROBLEMA
+  if (req.method === 'GET') {
+    const vars = ['SUPABASE_URL','SUPABASE_SERVICE_KEY','JWT_SECRET'];
+    const diag = {};
+    for (const v of vars) {
+      const val = process.env[v];
+      if (val === undefined) diag[v] = 'NÃO EXISTE';
+      else if (val === '')   diag[v] = 'VAZIA';
+      else diag[v] = `OK (${val.length} chars, começa com "${val.slice(0,6)}...")`;
+    }
+    const todasSupabase = Object.keys(process.env).filter(k => /supabase/i.test(k));
+    const todasJwt = Object.keys(process.env).filter(k => /jwt|secret/i.test(k));
+    return json(res, 200, {
+      aviso: 'DIAGNÓSTICO — REMOVER APÓS USO',
+      esperadas: diag,
+      todas_supabase_encontradas: todasSupabase,
+      todas_jwt_encontradas: todasJwt,
+    });
+  }
+
   if (req.method !== 'POST') return json(res, 405, { erro: 'Método não permitido' });
 
   // Rate limit: 5 tentativas/min por IP (protege contra força bruta)
@@ -87,41 +109,4 @@ export default async function handler(req, res) {
 
     // ─── 3. Nenhum acerto — resposta genérica (não revela qual campo falhou) ──
     // Pequeno delay aleatório atrapalha timing attacks
-    await new Promise(r => setTimeout(r, 200 + Math.random() * 200));
-    return json(res, 401, { erro: 'E-mail ou senha incorretos' });
-
-  } catch (e) {
-    console.error('[login]', e);
-    return json(res, 500, { erro: 'Erro interno' });
-  }
-}
-
-function responderSucesso(res, dadosUsuario) {
-  // Gerar JWT pra sessão
-  const token = assinarJWT({
-    sub: dadosUsuario.id,
-    tipo: dadosUsuario.tipo,
-    admin_id: dadosUsuario.admin_id || dadosUsuario.id,
-    perfil: dadosUsuario.perfil || 'administrador',
-  });
-
-  // Cookie HttpOnly (não acessível por JS — protege contra XSS)
-  // SameSite=Lax permite redirect normal mas bloqueia CSRF
-  const cookieParts = [
-    `pp_session=${token}`,
-    'Path=/',
-    'HttpOnly',
-    'SameSite=Lax',
-    'Max-Age=' + (60 * 60 * 24 * 7), // 7 dias
-  ];
-  if (process.env.NODE_ENV === 'production') cookieParts.push('Secure');
-  res.setHeader('Set-Cookie', cookieParts.join('; '));
-
-  return json(res, 200, {
-    ok: true,
-    usuario: dadosUsuario,
-    // Token também no body — pra você guardar em memória se quiser
-    // (não use localStorage por segurança contra XSS)
-    token,
-  });
-}
+    await new Promise(r => setTimeout(r, 200 + Math.random
