@@ -7,27 +7,6 @@ import {
 export default async function handler(req, res) {
   setCors(res);
   if (req.method === 'OPTIONS') return res.status(204).end();
-
-  // DIAGNÓSTICO TEMPORÁRIO
-  if (req.method === 'GET') {
-    const vars = ['SUPABASE_URL','SUPABASE_SERVICE_KEY','JWT_SECRET'];
-    const diag = {};
-    for (const v of vars) {
-      const val = process.env[v];
-      if (val === undefined) diag[v] = 'NAO EXISTE';
-      else if (val === '')   diag[v] = 'VAZIA';
-      else diag[v] = 'OK (' + val.length + ' chars, comeca com "' + val.slice(0,6) + '...")';
-    }
-    const todasSupabase = Object.keys(process.env).filter(k => /supabase/i.test(k));
-    const todasJwt = Object.keys(process.env).filter(k => /jwt|secret/i.test(k));
-    return json(res, 200, {
-      aviso: 'DIAGNOSTICO - REMOVER APOS USO',
-      esperadas: diag,
-      todas_supabase_encontradas: todasSupabase,
-      todas_jwt_encontradas: todasJwt,
-    });
-  }
-
   if (req.method !== 'POST') return json(res, 405, { erro: 'Metodo nao permitido' });
 
   const ip = req.headers['x-forwarded-for']?.split(',')[0].trim() || 'desconhecido';
@@ -68,6 +47,7 @@ export default async function handler(req, res) {
         });
       }
     }
+
     const admins = await sbAdmin(
       '/rest/v1/admins?email=eq.' + encodeURIComponent(emailLower) + '&select=id,nome,email,senha_hash,empresa_nome,cnpj,cargo,telefone'
     );
