@@ -2360,8 +2360,9 @@ async function carregarTudo() {
 }
 
 async function carregarMedicos() {
-  const data = await sb('/rest/v1/medicos?select=*&order=nome');
-  medicos = data || [];
+  const resp = await fetch('/api/medicos');
+  const data = await resp.json();
+  medicos = Array.isArray(data) ? data : [];
   renderMedicos();
   popLancSelects();
   popCalSelects();
