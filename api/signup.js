@@ -16,11 +16,11 @@ import {
 
 // Fonte da verdade de preços/limites. O cliente NÃO escolhe valor.
 const PLANOS = {
-  starter:    { nome: 'Starter',    limite: 100,  valor: 390 },
-  growth:     { nome: 'Growth',     limite: 200,  valor: 690 },
-  pro:        { nome: 'Pro',        limite: 500,  valor: 1460 },
-  business:   { nome: 'Business',   limite: 1000, valor: 2780 },
-  enterprise: { nome: 'Enterprise', limite: 1500, valor: 3450 },
+  standard:  { nome: 'Standard',  limite: 100,  valor: 390 },
+  essencial: { nome: 'Essencial', limite: 200,  valor: 690 },
+  avancado:  { nome: 'Avançado',  limite: 500,  valor: 1460 },
+  business:  { nome: 'Business',  limite: 1000, valor: 2780 },
+  pro:       { nome: 'Pro',       limite: 1500, valor: 3450 },
 };
 const BILLING = { pix: 'PIX', boleto: 'BOLETO', cartao: 'CREDIT_CARD' };
 
