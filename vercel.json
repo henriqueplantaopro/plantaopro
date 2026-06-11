@@ -1,11 +1,9 @@
 {
   "rewrites": [
-    { "source": "/", "destination": "/landing.html" }
+    { "source": "/", "destination": "/cadastro.html" },
+    { "source": "/demo", "destination": "/landing.html" }
   ],
   "crons": [
-    {
-      "path": "/api/registrar-pico",
-      "schedule": "0 3 * * *"
-    }
+    { "path": "/api/registrar-pico", "schedule": "0 3 * * *" }
   ]
 }
