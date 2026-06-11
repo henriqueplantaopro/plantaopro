@@ -1,20 +1,20 @@
 // /api/signup.js
 // ----------------------------------------------------------------------------
 // Autocadastro SELF-SERVICE seguro + cobrança Asaas, tudo no servidor.
-//   - hash da senha com bcrypt (nunca grava texto puro);
-//   - PREÇO e LIMITE do plano vêm DESTE arquivo, não do HTML do cliente;
-//   - CARTÃO: não recebe número/cvv. Cria a cobrança e devolve a invoiceUrl
-//     do Asaas, pra onde o cliente é redirecionado (página PCI do Asaas).
-//   - PIX/BOLETO: devolve QR code / link do boleto.
-// Endpoint PÚBLICO (é assim que a 1a conta nasce).
+//   - senha com hashSenha (bcrypt) — nunca grava texto puro;
+//   - PREÇO e LIMITE vêm DESTE arquivo, não do HTML do cliente;
+//   - CARTÃO: não recebe número/cvv. Devolve a invoiceUrl do Asaas (página PCI
+//     deles) pra onde o cliente é redirecionado;
+//   - PIX/BOLETO: devolve QR code / link do boleto;
+//   - rate limit por IP pra evitar spam de cadastro.
+// Usa os helpers do seu _lib.js (sbAdmin, asaas com ASAAS_BASE_URL, etc.).
 // ----------------------------------------------------------------------------
-import bcrypt from 'bcryptjs';
-import { sbAdmin, json, setCors } from './_lib.js';
+import {
+  sbAdmin, asaas, hashSenha, json, setCors,
+  validarEmail, limparCNPJ, limparTelefone, rateLimit,
+} from './_lib.js';
 
-const ASAAS_URL = process.env.ASAAS_URL || 'https://api.asaas.com/v3';
-// Para testar, defina ASAAS_URL=https://api-sandbox.asaas.com/v3 nas envs da Vercel.
-
-// Fonte da verdade de precos/limites. O cliente NAO escolhe valor.
+// Fonte da verdade de preços/limites. O cliente NÃO escolhe valor.
 const PLANOS = {
   starter:    { nome: 'Starter',    limite: 100,  valor: 390 },
   growth:     { nome: 'Growth',     limite: 200,  valor: 690 },
@@ -24,67 +24,59 @@ const PLANOS = {
 };
 const BILLING = { pix: 'PIX', boleto: 'BOLETO', cartao: 'CREDIT_CARD' };
 
-const txt = (v) => (typeof v === 'string' ? v.trim() : v);
-const num = (v) => (v || '').replace(/\D/g, '');
-
-async function asaas(path, opts = {}) {
-  const r = await fetch(ASAAS_URL + path, {
-    headers: { 'Content-Type': 'application/json', access_token: process.env.ASAAS_API_KEY },
-    ...opts,
-  });
-  const data = await r.json();
-  if (data?.errors) throw new Error(JSON.stringify(data.errors));
-  return data;
-}
-
 export default async function handler(req, res) {
   setCors(res);
   if (req.method === 'OPTIONS') return res.status(204).end();
-  if (req.method !== 'POST') return json(res, 405, { erro: 'Metodo nao permitido' });
+  if (req.method !== 'POST') return json(res, 405, { erro: 'Método não permitido' });
+
+  const ip = (req.headers['x-forwarded-for'] || '').split(',')[0].trim() || 'desconhecido';
+  if (!rateLimit(ip)) return json(res, 429, { erro: 'Muitas tentativas. Aguarde um minuto.' });
 
   try {
     const b = req.body || {};
-    const empresa  = txt(b.empresa);
-    const nome     = txt(b.nome);
-    const email    = (txt(b.email) || '').toLowerCase();
-    const telefone = num(b.telefone);
-    const cargo    = txt(b.cargo) || null;
-    const cnpj     = num(b.cnpj) || null;
+    const empresa  = (b.empresa || '').trim();
+    const nome     = (b.nome || '').trim();
+    const email    = (b.email || '').trim().toLowerCase();
+    const telefone = limparTelefone(b.telefone);
+    const cargo    = (b.cargo || '').trim() || null;
+    const cnpj     = limparCNPJ(b.cnpj) || null;
     const senha    = b.senha || '';
-    const plano    = txt(b.plano);
-    const formaPagamento = txt(b.formaPagamento);
+    const plano    = (b.plano || '').trim();
+    const formaPagamento = (b.formaPagamento || '').trim();
 
-    // -- Validacoes no servidor --
+    // -- Validações no servidor --
     if (!empresa || !nome || !email || !telefone || !senha || !plano)
-      return json(res, 400, { erro: 'Preencha todos os campos obrigatorios.' });
+      return json(res, 400, { erro: 'Preencha todos os campos obrigatórios.' });
+    if (!validarEmail(email))
+      return json(res, 400, { erro: 'E-mail inválido.' });
     if (senha.length < 8)
       return json(res, 400, { erro: 'A senha deve ter ao menos 8 caracteres.' });
     if (!PLANOS[plano])
-      return json(res, 400, { erro: 'Plano invalido.' });
+      return json(res, 400, { erro: 'Plano inválido.' });
     if (!BILLING[formaPagamento])
-      return json(res, 400, { erro: 'Forma de pagamento invalida.' });
+      return json(res, 400, { erro: 'Forma de pagamento inválida.' });
 
     // -- Unicidade (service key ignora RLS) --
     const emailExiste = await sbAdmin(`/rest/v1/admins?email=eq.${encodeURIComponent(email)}&select=id`);
-    if (emailExiste?.length) return json(res, 409, { erro: 'Este e-mail ja esta cadastrado. Faca login.' });
+    if (emailExiste?.length) return json(res, 409, { erro: 'Este e-mail já está cadastrado. Faça login.' });
     if (cnpj) {
       const cnpjExiste = await sbAdmin(`/rest/v1/clientes?cnpj=eq.${cnpj}&select=id`);
-      if (cnpjExiste?.length) return json(res, 409, { erro: 'Este CNPJ ja possui uma conta.' });
+      if (cnpjExiste?.length) return json(res, 409, { erro: 'Este CNPJ já possui uma conta.' });
     }
 
     const planoInfo = PLANOS[plano];
-    const senha_hash = bcrypt.hashSync(senha, 10);
+    const senha_hash = await hashSenha(senha);
 
     // -- Cria admin + cliente + assinatura (pendente) --
     const adminRes = await sbAdmin('/rest/v1/admins', {
-      method: 'POST', headers: { Prefer: 'return=representation' },
+      method: 'POST',
       body: JSON.stringify({ nome, email, senha_hash, empresa_nome: empresa, cnpj, cargo, telefone }),
     });
     const adminId = adminRes?.[0]?.id;
     if (!adminId) throw new Error('Falha ao criar admin');
 
     const clienteRes = await sbAdmin('/rest/v1/clientes', {
-      method: 'POST', headers: { Prefer: 'return=representation' },
+      method: 'POST',
       body: JSON.stringify({ admin_id: adminId, nome_empresa: empresa, cnpj, email, plano }),
     });
     const clienteId = clienteRes?.[0]?.id;
@@ -92,7 +84,7 @@ export default async function handler(req, res) {
     const venc = new Date(); venc.setDate(venc.getDate() + 3);
     const vencISO = venc.toISOString().slice(0, 10);
     await sbAdmin('/rest/v1/assinaturas', {
-      method: 'POST', headers: { Prefer: 'return=minimal' },
+      method: 'POST',
       body: JSON.stringify({
         admin_id: adminId, cliente_id: clienteId, status: 'pendente', plano,
         valor: planoInfo.valor, limite_medicos: planoInfo.limite,
@@ -100,7 +92,7 @@ export default async function handler(req, res) {
       }),
     });
 
-    // -- Asaas: cliente + assinatura recorrente (SEM dados de cartao) --
+    // -- Asaas: cliente + assinatura recorrente (SEM dados de cartão) --
     const customer = await asaas('/customers', {
       method: 'POST',
       body: JSON.stringify({
@@ -117,7 +109,7 @@ export default async function handler(req, res) {
         value: planoInfo.valor,
         nextDueDate: vencISO,
         cycle: 'MONTHLY',
-        description: 'PlantaoPro - Plano ' + planoInfo.nome,
+        description: 'PlantãoPro - Plano ' + planoInfo.nome,
         externalReference: adminId,
       }),
     });
@@ -127,7 +119,7 @@ export default async function handler(req, res) {
       body: JSON.stringify({ asaas_subscription_id: sub.id, asaas_customer_id: customer.id }),
     });
 
-    // -- Monta o retorno conforme a forma de pagamento --
+    // -- Retorno conforme a forma de pagamento --
     const pagamento = { tipo: formaPagamento };
     const cobr = await asaas(`/subscriptions/${sub.id}/payments?limit=1`);
     const prim = cobr?.data?.[0];
