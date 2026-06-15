@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PlantãoPro — Relatórios</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --blue:#1a5fad;--blue-dark:#0f3d7a;--blue-light:#e8f0fb;--green:#2d7a3a;
+  --border:#e0dbd2;--bg:#f8f7f4;--text:#1a1a1a;--text2:#555;--text3:#999;--radius:12px;
+}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);padding:24px;}
+.wrap{max-width:1000px;margin:0 auto;}
+h1{font-size:22px;font-weight:800;margin-bottom:4px;}
+.sub{font-size:13px;color:var(--text2);margin-bottom:24px;}
+.barra{display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap;background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:18px;margin-bottom:20px;}
+.campo{display:flex;flex-direction:column;gap:4px;}
+.campo label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.4px;color:var(--text2);}
+.campo input,.campo select{padding:9px 12px;font-size:14px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;outline:none;}
+.campo input:focus,.campo select:focus{border-color:var(--blue);}
+.btn{padding:9px 20px;background:var(--blue);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;}
+.btn:hover{background:var(--blue-dark);}
+.btn:disabled{opacity:0.6;cursor:not-allowed;}
+.btn-excel{background:var(--green);}
+.btn-excel:hover{background:#236030;}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:20px;}
+.card{background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;}
+.card .rotulo{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.4px;color:var(--text2);margin-bottom:6px;}
+.card .valor{font-size:22px;font-weight:800;color:var(--blue);}
+.painel{background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:20px;}
+table{width:100%;border-collapse:collapse;font-size:13px;}
+th,td{padding:10px 12px;text-align:right;border-bottom:1px solid var(--border);}
+th:first-child,td:first-child{text-align:left;}
+thead th{font-size:11px;text-transform:uppercase;letter-spacing:0.4px;color:var(--text2);background:#fafafa;}
+tbody tr:hover{background:var(--blue-light);}
+tfoot td{font-weight:800;border-top:2px solid var(--blue);color:var(--blue-dark);}
+.num{font-variant-numeric:tabular-nums;}
+#msg{font-size:13px;color:var(--text2);padding:12px 0;}
+.erro{color:#b03030;}
+canvas{max-height:320px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Relatórios</h1>
+  <div class="sub">Os dados do período são buscados uma vez; trocar o agrupamento recalcula na hora, sem nova consulta.</div>
+
+  <div class="barra">
+    <div class="campo">
+      <label>Mês</label>
+      <input type="month" id="mes" value="2026-04">
+    </div>
+    <div class="campo">
+      <label>Agrupar por</label>
+      <select id="agrupar" onchange="recalcular()">
+        <option value="unidade">Unidade</option>
+        <option value="setor">Setor</option>
+        <option value="tipo">Tipo de plantão</option>
+        <option value="medico">Médico (pagamento)</option>
+      </select>
+    </div>
+    <div class="campo">
+      <label>Modo</label>
+      <select id="modo" onchange="recalcular()">
+        <option value="previsto">Previsto (todos)</option>
+        <option value="realizado">Realizado (com médico)</option>
+      </select>
+    </div>
+    <div class="campo">
+      <label>&nbsp;</label>
+      <button class="btn" id="btn-gerar" onclick="carregar()">Gerar</button>
+    </div>
+    <div class="campo">
+      <label>&nbsp;</label>
+      <button class="btn btn-excel" id="btn-excel" onclick="exportarXlsx()" style="display:none;">Exportar Excel</button>
+    </div>
+  </div>
+
+  <div id="msg">Escolha o mês e clique em "Gerar".</div>
+
+  <div class="cards" id="cards" style="display:none;">
+    <div class="card"><div class="rotulo">Plantões</div><div class="valor num" id="c-plantoes">—</div></div>
+    <div class="card"><div class="rotulo">Horas</div><div class="valor num" id="c-horas">—</div></div>
+    <div class="card"><div class="rotulo">Custo total</div><div class="valor num" id="c-custo">—</div></div>
+    <div class="card"><div class="rotulo">Custo médio/plantão</div><div class="valor num" id="c-medio">—</div></div>
+  </div>
+
+  <div class="painel" id="painel-tabela" style="display:none;">
+    <table>
+      <thead>
+        <tr>
+          <th id="th-grupo">Unidade</th>
+          <th>Plantões</th>
+          <th>Com custo</th>
+          <th>Horas</th>
+          <th>Custo total</th>
+          <th>Custo médio</th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+      <tfoot id="tfoot"></tfoot>
+    </table>
+  </div>
+
+  <div class="painel" id="painel-grafico" style="display:none;">
+    <canvas id="grafico"></canvas>
+  </div>
+</div>
+
+<script>
+const BRL = (v) => (v || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+const NUM = (v) => (v || 0).toLocaleString('pt-BR');
+let chart = null;
+let feed = null;            // dados crus do período (buscados 1x)
+let relatorioAtual = null;  // resultado agregado atual (pra exportar)
+
+const ROTULO_GRUPO = { unidade: 'Unidade', setor: 'Setor', tipo: 'Tipo de plantão', medico: 'Médico' };
+
+function periodoDoMes(mes) {
+  const [ano, m] = mes.split('-').map(Number);
+  const ultimo = new Date(ano, m, 0).getDate();
+  return { inicio: `${mes}-01`, fim: `${mes}-${String(ultimo).padStart(2, '0')}` };
+}
+
+// Busca os dados do período UMA vez.
+async function carregar() {
+  const mes = document.getElementById('mes').value;
+  if (!mes) { setMsg('Escolha um mês.', true); return; }
+  const { inicio, fim } = periodoDoMes(mes);
+
+  const btn = document.getElementById('btn-gerar');
+  btn.disabled = true; btn.textContent = 'Buscando...';
+  document.getElementById('btn-excel').style.display = 'none';
+  esconder();
+
+  try {
+    const resp = await fetch(`/api/relatorios?inicio=${inicio}&fim=${fim}`);
+    const data = await resp.json();
+    if (!resp.ok) { setMsg(data.erro || 'Erro ao buscar dados.', true); feed = null; return; }
+    feed = data;
+    recalcular();
+  } catch (e) {
+    setMsg('Erro de conexão. Você está logado no painel?', true); feed = null;
+  } finally {
+    btn.disabled = false; btn.textContent = 'Gerar';
+  }
+}
+
+// Recalcula o relatório a partir do feed já em memória (sem nova chamada).
+function recalcular() {
+  if (!feed) return;
+  const agrupar = document.getElementById('agrupar').value;
+  const modo = document.getElementById('modo').value;
+
+  // "Realizado" = lançamento com médico atribuído (ajuste quando definir o critério).
+  let linhas = feed.lancamentos;
+  if (modo === 'realizado') linhas = linhas.filter((l) => l.medico_id);
+
+  const chave = (l) => {
+    if (agrupar === 'unidade') return feed.projetos[l.projeto_id] || '(sem projeto)';
+    if (agrupar === 'setor')   return l.setor || '(sem setor)';
+    if (agrupar === 'tipo')    return l.tipo || '(sem tipo)';
+    if (agrupar === 'medico')  return (feed.medicos[l.medico_id]?.nome) || '(sem médico)';
+    return '—';
+  };
+
+  const grupos = {};
+  const total = { plantoes: 0, com_custo: 0, horas: 0, custo: 0 };
+  for (const l of linhas) {
+    const k = chave(l);
+    const honor = parseFloat(l.honorario) || 0;
+    const horas = parseFloat(l.horas) || 0;
+    if (!grupos[k]) grupos[k] = { grupo: k, plantoes: 0, com_custo: 0, horas: 0, custo: 0 };
+    const g = grupos[k];
+    g.plantoes += 1; total.plantoes += 1;
+    if (honor > 0) { g.com_custo += 1; total.com_custo += 1; }
+    g.horas += horas; total.horas += horas;
+    g.custo += honor; total.custo += honor;
+  }
+
+  const itens = Object.values(grupos)
+    .map((g) => ({
+      grupo: g.grupo, plantoes: g.plantoes, com_custo: g.com_custo,
+      horas: +g.horas.toFixed(1), custo: +g.custo.toFixed(2),
+      medio: g.com_custo ? +(g.custo / g.com_custo).toFixed(2) : 0,
+    }))
+    .sort((a, b) => b.custo - a.custo);
+
+  relatorioAtual = {
+    rotulo: ROTULO_GRUPO[agrupar], itens,
+    total: {
+      plantoes: total.plantoes, com_custo: total.com_custo,
+      horas: +total.horas.toFixed(1), custo: +total.custo.toFixed(2),
+      medio: total.com_custo ? +(total.custo / total.com_custo).toFixed(2) : 0,
+    },
+  };
+
+  if (!itens.length) { setMsg('Nenhum lançamento nesse período/critério.'); return; }
+  setMsg('');
+  render(relatorioAtual);
+  document.getElementById('btn-excel').style.display = 'inline-block';
+}
+
+function render(r) {
+  document.getElementById('c-plantoes').textContent = NUM(r.total.plantoes);
+  document.getElementById('c-horas').textContent = NUM(r.total.horas) + 'h';
+  document.getElementById('c-custo').textContent = BRL(r.total.custo);
+  document.getElementById('c-medio').textContent = BRL(r.total.medio);
+  document.getElementById('cards').style.display = 'grid';
+
+  document.getElementById('th-grupo').textContent = r.rotulo;
+  document.getElementById('tbody').innerHTML = r.itens.map((i) => `
+    <tr>
+      <td>${i.grupo}</td>
+      <td class="num">${NUM(i.plantoes)}</td>
+      <td class="num">${NUM(i.com_custo)}</td>
+      <td class="num">${NUM(i.horas)}</td>
+      <td class="num">${BRL(i.custo)}</td>
+      <td class="num">${BRL(i.medio)}</td>
+    </tr>`).join('');
+  document.getElementById('tfoot').innerHTML = `
+    <tr>
+      <td>TOTAL GERAL</td>
+      <td class="num">${NUM(r.total.plantoes)}</td>
+      <td class="num">${NUM(r.total.com_custo)}</td>
+      <td class="num">${NUM(r.total.horas)}</td>
+      <td class="num">${BRL(r.total.custo)}</td>
+      <td class="num">${BRL(r.total.medio)}</td>
+    </tr>`;
+  document.getElementById('painel-tabela').style.display = 'block';
+
+  const ctx = document.getElementById('grafico');
+  if (chart) chart.destroy();
+  chart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: r.itens.map((i) => i.grupo),
+      datasets: [{ label: 'Custo total (R$)', data: r.itens.map((i) => i.custo), backgroundColor: '#1a5fad', borderRadius: 4 }],
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { display: false } },
+      scales: { y: { ticks: { callback: (v) => 'R$ ' + v.toLocaleString('pt-BR') } } },
+    },
+  });
+  document.getElementById('painel-grafico').style.display = 'block';
+}
+
+function exportarXlsx() {
+  if (!relatorioAtual || !window.XLSX) return;
+  const r = relatorioAtual;
+  const linhas = r.itens.map((i) => ({
+    [r.rotulo]: i.grupo,
+    'Plantões': i.plantoes,
+    'Com custo': i.com_custo,
+    'Horas': i.horas,
+    'Custo total (R$)': i.custo,
+    'Custo médio (R$)': i.medio,
+  }));
+  linhas.push({
+    [r.rotulo]: 'TOTAL GERAL',
+    'Plantões': r.total.plantoes,
+    'Com custo': r.total.com_custo,
+    'Horas': r.total.horas,
+    'Custo total (R$)': r.total.custo,
+    'Custo médio (R$)': r.total.medio,
+  });
+  const ws = XLSX.utils.json_to_sheet(linhas);
+  ws['!cols'] = [{ wch: 26 }, { wch: 10 }, { wch: 10 }, { wch: 8 }, { wch: 16 }, { wch: 16 }];
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Relatorio');
+  const mes = document.getElementById('mes').value;
+  XLSX.writeFile(wb, `relatorio-${r.rotulo.toLowerCase()}-${mes}.xlsx`);
+}
+
+function setMsg(t, err) {
+  const m = document.getElementById('msg');
+  m.textContent = t; m.className = err ? 'erro' : ''; m.style.display = t ? 'block' : 'none';
+}
+function esconder() {
+  document.getElementById('cards').style.display = 'none';
+  document.getElementById('painel-tabela').style.display = 'none';
+  document.getElementById('painel-grafico').style.display = 'none';
+}
+</script>
+</body>
+</html>
