@@ -8913,7 +8913,14 @@ document.addEventListener('click',function(e){var dd=document.getElementById('pe
 </script>
 
 <script>
-// ===== RELATÓRIOS — versão completa (16 tipos) =====
+<script>
+// ===== RELATÓRIOS v2 — agrupados por hospital + por tipo =====
+function _porHospital(dados){
+  const m={};
+  dados.forEach(l=>{const p=l.projeto||'Sem hospital';(m[p]=m[p]||[]).push(l);});
+  return Object.entries(m).sort((a,b)=>a[0].localeCompare(b[0],'pt-BR'));
+}
+
 function gerarRelatorio(){
   const el=document.getElementById('rel-resultado');
   switch(_relTipoAtivo){
@@ -8930,172 +8937,98 @@ function gerarRelatorio(){
     case 'fin_profissional': return gerarRelFinProfissional(el);
     case 'fin_banco': return gerarRelFinBanco(el);
     case 'fin_setor': return gerarRelFinSetor(el);
+    case 'fin_tipo': return gerarRelFinTipo(el);
     case 'escala': return gerarRelEscala(el);
     case 'entrada_saida': return gerarRelEntradaSaida(el);
     case 'trocas': return gerarRelTrocas(el);
   }
 }
 
-// ---- FINANCEIRO ANALÍTICO (todos os plantões) ----
+function _totalGeralCard(label,valor){
+  return `<div class="card" style="margin-bottom:12px;background:#0f3d7a;color:#fff;"><div style="display:flex;justify-content:space-between;"><span style="font-weight:600;">${label}</span><span style="font-weight:700;">${fBRL(valor)}</span></div></div>`;
+}
+
+// HORAS POR PROFISSIONAL — por hospital
+function gerarRelHoras(el){
+  const dados=filtrarDadosRel();
+  if(!dados.length){el.innerHTML='<div class="card"><div class="empty">Nenhum plantão no período.</div></div>';return;}
+  let html='';
+  _porHospital(dados).forEach(([proj,lst])=>{
+    const porMed={};
+    lst.forEach(l=>{const k=l.medico_id||l.medico;if(!porMed[k])porMed[k]={nome:l.medico||'—',crm:l.crm||'',h12:0,h24:0,hOutros:0,hTotal:0,plantoes:0,total:0};const h=l.horas||0,t=l.tipo||'';if(t.includes('24'))porMed[k].h24+=h;else if(t.includes('12')||t.includes('Diurno')||t.includes('Noturno'))porMed[k].h12+=h;else porMed[k].hOutros+=h;porMed[k].hTotal+=h;porMed[k].plantoes++;porMed[k].total+=l.honorario||0;});
+    const arr=Object.values(porMed).sort((a,b)=>b.hTotal-a.hTotal);
+    const subH=arr.reduce((s,m)=>s+m.hTotal,0);
+    const linhas=arr.map(m=>`<tr><td><strong>${m.nome}</strong></td><td class="mono">${m.crm}</td><td style="text-align:center;">${m.plantoes}</td><td style="text-align:center;">${Math.round(m.h12*10)/10}h</td><td style="text-align:center;">${Math.round(m.h24*10)/10}h</td><td style="text-align:center;">${Math.round(m.hOutros*10)/10}h</td><td style="text-align:center;font-weight:700;">${Math.round(m.hTotal*10)/10}h</td><td class="mono" style="color:var(--green);font-weight:600;">${fBRL(m.total)}</td></tr>`).join('');
+    html+=`<div class="card" style="margin-bottom:12px;"><div style="display:flex;justify-content:space-between;margin-bottom:8px;"><div class="card-title" style="margin-bottom:0;">${proj}</div><div style="font-size:12px;color:var(--text2);">${arr.length} profissional(is) · ${Math.round(subH*10)/10}h</div></div><table><thead><tr><th>Profissional</th><th>CRM</th><th style="text-align:center;">Plantões</th><th style="text-align:center;">12h</th><th style="text-align:center;">24h</th><th style="text-align:center;">Outros</th><th style="text-align:center;">Total</th><th>Honorários</th></tr></thead><tbody>${linhas}</tbody></table></div>`;
+  });
+  el.innerHTML=html;
+}
+
+// FINANCEIRO ANALÍTICO — por hospital
 function gerarRelFinAnalitico(el){
   const dados=filtrarDadosRel();
   if(!dados.length){el.innerHTML='<div class="card"><div class="empty">Nenhum plantão no período.</div></div>';return;}
-  const tot=dados.reduce((s,l)=>s+(l.honorario||0),0);
-  const linhas=dados.slice().sort((a,b)=>(a.projeto||'').localeCompare(b.projeto||'','pt-BR')||a.data.localeCompare(b.data)).map(l=>`<tr><td class="mono">${fDate(l.data)}</td><td><strong>${l.medico||'—'}</strong><br><span class="mono" style="font-size:11px;color:var(--text3);">${l.crm||''}</span></td><td>${l.projeto||'—'}</td><td>${l.setor||'—'}</td><td>${l.tipo||'—'}</td><td class="mono">${l.horas}h</td><td class="mono" style="color:var(--green);font-weight:600;">${fBRL(l.honorario||0)}</td></tr>`).join('');
-  el.innerHTML=`<div class="card"><div style="display:flex;justify-content:space-between;margin-bottom:10px;"><div class="card-title" style="margin-bottom:0;">Financeiro analítico</div><div style="font-size:12px;color:var(--text2);">${dados.length} plantão(ões) · <span style="color:var(--green);font-weight:600;">${fBRL(tot)}</span></div></div><table><thead><tr><th>Data</th><th>Médico / CRM</th><th>Hospital</th><th>Setor</th><th>Tipo</th><th>Horas</th><th>Valor</th></tr></thead><tbody>${linhas}</tbody><tfoot><tr style="border-top:1.5px solid var(--border2);"><td colspan="6" style="font-weight:600;padding:8px;">Total</td><td class="mono" style="color:var(--green);font-weight:700;">${fBRL(tot)}</td></tr></tfoot></table></div>`;
+  let html='',geral=0;
+  _porHospital(dados).forEach(([proj,lst])=>{
+    const sub=lst.reduce((s,l)=>s+(l.honorario||0),0);geral+=sub;
+    const linhas=lst.slice().sort((a,b)=>(a.setor||'').localeCompare(b.setor||'','pt-BR')||a.data.localeCompare(b.data)).map(l=>`<tr><td class="mono">${fDate(l.data)}</td><td><strong>${l.medico||'—'}</strong><br><span class="mono" style="font-size:11px;color:var(--text3);">${l.crm||''}</span></td><td>${l.setor||'—'}</td><td>${l.tipo||'—'}</td><td class="mono">${l.horas}h</td><td class="mono" style="color:var(--green);font-weight:600;">${fBRL(l.honorario||0)}</td></tr>`).join('');
+    html+=`<div class="card" style="margin-bottom:12px;"><div style="display:flex;justify-content:space-between;margin-bottom:8px;"><div class="card-title" style="margin-bottom:0;">${proj}</div><div style="font-size:12px;color:var(--text2);">${lst.length} plantão(ões) · <span style="color:var(--green);font-weight:600;">${fBRL(sub)}</span></div></div><table><thead><tr><th>Data</th><th>Médico / CRM</th><th>Setor</th><th>Tipo</th><th>Horas</th><th>Valor</th></tr></thead><tbody>${linhas}</tbody><tfoot><tr style="border-top:1.5px solid var(--border2);"><td colspan="5" style="font-weight:600;padding:8px;">Total ${proj}</td><td class="mono" style="color:var(--green);font-weight:700;">${fBRL(sub)}</td></tr></tfoot></table></div>`;
+  });
+  el.innerHTML=_totalGeralCard('Total geral — '+dados.length+' plantão(ões)',geral)+html;
 }
 
-// ---- FINANCEIRO CONSOLIDADO (por profissional) ----
+// FINANCEIRO CONSOLIDADO — por hospital → médico
 function gerarRelFinConsolidado(el){
   const dados=filtrarDadosRel();
   if(!dados.length){el.innerHTML='<div class="card"><div class="empty">Nenhum plantão no período.</div></div>';return;}
-  const porMed={};
-  dados.forEach(l=>{const k=l.medico_id||l.medico;if(!porMed[k])porMed[k]={nome:l.medico||'—',crm:l.crm||'',qtd:0,horas:0,total:0};porMed[k].qtd++;porMed[k].horas+=l.horas||0;porMed[k].total+=l.honorario||0;});
-  const arr=Object.values(porMed).sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR'));
-  const tot=arr.reduce((s,m)=>s+m.total,0);
-  const linhas=arr.map(m=>`<tr><td><strong>${m.nome}</strong></td><td class="mono">${m.crm}</td><td style="text-align:center;">${m.qtd}</td><td class="mono">${Math.round(m.horas*10)/10}h</td><td class="mono" style="color:var(--green);font-weight:600;">${fBRL(m.total)}</td></tr>`).join('');
-  el.innerHTML=`<div class="card"><div style="display:flex;justify-content:space-between;margin-bottom:10px;"><div class="card-title" style="margin-bottom:0;">Financeiro consolidado</div><div style="font-size:12px;color:var(--text2);">${arr.length} profissional(is) · <span style="color:var(--green);font-weight:600;">${fBRL(tot)}</span></div></div><table><thead><tr><th>Médico</th><th>CRM</th><th style="text-align:center;">Plantões</th><th>Horas</th><th>Total</th></tr></thead><tbody>${linhas}</tbody><tfoot><tr style="border-top:1.5px solid var(--border2);"><td colspan="4" style="font-weight:600;padding:8px;">Total geral</td><td class="mono" style="color:var(--green);font-weight:700;">${fBRL(tot)}</td></tr></tfoot></table></div>`;
+  let html='',geral=0;
+  _porHospital(dados).forEach(([proj,lst])=>{
+    const porMed={};
+    lst.forEach(l=>{const k=l.medico_id||l.medico;if(!porMed[k])porMed[k]={nome:l.medico||'—',crm:l.crm||'',qtd:0,horas:0,total:0};porMed[k].qtd++;porMed[k].horas+=l.horas||0;porMed[k].total+=l.honorario||0;});
+    const arr=Object.values(porMed).sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR'));
+    const sub=arr.reduce((s,m)=>s+m.total,0);geral+=sub;
+    const linhas=arr.map(m=>`<tr><td><strong>${m.nome}</strong></td><td class="mono">${m.crm}</td><td style="text-align:center;">${m.qtd}</td><td class="mono">${Math.round(m.horas*10)/10}h</td><td class="mono" style="color:var(--green);font-weight:600;">${fBRL(m.total)}</td></tr>`).join('');
+    html+=`<div class="card" style="margin-bottom:12px;"><div style="display:flex;justify-content:space-between;margin-bottom:8px;"><div class="card-title" style="margin-bottom:0;">${proj}</div><div style="font-size:12px;color:var(--text2);">${arr.length} profissional(is) · <span style="color:var(--green);font-weight:600;">${fBRL(sub)}</span></div></div><table><thead><tr><th>Médico</th><th>CRM</th><th style="text-align:center;">Plantões</th><th>Horas</th><th>Total</th></tr></thead><tbody>${linhas}</tbody><tfoot><tr style="border-top:1.5px solid var(--border2);"><td colspan="4" style="font-weight:600;padding:8px;">Total ${proj}</td><td class="mono" style="color:var(--green);font-weight:700;">${fBRL(sub)}</td></tr></tfoot></table></div>`;
+  });
+  el.innerHTML=_totalGeralCard('Total geral',geral)+html;
 }
 
-// ---- FINANCEIRO POR PROFISSIONAL (agrupado, lista plantões) ----
+// FINANCEIRO POR PROFISSIONAL — por hospital → médico → plantões
 function gerarRelFinProfissional(el){
   const dados=filtrarDadosRel();
   if(!dados.length){el.innerHTML='<div class="card"><div class="empty">Nenhum plantão no período.</div></div>';return;}
-  const porMed={};
-  dados.forEach(l=>{const k=l.medico_id||l.medico;if(!porMed[k])porMed[k]={nome:l.medico||'—',crm:l.crm||'',itens:[]};porMed[k].itens.push(l);});
-  const meds=Object.values(porMed).sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR'));
   let html='';
-  meds.forEach(m=>{
-    const sub=m.itens.reduce((s,l)=>s+(l.honorario||0),0);
-    const subH=m.itens.reduce((s,l)=>s+(l.horas||0),0);
-    const linhas=m.itens.slice().sort((a,b)=>a.data.localeCompare(b.data)).map(l=>`<tr><td class="mono">${fDate(l.data)}</td><td>${l.projeto||'—'}${l.setor?' — '+l.setor:''}</td><td>${l.tipo||'—'}</td><td class="mono">${l.horas}h</td><td class="mono" style="color:var(--green);">${fBRL(l.honorario||0)}</td></tr>`).join('');
-    html+=`<div class="card" style="margin-bottom:12px;"><div style="font-size:13px;font-weight:700;margin-bottom:8px;">${m.nome} <span class="mono" style="font-size:11px;color:var(--text3);font-weight:400;">${m.crm}</span></div><table><thead><tr><th>Data</th><th>Hospital / Setor</th><th>Tipo</th><th>Duração</th><th>Valor</th></tr></thead><tbody>${linhas}</tbody><tfoot><tr style="border-top:1.5px solid var(--border2);"><td style="font-weight:600;padding:8px;">Total</td><td style="font-weight:600;">${m.itens.length} plantão(ões)</td><td></td><td class="mono" style="font-weight:600;">${Math.round(subH*10)/10}h</td><td class="mono" style="color:var(--green);font-weight:700;">${fBRL(sub)}</td></tr></tfoot></table></div>`;
+  _porHospital(dados).forEach(([proj,lst])=>{
+    const porMed={};
+    lst.forEach(l=>{const k=l.medico_id||l.medico;if(!porMed[k])porMed[k]={nome:l.medico||'—',crm:l.crm||'',itens:[]};porMed[k].itens.push(l);});
+    const meds=Object.values(porMed).sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR'));
+    const subProj=lst.reduce((s,l)=>s+(l.honorario||0),0);
+    let inner='';
+    meds.forEach(m=>{
+      const sub=m.itens.reduce((s,l)=>s+(l.honorario||0),0);
+      const subH=m.itens.reduce((s,l)=>s+(l.horas||0),0);
+      const linhas=m.itens.slice().sort((a,b)=>a.data.localeCompare(b.data)).map(l=>`<tr><td class="mono">${fDate(l.data)}</td><td>${l.setor||'—'}</td><td>${l.tipo||'—'}</td><td class="mono">${l.horas}h</td><td class="mono" style="color:var(--green);">${fBRL(l.honorario||0)}</td></tr>`).join('');
+      inner+=`<div style="margin-bottom:10px;"><div style="font-size:13px;font-weight:700;margin-bottom:6px;">${m.nome} <span class="mono" style="font-size:11px;color:var(--text3);font-weight:400;">${m.crm}</span></div><table><thead><tr><th>Data</th><th>Setor</th><th>Tipo</th><th>Duração</th><th>Valor</th></tr></thead><tbody>${linhas}</tbody><tfoot><tr style="border-top:1px solid var(--border);"><td style="font-weight:600;padding:6px;">Total</td><td>${m.itens.length} plantão(ões)</td><td></td><td class="mono" style="font-weight:600;">${Math.round(subH*10)/10}h</td><td class="mono" style="color:var(--green);font-weight:700;">${fBRL(sub)}</td></tr></tfoot></table></div>`;
+    });
+    html+=`<div class="card" style="margin-bottom:12px;"><div style="display:flex;justify-content:space-between;margin-bottom:10px;border-bottom:1px solid var(--border);padding-bottom:8px;"><div class="card-title" style="margin-bottom:0;">${proj}</div><div style="font-size:12px;color:var(--text2);">${meds.length} profissional(is) · <span style="color:var(--green);font-weight:600;">${fBRL(subProj)}</span></div></div>${inner}</div>`;
   });
   el.innerHTML=html;
 }
 
-// ---- FINANCEIRO COM DADOS BANCÁRIOS ----
+// FINANCEIRO COM DADOS BANCÁRIOS — por hospital → médico
 function gerarRelFinBanco(el){
   const dados=filtrarDadosRel();
   if(!dados.length){el.innerHTML='<div class="card"><div class="empty">Nenhum plantão no período.</div></div>';return;}
-  const porMed={};
-  dados.forEach(l=>{const k=l.medico_id||l.medico;if(!porMed[k])porMed[k]={id:l.medico_id,nome:l.medico||'—',crm:l.crm||'',qtd:0,total:0};porMed[k].qtd++;porMed[k].total+=l.honorario||0;});
-  const arr=Object.values(porMed).sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR'));
-  const tot=arr.reduce((s,m)=>s+m.total,0);
-  const linhas=arr.map(m=>{
-    const med=medicos.find(x=>x.id===m.id)||{};
-    let banco='<span style="color:var(--red);">Sem dados bancários</span>';
-    if(med.pix_tipo&&med.pix_chave) banco='PIX '+med.pix_tipo+': '+med.pix_chave;
-    else if(med.banco) banco=med.banco+' · Ag '+(med.agencia||'—')+' · CC '+(med.conta_corrente||'—');
-    return `<tr><td><strong>${m.nome}</strong></td><td class="mono">${m.crm}</td><td style="font-size:12px;">${banco}</td><td style="text-align:center;">${m.qtd}</td><td class="mono" style="color:var(--green);font-weight:600;">${fBRL(m.total)}</td></tr>`;
-  }).join('');
-  el.innerHTML=`<div class="card"><div style="display:flex;justify-content:space-between;margin-bottom:10px;"><div class="card-title" style="margin-bottom:0;">Financeiro com dados bancários</div><div style="font-size:12px;color:var(--text2);">${arr.length} profissional(is) · <span style="color:var(--green);font-weight:600;">${fBRL(tot)}</span></div></div><table><thead><tr><th>Médico</th><th>CRM</th><th>Dados bancários</th><th style="text-align:center;">Plantões</th><th>Total</th></tr></thead><tbody>${linhas}</tbody><tfoot><tr style="border-top:1.5px solid var(--border2);"><td colspan="4" style="font-weight:600;padding:8px;">Total geral</td><td class="mono" style="color:var(--green);font-weight:700;">${fBRL(tot)}</td></tr></tfoot></table></div>`;
-}
-
-// ---- FINANCEIRO POR SETOR (por hospital) ----
-function gerarRelFinSetor(el){
-  const dados=filtrarDadosRel();
-  if(!dados.length){el.innerHTML='<div class="card"><div class="empty">Nenhum plantão no período.</div></div>';return;}
-  const porProj={};
-  dados.forEach(l=>{const p=l.projeto||'Sem hospital';if(!porProj[p])porProj[p]={};const s=l.setor||'(sem setor)';porProj[p][s]=(porProj[p][s]||0)+(l.honorario||0);});
-  let html='';
-  Object.entries(porProj).sort((a,b)=>a[0].localeCompare(b[0],'pt-BR')).forEach(([proj,setores])=>{
-    const arr=Object.entries(setores).sort((a,b)=>a[0].localeCompare(b[0],'pt-BR'));
-    const totProj=arr.reduce((s,[,v])=>s+v,0);
-    const linhas=arr.map(([s,v])=>`<tr><td>${s}</td><td class="mono" style="text-align:right;">${fBRL(v)}</td></tr>`).join('');
-    html+=`<div class="card" style="margin-bottom:12px;"><div class="card-title">${proj}</div><table><thead><tr><th>Setor</th><th style="text-align:right;">Custo</th></tr></thead><tbody>${linhas}</tbody><tfoot><tr style="border-top:1.5px solid var(--border2);"><td style="font-weight:700;padding:8px;">Total</td><td class="mono" style="text-align:right;font-weight:700;color:var(--green);">${fBRL(totProj)}</td></tr></tfoot></table></div>`;
+  let html='',geral=0;
+  _porHospital(dados).forEach(([proj,lst])=>{
+    const porMed={};
+    lst.forEach(l=>{const k=l.medico_id||l.medico;if(!porMed[k])porMed[k]={id:l.medico_id,nome:l.medico||'—',crm:l.crm||'',qtd:0,total:0};porMed[k].qtd++;porMed[k].total+=l.honorario||0;});
+    const arr=Object.values(porMed).sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR'));
+    const sub=arr.reduce((s,m)=>s+m.total,0);geral+=sub;
+    const linhas=arr.map(m=>{const med=medicos.find(x=>x.id===m.id)||{};let banco='<span style="color:var(--red);">Sem dados bancários</span>';if(med.pix_tipo&&med.pix_chave)banco='PIX '+med.pix_tipo+': '+med.pix_chave;else if(med.banco)banco=med.banco+' · Ag '+(med.agencia||'—')+' · CC '+(med.conta_corrente||'—');return `<tr><td><strong>${m.nome}</strong></td><td class="mono">${m.crm}</td><td style="font-size:12px;">${banco}</td><td style="text-align:center;">${m.qtd}</td><td class="mono" style="color:var(--green);font-weight:600;">${fBRL(m.total)}</td></tr>`;}).join('');
+    html+=`<div class="card" style="margin-bottom:12px;"><div style="display:flex;justify-content:space-between;margin-bottom:8px;"><div class="card-title" style="margin-bottom:0;">${proj}</div><div style="font-size:12px;color:var(--text2);">${arr.length} profissional(is) · <span style="color:var(--green);font-weight:600;">${fBRL(sub)}</span></div></div><table><thead><tr><th>Médico</th><th>CRM</th><th>Dados bancários</th><th style="text-align:center;">Plantões</th><th>Total</th></tr></thead><tbody>${linhas}</tbody><tfoot><tr style="border-top:1.5px solid var(--border2);"><td colspan="4" style="font-weight:600;padding:8px;">Total ${proj}</td><td class="mono" style="color:var(--green);font-weight:700;">${fBRL(sub)}</td></tr></tfoot></table></div>`;
   });
-  el.innerHTML=html;
-}
-
-// ---- ESCALA DE PLANTÕES (com furos) ----
-function gerarRelEscala(el){
-  const dados=filtrarDadosRel();
-  if(!dados.length){el.innerHTML='<div class="card"><div class="empty">Nenhum plantão no período.</div></div>';return;}
-  const porData={};
-  dados.forEach(l=>{(porData[l.data]=porData[l.data]||[]).push(l);});
-  let totFuros=0,html='';
-  Object.keys(porData).sort().forEach(data=>{
-    const lst=porData[data].slice().sort((a,b)=>(a.setor||'').localeCompare(b.setor||'','pt-BR')||(a.hora_ini||'').localeCompare(b.hora_ini||''));
-    const dt=new Date(data+'T12:00:00');
-    const dow=dt.toLocaleDateString('pt-BR',{weekday:'long'});
-    const linhas=lst.map(l=>{
-      const ehFuro=l.aberto?((l.vagas||1)-(l.vagas_preenchidas||0))>0:!l.medico_id;
-      if(ehFuro) totFuros++;
-      const resp=ehFuro?'<span style="color:var(--red);font-weight:600;">Sem médico escalado</span>':'<strong>'+(l.medico||'—')+'</strong>';
-      return `<tr style="${ehFuro?'background:#fdf0f0;':''}"><td>${l.projeto||'—'}</td><td>${l.setor||'—'}</td><td class="mono">${(l.hora_ini||'').slice(0,5)}–${(l.hora_fim||'').slice(0,5)}</td><td>${l.tipo||'—'}</td><td>${resp}</td></tr>`;
-    }).join('');
-    html+=`<div class="card" style="margin-bottom:12px;"><div class="card-title" style="text-transform:capitalize;">${dow}, ${fDate(data)}</div><table><thead><tr><th>Hospital</th><th>Setor</th><th>Horário</th><th>Tipo</th><th>Profissional</th></tr></thead><tbody>${linhas}</tbody></table></div>`;
-  });
-  const aviso=totFuros>0?`<div class="card" style="border-left:3px solid var(--red);background:var(--red-bg);margin-bottom:12px;"><strong style="color:var(--red);">${totFuros} furo(s)</strong> — plantões ainda sem médico escalado no período.</div>`:'';
-  el.innerHTML=aviso+html;
-}
-
-// ---- FALTAS (com justificada / não justificada) ----
-async function gerarRelFaltas(el){
-  el.innerHTML='<div class="card"><div class="empty">Carregando...</div></div>';
-  const d1=document.getElementById('rd1').value,d2=document.getElementById('rd2').value;
-  let pathCI='/rest/v1/checkins?aprovado=eq.true&select=medico_id,projeto_id,feito_em';
-  if(d1)pathCI+=`&feito_em=gte.${d1}T00:00:00`;
-  if(d2)pathCI+=`&feito_em=lte.${d2}T23:59:59`;
-  const checkins=await sb(pathCI)||[];
-  const ciKeys=new Set(checkins.map(c=>`${c.medico_id}_${c.projeto_id}_${(c.feito_em||'').slice(0,10)}`));
-  const ausencias=await sb('/rest/v1/ausencias?select=lancamento_id,status,motivo')||[];
-  const ausByLanc={}; ausencias.forEach(a=>{ if(a.lancamento_id) ausByLanc[a.lancamento_id]=a; });
-  const agora=new Date();
-  const dados=filtrarDadosRel().filter(l=>l.medico_id && new Date(`${l.data}T${l.hora_ini||'00:00'}`)<agora);
-  const faltas=dados.filter(l=>!ciKeys.has(`${l.medico_id}_${l.projeto_id}_${l.data}`));
-  if(!faltas.length){el.innerHTML='<div class="card"><div style="text-align:center;padding:24px;color:var(--green);font-weight:600;">Nenhuma falta no período.</div></div>';return;}
-  const classifica=l=>{
-    const a=ausByLanc[l.id];
-    if(!a) return {txt:'Não justificada (sem aviso)',cor:'var(--red)'};
-    const st=(a.status||'').toLowerCase();
-    const justif = a.motivo || st.includes('justif') || st.includes('aprov');
-    return justif?{txt:'Justificada'+(a.motivo?' — '+a.motivo:''),cor:'var(--amber)'}:{txt:'Não justificada',cor:'var(--red)'};
-  };
-  const linhas=faltas.slice().sort((a,b)=>b.data.localeCompare(a.data)).map(l=>{const c=classifica(l);return `<tr><td><strong>${l.medico||'—'}</strong></td><td class="mono">${l.crm||''}</td><td>${l.projeto||'—'}</td><td>${l.setor||'—'}</td><td class="mono">${fDate(l.data)}</td><td class="mono">${(l.hora_ini||'').slice(0,5)}–${(l.hora_fim||'').slice(0,5)}</td><td style="color:${c.cor};font-weight:600;">${c.txt}</td><td class="mono">${fBRL(l.honorario||0)}</td></tr>`;}).join('');
-  const tot=faltas.reduce((s,l)=>s+(l.honorario||0),0);
-  el.innerHTML=`<div class="card"><div style="margin-bottom:10px;font-size:13px;color:var(--red);font-weight:600;">${faltas.length} falta(s) no período</div><table><thead><tr><th>Médico</th><th>CRM</th><th>Hospital</th><th>Setor</th><th>Data</th><th>Horário</th><th>Situação</th><th>Valor</th></tr></thead><tbody>${linhas}</tbody><tfoot><tr style="border-top:1.5px solid var(--border2);"><td colspan="7" style="font-weight:600;padding:8px;">Total</td><td class="mono" style="color:var(--red);font-weight:700;">${fBRL(tot)}</td></tr></tfoot></table></div>`;
-}
-
-// ---- ENTRADA E SAÍDA (check-ins) ----
-async function gerarRelEntradaSaida(el){
-  el.innerHTML='<div class="card"><div class="empty">Carregando...</div></div>';
-  const d1=document.getElementById('rd1').value,d2=document.getElementById('rd2').value;
-  const dados=filtrarDadosRel();
-  if(!dados.length){el.innerHTML='<div class="card"><div class="empty">Nenhum plantão no período.</div></div>';return;}
-  let pathCI='/rest/v1/checkins?select=medico_id,projeto_id,feito_em,distancia_metros,aprovado&order=feito_em';
-  if(d1)pathCI+=`&feito_em=gte.${d1}T00:00:00`;
-  if(d2)pathCI+=`&feito_em=lte.${d2}T23:59:59`;
-  const checkins=await sb(pathCI)||[];
-  const byKey={}; checkins.forEach(c=>{const k=`${c.medico_id}_${c.projeto_id}_${(c.feito_em||'').slice(0,10)}`;(byKey[k]=byKey[k]||[]).push(c);});
-  const fmtH=v=>v?new Date(v.feito_em).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'';
-  const dist=v=>(v&&v.distancia_metros!=null)?`<span style="color:${v.distancia_metros>100?'var(--red)':'var(--green)'};">${v.distancia_metros}m</span>`:'';
-  const linhas=dados.slice().sort((a,b)=>a.data.localeCompare(b.data)||(a.hora_ini||'').localeCompare(b.hora_ini||'')).map(l=>{
-    const cs=(byKey[`${l.medico_id}_${l.projeto_id}_${l.data}`]||[]).slice().sort((a,b)=>a.feito_em.localeCompare(b.feito_em));
-    const ent=cs[0],sai=cs.length>1?cs[cs.length-1]:null;
-    const situ=ent?'Presente':'Sem check-in';
-    return `<tr><td class="mono">${fDate(l.data)} ${(l.hora_ini||'').slice(0,5)}</td><td class="mono">${l.horas}h</td><td class="mono">${fmtH(ent)}</td><td class="mono">${dist(ent)}</td><td class="mono">${fmtH(sai)}</td><td class="mono">${dist(sai)}</td><td>${l.projeto||'—'}${l.setor?' - '+l.setor:''}</td><td>${l.medico||'—'}</td><td>${situ}</td><td>${l.tipo||'—'}</td></tr>`;
-  }).join('');
-  el.innerHTML=`<div class="card"><div class="card-title">Entrada e saída</div><table><thead><tr><th>Data</th><th>Duração</th><th>Entrada</th><th>Dist. entrada</th><th>Saída</th><th>Dist. saída</th><th>Setor</th><th>Responsável</th><th>Situação</th><th>Tipo</th></tr></thead><tbody>${linhas}</tbody></table></div>`;
-}
-
-// ---- TROCAS E PASSAGENS ----
-async function gerarRelTrocas(el){
-  el.innerHTML='<div class="card"><div class="empty">Carregando...</div></div>';
-  const d1=document.getElementById('rd1').value,d2=document.getElementById('rd2').value;
-  let path='/rest/v1/transferencias?select=*,lancamentos(data,setor,projetos(nome))&order=criado_em.desc';
-  if(d1)path+=`&criado_em=gte.${d1}T00:00:00`;
-  if(d2)path+=`&criado_em=lte.${d2}T23:59:59`;
-  const trs=await sb(path)||[];
-  if(!trs.length){el.innerHTML='<div class="card"><div class="empty">Nenhuma troca/passagem no período.</div></div>';return;}
-  const nome=id=>{const m=medicos.find(x=>x.id===id);return m?m.nome:'—';};
-  const linhas=trs.map(t=>{
-    const realizado=t.respondido_em||t.criado_em;
-    const plant=t.lancamentos?`${t.lancamentos.projetos?.nome||''}${t.lancamentos.setor?' - '+t.lancamentos.setor:''} · ${t.lancamentos.data?fDate(t.lancamentos.data):''}`:'—';
-    return `<tr><td class="mono">${realizado?new Date(realizado).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'—'}</td><td>${plant}</td><td>${nome(t.medico_origem_id)}</td><td>${nome(t.medico_destino_id)}</td><td>${t.status||'—'}</td><td>${t.justificativa||t.obs||''}</td></tr>`;
-  }).join('');
-  el.innerHTML=`<div class="card"><div class="card-title">Trocas e passagens de plantões</div><table><thead><tr><th>Realizado em</th><th>Plantão</th><th>Requerente</th><th>Requerido</th><th>Status</th><th>Justificativa</th></tr></thead><tbody>${linhas}</tbody></table></div>`;
+  el.innerHTML=_totalGeralCard('Total geral',geral)+html;
 }
 
 // FINANCEIRO POR TIPO DE PLANTÃO — por hospital → tipo
@@ -9113,23 +9046,5 @@ function gerarRelFinTipo(el){
     html+=`<div class="card" style="margin-bottom:12px;"><div style="display:flex;justify-content:space-between;margin-bottom:8px;"><div class="card-title" style="margin-bottom:0;">${proj}</div><div style="font-size:12px;color:var(--text2);">${subQ} plantão(ões) · <span style="color:var(--green);font-weight:600;">${fBRL(sub)}</span></div></div><table><thead><tr><th>Tipo de plantão</th><th style="text-align:center;">Qtd</th><th>Horas</th><th style="text-align:right;">Total</th></tr></thead><tbody>${linhas}</tbody><tfoot><tr style="border-top:1.5px solid var(--border2);"><td style="font-weight:700;padding:8px;">Total ${proj}</td><td style="text-align:center;font-weight:700;">${subQ}</td><td></td><td class="mono" style="text-align:right;font-weight:700;color:var(--green);">${fBRL(sub)}</td></tr></tfoot></table></div>`;
   });
   el.innerHTML=_totalGeralCard('Total geral',geral)+html;
-}
-
-// ---- EXPORTS genéricos (servem pra qualquer relatório) ----
-function exportarRelXLSX(){
-  const cont=document.getElementById('rel-resultado');
-  const tabelas=cont?cont.querySelectorAll('table'):[];
-  if(!tabelas.length){toast('Gere um relatório primeiro',true);return;}
-  const wb=XLSX.utils.book_new();
-  tabelas.forEach((tb,i)=>{const ws=XLSX.utils.table_to_sheet(tb,{raw:true});XLSX.utils.book_append_sheet(wb,ws,'Relatorio'+(tabelas.length>1?'_'+(i+1):''));});
-  XLSX.writeFile(wb,'relatorio_'+_relTipoAtivo+'_'+new Date().toISOString().slice(0,10)+'.xlsx');
-  toast('Excel exportado!');
-}
-function exportarRelPDF(){
-  const cont=document.getElementById('rel-resultado');
-  if(!cont||!cont.innerHTML.trim()){toast('Gere um relatório primeiro',true);return;}
-  const win=window.open('','_blank');
-  win.document.write('<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>Relatório</title><style>body{font-family:Arial,sans-serif;font-size:11px;padding:20px;}table{width:100%;border-collapse:collapse;margin-bottom:14px;}th{background:#1a5fad;color:#fff;padding:6px 8px;text-align:left;font-size:10px;}td{padding:5px 8px;border-bottom:0.5px solid #e0e0e0;font-size:10px;}.card-title{font-weight:700;font-size:12px;margin:10px 0 6px;}@page{margin:1.2cm;}</style></head><body>'+cont.innerHTML+'<div style="margin-top:14px;font-size:9px;color:#999;">PlantãoPro · '+new Date().toLocaleString('pt-BR')+'</div></body></html>');
-  win.document.close();setTimeout(()=>{win.focus();win.print();},400);
 }
 </script>
