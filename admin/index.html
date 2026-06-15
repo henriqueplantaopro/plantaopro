@@ -389,8 +389,8 @@ tr:hover td{background:var(--bg3);}
     <div class="login-logo">🏥</div>
     <div class="login-title">PlantãoPro</div>
     <div class="login-sub">Painel Administrativo</div>
-    <div class="login-field"><label>E-mail</label><input id="l-email" type="email" placeholder="admin@email.com" value="admin@plantaoplus.com"></div>
-    <div class="login-field"><label>Senha</label><input id="l-senha" type="password" placeholder="••••••••"></div>
+    <div class="login-field"><label>E-mail</label><input id="l-email" type="email" placeholder="admin@email.com" value="admin@plantaoplus.com" onkeydown="if(event.key==='Enter')document.getElementById('l-senha').focus()"></div>
+    <div class="login-field"><label>Senha</label><input id="l-senha" type="password" placeholder="••••••••" onkeydown="if(event.key==='Enter')fazerLoginWrapper()"></div>
     <button class="btn-login" onclick="fazerLoginWrapper()">Entrar</button>
     <div class="login-erro" id="login-erro">E-mail ou senha incorretos</div>
   </div>
@@ -1126,6 +1126,7 @@ tr:hover td{background:var(--bg3);}
             <option value="fin_consolidado">Financeiro consolidado</option>
             <option value="fin_profissional">Financeiro por profissional</option>
             <option value="fin_setor">Financeiro por setor</option>
+            <option value="fin_tipo">Financeiro por tipo de plantão</option>
             <option value="horas">Horas por profissional</option>
             <option value="medicos">Médicos cadastrados</option>
             <option value="resumo">Plantões por projeto</option>
@@ -9095,6 +9096,23 @@ async function gerarRelTrocas(el){
     return `<tr><td class="mono">${realizado?new Date(realizado).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'—'}</td><td>${plant}</td><td>${nome(t.medico_origem_id)}</td><td>${nome(t.medico_destino_id)}</td><td>${t.status||'—'}</td><td>${t.justificativa||t.obs||''}</td></tr>`;
   }).join('');
   el.innerHTML=`<div class="card"><div class="card-title">Trocas e passagens de plantões</div><table><thead><tr><th>Realizado em</th><th>Plantão</th><th>Requerente</th><th>Requerido</th><th>Status</th><th>Justificativa</th></tr></thead><tbody>${linhas}</tbody></table></div>`;
+}
+
+// FINANCEIRO POR TIPO DE PLANTÃO — por hospital → tipo
+function gerarRelFinTipo(el){
+  const dados=filtrarDadosRel();
+  if(!dados.length){el.innerHTML='<div class="card"><div class="empty">Nenhum plantão no período.</div></div>';return;}
+  let html='',geral=0;
+  _porHospital(dados).forEach(([proj,lst])=>{
+    const porTipo={};
+    lst.forEach(l=>{const t=l.tipo||'Não informado';if(!porTipo[t])porTipo[t]={qtd:0,horas:0,total:0};porTipo[t].qtd++;porTipo[t].horas+=l.horas||0;porTipo[t].total+=l.honorario||0;});
+    const arr=Object.entries(porTipo).sort((a,b)=>a[0].localeCompare(b[0],'pt-BR'));
+    const sub=arr.reduce((s,[,v])=>s+v.total,0);geral+=sub;
+    const subQ=arr.reduce((s,[,v])=>s+v.qtd,0);
+    const linhas=arr.map(([t,v])=>`<tr><td>${t}</td><td style="text-align:center;">${v.qtd}</td><td class="mono">${Math.round(v.horas*10)/10}h</td><td class="mono" style="text-align:right;color:var(--green);font-weight:600;">${fBRL(v.total)}</td></tr>`).join('');
+    html+=`<div class="card" style="margin-bottom:12px;"><div style="display:flex;justify-content:space-between;margin-bottom:8px;"><div class="card-title" style="margin-bottom:0;">${proj}</div><div style="font-size:12px;color:var(--text2);">${subQ} plantão(ões) · <span style="color:var(--green);font-weight:600;">${fBRL(sub)}</span></div></div><table><thead><tr><th>Tipo de plantão</th><th style="text-align:center;">Qtd</th><th>Horas</th><th style="text-align:right;">Total</th></tr></thead><tbody>${linhas}</tbody><tfoot><tr style="border-top:1.5px solid var(--border2);"><td style="font-weight:700;padding:8px;">Total ${proj}</td><td style="text-align:center;font-weight:700;">${subQ}</td><td></td><td class="mono" style="text-align:right;font-weight:700;color:var(--green);">${fBRL(sub)}</td></tr></tfoot></table></div>`;
+  });
+  el.innerHTML=_totalGeralCard('Total geral',geral)+html;
 }
 
 // ---- EXPORTS genéricos (servem pra qualquer relatório) ----
