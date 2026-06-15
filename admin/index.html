@@ -9407,3 +9407,159 @@ async function aciConfirmarSub(id){
   }
 }
 </script>
+
+
+
+<script>
+// Selo "Confirmado pelo gestor" nos relatórios
+function _tagGestor(l){
+  if(l.status_presenca==='presente') return ' <span style="display:inline-block;font-size:10px;background:#e8f0fb;color:#1a5fad;padding:1px 7px;border-radius:10px;font-weight:600;white-space:nowrap;">Confirmado pelo gestor</span>';
+  if(l.status_presenca==='falta') return ' <span style="display:inline-block;font-size:10px;background:#fdeaea;color:#b03030;padding:1px 7px;border-radius:10px;font-weight:600;white-space:nowrap;">Falta confirmada</span>';
+  return '';
+}
+
+function gerarRelFinAnalitico(el){
+  const dados=_dadosFin();
+  if(!dados.length){el.innerHTML='<div class="card"><div class="empty">Nenhum plantão no período.</div></div>';return;}
+  let html='',geral=0;
+  _porHospital(dados).forEach(([proj,lst])=>{
+    const sub=lst.reduce((s,l)=>s+(l.honorario||0),0);geral+=sub;
+    const linhas=lst.slice().sort((a,b)=>(a.setor||'').localeCompare(b.setor||'','pt-BR')||a.data.localeCompare(b.data)).map(l=>`<tr style="${l.status_presenca==='falta'?'background:#fdf0f0;':''}"><td class="mono">${fDate(l.data)}</td><td><strong>${l.medico||'—'}</strong>${_tagGestor(l)}${l.crm?'<br><span class="mono" style="font-size:11px;color:var(--text3);">'+l.crm+'</span>':''}</td><td>${l.setor||'—'}</td><td>${l.tipo||'—'}</td><td class="mono">${l.horas}h</td><td class="mono" style="color:${l.honorario?'var(--green)':'var(--text3)'};font-weight:600;">${fBRL(l.honorario||0)}</td></tr>`).join('');
+    html+=`<div class="card" style="margin-bottom:12px;"><div style="display:flex;justify-content:space-between;margin-bottom:8px;"><div class="card-title" style="margin-bottom:0;">${proj}</div><div style="font-size:12px;color:var(--text2);">${lst.length} plantão(ões) · <span style="color:var(--green);font-weight:600;">${fBRL(sub)}</span></div></div><table><thead><tr><th>Data</th><th>Médico / CRM</th><th>Setor</th><th>Tipo</th><th>Horas</th><th>Valor</th></tr></thead><tbody>${linhas}</tbody><tfoot><tr style="border-top:1.5px solid var(--border2);"><td colspan="5" style="font-weight:600;padding:8px;">Total ${proj}</td><td class="mono" style="color:var(--green);font-weight:700;">${fBRL(sub)}</td></tr></tfoot></table></div>`;
+  });
+  el.innerHTML=_totalGeralCard('Total geral — '+dados.length+' plantão(ões)',geral)+html;
+}
+
+function gerarRelFinProfissional(el){
+  const dados=_dadosFin();
+  if(!dados.length){el.innerHTML='<div class="card"><div class="empty">Nenhum plantão no período.</div></div>';return;}
+  let html='';
+  _porHospital(dados).forEach(([proj,lst])=>{
+    const porMed={};
+    lst.forEach(l=>{const k=l.medico_id||l.medico;if(!porMed[k])porMed[k]={nome:l.medico||'—',crm:l.crm||'',itens:[]};porMed[k].itens.push(l);});
+    const meds=Object.values(porMed).sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR'));
+    const subProj=lst.reduce((s,l)=>s+(l.honorario||0),0);
+    let inner='';
+    meds.forEach(m=>{
+      const sub=m.itens.reduce((s,l)=>s+(l.honorario||0),0);
+      const subH=m.itens.reduce((s,l)=>s+(l.horas||0),0);
+      const linhas=m.itens.slice().sort((a,b)=>a.data.localeCompare(b.data)).map(l=>`<tr><td class="mono">${fDate(l.data)}</td><td>${l.setor||'—'}${_tagGestor(l)}</td><td>${l.tipo||'—'}</td><td class="mono">${l.horas}h</td><td class="mono" style="color:${l.honorario?'var(--green)':'var(--text3)'};">${fBRL(l.honorario||0)}</td></tr>`).join('');
+      inner+=`<div style="margin-bottom:10px;"><div style="font-size:13px;font-weight:700;margin-bottom:6px;">${m.nome} <span class="mono" style="font-size:11px;color:var(--text3);font-weight:400;">${m.crm}</span></div><table><thead><tr><th>Data</th><th>Setor</th><th>Tipo</th><th>Duração</th><th>Valor</th></tr></thead><tbody>${linhas}</tbody><tfoot><tr style="border-top:1px solid var(--border);"><td style="font-weight:600;padding:6px;">Total</td><td>${m.itens.length} plantão(ões)</td><td></td><td class="mono" style="font-weight:600;">${Math.round(subH*10)/10}h</td><td class="mono" style="color:var(--green);font-weight:700;">${fBRL(sub)}</td></tr></tfoot></table></div>`;
+    });
+    html+=`<div class="card" style="margin-bottom:12px;"><div style="display:flex;justify-content:space-between;margin-bottom:10px;border-bottom:1px solid var(--border);padding-bottom:8px;"><div class="card-title" style="margin-bottom:0;">${proj}</div><div style="font-size:12px;color:var(--text2);">${meds.length} linha(s) · <span style="color:var(--green);font-weight:600;">${fBRL(subProj)}</span></div></div>${inner}</div>`;
+  });
+  el.innerHTML=html;
+}
+
+async function gerarRelEntradaSaida(el){
+  el.innerHTML='<div class="card"><div class="empty">Carregando...</div></div>';
+  const d1=document.getElementById('rd1').value,d2=document.getElementById('rd2').value;
+  const dados=filtrarDadosRel();
+  if(!dados.length){el.innerHTML='<div class="card"><div class="empty">Nenhum plantão no período.</div></div>';return;}
+  let pathCI='/rest/v1/checkins?select=medico_id,projeto_id,feito_em,distancia_metros,aprovado&order=feito_em';
+  if(d1)pathCI+=`&feito_em=gte.${d1}T00:00:00`;
+  if(d2)pathCI+=`&feito_em=lte.${d2}T23:59:59`;
+  const checkins=await sb(pathCI)||[];
+  const byKey={}; checkins.forEach(c=>{const k=`${c.medico_id}_${c.projeto_id}_${(c.feito_em||'').slice(0,10)}`;(byKey[k]=byKey[k]||[]).push(c);});
+  const fmtH=v=>v?new Date(v.feito_em).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'';
+  const dist=v=>(v&&v.distancia_metros!=null)?`<span style="color:${v.distancia_metros>100?'var(--red)':'var(--green)'};">${v.distancia_metros}m</span>`:'';
+  let html='';
+  _porHospital(dados).forEach(([proj,lst])=>{
+    const linhas=lst.slice().sort((a,b)=>a.data.localeCompare(b.data)||(a.hora_ini||'').localeCompare(b.hora_ini||'')).map(l=>{
+      const cs=(byKey[`${l.medico_id}_${l.projeto_id}_${l.data}`]||[]).slice().sort((a,b)=>a.feito_em.localeCompare(b.feito_em));
+      const ent=cs[0],sai=cs.length>1?cs[cs.length-1]:null;
+      let situ;
+      if(ent) situ='<span style="color:var(--green);">Presente (check-in)</span>';
+      else if(l.status_presenca==='presente') situ='<span style="color:var(--blue);font-weight:600;">Confirmado pelo gestor</span>';
+      else if(l.status_presenca==='falta') situ='<span style="color:var(--red);font-weight:600;">Falta confirmada</span>';
+      else situ='<span style="color:var(--text3);">Sem check-in</span>';
+      return `<tr><td class="mono">${fDate(l.data)} ${(l.hora_ini||'').slice(0,5)}</td><td class="mono">${l.horas}h</td><td class="mono">${fmtH(ent)}</td><td class="mono">${dist(ent)}</td><td class="mono">${fmtH(sai)}</td><td class="mono">${dist(sai)}</td><td>${l.setor||'—'}</td><td>${l.medico||'—'}</td><td>${situ}</td><td>${l.tipo||'—'}</td></tr>`;
+    }).join('');
+    html+=`<div class="card" style="margin-bottom:12px;"><div class="card-title">${proj}</div><table><thead><tr><th>Data</th><th>Duração</th><th>Entrada</th><th>Dist.</th><th>Saída</th><th>Dist.</th><th>Setor</th><th>Responsável</th><th>Situação</th><th>Tipo</th></tr></thead><tbody>${linhas}</tbody></table></div>`;
+  });
+  el.innerHTML=html;
+}
+
+// ----- TELA AUSÊNCIA DE CHECK-IN: pendentes + histórico + obs -----
+let _aciView='pendentes';
+async function carregarAusenciasCI(view){
+  if(view)_aciView=view;
+  const el=document.getElementById('aci-lista'); if(!el)return;
+  const selP=document.getElementById('aci-proj');
+  if(selP&&selP.options.length<=1){selP.innerHTML='<option value="">Todos</option>'+sortedProjetos().map(p=>`<option value="${p.id}">${p.nome}</option>`).join('');}
+  const eD1=document.getElementById('aci-d1'),eD2=document.getElementById('aci-d2');
+  if(eD1&&!eD1.value)eD1.value=new Date(Date.now()-30*86400000).toISOString().slice(0,10);
+  if(eD2&&!eD2.value)eD2.value=new Date().toISOString().slice(0,10);
+  const toggle=`<div style="display:flex;gap:8px;margin-bottom:12px;"><button class="btn ${_aciView==='pendentes'?'btn-primary':'btn-ghost'} btn-sm" onclick="carregarAusenciasCI('pendentes')">Pendentes</button><button class="btn ${_aciView==='historico'?'btn-primary':'btn-ghost'} btn-sm" onclick="carregarAusenciasCI('historico')">Histórico</button></div>`;
+  el.innerHTML=toggle+'<div class="empty">Carregando...</div>';
+  const pid=selP?.value||'',d1=eD1?.value||'',d2=eD2?.value||'';
+  let path='/rest/v1/lancamentos?select=*,medicos(nome,crm),projetos(nome)&order=data.desc&limit=800';
+  if(pid)path+=`&projeto_id=eq.${pid}`;
+  if(d1)path+=`&data=gte.${d1}`;
+  if(d2)path+=`&data=lte.${d2}`;
+  const lancs=await sb(path)||[];
+  if(_aciView==='historico'){
+    const hist=lancs.filter(l=>l.status_presenca==='presente'||l.status_presenca==='falta');
+    if(!hist.length){el.innerHTML=toggle+'<div class="card"><div class="empty">Nenhum plantão resolvido no período.</div></div>';return;}
+    const rows=hist.map(l=>{
+      const st=l.status_presenca==='falta'?'<span style="color:var(--red);font-weight:600;">Falta</span>':'<span style="color:var(--green);font-weight:600;">Compareceu</span>';
+      const quando=l.presenca_em?new Date(l.presenca_em).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'—';
+      return `<tr id="aci-row-${l.id}"><td class="mono">${fDate(l.data)}</td><td><strong>${l.medicos?.nome||'—'}</strong><br><span class="mono" style="font-size:11px;color:var(--text3);">${l.medicos?.crm||''}</span></td><td>${l.projetos?.nome||'—'}${l.setor?' — '+l.setor:''}</td><td>${st}</td><td style="font-size:12px;color:var(--text2);">${l.obs_presenca||''}</td><td class="mono">${quando}</td><td><button class="btn btn-ghost btn-sm" onclick="aciAlterar('${l.id}')">Alterar</button></td></tr>`;
+    }).join('');
+    el.innerHTML=toggle+`<div class="card"><div style="margin-bottom:10px;font-size:13px;color:var(--text2);font-weight:600;">${hist.length} plantão(ões) resolvido(s)</div><table><thead><tr><th>Data</th><th>Médico</th><th>Projeto / Setor</th><th>Decisão</th><th>Obs.</th><th>Quando</th><th>Ação</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+    return;
+  }
+  let pathCI='/rest/v1/checkins?aprovado=eq.true&select=medico_id,projeto_id,feito_em';
+  if(d1)pathCI+=`&feito_em=gte.${d1}T00:00:00`;
+  if(d2)pathCI+=`&feito_em=lte.${d2}T23:59:59`;
+  const checkins=await sb(pathCI)||[];
+  const ciKeys=new Set(checkins.map(c=>`${c.medico_id}_${c.projeto_id}_${(c.feito_em||'').slice(0,10)}`));
+  const agora=new Date();
+  const pend=lancs.filter(l=>{
+    if(!l.medico_id||l.aberto)return false;
+    if(l.status_presenca==='presente'||l.status_presenca==='falta')return false;
+    if(new Date(`${l.data}T${l.hora_ini||'00:00'}`)>=agora)return false;
+    return !ciKeys.has(`${l.medico_id}_${l.projeto_id}_${l.data}`);
+  });
+  if(!pend.length){el.innerHTML=toggle+'<div class="card"><div style="text-align:center;padding:24px;color:var(--green);font-weight:600;">Nenhuma ausência de check-in pendente.</div></div>';return;}
+  const rows=pend.map(l=>`<tr id="aci-row-${l.id}"><td class="mono">${fDate(l.data)}</td><td><strong>${l.medicos?.nome||'—'}</strong><br><span class="mono" style="font-size:11px;color:var(--text3);">${l.medicos?.crm||''}</span></td><td>${l.projetos?.nome||'—'}${l.setor?' — '+l.setor:''}</td><td class="mono">${(l.hora_ini||'').slice(0,5)}–${(l.hora_fim||'').slice(0,5)}</td><td class="mono">${fBRL(l.honorario||0)}</td><td style="white-space:nowrap;"><button class="btn btn-success btn-sm" onclick="aciAbrirObs('${l.id}','presente')">Compareceu</button> <button class="btn btn-danger btn-sm" onclick="aciAbrirObs('${l.id}','falta')">Falta</button> <button class="btn btn-ghost btn-sm" onclick="aciSubstituir('${l.id}')">Substituir</button></td></tr>`).join('');
+  el.innerHTML=toggle+`<div class="card"><div style="margin-bottom:10px;font-size:13px;color:var(--amber);font-weight:600;">${pend.length} plantão(ões) sem check-in aguardando análise</div><table><thead><tr><th>Data</th><th>Médico</th><th>Projeto / Setor</th><th>Horário</th><th>Valor</th><th>Ação</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+}
+
+function aciAbrirObs(id,status){
+  const row=document.getElementById('aci-row-'+id); if(!row)return;
+  const cell=row.querySelector('td:last-child');
+  const label=status==='presente'?'Confirmar presença':'Confirmar falta';
+  const cls=status==='falta'?'btn-danger':'btn-success';
+  cell.innerHTML=`<input id="aci-obs-${id}" placeholder="Observação (opcional)" style="padding:5px 8px;border:1px solid var(--border);border-radius:var(--radius);font-size:12px;width:170px;"> <button class="btn ${cls} btn-sm" onclick="aciResolver('${id}','${status}')">${label}</button> <button class="btn btn-ghost btn-sm" onclick="carregarAusenciasCI()">Cancelar</button>`;
+  document.getElementById('aci-obs-'+id)?.focus();
+}
+async function aciResolver(id,status){
+  const obs=document.getElementById('aci-obs-'+id)?.value||'';
+  if(await aciSalvar(id,{status_presenca:status,obs_presenca:obs||null,presenca_em:new Date().toISOString()})){
+    toast(status==='falta'?'Marcado como falta':'Presença confirmada');
+    const l=lancamentos.find(x=>String(x.id)===String(id)); if(l){l.status_presenca=status;l.obs_presenca=obs;}
+    carregarAusenciasCI();
+  }
+}
+function aciSubstituir(id){
+  const row=document.getElementById('aci-row-'+id); if(!row)return;
+  const cell=row.querySelector('td:last-child');
+  cell.innerHTML=`<select id="aci-sub-${id}" style="padding:5px 8px;border:1px solid var(--border);border-radius:var(--radius);font-size:12px;max-width:150px;">${sortedMedicos().map(m=>`<option value="${m.id}">${m.nome}${m.crm?' — '+m.crm:''}</option>`).join('')}</select> <input id="aci-obs-${id}" placeholder="Obs (opcional)" style="padding:5px 8px;border:1px solid var(--border);border-radius:var(--radius);font-size:12px;width:120px;"> <button class="btn btn-primary btn-sm" onclick="aciConfirmarSub('${id}')">Confirmar</button> <button class="btn btn-ghost btn-sm" onclick="carregarAusenciasCI()">Cancelar</button>`;
+}
+async function aciConfirmarSub(id){
+  const novo=document.getElementById('aci-sub-'+id)?.value;
+  if(!novo){toast('Selecione o médico substituto',true);return;}
+  const obs=document.getElementById('aci-obs-'+id)?.value||'';
+  if(await aciSalvar(id,{medico_id:novo,status_presenca:'presente',obs_presenca:('Substituição. '+obs).trim(),presenca_em:new Date().toISOString()})){
+    toast('Substituição registrada');
+    await carregarLancamentos(true);
+    carregarAusenciasCI();
+  }
+}
+function aciAlterar(id){
+  const row=document.getElementById('aci-row-'+id); if(!row)return;
+  const cell=row.querySelector('td:last-child');
+  cell.innerHTML=`<button class="btn btn-success btn-sm" onclick="aciAbrirObs('${id}','presente')">Compareceu</button> <button class="btn btn-danger btn-sm" onclick="aciAbrirObs('${id}','falta')">Falta</button> <button class="btn btn-ghost btn-sm" onclick="aciSubstituir('${id}')">Substituir</button>`;
+}
+</script>
