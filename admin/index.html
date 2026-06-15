@@ -8913,12 +8913,14 @@ document.addEventListener('click',function(e){var dd=document.getElementById('pe
 </script>
 
 <script>
-<script>
-// ===== RELATÓRIOS v2 — agrupados por hospital + por tipo =====
+// ===== RELATÓRIOS — BLOCO ÚNICO COMPLETO =====
 function _porHospital(dados){
   const m={};
   dados.forEach(l=>{const p=l.projeto||'Sem hospital';(m[p]=m[p]||[]).push(l);});
   return Object.entries(m).sort((a,b)=>a[0].localeCompare(b[0],'pt-BR'));
+}
+function _totalGeralCard(label,valor){
+  return `<div class="card" style="margin-bottom:12px;background:#0f3d7a;color:#fff;"><div style="display:flex;justify-content:space-between;"><span style="font-weight:600;">${label}</span><span style="font-weight:700;">${fBRL(valor)}</span></div></div>`;
 }
 
 function gerarRelatorio(){
@@ -8944,10 +8946,6 @@ function gerarRelatorio(){
   }
 }
 
-function _totalGeralCard(label,valor){
-  return `<div class="card" style="margin-bottom:12px;background:#0f3d7a;color:#fff;"><div style="display:flex;justify-content:space-between;"><span style="font-weight:600;">${label}</span><span style="font-weight:700;">${fBRL(valor)}</span></div></div>`;
-}
-
 // HORAS POR PROFISSIONAL — por hospital
 function gerarRelHoras(el){
   const dados=filtrarDadosRel();
@@ -8960,6 +8958,37 @@ function gerarRelHoras(el){
     const subH=arr.reduce((s,m)=>s+m.hTotal,0);
     const linhas=arr.map(m=>`<tr><td><strong>${m.nome}</strong></td><td class="mono">${m.crm}</td><td style="text-align:center;">${m.plantoes}</td><td style="text-align:center;">${Math.round(m.h12*10)/10}h</td><td style="text-align:center;">${Math.round(m.h24*10)/10}h</td><td style="text-align:center;">${Math.round(m.hOutros*10)/10}h</td><td style="text-align:center;font-weight:700;">${Math.round(m.hTotal*10)/10}h</td><td class="mono" style="color:var(--green);font-weight:600;">${fBRL(m.total)}</td></tr>`).join('');
     html+=`<div class="card" style="margin-bottom:12px;"><div style="display:flex;justify-content:space-between;margin-bottom:8px;"><div class="card-title" style="margin-bottom:0;">${proj}</div><div style="font-size:12px;color:var(--text2);">${arr.length} profissional(is) · ${Math.round(subH*10)/10}h</div></div><table><thead><tr><th>Profissional</th><th>CRM</th><th style="text-align:center;">Plantões</th><th style="text-align:center;">12h</th><th style="text-align:center;">24h</th><th style="text-align:center;">Outros</th><th style="text-align:center;">Total</th><th>Honorários</th></tr></thead><tbody>${linhas}</tbody></table></div>`;
+  });
+  el.innerHTML=html;
+}
+
+// FALTAS — com justificada / não justificada
+async function gerarRelFaltas(el){
+  el.innerHTML='<div class="card"><div class="empty">Carregando...</div></div>';
+  const d1=document.getElementById('rd1').value,d2=document.getElementById('rd2').value;
+  let pathCI='/rest/v1/checkins?aprovado=eq.true&select=medico_id,projeto_id,feito_em';
+  if(d1)pathCI+=`&feito_em=gte.${d1}T00:00:00`;
+  if(d2)pathCI+=`&feito_em=lte.${d2}T23:59:59`;
+  const checkins=await sb(pathCI)||[];
+  const ciKeys=new Set(checkins.map(c=>`${c.medico_id}_${c.projeto_id}_${(c.feito_em||'').slice(0,10)}`));
+  const ausencias=await sb('/rest/v1/ausencias?select=lancamento_id,status,motivo')||[];
+  const ausByLanc={}; ausencias.forEach(a=>{ if(a.lancamento_id) ausByLanc[a.lancamento_id]=a; });
+  const agora=new Date();
+  const dados=filtrarDadosRel().filter(l=>l.medico_id && new Date(`${l.data}T${l.hora_ini||'00:00'}`)<agora);
+  const faltas=dados.filter(l=>!ciKeys.has(`${l.medico_id}_${l.projeto_id}_${l.data}`));
+  if(!faltas.length){el.innerHTML='<div class="card"><div style="text-align:center;padding:24px;color:var(--green);font-weight:600;">Nenhuma falta no período.</div></div>';return;}
+  const classifica=l=>{
+    const a=ausByLanc[l.id];
+    if(!a) return {txt:'Não justificada (sem aviso)',cor:'var(--red)'};
+    const st=(a.status||'').toLowerCase();
+    const justif = a.motivo || st.includes('justif') || st.includes('aprov');
+    return justif?{txt:'Justificada'+(a.motivo?' — '+a.motivo:''),cor:'var(--amber)'}:{txt:'Não justificada',cor:'var(--red)'};
+  };
+  let html='';
+  _porHospital(faltas).forEach(([proj,lst])=>{
+    const linhas=lst.slice().sort((a,b)=>b.data.localeCompare(a.data)).map(l=>{const c=classifica(l);return `<tr><td><strong>${l.medico||'—'}</strong></td><td class="mono">${l.crm||''}</td><td>${l.setor||'—'}</td><td class="mono">${fDate(l.data)}</td><td class="mono">${(l.hora_ini||'').slice(0,5)}–${(l.hora_fim||'').slice(0,5)}</td><td style="color:${c.cor};font-weight:600;">${c.txt}</td><td class="mono">${fBRL(l.honorario||0)}</td></tr>`;}).join('');
+    const sub=lst.reduce((s,l)=>s+(l.honorario||0),0);
+    html+=`<div class="card" style="margin-bottom:12px;"><div style="display:flex;justify-content:space-between;margin-bottom:8px;"><div class="card-title" style="margin-bottom:0;">${proj}</div><div style="font-size:12px;color:var(--red);font-weight:600;">${lst.length} falta(s)</div></div><table><thead><tr><th>Médico</th><th>CRM</th><th>Setor</th><th>Data</th><th>Horário</th><th>Situação</th><th>Valor</th></tr></thead><tbody>${linhas}</tbody><tfoot><tr style="border-top:1.5px solid var(--border2);"><td colspan="6" style="font-weight:600;padding:8px;">Total ${proj}</td><td class="mono" style="color:var(--red);font-weight:700;">${fBRL(sub)}</td></tr></tfoot></table></div>`;
   });
   el.innerHTML=html;
 }
@@ -9031,6 +9060,22 @@ function gerarRelFinBanco(el){
   el.innerHTML=_totalGeralCard('Total geral',geral)+html;
 }
 
+// FINANCEIRO POR SETOR — por hospital → setor
+function gerarRelFinSetor(el){
+  const dados=filtrarDadosRel();
+  if(!dados.length){el.innerHTML='<div class="card"><div class="empty">Nenhum plantão no período.</div></div>';return;}
+  let html='',geral=0;
+  _porHospital(dados).forEach(([proj,lst])=>{
+    const setores={};
+    lst.forEach(l=>{const s=l.setor||'(sem setor)';setores[s]=(setores[s]||0)+(l.honorario||0);});
+    const arr=Object.entries(setores).sort((a,b)=>a[0].localeCompare(b[0],'pt-BR'));
+    const totProj=arr.reduce((s,[,v])=>s+v,0);geral+=totProj;
+    const linhas=arr.map(([s,v])=>`<tr><td>${s}</td><td class="mono" style="text-align:right;">${fBRL(v)}</td></tr>`).join('');
+    html+=`<div class="card" style="margin-bottom:12px;"><div class="card-title">${proj}</div><table><thead><tr><th>Setor</th><th style="text-align:right;">Custo</th></tr></thead><tbody>${linhas}</tbody><tfoot><tr style="border-top:1.5px solid var(--border2);"><td style="font-weight:700;padding:8px;">Total</td><td class="mono" style="text-align:right;font-weight:700;color:var(--green);">${fBRL(totProj)}</td></tr></tfoot></table></div>`;
+  });
+  el.innerHTML=_totalGeralCard('Total geral',geral)+html;
+}
+
 // FINANCEIRO POR TIPO DE PLANTÃO — por hospital → tipo
 function gerarRelFinTipo(el){
   const dados=filtrarDadosRel();
@@ -9046,5 +9091,90 @@ function gerarRelFinTipo(el){
     html+=`<div class="card" style="margin-bottom:12px;"><div style="display:flex;justify-content:space-between;margin-bottom:8px;"><div class="card-title" style="margin-bottom:0;">${proj}</div><div style="font-size:12px;color:var(--text2);">${subQ} plantão(ões) · <span style="color:var(--green);font-weight:600;">${fBRL(sub)}</span></div></div><table><thead><tr><th>Tipo de plantão</th><th style="text-align:center;">Qtd</th><th>Horas</th><th style="text-align:right;">Total</th></tr></thead><tbody>${linhas}</tbody><tfoot><tr style="border-top:1.5px solid var(--border2);"><td style="font-weight:700;padding:8px;">Total ${proj}</td><td style="text-align:center;font-weight:700;">${subQ}</td><td></td><td class="mono" style="text-align:right;font-weight:700;color:var(--green);">${fBRL(sub)}</td></tr></tfoot></table></div>`;
   });
   el.innerHTML=_totalGeralCard('Total geral',geral)+html;
+}
+
+// ESCALA DE PLANTÕES — com furos
+function gerarRelEscala(el){
+  const dados=filtrarDadosRel();
+  if(!dados.length){el.innerHTML='<div class="card"><div class="empty">Nenhum plantão no período.</div></div>';return;}
+  const porData={};
+  dados.forEach(l=>{(porData[l.data]=porData[l.data]||[]).push(l);});
+  let totFuros=0,html='';
+  Object.keys(porData).sort().forEach(data=>{
+    const lst=porData[data].slice().sort((a,b)=>(a.projeto||'').localeCompare(b.projeto||'','pt-BR')||(a.setor||'').localeCompare(b.setor||'')||(a.hora_ini||'').localeCompare(b.hora_ini||''));
+    const dt=new Date(data+'T12:00:00');
+    const dow=dt.toLocaleDateString('pt-BR',{weekday:'long'});
+    const linhas=lst.map(l=>{
+      const ehFuro=l.aberto?((l.vagas||1)-(l.vagas_preenchidas||0))>0:!l.medico_id;
+      if(ehFuro) totFuros++;
+      const resp=ehFuro?'<span style="color:var(--red);font-weight:600;">Sem médico escalado</span>':'<strong>'+(l.medico||'—')+'</strong>';
+      return `<tr style="${ehFuro?'background:#fdf0f0;':''}"><td>${l.projeto||'—'}</td><td>${l.setor||'—'}</td><td class="mono">${(l.hora_ini||'').slice(0,5)}–${(l.hora_fim||'').slice(0,5)}</td><td>${l.tipo||'—'}</td><td>${resp}</td></tr>`;
+    }).join('');
+    html+=`<div class="card" style="margin-bottom:12px;"><div class="card-title" style="text-transform:capitalize;">${dow}, ${fDate(data)}</div><table><thead><tr><th>Hospital</th><th>Setor</th><th>Horário</th><th>Tipo</th><th>Profissional</th></tr></thead><tbody>${linhas}</tbody></table></div>`;
+  });
+  const aviso=totFuros>0?`<div class="card" style="border-left:3px solid var(--red);background:var(--red-bg);margin-bottom:12px;"><strong style="color:var(--red);">${totFuros} furo(s)</strong> — plantões ainda sem médico escalado no período.</div>`:'';
+  el.innerHTML=aviso+html;
+}
+
+// ENTRADA E SAÍDA — check-ins
+async function gerarRelEntradaSaida(el){
+  el.innerHTML='<div class="card"><div class="empty">Carregando...</div></div>';
+  const d1=document.getElementById('rd1').value,d2=document.getElementById('rd2').value;
+  const dados=filtrarDadosRel();
+  if(!dados.length){el.innerHTML='<div class="card"><div class="empty">Nenhum plantão no período.</div></div>';return;}
+  let pathCI='/rest/v1/checkins?select=medico_id,projeto_id,feito_em,distancia_metros,aprovado&order=feito_em';
+  if(d1)pathCI+=`&feito_em=gte.${d1}T00:00:00`;
+  if(d2)pathCI+=`&feito_em=lte.${d2}T23:59:59`;
+  const checkins=await sb(pathCI)||[];
+  const byKey={}; checkins.forEach(c=>{const k=`${c.medico_id}_${c.projeto_id}_${(c.feito_em||'').slice(0,10)}`;(byKey[k]=byKey[k]||[]).push(c);});
+  const fmtH=v=>v?new Date(v.feito_em).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'';
+  const dist=v=>(v&&v.distancia_metros!=null)?`<span style="color:${v.distancia_metros>100?'var(--red)':'var(--green)'};">${v.distancia_metros}m</span>`:'';
+  let html='';
+  _porHospital(dados).forEach(([proj,lst])=>{
+    const linhas=lst.slice().sort((a,b)=>a.data.localeCompare(b.data)||(a.hora_ini||'').localeCompare(b.hora_ini||'')).map(l=>{
+      const cs=(byKey[`${l.medico_id}_${l.projeto_id}_${l.data}`]||[]).slice().sort((a,b)=>a.feito_em.localeCompare(b.feito_em));
+      const ent=cs[0],sai=cs.length>1?cs[cs.length-1]:null;
+      const situ=ent?'Presente':'Sem check-in';
+      return `<tr><td class="mono">${fDate(l.data)} ${(l.hora_ini||'').slice(0,5)}</td><td class="mono">${l.horas}h</td><td class="mono">${fmtH(ent)}</td><td class="mono">${dist(ent)}</td><td class="mono">${fmtH(sai)}</td><td class="mono">${dist(sai)}</td><td>${l.setor||'—'}</td><td>${l.medico||'—'}</td><td>${situ}</td><td>${l.tipo||'—'}</td></tr>`;
+    }).join('');
+    html+=`<div class="card" style="margin-bottom:12px;"><div class="card-title">${proj}</div><table><thead><tr><th>Data</th><th>Duração</th><th>Entrada</th><th>Dist.</th><th>Saída</th><th>Dist.</th><th>Setor</th><th>Responsável</th><th>Situação</th><th>Tipo</th></tr></thead><tbody>${linhas}</tbody></table></div>`;
+  });
+  el.innerHTML=html;
+}
+
+// TROCAS E PASSAGENS
+async function gerarRelTrocas(el){
+  el.innerHTML='<div class="card"><div class="empty">Carregando...</div></div>';
+  const d1=document.getElementById('rd1').value,d2=document.getElementById('rd2').value;
+  let path='/rest/v1/transferencias?select=*,lancamentos(data,setor,projetos(nome))&order=criado_em.desc';
+  if(d1)path+=`&criado_em=gte.${d1}T00:00:00`;
+  if(d2)path+=`&criado_em=lte.${d2}T23:59:59`;
+  const trs=await sb(path)||[];
+  if(!trs.length){el.innerHTML='<div class="card"><div class="empty">Nenhuma troca/passagem no período.</div></div>';return;}
+  const nome=id=>{const m=medicos.find(x=>x.id===id);return m?m.nome:'—';};
+  const linhas=trs.map(t=>{
+    const realizado=t.respondido_em||t.criado_em;
+    const plant=t.lancamentos?`${t.lancamentos.projetos?.nome||''}${t.lancamentos.setor?' - '+t.lancamentos.setor:''} · ${t.lancamentos.data?fDate(t.lancamentos.data):''}`:'—';
+    return `<tr><td class="mono">${realizado?new Date(realizado).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'—'}</td><td>${plant}</td><td>${nome(t.medico_origem_id)}</td><td>${nome(t.medico_destino_id)}</td><td>${t.status||'—'}</td><td>${t.justificativa||t.obs||''}</td></tr>`;
+  }).join('');
+  el.innerHTML=`<div class="card"><div class="card-title">Trocas e passagens de plantões</div><table><thead><tr><th>Realizado em</th><th>Plantão</th><th>Requerente</th><th>Requerido</th><th>Status</th><th>Justificativa</th></tr></thead><tbody>${linhas}</tbody></table></div>`;
+}
+
+// EXPORTS — servem pra qualquer relatório
+function exportarRelXLSX(){
+  const cont=document.getElementById('rel-resultado');
+  const tabelas=cont?cont.querySelectorAll('table'):[];
+  if(!tabelas.length){toast('Gere um relatório primeiro',true);return;}
+  const wb=XLSX.utils.book_new();
+  tabelas.forEach((tb,i)=>{const ws=XLSX.utils.table_to_sheet(tb,{raw:true});XLSX.utils.book_append_sheet(wb,ws,'Relatorio'+(tabelas.length>1?'_'+(i+1):''));});
+  XLSX.writeFile(wb,'relatorio_'+_relTipoAtivo+'_'+new Date().toISOString().slice(0,10)+'.xlsx');
+  toast('Excel exportado!');
+}
+function exportarRelPDF(){
+  const cont=document.getElementById('rel-resultado');
+  if(!cont||!cont.innerHTML.trim()){toast('Gere um relatório primeiro',true);return;}
+  const win=window.open('','_blank');
+  win.document.write('<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>Relatório</title><style>body{font-family:Arial,sans-serif;font-size:11px;padding:20px;}table{width:100%;border-collapse:collapse;margin-bottom:14px;}th{background:#1a5fad;color:#fff;padding:6px 8px;text-align:left;font-size:10px;}td{padding:5px 8px;border-bottom:0.5px solid #e0e0e0;font-size:10px;}.card-title{font-weight:700;font-size:12px;margin:10px 0 6px;}@page{margin:1.2cm;}</style></head><body>'+cont.innerHTML+'<div style="margin-top:14px;font-size:9px;color:#999;">PlantãoPro · '+new Date().toLocaleString('pt-BR')+'</div></body></html>');
+  win.document.close();setTimeout(()=>{win.focus();win.print();},400);
 }
 </script>
