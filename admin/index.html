@@ -409,6 +409,7 @@ tr:hover td{background:var(--bg3);}
 
     <!-- Calendário -->
     <div class="nav-item" onclick="showTab('calendario',this)" style="margin-bottom:2px;">📅 Calendário</div>
+    <div class="nav-item" onclick="showTab('ausencias_ci',this);carregarAusenciasCI();">Ausência de check-in</div>
 
     <!-- Cadastros (colapsável) -->
     <div class="nav-group">
@@ -1103,6 +1104,21 @@ tr:hover td{background:var(--bg3);}
       </div>
       <div class="card"><div class="card-title">Registros de check-in</div><div id="checkins-lista"><div class="empty">Carregando...</div></div></div>
     </div>
+  </div>
+
+  <!-- AUSÊNCIA DE CHECK-IN -->
+  <div id="tab-ausencias_ci" class="section">
+    <div class="page-title">Ausência de check-in</div>
+    <div class="page-sub">Plantões que já passaram e não tiveram check-in. Confirme presença, marque falta ou faça a substituição.</div>
+    <div class="card" style="margin-bottom:12px;">
+      <div class="form-row three">
+        <div class="form-group"><label>Projeto</label><select id="aci-proj"><option value="">Todos</option></select></div>
+        <div class="form-group"><label>De</label><input type="date" id="aci-d1"></div>
+        <div class="form-group"><label>Até</label><input type="date" id="aci-d2"></div>
+      </div>
+      <div style="margin-top:8px;"><button class="btn btn-primary" onclick="carregarAusenciasCI()">Atualizar</button></div>
+    </div>
+    <div id="aci-lista"></div>
   </div>
 
   <!-- RELATÓRIOS -->
@@ -9176,5 +9192,186 @@ function exportarRelPDF(){
   const win=window.open('','_blank');
   win.document.write('<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>Relatório</title><style>body{font-family:Arial,sans-serif;font-size:11px;padding:20px;}table{width:100%;border-collapse:collapse;margin-bottom:14px;}th{background:#1a5fad;color:#fff;padding:6px 8px;text-align:left;font-size:10px;}td{padding:5px 8px;border-bottom:0.5px solid #e0e0e0;font-size:10px;}.card-title{font-weight:700;font-size:12px;margin:10px 0 6px;}@page{margin:1.2cm;}</style></head><body>'+cont.innerHTML+'<div style="margin-top:14px;font-size:9px;color:#999;">PlantãoPro · '+new Date().toLocaleString('pt-BR')+'</div></body></html>');
   win.document.close();setTimeout(()=>{win.focus();win.print();},400);
+}
+</script>
+
+
+
+<script>
+// ===== AUSÊNCIA DE CHECK-IN + financeiro ciente de faltas =====
+
+// Dados financeiros: falta confirmada vira custo zero e sem profissional
+function _dadosFin(){
+  return filtrarDadosRel().map(l=>{
+    if(l.status_presenca==='falta') return Object.assign({},l,{honorario:0,medico:'— (falta)',crm:'',medico_id:null});
+    return l;
+  });
+}
+
+// Redefine os 6 financeiros pra usar _dadosFin (faltas não somam mais)
+function gerarRelFinAnalitico(el){
+  const dados=_dadosFin();
+  if(!dados.length){el.innerHTML='<div class="card"><div class="empty">Nenhum plantão no período.</div></div>';return;}
+  let html='',geral=0;
+  _porHospital(dados).forEach(([proj,lst])=>{
+    const sub=lst.reduce((s,l)=>s+(l.honorario||0),0);geral+=sub;
+    const linhas=lst.slice().sort((a,b)=>(a.setor||'').localeCompare(b.setor||'','pt-BR')||a.data.localeCompare(b.data)).map(l=>`<tr style="${l.honorario===0&&l.medico==='— (falta)'?'background:#fdf0f0;':''}"><td class="mono">${fDate(l.data)}</td><td><strong>${l.medico||'—'}</strong>${l.crm?'<br><span class="mono" style="font-size:11px;color:var(--text3);">'+l.crm+'</span>':''}</td><td>${l.setor||'—'}</td><td>${l.tipo||'—'}</td><td class="mono">${l.horas}h</td><td class="mono" style="color:${l.honorario?'var(--green)':'var(--text3)'};font-weight:600;">${fBRL(l.honorario||0)}</td></tr>`).join('');
+    html+=`<div class="card" style="margin-bottom:12px;"><div style="display:flex;justify-content:space-between;margin-bottom:8px;"><div class="card-title" style="margin-bottom:0;">${proj}</div><div style="font-size:12px;color:var(--text2);">${lst.length} plantão(ões) · <span style="color:var(--green);font-weight:600;">${fBRL(sub)}</span></div></div><table><thead><tr><th>Data</th><th>Médico / CRM</th><th>Setor</th><th>Tipo</th><th>Horas</th><th>Valor</th></tr></thead><tbody>${linhas}</tbody><tfoot><tr style="border-top:1.5px solid var(--border2);"><td colspan="5" style="font-weight:600;padding:8px;">Total ${proj}</td><td class="mono" style="color:var(--green);font-weight:700;">${fBRL(sub)}</td></tr></tfoot></table></div>`;
+  });
+  el.innerHTML=_totalGeralCard('Total geral — '+dados.length+' plantão(ões)',geral)+html;
+}
+function gerarRelFinConsolidado(el){
+  const dados=_dadosFin();
+  if(!dados.length){el.innerHTML='<div class="card"><div class="empty">Nenhum plantão no período.</div></div>';return;}
+  let html='',geral=0;
+  _porHospital(dados).forEach(([proj,lst])=>{
+    const porMed={};
+    lst.forEach(l=>{const k=l.medico_id||l.medico;if(!porMed[k])porMed[k]={nome:l.medico||'—',crm:l.crm||'',qtd:0,horas:0,total:0};porMed[k].qtd++;porMed[k].horas+=l.horas||0;porMed[k].total+=l.honorario||0;});
+    const arr=Object.values(porMed).sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR'));
+    const sub=arr.reduce((s,m)=>s+m.total,0);geral+=sub;
+    const linhas=arr.map(m=>`<tr style="${m.total===0&&m.nome==='— (falta)'?'background:#fdf0f0;':''}"><td><strong>${m.nome}</strong></td><td class="mono">${m.crm}</td><td style="text-align:center;">${m.qtd}</td><td class="mono">${Math.round(m.horas*10)/10}h</td><td class="mono" style="color:${m.total?'var(--green)':'var(--text3)'};font-weight:600;">${fBRL(m.total)}</td></tr>`).join('');
+    html+=`<div class="card" style="margin-bottom:12px;"><div style="display:flex;justify-content:space-between;margin-bottom:8px;"><div class="card-title" style="margin-bottom:0;">${proj}</div><div style="font-size:12px;color:var(--text2);">${arr.length} linha(s) · <span style="color:var(--green);font-weight:600;">${fBRL(sub)}</span></div></div><table><thead><tr><th>Médico</th><th>CRM</th><th style="text-align:center;">Plantões</th><th>Horas</th><th>Total</th></tr></thead><tbody>${linhas}</tbody><tfoot><tr style="border-top:1.5px solid var(--border2);"><td colspan="4" style="font-weight:600;padding:8px;">Total ${proj}</td><td class="mono" style="color:var(--green);font-weight:700;">${fBRL(sub)}</td></tr></tfoot></table></div>`;
+  });
+  el.innerHTML=_totalGeralCard('Total geral',geral)+html;
+}
+function gerarRelFinProfissional(el){
+  const dados=_dadosFin();
+  if(!dados.length){el.innerHTML='<div class="card"><div class="empty">Nenhum plantão no período.</div></div>';return;}
+  let html='';
+  _porHospital(dados).forEach(([proj,lst])=>{
+    const porMed={};
+    lst.forEach(l=>{const k=l.medico_id||l.medico;if(!porMed[k])porMed[k]={nome:l.medico||'—',crm:l.crm||'',itens:[]};porMed[k].itens.push(l);});
+    const meds=Object.values(porMed).sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR'));
+    const subProj=lst.reduce((s,l)=>s+(l.honorario||0),0);
+    let inner='';
+    meds.forEach(m=>{
+      const sub=m.itens.reduce((s,l)=>s+(l.honorario||0),0);
+      const subH=m.itens.reduce((s,l)=>s+(l.horas||0),0);
+      const linhas=m.itens.slice().sort((a,b)=>a.data.localeCompare(b.data)).map(l=>`<tr><td class="mono">${fDate(l.data)}</td><td>${l.setor||'—'}</td><td>${l.tipo||'—'}</td><td class="mono">${l.horas}h</td><td class="mono" style="color:${l.honorario?'var(--green)':'var(--text3)'};">${fBRL(l.honorario||0)}</td></tr>`).join('');
+      inner+=`<div style="margin-bottom:10px;"><div style="font-size:13px;font-weight:700;margin-bottom:6px;">${m.nome} <span class="mono" style="font-size:11px;color:var(--text3);font-weight:400;">${m.crm}</span></div><table><thead><tr><th>Data</th><th>Setor</th><th>Tipo</th><th>Duração</th><th>Valor</th></tr></thead><tbody>${linhas}</tbody><tfoot><tr style="border-top:1px solid var(--border);"><td style="font-weight:600;padding:6px;">Total</td><td>${m.itens.length} plantão(ões)</td><td></td><td class="mono" style="font-weight:600;">${Math.round(subH*10)/10}h</td><td class="mono" style="color:var(--green);font-weight:700;">${fBRL(sub)}</td></tr></tfoot></table></div>`;
+    });
+    html+=`<div class="card" style="margin-bottom:12px;"><div style="display:flex;justify-content:space-between;margin-bottom:10px;border-bottom:1px solid var(--border);padding-bottom:8px;"><div class="card-title" style="margin-bottom:0;">${proj}</div><div style="font-size:12px;color:var(--text2);">${meds.length} linha(s) · <span style="color:var(--green);font-weight:600;">${fBRL(subProj)}</span></div></div>${inner}</div>`;
+  });
+  el.innerHTML=html;
+}
+function gerarRelFinBanco(el){
+  const dados=_dadosFin();
+  if(!dados.length){el.innerHTML='<div class="card"><div class="empty">Nenhum plantão no período.</div></div>';return;}
+  let html='',geral=0;
+  _porHospital(dados).forEach(([proj,lst])=>{
+    const porMed={};
+    lst.forEach(l=>{const k=l.medico_id||l.medico;if(!porMed[k])porMed[k]={id:l.medico_id,nome:l.medico||'—',crm:l.crm||'',qtd:0,total:0};porMed[k].qtd++;porMed[k].total+=l.honorario||0;});
+    const arr=Object.values(porMed).sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR'));
+    const sub=arr.reduce((s,m)=>s+m.total,0);geral+=sub;
+    const linhas=arr.map(m=>{let banco='—';if(m.id){const med=medicos.find(x=>x.id===m.id)||{};if(med.pix_tipo&&med.pix_chave)banco='PIX '+med.pix_tipo+': '+med.pix_chave;else if(med.banco)banco=med.banco+' · Ag '+(med.agencia||'—')+' · CC '+(med.conta_corrente||'—');else banco='<span style="color:var(--red);">Sem dados bancários</span>';}return `<tr><td><strong>${m.nome}</strong></td><td class="mono">${m.crm}</td><td style="font-size:12px;">${banco}</td><td style="text-align:center;">${m.qtd}</td><td class="mono" style="color:${m.total?'var(--green)':'var(--text3)'};font-weight:600;">${fBRL(m.total)}</td></tr>`;}).join('');
+    html+=`<div class="card" style="margin-bottom:12px;"><div style="display:flex;justify-content:space-between;margin-bottom:8px;"><div class="card-title" style="margin-bottom:0;">${proj}</div><div style="font-size:12px;color:var(--text2);">${arr.length} linha(s) · <span style="color:var(--green);font-weight:600;">${fBRL(sub)}</span></div></div><table><thead><tr><th>Médico</th><th>CRM</th><th>Dados bancários</th><th style="text-align:center;">Plantões</th><th>Total</th></tr></thead><tbody>${linhas}</tbody><tfoot><tr style="border-top:1.5px solid var(--border2);"><td colspan="4" style="font-weight:600;padding:8px;">Total ${proj}</td><td class="mono" style="color:var(--green);font-weight:700;">${fBRL(sub)}</td></tr></tfoot></table></div>`;
+  });
+  el.innerHTML=_totalGeralCard('Total geral',geral)+html;
+}
+function gerarRelFinSetor(el){
+  const dados=_dadosFin();
+  if(!dados.length){el.innerHTML='<div class="card"><div class="empty">Nenhum plantão no período.</div></div>';return;}
+  let html='',geral=0;
+  _porHospital(dados).forEach(([proj,lst])=>{
+    const setores={};
+    lst.forEach(l=>{const s=l.setor||'(sem setor)';setores[s]=(setores[s]||0)+(l.honorario||0);});
+    const arr=Object.entries(setores).sort((a,b)=>a[0].localeCompare(b[0],'pt-BR'));
+    const totProj=arr.reduce((s,[,v])=>s+v,0);geral+=totProj;
+    const linhas=arr.map(([s,v])=>`<tr><td>${s}</td><td class="mono" style="text-align:right;">${fBRL(v)}</td></tr>`).join('');
+    html+=`<div class="card" style="margin-bottom:12px;"><div class="card-title">${proj}</div><table><thead><tr><th>Setor</th><th style="text-align:right;">Custo</th></tr></thead><tbody>${linhas}</tbody><tfoot><tr style="border-top:1.5px solid var(--border2);"><td style="font-weight:700;padding:8px;">Total</td><td class="mono" style="text-align:right;font-weight:700;color:var(--green);">${fBRL(totProj)}</td></tr></tfoot></table></div>`;
+  });
+  el.innerHTML=_totalGeralCard('Total geral',geral)+html;
+}
+function gerarRelFinTipo(el){
+  const dados=_dadosFin();
+  if(!dados.length){el.innerHTML='<div class="card"><div class="empty">Nenhum plantão no período.</div></div>';return;}
+  let html='',geral=0;
+  _porHospital(dados).forEach(([proj,lst])=>{
+    const porTipo={};
+    lst.forEach(l=>{const t=l.tipo||'Não informado';if(!porTipo[t])porTipo[t]={qtd:0,horas:0,total:0};porTipo[t].qtd++;porTipo[t].horas+=l.horas||0;porTipo[t].total+=l.honorario||0;});
+    const arr=Object.entries(porTipo).sort((a,b)=>a[0].localeCompare(b[0],'pt-BR'));
+    const sub=arr.reduce((s,[,v])=>s+v.total,0);geral+=sub;
+    const subQ=arr.reduce((s,[,v])=>s+v.qtd,0);
+    const linhas=arr.map(([t,v])=>`<tr><td>${t}</td><td style="text-align:center;">${v.qtd}</td><td class="mono">${Math.round(v.horas*10)/10}h</td><td class="mono" style="text-align:right;color:var(--green);font-weight:600;">${fBRL(v.total)}</td></tr>`).join('');
+    html+=`<div class="card" style="margin-bottom:12px;"><div style="display:flex;justify-content:space-between;margin-bottom:8px;"><div class="card-title" style="margin-bottom:0;">${proj}</div><div style="font-size:12px;color:var(--text2);">${subQ} plantão(ões) · <span style="color:var(--green);font-weight:600;">${fBRL(sub)}</span></div></div><table><thead><tr><th>Tipo de plantão</th><th style="text-align:center;">Qtd</th><th>Horas</th><th style="text-align:right;">Total</th></tr></thead><tbody>${linhas}</tbody><tfoot><tr style="border-top:1.5px solid var(--border2);"><td style="font-weight:700;padding:8px;">Total ${proj}</td><td style="text-align:center;font-weight:700;">${subQ}</td><td></td><td class="mono" style="text-align:right;font-weight:700;color:var(--green);">${fBRL(sub)}</td></tr></tfoot></table></div>`;
+  });
+  el.innerHTML=_totalGeralCard('Total geral',geral)+html;
+}
+
+// Faltas agora respeita a decisão do gestor (não mostra quem teve presença confirmada)
+async function gerarRelFaltas(el){
+  el.innerHTML='<div class="card"><div class="empty">Carregando...</div></div>';
+  const d1=document.getElementById('rd1').value,d2=document.getElementById('rd2').value;
+  let pathCI='/rest/v1/checkins?aprovado=eq.true&select=medico_id,projeto_id,feito_em';
+  if(d1)pathCI+=`&feito_em=gte.${d1}T00:00:00`;
+  if(d2)pathCI+=`&feito_em=lte.${d2}T23:59:59`;
+  const checkins=await sb(pathCI)||[];
+  const ciKeys=new Set(checkins.map(c=>`${c.medico_id}_${c.projeto_id}_${(c.feito_em||'').slice(0,10)}`));
+  const ausencias=await sb('/rest/v1/ausencias?select=lancamento_id,status,motivo')||[];
+  const ausByLanc={}; ausencias.forEach(a=>{ if(a.lancamento_id) ausByLanc[a.lancamento_id]=a; });
+  const agora=new Date();
+  const dados=filtrarDadosRel().filter(l=>l.medico_id && new Date(`${l.data}T${l.hora_ini||'00:00'}`)<agora);
+  const faltas=dados.filter(l=>{
+    if(l.status_presenca==='presente')return false;
+    if(l.status_presenca==='falta')return true;
+    return !ciKeys.has(`${l.medico_id}_${l.projeto_id}_${l.data}`);
+  });
+  if(!faltas.length){el.innerHTML='<div class="card"><div style="text-align:center;padding:24px;color:var(--green);font-weight:600;">Nenhuma falta no período.</div></div>';return;}
+  const classifica=l=>{const a=ausByLanc[l.id];if(!a)return{txt:'Não justificada (sem aviso)',cor:'var(--red)'};const st=(a.status||'').toLowerCase();const justif=a.motivo||st.includes('justif')||st.includes('aprov');return justif?{txt:'Justificada'+(a.motivo?' — '+a.motivo:''),cor:'var(--amber)'}:{txt:'Não justificada',cor:'var(--red)'};};
+  let html='';
+  _porHospital(faltas).forEach(([proj,lst])=>{
+    const linhas=lst.slice().sort((a,b)=>b.data.localeCompare(a.data)).map(l=>{const c=classifica(l);return `<tr><td><strong>${l.medico||'—'}</strong></td><td class="mono">${l.crm||''}</td><td>${l.setor||'—'}</td><td class="mono">${fDate(l.data)}</td><td class="mono">${(l.hora_ini||'').slice(0,5)}–${(l.hora_fim||'').slice(0,5)}</td><td style="color:${c.cor};font-weight:600;">${c.txt}</td></tr>`;}).join('');
+    html+=`<div class="card" style="margin-bottom:12px;"><div style="display:flex;justify-content:space-between;margin-bottom:8px;"><div class="card-title" style="margin-bottom:0;">${proj}</div><div style="font-size:12px;color:var(--red);font-weight:600;">${lst.length} falta(s)</div></div><table><thead><tr><th>Médico</th><th>CRM</th><th>Setor</th><th>Data</th><th>Horário</th><th>Situação</th></tr></thead><tbody>${linhas}</tbody></table></div>`;
+  });
+  el.innerHTML=html;
+}
+
+// ----- TELA: AUSÊNCIA DE CHECK-IN -----
+async function carregarAusenciasCI(){
+  const el=document.getElementById('aci-lista'); if(!el)return;
+  const selP=document.getElementById('aci-proj');
+  if(selP&&selP.options.length<=1){selP.innerHTML='<option value="">Todos</option>'+sortedProjetos().map(p=>`<option value="${p.id}">${p.nome}</option>`).join('');}
+  const eD1=document.getElementById('aci-d1'),eD2=document.getElementById('aci-d2');
+  if(eD1&&!eD1.value)eD1.value=new Date(Date.now()-30*86400000).toISOString().slice(0,10);
+  if(eD2&&!eD2.value)eD2.value=new Date().toISOString().slice(0,10);
+  el.innerHTML='<div class="empty">Carregando...</div>';
+  const pid=selP?.value||'',d1=eD1?.value||'',d2=eD2?.value||'';
+  let pathCI='/rest/v1/checkins?aprovado=eq.true&select=medico_id,projeto_id,feito_em';
+  if(d1)pathCI+=`&feito_em=gte.${d1}T00:00:00`;
+  if(d2)pathCI+=`&feito_em=lte.${d2}T23:59:59`;
+  const checkins=await sb(pathCI)||[];
+  const ciKeys=new Set(checkins.map(c=>`${c.medico_id}_${c.projeto_id}_${(c.feito_em||'').slice(0,10)}`));
+  let path='/rest/v1/lancamentos?select=*,medicos(nome,crm),projetos(nome)&order=data.desc&limit=500';
+  if(pid)path+=`&projeto_id=eq.${pid}`;
+  if(d1)path+=`&data=gte.${d1}`;
+  if(d2)path+=`&data=lte.${d2}`;
+  const lancs=await sb(path)||[];
+  const agora=new Date();
+  const pend=lancs.filter(l=>{
+    if(!l.medico_id||l.aberto)return false;
+    if(l.status_presenca==='presente'||l.status_presenca==='falta')return false;
+    if(new Date(`${l.data}T${l.hora_ini||'00:00'}`)>=agora)return false;
+    return !ciKeys.has(`${l.medico_id}_${l.projeto_id}_${l.data}`);
+  });
+  if(!pend.length){el.innerHTML='<div class="card"><div style="text-align:center;padding:24px;color:var(--green);font-weight:600;">Nenhuma ausência de check-in pendente.</div></div>';return;}
+  el.innerHTML=`<div class="card"><div style="margin-bottom:10px;font-size:13px;color:var(--amber);font-weight:600;">${pend.length} plantão(ões) sem check-in aguardando análise</div><table><thead><tr><th>Data</th><th>Médico</th><th>Projeto / Setor</th><th>Horário</th><th>Valor</th><th>Ação</th></tr></thead><tbody>`+
+  pend.map(l=>`<tr id="aci-row-${l.id}"><td class="mono">${fDate(l.data)}</td><td><strong>${l.medicos?.nome||'—'}</strong><br><span class="mono" style="font-size:11px;color:var(--text3);">${l.medicos?.crm||''}</span></td><td>${l.projetos?.nome||'—'}${l.setor?' — '+l.setor:''}</td><td class="mono">${(l.hora_ini||'').slice(0,5)}–${(l.hora_fim||'').slice(0,5)}</td><td class="mono">${fBRL(l.honorario||0)}</td><td style="white-space:nowrap;"><button class="btn btn-success btn-sm" onclick="aciResolver('${l.id}','presente')">Compareceu</button> <button class="btn btn-danger btn-sm" onclick="aciResolver('${l.id}','falta')">Falta</button> <button class="btn btn-ghost btn-sm" onclick="aciSubstituir('${l.id}')">Substituir</button></td></tr>`).join('')+'</tbody></table></div>';
+}
+async function aciResolver(id,status){
+  const res=await sb('/rest/v1/lancamentos?id=eq.'+id,{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify({status_presenca:status})});
+  if(res!==null){toast(status==='falta'?'Marcado como falta':'Presença confirmada');const row=document.getElementById('aci-row-'+id);if(row)row.remove();const l=lancamentos.find(x=>x.id===id||x.id==id);if(l)l.status_presenca=status;}
+  else toast('Erro ao salvar',true);
+}
+function aciSubstituir(id){
+  const row=document.getElementById('aci-row-'+id); if(!row)return;
+  const cell=row.querySelector('td:last-child');
+  cell.innerHTML=`<select id="aci-sub-${id}" style="padding:5px 8px;border:1px solid var(--border);border-radius:var(--radius);font-size:12px;max-width:180px;">${sortedMedicos().map(m=>`<option value="${m.id}">${m.nome}${m.crm?' — '+m.crm:''}</option>`).join('')}</select> <button class="btn btn-primary btn-sm" onclick="aciConfirmarSub('${id}')">Confirmar</button> <button class="btn btn-ghost btn-sm" onclick="carregarAusenciasCI()">Cancelar</button>`;
+}
+async function aciConfirmarSub(id){
+  const novo=document.getElementById('aci-sub-'+id)?.value;
+  if(!novo){toast('Selecione o médico substituto',true);return;}
+  const res=await sb('/rest/v1/lancamentos?id=eq.'+id,{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify({medico_id:novo,status_presenca:'presente'})});
+  if(res!==null){toast('Substituição registrada');const row=document.getElementById('aci-row-'+id);if(row)row.remove();await carregarLancamentos(true);}
+  else toast('Erro ao salvar',true);
 }
 </script>
