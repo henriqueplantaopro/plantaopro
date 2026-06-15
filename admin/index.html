@@ -1114,14 +1114,14 @@ tr:hover td{background:var(--bg3);}
     <div class="card" style="margin-bottom:12px;">
       <div class="card-title">Tipo de relatório</div>
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;" id="rel-tipo-grid">
-        <button type="button" class="rel-tipo-btn active" id="rt-detalhado" onclick="selecionarRelTipo('detalhado',this)">📊 Detalhado por projeto</button>
-        <button type="button" class="rel-tipo-btn" id="rt-resumo" onclick="selecionarRelTipo('resumo',this)">📋 Plantões por projeto</button>
-        <button type="button" class="rel-tipo-btn" id="rt-horas" onclick="selecionarRelTipo('horas',this)">⏱️ Horas por profissional</button>
-        <button type="button" class="rel-tipo-btn" id="rt-faltas" onclick="selecionarRelTipo('faltas',this)">❌ Faltas</button>
-        <button type="button" class="rel-tipo-btn" id="rt-atrasos" onclick="selecionarRelTipo('atrasos',this)">⚠️ Atrasos</button>
-        <button type="button" class="rel-tipo-btn" id="rt-checkins" onclick="selecionarRelTipo('checkins',this)">📍 Check-ins fora da tolerância</button>
-        <button type="button" class="rel-tipo-btn" id="rt-medicos" onclick="selecionarRelTipo('medicos',this)">👨‍⚕️ Médicos cadastrados</button>
-        <button type="button" class="rel-tipo-btn" id="rt-risco" onclick="selecionarRelTipo('risco',this)" style="border-color:var(--red);color:var(--red);">🚨 Risco operacional</button>
+        <button type="button" class="rel-tipo-btn active" id="rt-detalhado" onclick="selecionarRelTipo('detalhado',this)">Detalhado por projeto</button>
+        <button type="button" class="rel-tipo-btn" id="rt-resumo" onclick="selecionarRelTipo('resumo',this)">Plantões por projeto</button>
+        <button type="button" class="rel-tipo-btn" id="rt-horas" onclick="selecionarRelTipo('horas',this)">Horas por profissional</button>
+        <button type="button" class="rel-tipo-btn" id="rt-faltas" onclick="selecionarRelTipo('faltas',this)">Faltas</button>
+        <button type="button" class="rel-tipo-btn" id="rt-atrasos" onclick="selecionarRelTipo('atrasos',this)">Atrasos</button>
+        <button type="button" class="rel-tipo-btn" id="rt-checkins" onclick="selecionarRelTipo('checkins',this)">Check-ins fora da tolerância</button>
+        <button type="button" class="rel-tipo-btn" id="rt-medicos" onclick="selecionarRelTipo('medicos',this)">Médicos cadastrados</button>
+        <button type="button" class="rel-tipo-btn" id="rt-risco" onclick="selecionarRelTipo('risco',this)">Risco operacional</button>
       </div>
     </div>
 
@@ -1134,9 +1134,9 @@ tr:hover td{background:var(--bg3);}
         <div class="form-group"><label>Até</label><input type="date" id="rd2"></div>
       </div>
       <div style="display:flex;gap:8px;margin-top:8px;">
-        <button class="btn btn-primary" onclick="gerarRelatorio()">🔍 Gerar relatório</button>
-        <button class="btn btn-success" onclick="exportarRelXLSX()">⬇ Excel</button>
-        <button class="btn btn-amber" onclick="exportarRelPDF()">⬇ PDF</button>
+        <button class="btn btn-primary" onclick="gerarRelatorio()">Gerar relatório</button>
+        <button class="btn btn-ghost" onclick="exportarRelXLSX()">Exportar Excel</button>
+        <button class="btn btn-ghost" onclick="exportarRelPDF()">Exportar PDF</button>
       </div>
     </div>
     <div id="rel-resultado"></div>
