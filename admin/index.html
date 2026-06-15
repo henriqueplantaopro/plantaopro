@@ -1115,14 +1115,22 @@ tr:hover td{background:var(--bg3);}
         <div class="form-group">
           <label>Tipo de relatório</label>
           <select id="rel-tipo-select" onchange="selecionarRelTipo(this.value, this)">
-            <option value="detalhado">Detalhado por projeto</option>
-            <option value="resumo">Plantões por projeto</option>
-            <option value="horas">Horas por profissional</option>
-            <option value="faltas">Faltas</option>
             <option value="atrasos">Atrasos</option>
             <option value="checkins">Check-ins fora da tolerância</option>
+            <option value="detalhado" selected>Detalhado por projeto</option>
+            <option value="entrada_saida">Entrada e saída</option>
+            <option value="escala">Escala de plantões</option>
+            <option value="faltas">Faltas</option>
+            <option value="fin_analitico">Financeiro analítico</option>
+            <option value="fin_banco">Financeiro com dados bancários</option>
+            <option value="fin_consolidado">Financeiro consolidado</option>
+            <option value="fin_profissional">Financeiro por profissional</option>
+            <option value="fin_setor">Financeiro por setor</option>
+            <option value="horas">Horas por profissional</option>
             <option value="medicos">Médicos cadastrados</option>
+            <option value="resumo">Plantões por projeto</option>
             <option value="risco">Risco operacional</option>
+            <option value="trocas">Trocas e passagens de plantões</option>
           </select>
         </div>
         <div class="form-group"><label>Projeto</label><select id="rp"><option value="">Todos</option></select></div>
