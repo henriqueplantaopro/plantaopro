@@ -103,12 +103,12 @@ export default async function handler(req, res) {
       return json(res, 200, { ok: true });
     }
 
-    // ── REMOVER ─────────────────────────────────────────────────────────
+   // ── REMOVER = desvincular da minha empresa (não apaga a pessoa) ──────
     if (req.method === 'DELETE') {
       const id = req.query.id;
       if (!id) return json(res, 400, { erro: 'id obrigatório' });
       await sbAdmin(
-        `/rest/v1/medicos?id=eq.${id}&admin_id=eq.${adminId}`,
+        `/rest/v1/vinculos?medico_id=eq.${id}&admin_id=eq.${adminId}`,
         { method: 'DELETE', headers: { Prefer: 'return=minimal' } }
       );
       return json(res, 200, { ok: true });
