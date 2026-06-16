@@ -24,8 +24,24 @@ export default async function handler(req, res) {
       return json(res, 200, dados || []);
     }
 
-    if (req.method === 'POST') {
+   if (req.method === 'POST') {
       const b = req.body || {};
+      const crm = (b.crm || '').trim();
+      if (!crm) return json(res, 400, { erro: 'CRM é obrigatório' });
+
+      let empresaNome = null;
+      try {
+        const adm = await sbAdmin(`/rest/v1/admins?id=eq.${adminId}&select=*`);
+        const a = adm?.[0] || {};
+        empresaNome = a.nome || a.razao_social || a.empresa || a.nome_empresa || a.nome_fantasia || null;
+      } catch (_) {}
+
+      let medicoId = null, medicoNome = null;
+      try {
+        const m = await sbAdmin(`/rest/v1/medicos?crm=eq.${encodeURIComponent(crm)}&select=id,nome&limit=1`);
+        if (m && m[0]) { medicoId = m[0].id; medicoNome = m[0].nome; }
+      } catch (_) {}
+
       let criado = null, tentativas = 0;
       while (!criado && tentativas < 6) {
         tentativas++;
@@ -36,16 +52,18 @@ export default async function handler(req, res) {
             body: JSON.stringify({
               codigo: gerarCodigo(),
               admin_id: adminId,
-              nome: b.nome || null,
-              crm: b.crm || null,
+              empresa_nome: empresaNome,
+              crm,
+              nome: b.nome || medicoNome || null,
               email: b.email || null,
+              medico_id: medicoId,
             }),
           });
           if (r && r[0]) criado = r[0];
-        } catch (_) { /* colisão de código, tenta de novo */ }
+        } catch (_) {}
       }
       if (!criado) return json(res, 500, { erro: 'Não foi possível gerar o convite' });
-      return json(res, 201, criado);
+      return json(res, 201, { ...criado, medico_existe: !!medicoId });
     }
 
     if (req.method === 'PATCH') {
