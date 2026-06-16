@@ -26,8 +26,8 @@ export default async function handler(req, res) {
 
    if (req.method === 'POST') {
       const b = req.body || {};
-      const crm = (b.crm || '').trim();
-      if (!crm) return json(res, 400, { erro: 'CRM é obrigatório' });
+      const crm = (b.crm || '').replace(/\D/g, '');
+      if (!crm) return json(res, 400, { erro: 'CRM é obrigatório (apenas números)' });
 
       let empresaNome = null;
       try {
@@ -38,7 +38,7 @@ export default async function handler(req, res) {
 
       let medicoId = null, medicoNome = null;
       try {
-        const m = await sbAdmin(`/rest/v1/medicos?crm=eq.${encodeURIComponent(crm)}&select=id,nome&limit=1`);
+        const m = await sbAdmin(`/rest/v1/medicos?crm_norm=eq.${crm}&select=id,nome&limit=1`);
         if (m && m[0]) { medicoId = m[0].id; medicoNome = m[0].nome; }
       } catch (_) {}
 
