@@ -60,10 +60,10 @@ export default async function handler(req, res) {
     if (req.method === 'GET') {
       // select=* para não depender da lista exata de colunas da sua tabela;
       // a senha_hash é removida aqui no servidor antes de ir pro navegador.
-      const dados = await sbAdmin(
-        `/rest/v1/medicos?admin_id=eq.${adminId}&select=*&order=nome`
+     const dados = await sbAdmin(
+        `/rest/v1/medicos?select=*,vinculos!inner(admin_id,status)&vinculos.admin_id=eq.${adminId}&vinculos.status=eq.ativo&order=nome`
       );
-      const limpos = (dados || []).map(({ senha_hash, ...resto }) => resto);
+      const limpos = (dados || []).map(({ senha_hash, vinculos, ...resto }) => resto);
       return json(res, 200, limpos);
     }
 
