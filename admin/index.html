@@ -2892,11 +2892,11 @@ async function importarMedicosXLSX(event) {
 
 
 async function delMedico(id) {
-  if (!confirm('Remover médico?')) return;
-  await sb(`/rest/v1/medicos?id=eq.${id}`, { method:'DELETE' });
+  if (!confirm('Remover este médico da sua empresa? O cadastro dele continua existindo (ele pode estar vinculado a outras empresas).')) return;
+  const r = await fetch('/api/medicos?id=' + id, { method:'DELETE' });
+  if (r.ok) toast('Médico removido da sua empresa'); else toast('Erro ao remover', true);
   await carregarMedicos();
 }
-
 let _editandoMedId = null;
 
 function abrirEditarMedico(id) {
