@@ -5067,8 +5067,8 @@ async function addMedico() {
 
   const btn = document.querySelector('.btn[onclick="addMedico()"]');
   if (btn) { btn.disabled=true; btn.textContent='Salvando...'; }
-
-  const res = await sb('/rest/v1/medicos', { method:'POST', body: JSON.stringify(payload) });
+  const _r = await fetch('/api/medicos', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+  const res = _r.ok ? await _r.json().catch(()=>({})) : null;
   if (res) {
     // Upload de documentos (se selecionados)
     const medId = res[0]?.id;
