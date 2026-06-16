@@ -419,6 +419,7 @@ tr:hover td{background:var(--bg3);}
       </div>
       <div class="nav-group-items">
         <div class="nav-item" onclick="showTab('medicos',this)">👨‍⚕️ Médicos</div>
+        <div class="nav-item" onclick="showTab('convites',this);carregarConvites();">Convidar médico</div>
         <div class="nav-item" onclick="showTab('projetos',this)">📁 Projetos</div>
         <div class="nav-item" onclick="showTab('tipos',this)">⚙️ Tipos de plantão</div>
       </div>
@@ -1120,6 +1121,23 @@ tr:hover td{background:var(--bg3);}
     </div>
     <div id="aci-lista"></div>
   </div>
+
+<!-- CONVITES -->
+  <div id="tab-convites" class="section">
+    <div class="page-title">Convidar médico</div>
+    <div class="page-sub">Gere um código e envie ao médico. Ao usá-lo no app, ele entra já vinculado à sua empresa.</div>
+    <div class="card" style="margin-bottom:12px;">
+      <div class="form-row three">
+        <div class="form-group"><label>Nome (opcional)</label><input id="cv-nome" type="text" placeholder="Nome do médico"></div>
+        <div class="form-group"><label>CRM (opcional)</label><input id="cv-crm" type="text" placeholder="CRM"></div>
+        <div class="form-group"><label>E-mail (opcional)</label><input id="cv-email" type="email" placeholder="email@exemplo.com"></div>
+      </div>
+      <div style="margin-top:8px;"><button class="btn btn-primary" onclick="gerarConvite()">Gerar convite</button></div>
+      <div id="cv-resultado" style="margin-top:12px;"></div>
+    </div>
+    <div id="cv-lista"></div>
+  </div>
+
 
   <!-- RELATÓRIOS -->
   <div id="tab-relatorios" class="section">
@@ -9561,5 +9579,47 @@ function aciAlterar(id){
   const row=document.getElementById('aci-row-'+id); if(!row)return;
   const cell=row.querySelector('td:last-child');
   cell.innerHTML=`<button class="btn btn-success btn-sm" onclick="aciAbrirObs('${id}','presente')">Compareceu</button> <button class="btn btn-danger btn-sm" onclick="aciAbrirObs('${id}','falta')">Falta</button> <button class="btn btn-ghost btn-sm" onclick="aciSubstituir('${id}')">Substituir</button>`;
+}
+</script>
+
+<script>
+let _ultimoConvite=null;
+async function gerarConvite(){
+  const btn=document.querySelector('button[onclick="gerarConvite()"]');
+  if(btn){btn.disabled=true;btn.textContent='Gerando...';}
+  const body={
+    nome:(document.getElementById('cv-nome')?.value||'').trim()||null,
+    crm:(document.getElementById('cv-crm')?.value||'').trim()||null,
+    email:(document.getElementById('cv-email')?.value||'').trim()||null
+  };
+  const r=await fetch('/api/convites',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+  if(btn){btn.disabled=false;btn.textContent='Gerar convite';}
+  if(!r.ok){toast('Erro ao gerar convite',true);return;}
+  const c=await r.json(); _ultimoConvite=c;
+  document.getElementById('cv-resultado').innerHTML=`<div class="card" style="background:#e8f0fb;border:1px solid var(--blue);"><div style="font-size:12px;color:var(--text2);margin-bottom:4px;">Código de convite gerado</div><div style="font-size:26px;font-weight:700;letter-spacing:2px;color:var(--blue);font-family:monospace;">${c.codigo}</div><div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;"><button class="btn btn-ghost btn-sm" onclick="copiarCodigoConvite()">Copiar código</button><button class="btn btn-ghost btn-sm" onclick="copiarMsgConvite()">Copiar mensagem p/ WhatsApp</button></div><div style="font-size:11px;color:var(--text3);margin-top:8px;">Válido por 7 dias · uso único</div></div>`;
+  ['cv-nome','cv-crm','cv-email'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
+  carregarConvites();
+}
+function copiarCodigoConvite(){ if(_ultimoConvite){navigator.clipboard.writeText(_ultimoConvite.codigo);toast('Código copiado');} }
+function copiarMsgConvite(){ if(_ultimoConvite){navigator.clipboard.writeText('Você foi convidado(a) para o PlantãoPro. Baixe o app e, ao criar sua conta, use o código de convite: '+_ultimoConvite.codigo);toast('Mensagem copiada');} }
+
+async function carregarConvites(){
+  const el=document.getElementById('cv-lista'); if(!el)return;
+  el.innerHTML='<div class="empty">Carregando...</div>';
+  const r=await fetch('/api/convites'); const lista=r.ok?await r.json():[];
+  if(!lista.length){el.innerHTML='<div class="card"><div class="empty">Nenhum convite gerado ainda.</div></div>';return;}
+  const badge=s=>{const m={pendente:['#1a5fad','Pendente'],usado:['#2d7a3a','Usado'],cancelado:['#999','Cancelado']};const x=m[s]||['#999',s];return `<span style="font-size:11px;font-weight:600;color:${x[0]};">${x[1]}</span>`;};
+  const rows=lista.map(c=>{
+    const expirado=c.status==='pendente'&&new Date(c.expira_em)<new Date();
+    const st=expirado?'<span style="font-size:11px;font-weight:600;color:#999;">Expirado</span>':badge(c.status);
+    const acao=(c.status==='pendente'&&!expirado)?`<button class="btn btn-ghost btn-sm" onclick="cancelarConvite('${c.id}')">Cancelar</button>`:'';
+    return `<tr><td class="mono" style="font-weight:700;">${c.codigo}</td><td>${c.nome||'—'}</td><td class="mono">${c.crm||'—'}</td><td>${st}</td><td class="mono">${fDate((c.criado_em||'').slice(0,10))}</td><td>${acao}</td></tr>`;
+  }).join('');
+  el.innerHTML=`<div class="card"><div class="card-title">Convites enviados</div><table><thead><tr><th>Código</th><th>Nome</th><th>CRM</th><th>Status</th><th>Criado</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>`;
+}
+async function cancelarConvite(id){
+  if(!confirm('Cancelar este convite?'))return;
+  const r=await fetch('/api/convites?id='+id,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({})});
+  if(r.ok){toast('Convite cancelado');carregarConvites();}else toast('Erro',true);
 }
 </script>
