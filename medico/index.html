@@ -1030,11 +1030,10 @@ async function fazerLoginMedico(){
   if(!cpf||cpf.length<11){erroEl.textContent='Digite um CPF válido.';erroEl.style.display='block';return;}
   if(!senha){erroEl.textContent='Digite sua senha.';erroEl.style.display='block';return;}
   btn.disabled=true;btn.textContent='Entrando...';
-  const res=await sb('/rest/v1/medicos?cpf=eq.'+cpf+'&select=*');
-  if(!res?.length){erroEl.textContent='CPF não encontrado. Verifique ou crie uma conta.';erroEl.style.display='block';btn.disabled=false;btn.textContent='Entrar';return;}
-  const med=res[0];
-  if(med.senha_hash!==senha){erroEl.textContent='Senha incorreta.';erroEl.style.display='block';btn.disabled=false;btn.textContent='Entrar';return;}
-  if(!med.ativo){erroEl.textContent='Conta inativa. Contate o administrador.';erroEl.style.display='block';btn.disabled=false;btn.textContent='Entrar';return;}
+  const r = await fetch('/api/medico-login', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ cpf, senha })});
+  const out = await r.json().catch(()=>({}));
+  if(!r.ok || !out.medico){erroEl.textContent=out.erro||'Erro ao entrar. Tente novamente.';erroEl.style.display='block';btn.disabled=false;btn.textContent='Entrar';return;}
+  const med = out.medico;
 
   // Salvar token
   try{localStorage.setItem('plantaopro_token', med.token_acesso);}catch(e){}
@@ -1086,21 +1085,21 @@ async function cadastrarMedico(){
   const existe=await sb('/rest/v1/medicos?cpf=eq.'+cpf+'&select=id');
   if(existe?.length){erroEl.textContent='Este CPF já está cadastrado. Faça login.';erroEl.style.display='block';btn.disabled=false;btn.textContent='Criar conta';return;}
   // Criar médico
-  const token=Math.random().toString(36).slice(2)+Math.random().toString(36).slice(2)+Date.now().toString(36);
   const ufs = getUFsSelecionadas('cad');
   const esps = getEspSelecionadas('cad');
   const rqe = document.getElementById('cad-rqe')?.value.trim() || null;
-  const res=await sb('/rest/v1/medicos',{method:'POST',headers:{'Prefer':'return=representation'},body:JSON.stringify({
+  const r = await fetch('/api/medico-conta',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
     nome, cpf, crm, telefone:tel,
     especialidade: esps[0] || null,
     especialidades: esps,
     rqe,
     ufs_interesse: ufs,
-    senha_hash:senha, token_acesso:token, ativo:true, primeiro_acesso:false
+    senha
   })});
-  if(!res?.length){erroEl.textContent='Erro ao criar conta. Tente novamente.';erroEl.style.display='block';btn.disabled=false;btn.textContent='Criar conta';return;}
-  medico=res[0];
-  try{localStorage.setItem('plantaopro_token',token);}catch(e){}
+  const out = await r.json().catch(()=>({}));
+  if(!r.ok || !out.medico){erroEl.textContent=out.erro||'Erro ao criar conta. Tente novamente.';erroEl.style.display='block';btn.disabled=false;btn.textContent='Criar conta';return;}
+  medico=out.medico;
+  try{localStorage.setItem('plantaopro_token',medico.token_acesso);}catch(e){}
   document.getElementById('tela-cadastro-med').style.display='none';
   document.getElementById('tela-primeiro-acesso').style.display='block';
 }
