@@ -61,6 +61,6 @@ export default async function handler(req, res) {
     return json(res, 405, { erro: 'Método não permitido' });
   } catch (e) {
     console.error('[db]', table, e);
-    return json(res, 500, { erro: 'Erro interno' });
+    return json(res, 500, { erro: String((e && e.message) || e) });
   }
 }
