@@ -3011,12 +3011,12 @@ async function salvarEdicaoMedico() {
   const btn = document.querySelector('#modal-editar-med .btn-primary');
   if (btn) { btn.disabled = true; btn.textContent = 'Salvando...'; }
   try {
-    const res = await fetch(SUPABASE_URL + '/rest/v1/medicos?id=eq.' + _editandoMedId, {
+    const res = await fetch('/api/medicos?id=' + _editandoMedId, {
       method: 'PATCH',
-      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
     });
-    if (res.ok || res.status === 204) {
+    if (res.ok) {
       toast('✅ Médico atualizado!');
       fecharEditarMedico();
       await carregarMedicos();
@@ -3030,12 +3030,12 @@ async function salvarEdicaoMedico() {
 
 async function resetarDispositivo(id, nome) {
   if (!confirm(`Redefinir vínculo de dispositivo de ${nome}?\n\nO médico poderá fazer o primeiro acesso em um novo celular.`)) return;
-  const res = await sb(`/rest/v1/medicos?id=eq.${id}`, {
+  const r = await fetch('/api/medicos?id=' + id, {
     method: 'PATCH',
-    headers: {'Content-Type':'application/json','Prefer':'return=minimal'},
+    headers: {'Content-Type':'application/json'},
     body: JSON.stringify({ device_id: null, device_registrado_em: null })
   });
-  if (res !== null) {
+  if (r.ok) {
     toast(`Dispositivo de ${nome} redefinido!`);
     await carregarMedicos();
   } else {
@@ -9628,26 +9628,23 @@ async function cancelarConvite(id){
 </script>
 
 <script>
+  
 async function resetSenhaMedico(id){
   const med = (typeof medicos!=='undefined' && medicos) ? medicos.find(x=>x.id===id) : null;
   const nome = med && med.nome ? med.nome : 'este médico';
   if(!confirm('Gerar nova senha provisória para '+nome+'?\n\nA senha atual dele deixará de funcionar.')) return;
-  const nova = gerarSenhaProvisoria();
   try{
-    const r = await fetch(SUPABASE_URL+'/rest/v1/medicos?id=eq.'+id, {
+    const r = await fetch('/api/medicos?id='+id+'&action=reset-senha', {
       method:'PATCH',
-      headers:{
-        'apikey':SUPABASE_KEY,
-        'Authorization':'Bearer '+SUPABASE_KEY,
-        'Content-Type':'application/json',
-        'Prefer':'return=minimal'
-      },
-      body: JSON.stringify({ senha_hash: nova })
+      headers:{ 'Content-Type':'application/json' },
+      body: JSON.stringify({})
     });
     if(!r.ok){ const e=await r.text(); console.error('reset',r.status,e); toast('Erro ao redefinir ('+r.status+')', true); return; }
-    window.prompt('Senha provisória de '+nome+'. Copie e envie ao médico:', nova);
+    const data = await r.json();
+    window.prompt('Senha provisória de '+nome+'. Copie e envie ao médico:', data.senha);
   }catch(e){ console.error(e); toast('Erro ao redefinir senha', true); }
 }
+  
 function gerarSenhaProvisoria(){
   const abc='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
   let s=''; for(let i=0;i<8;i++){ s+=abc[Math.floor(Math.random()*abc.length)]; }
