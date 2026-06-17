@@ -2202,6 +2202,7 @@ async function fazerLoginWrapper() {
       return;
     }
     // Sucesso — pós-login depende do tipo
+    try { localStorage.setItem('pp_user', JSON.stringify(data.usuario)); } catch(e){}
     if (data.usuario.tipo === 'admin') {
       await posLoginAdmin(data.usuario);
     } else {
@@ -2384,6 +2385,7 @@ document.getElementById('modal-esqueci-admin').addEventListener('click', functio
 
 
 function fazerLogout() {
+  try { localStorage.removeItem('pp_user'); } catch(e){}
   adminLogado = null;
   document.getElementById('tela-login').style.display = 'flex';
   document.getElementById('sidebar').style.display = 'none';
@@ -9651,4 +9653,20 @@ function gerarSenhaProvisoria(){
   let s=''; for(let i=0;i<8;i++){ s+=abc[Math.floor(Math.random()*abc.length)]; }
   return s;
 }
+</script>
+
+<script>
+// Restaurar sessão ao recarregar a página
+window.addEventListener('DOMContentLoaded', async function () {
+  let saved = null;
+  try { saved = JSON.parse(localStorage.getItem('pp_user') || 'null'); } catch (e) {}
+  if (!saved) return;
+  try {
+    if (saved.tipo === 'admin') await posLoginAdmin(saved);
+    else await posLoginUsuario(saved);
+  } catch (e) {
+    console.error('Falha ao restaurar sessão:', e);
+    try { localStorage.removeItem('pp_user'); } catch (_) {}
+  }
+});
 </script>
