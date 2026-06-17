@@ -45,17 +45,17 @@ export default async function handler(req, res) {
     if (req.method === 'PATCH') {
       const body = { ...(req.body || {}) };
       delete body.admin_id; // nunca deixa trocar de empresa
-      await sbAdmin(comEscopo(), {
+      const upd = await sbAdmin(comEscopo(), {
         method: 'PATCH',
-        headers: { Prefer: 'return=minimal' },
+        headers: { Prefer: 'return=representation' },
         body: JSON.stringify(body),
       });
-      return json(res, 200, { ok: true });
+      return json(res, 200, upd || []);
     }
 
     if (req.method === 'DELETE') {
-      await sbAdmin(comEscopo(), { method: 'DELETE', headers: { Prefer: 'return=minimal' } });
-      return json(res, 200, { ok: true });
+      const del = await sbAdmin(comEscopo(), { method: 'DELETE', headers: { Prefer: 'return=representation' } });
+      return json(res, 200, del || []);
     }
 
     return json(res, 405, { erro: 'Método não permitido' });
