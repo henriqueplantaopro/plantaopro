@@ -522,18 +522,30 @@ html,body{height:100%;background:#f0f4f8;font-family:-apple-system,BlinkMacSyste
     <div class="modal-handle"></div>
     <div class="modal-header">
       <div class="modal-title">Esqueci minha senha</div>
-      <div class="modal-sub">Entre em contato com o administrador para redefinir sua senha.</div>
+      <div class="modal-sub">Redefina sua senha pelo WhatsApp do suporte.</div>
     </div>
     <div class="modal-body">
-      <div style="background:var(--amber-light);border:1px solid #f0c060;border-radius:8px;padding:14px;font-size:13px;color:var(--amber);line-height:1.6;">
-        Informe seu CPF ao administrador do sistema e solicite a redefinição de senha. O administrador irá gerar uma nova senha provisória para você.
+      <div style="font-size:13px;color:#555;line-height:1.6;margin-bottom:14px;">
+        Para redefinir sua senha, fale com o suporte pelo WhatsApp. A mensagem já vai pronta com o seu CPF.
       </div>
+      <button class="btn-modal" style="width:100%;background:#25D366;color:#fff;border:none;font-weight:600;" onclick="abrirWhatsAppSenha()">Falar com o suporte no WhatsApp</button>
     </div>
     <div class="modal-footer">
       <button class="btn-modal cancel" onclick="document.getElementById('modal-esqueci-med').classList.add('oculto')">Fechar</button>
     </div>
   </div>
 </div>
+
+<script>
+function abrirWhatsAppSenha(){
+  var el = document.getElementById('login-cpf');
+  var cpf = el ? el.value.replace(/\D/g,'') : '';
+  var num = '5521995953003';
+  var msg = 'Ola! Esqueci minha senha do PlantaoPro e gostaria de redefinir.';
+  if(cpf){ msg += ' Meu CPF: ' + cpf + '.'; }
+  window.open('https://wa.me/' + num + '?text=' + encodeURIComponent(msg), '_blank');
+}
+</script>
 
 <!-- MODAL SELETOR GENÉRICO (Especialidades e UFs) -->
 <div class="modal-overlay oculto" id="modal-seletor" onclick="if(event.target===this)fecharSeletor()">
