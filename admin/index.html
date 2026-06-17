@@ -2459,8 +2459,8 @@ async function carregarDashboard() {
   document.getElementById('d-medicos').textContent = medicos.filter(m=>m.ativo).length;
 
   const lanMes = lancamentos.filter(l => l.data >= d1 && l.data <= d2);
-  document.getElementById('d-plantoes').textContent = lanMes.length;
-  document.getElementById('d-total').textContent = fBRL(lanMes.reduce((s,l)=>s+(l.honorario||0),0));
+  document.getElementById('d-plantoes').textContent = lanMes.reduce((s,l)=>s+qtdPlantao(l),0);
+  document.getElementById('d-total').textContent = fBRL(lanMes.reduce((s,l)=>s+(l.honorario||0)*qtdPlantao(l),0));
 
   const cis = await sb(`/rest/v1/checkins?feito_em=gte.${hj}T00:00:00&select=*,medicos(nome),projetos(nome)&order=feito_em.desc&limit=10`);
   document.getElementById('d-checkins').textContent = (cis||[]).length;
