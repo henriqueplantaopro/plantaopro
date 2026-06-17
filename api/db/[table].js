@@ -21,7 +21,7 @@ export default async function handler(req, res) {
   // Query crua do cliente, removendo qualquer admin_id que ele tente mandar.
   const i = req.url.indexOf('?');
   const qsCru = i >= 0 ? req.url.slice(i + 1) : '';
-  const qs = qsCru.split('&').filter(p => p && !/^admin_id=/i.test(p)).join('&');
+  const qs = qsCru.split('&').filter(p => p && !/^admin_id=/i.test(p) && !/^table=/i.test(p)).join('&');
   const comEscopo = () => `/rest/v1/${table}?${qs ? qs + '&' : ''}admin_id=eq.${adminId}`;
 
   try {
