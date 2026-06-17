@@ -1,26 +1,9 @@
 // /api/medicos.js
-// ----------------------------------------------------------------------------
-// ENDPOINT-MODELO do Caminho B. Use este arquivo como TEMPLATE para criar
-// os demais recursos (projetos.js, lancamentos.js, fechamentos.js, etc.).
-//
-// Regras que TODO endpoint de dados segue:
-//   1. exigirSessao() primeiro. Sem sessão válida → 401 e return.
-//   2. admin_id vem SEMPRE de sessao.adminId (token), nunca do body/query.
-//   3. Toda query ao Supabase filtra por admin_id=eq.<sessao.adminId>.
-//   4. Campos sensíveis (senha_hash) nunca voltam no select.
-//   5. Perfis: leitura ampla; escrita conforme PERMISSOES.
-//
-// Front-end: troque as chamadas `sb('/rest/v1/medicos...')` por
-//   fetch('/api/medicos')                      // listar
-//   fetch('/api/medicos', {method:'POST', body})    // criar
-//   fetch('/api/medicos?id=<id>', {method:'PATCH', body})  // editar
-//   fetch('/api/medicos?id=<id>', {method:'DELETE'})       // remover
-// O cookie pp_session é enviado automaticamente (mesma origem).
-// ----------------------------------------------------------------------------
-import { sbAdmin, json, setCors } from './_lib.js';
+import { sbAdmin, hashSenha, json, setCors } from './_lib.js';
 import { exigirSessao } from './_auth.js';
+import { randomUUID } from 'crypto';
 
-// Colunas seguras para devolver ao cliente (sem senha_hash).
+// Colunas seguras (referência — o GET usa select=* e remove senha_hash no servidor).
 const SELECT_MEDICO =
   'id,admin_id,nome,crm,rqe,especialidade,especialidades,cpf,email,telefone,' +
   'data_nascimento,tipo,valor_hora,token_acesso,primeiro_acesso,cpf_proprio,' +
@@ -29,13 +12,13 @@ const SELECT_MEDICO =
   'pessoa_juridica,razao_social,cnpj,pix_tipo,pix_chave,banco,agencia,' +
   'conta_corrente,tipo_conta,ufs_interesse,projetos_vinculados,criado_em';
 
-// Campos que o cliente pode enviar (whitelist — ignora o resto).
 const CAMPOS_PERMITIDOS = [
   'nome','crm','rqe','especialidade','especialidades','cpf','email','telefone',
   'data_nascimento','tipo','valor_hora','ativo','endereco_rua','endereco_numero',
   'endereco_comp','endereco_bairro','endereco_cidade','endereco_uf','endereco_cep',
   'pessoa_juridica','razao_social','cnpj','pix_tipo','pix_chave','banco','agencia',
   'conta_corrente','tipo_conta','ufs_interesse','projetos_vinculados',
+  'device_id','device_registrado_em', // reset de dispositivo
 ];
 
 function sanitizar(body) {
@@ -46,11 +29,17 @@ function sanitizar(body) {
   return out;
 }
 
+function gerarSenhaProvisoria() {
+  const abc = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let s = '';
+  for (let i = 0; i < 8; i++) s += abc[Math.floor(Math.random() * abc.length)];
+  return s;
+}
+
 export default async function handler(req, res) {
   setCors(res);
   if (req.method === 'OPTIONS') return res.status(204).end();
 
-  // 1. Autorização — admin_id sai daqui.
   const sessao = exigirSessao(req, res);
   if (!sessao) return; // já respondeu 401
   const adminId = sessao.adminId;
@@ -58,9 +47,7 @@ export default async function handler(req, res) {
   try {
     // ── LISTAR ──────────────────────────────────────────────────────────
     if (req.method === 'GET') {
-      // select=* para não depender da lista exata de colunas da sua tabela;
-      // a senha_hash é removida aqui no servidor antes de ir pro navegador.
-     const dados = await sbAdmin(
+      const dados = await sbAdmin(
         `/rest/v1/medicos?select=*,vinculos!inner(admin_id,status)&vinculos.admin_id=eq.${adminId}&vinculos.status=eq.ativo&order=nome`
       );
       const limpos = (dados || []).map(({ senha_hash, vinculos, ...resto }) => resto);
@@ -71,39 +58,56 @@ export default async function handler(req, res) {
     if (req.method === 'POST') {
       const payload = sanitizar(req.body || {});
       if (!payload.nome) return json(res, 400, { erro: 'Nome é obrigatório' });
-      // admin_id forçado pelo token — cliente não escolhe tenant.
-      payload.admin_id = adminId;
+      payload.admin_id = adminId;             // tenant vem do token
       payload.ativo = payload.ativo ?? true;
+      payload.token_acesso = randomUUID();    // garante link de acesso
 
       const criado = await sbAdmin('/rest/v1/medicos', {
         method: 'POST',
         headers: { Prefer: 'return=representation' },
         body: JSON.stringify(payload),
       });
-      // Não devolve senha_hash (nem foi setada aqui).
-      return json(res, 201, criado?.[0] || null);
+      const { senha_hash, ...resto } = criado?.[0] || {};
+      return json(res, 201, resto);
     }
 
-    // ── EDITAR ──────────────────────────────────────────────────────────
+    // ── EDITAR / AÇÕES ──────────────────────────────────────────────────
     if (req.method === 'PATCH') {
       const id = req.query.id;
       if (!id) return json(res, 400, { erro: 'id obrigatório' });
-      const payload = sanitizar(req.body || {});
-      delete payload.admin_id; // nunca permite trocar de tenant
 
-      // O filtro por admin_id garante que só edita médico do próprio tenant.
-      await sbAdmin(
-        `/rest/v1/medicos?id=eq.${id}&admin_id=eq.${adminId}`,
-        {
+      // Confirma que o médico está vinculado à minha empresa (isolamento)
+      const vinc = await sbAdmin(
+        `/rest/v1/vinculos?medico_id=eq.${id}&admin_id=eq.${adminId}&select=medico_id`
+      );
+      if (!vinc || !vinc.length) {
+        return json(res, 403, { erro: 'Médico não pertence à sua empresa' });
+      }
+
+      // Ação especial: redefinir senha (servidor gera + faz o hash)
+      if (req.query.action === 'reset-senha') {
+        const provisoria = gerarSenhaProvisoria();
+        const hash = await hashSenha(provisoria);
+        await sbAdmin(`/rest/v1/medicos?id=eq.${id}`, {
           method: 'PATCH',
           headers: { Prefer: 'return=minimal' },
-          body: JSON.stringify(payload),
-        }
-      );
+          body: JSON.stringify({ senha_hash: hash }),
+        });
+        return json(res, 200, { ok: true, senha: provisoria });
+      }
+
+      // Edição normal
+      const payload = sanitizar(req.body || {});
+      delete payload.admin_id;
+      await sbAdmin(`/rest/v1/medicos?id=eq.${id}`, {
+        method: 'PATCH',
+        headers: { Prefer: 'return=minimal' },
+        body: JSON.stringify(payload),
+      });
       return json(res, 200, { ok: true });
     }
 
-   // ── REMOVER = desvincular da minha empresa (não apaga a pessoa) ──────
+    // ── REMOVER = desvincular da minha empresa ──────────────────────────
     if (req.method === 'DELETE') {
       const id = req.query.id;
       if (!id) return json(res, 400, { erro: 'id obrigatório' });
