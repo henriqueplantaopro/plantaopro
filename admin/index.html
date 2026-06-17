@@ -3945,10 +3945,10 @@ function renderSemanaGrid(dias, dows, hj, pid, mid) {
 
   // Categorias de agrupamento
   const categorias = [
-    { key:'diurno',   label:'☀️ Plantão Diurno — 07:00 às 19:00',   cls:'',        fn: l => !l.tipo?.includes('Noturno') && !l.tipo?.includes('24') && l.tipo !== 'Personalizado' && !l.tipo?.includes('Sobre') },
+    { key:'diurno',   label:'☀️ Plantão Diurno — 07:00 às 19:00',   cls:'',        fn: l => !l.tipo?.includes('Noturno') && !l.tipo?.includes('24') && l.tipo !== 'Personalizado' && !l.tipo?.includes('Sobre') && !l.tipo?.includes('Rotina') && !l.tipo?.includes('Manhã') && !l.tipo?.includes('Tarde') },
     { key:'noturno',  label:'🌙 Plantão Noturno — 19:00 às 07:00',   cls:'noturno', fn: l => l.tipo?.includes('Noturno') },
-    { key:'h24',      label:'🔄 Plantão 24 Horas — 07:00 às 07:00',  cls:'h24',     fn: l => l.tipo?.includes('24') },
-    { key:'custom',   label:'✏️ Personalizado',                        cls:'custom',  fn: l => l.tipo === 'Personalizado' || l.tipo?.includes('Sobre') || l.tipo?.includes('Rotina') || l.tipo?.includes('Manhã') || l.tipo?.includes('Tarde') || l.tipo?.includes('Sem') },
+    { key:'h24',      label:'🔄 Plantão 24 Horas — 07:00 às 07:00',  cls:'h24',     fn: l => !l.tipo?.includes('Noturno') && l.tipo?.includes('24') },
+    { key:'custom',   label:'✏️ Personalizado',                        cls:'custom',  fn: l => !l.tipo?.includes('Noturno') && !l.tipo?.includes('24') && (l.tipo === 'Personalizado' || l.tipo?.includes('Sobre') || l.tipo?.includes('Rotina') || l.tipo?.includes('Manhã') || l.tipo?.includes('Tarde')) },
   ];
 
   dias.forEach(d => {
