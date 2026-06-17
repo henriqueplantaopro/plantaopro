@@ -2578,7 +2578,7 @@ async function carregarPainelCustos() {
   if (!d1 || !d2) return;
 
   // Buscar lançamentos do período
-  let urlLancs = `/rest/v1/lancamentos?data=gte.${d1}&data=lte.${d2}&select=id,data,projeto_id,medico_id,honorario,projetos(nome)`;
+  let urlLancs = `/rest/v1/lancamentos?data=gte.${d1}&data=lte.${d2}&select=id,data,projeto_id,medico_id,honorario,aberto,vagas,vagas_preenchidas,projetos(nome)`;
   if (projFiltro) urlLancs += `&projeto_id=eq.${projFiltro}`;
   const lancs = await sb(urlLancs) || [];
 
