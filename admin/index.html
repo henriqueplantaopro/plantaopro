@@ -2605,14 +2605,14 @@ async function carregarPainelCustos() {
   const previstos  = lancs.filter(l => l.data >= hoje);
 
   const custoRealizado = realizados.reduce((s,l) => s + (l.honorario||0), 0);
-  const custoPrevisto  = previstos.reduce((s,l) => s + (l.honorario||0), 0);
+  const custoPrevisto  = previstos.reduce((s,l) => s + (l.honorario||0) * qtdPlantao(l), 0);
   const custoTotal     = custoRealizado + custoPrevisto;
 
   // Slots sem médico atribuído:
   // - No passado (data < hoje): é uma FALTA (ninguém cobriu o plantão)
   // - No futuro (data >= hoje): é um SLOT VAZIO (vaga aguardando médico)
   const slotsSemMedicoPassado = lancs.filter(l => !l.medico_id && l.data < hoje).length;
-  const slotsVazios            = lancs.filter(l => !l.medico_id && l.data >= hoje).length;
+  const slotsVazios            = lancs.filter(l => !l.medico_id && l.data >= hoje).reduce((s,l) => s + qtdPlantao(l), 0);
 
   // Faltas sem cobertura (médico que estava atribuído faltou):
   // - ausência existe
@@ -2657,11 +2657,11 @@ async function carregarPainelCustos() {
     const pnome = l.projetos?.nome || 'Sem projeto';
     if (!porProj[pid]) porProj[pid] = { nome: pnome, realizado: 0, previsto: 0, slots: 0, faltas: 0 };
     if (l.data < hoje) porProj[pid].realizado += (l.honorario||0);
-    else porProj[pid].previsto += (l.honorario||0);
+    else porProj[pid].previsto += (l.honorario||0) * qtdPlantao(l);
     // Slot sem médico: passado conta como falta, futuro como slot vazio
     if (!l.medico_id) {
       if (l.data < hoje) porProj[pid].faltas += 1;
-      else porProj[pid].slots += 1;
+      else porProj[pid].slots += qtdPlantao(l);
     }
   }
   // Adicionar faltas por ausência sem cobertura (médico atribuído faltou)
@@ -9680,5 +9680,12 @@ async function sbApi(path, opts={}) {
     const ct = r.headers.get('content-type');
     return ct && ct.includes('json') ? r.json() : true;
   } catch(e) { console.error(e); return null; }
+}
+</script>
+
+<script>
+function qtdPlantao(l){
+  // plantão aberto = vagas que ainda faltam preencher; qualquer outro = 1
+  return l && l.aberto ? Math.max(0, (l.vagas||1) - (l.vagas_preenchidas||0)) : 1;
 }
 </script>
