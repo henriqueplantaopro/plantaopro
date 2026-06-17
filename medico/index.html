@@ -705,6 +705,7 @@ function mostrarApp() {
   carregarDisponiveis();
   carregarMedicos();
   carregarNotificacoes();
+  carregarConvites();
 }
 
 function mostrarErro(){
@@ -1272,9 +1273,8 @@ async function carregarNotificacoes() {
   const el=document.getElementById('notif-lista');if(!el||!medico)return;
   const d=await sb('/rest/v1/transferencias?medico_destino_id=eq.'+medico.id+'&select=*,medicos!transferencias_medico_origem_id_fkey(nome,crm),lancamentos(data,hora_ini,hora_fim,horas,honorario,projetos(nome))&order=criado_em.desc&limit=20');
   const lista=d||[];
-  const pend=lista.filter(t=>t.status==='pendente').length;
-  const b=document.getElementById('badge-notif');
-  if(b){b.textContent=pend;b.style.display=pend>0?'inline':'none';}
+  window._pendTransf=lista.filter(t=>t.status==='pendente').length;
+  atualizarBadgeNotif();
   if(!lista.length){el.innerHTML='<div class="empty"><div class="empty-icon">&#128276;</div>Nenhuma solicitacao recebida</div>';return;}
   el.innerHTML=lista.map(t=>{
     const origem=t.medicos?.nome||'Colega';
@@ -1406,7 +1406,7 @@ function showPage(id,el) {
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   document.getElementById('page-'+id).classList.add('active');
   el.classList.add('active');
-  if(id==='notificacoes')carregarNotificacoes();
+  if(id==='notificacoes'){carregarNotificacoes();carregarConvites();}
   if(id==='plantoes')carregarPlantoes();
   if(id==='disponiveis')carregarDisponiveis();
   if(id==='perfil')preencherPerfil();
@@ -1461,5 +1461,56 @@ function fecharBannerPWA() {
   localStorage.setItem('pwa_dica_vista', '1');
 }
 </script>
+
+  <script>
+// ── CONVITES DE VÍNCULO (empresas) ───────────────────────
+async function carregarConvites() {
+  const el = document.getElementById('convites-lista');
+  if (!el || !medico) return;
+  const data = await sb('/rest/v1/rpc/convites_pendentes_medico', {
+    method: 'POST',
+    body: JSON.stringify({ p_medico_id: medico.id })
+  });
+  const lista = Array.isArray(data) ? data : [];
+  window._pendConvites = lista.length;
+  atualizarBadgeNotif();
+  if (!lista.length) { el.innerHTML = ''; return; }
+  el.innerHTML = lista.map(c => {
+    const empresa = c.empresa || 'Uma empresa';
+    return '<div class="notif-card pendente"><div class="notif-header">'
+      + '<div class="notif-tipo">Convite de vínculo</div>'
+      + '<div class="notif-desc">' + empresa + ' quer te adicionar à equipe</div>'
+      + '<div class="notif-meta">Ao aceitar, você passa a receber os plantões dessa empresa.</div>'
+      + '</div><div class="notif-acoes">'
+      + '<button class="btn-notif btn-notif-aceitar" onclick="responderConvite(\'' + c.id + '\',true,this)">Aceitar</button>'
+      + '<button class="btn-notif btn-notif-recusar" onclick="responderConvite(\'' + c.id + '\',false,this)">Recusar</button>'
+      + '</div></div>';
+  }).join('');
+}
+
+async function responderConvite(conviteId, aceito, btn) {
+  const card = btn.closest('.notif-card');
+  if (card) card.querySelectorAll('button').forEach(b => b.disabled = true);
+  const data = await sb('/rest/v1/rpc/responder_convite', {
+    method: 'POST',
+    body: JSON.stringify({ p_convite_id: conviteId, p_medico_id: medico.id, p_aceito: aceito })
+  });
+  if (data && data.ok) {
+    toastMed(aceito ? 'Pronto! Você agora faz parte da equipe.' : 'Convite recusado.');
+    await carregarConvites();
+    if (aceito) { carregarPlantoes(); carregarDisponiveis(); }
+  } else {
+    if (card) card.querySelectorAll('button').forEach(b => b.disabled = false);
+    toastMed((data && data.erro) || 'Erro ao responder', false);
+  }
+}
+
+function atualizarBadgeNotif() {
+  const n = (window._pendTransf || 0) + (window._pendConvites || 0);
+  const b = document.getElementById('badge-notif');
+  if (b) { b.textContent = n; b.style.display = n > 0 ? 'inline' : 'none'; }
+}
+</script>
+  
 </body>
 </html>
