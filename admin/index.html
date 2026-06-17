@@ -2423,7 +2423,7 @@ async function carregarProjetos() {
 }
 
 async function carregarLancamentos(silencioso=false) {
-  const data = await sb('/rest/v1/lancamentos?select=*,medicos(nome,crm),projetos(nome)&order=data.desc&limit=200');
+  const data = await sbApi('/lancamentos?select=*,medicos(nome,crm),projetos(nome)&order=data.desc&limit=200');
   lancamentos = (data || []).map(l => ({
     ...l,
     medico: l.medicos?.nome || '',
