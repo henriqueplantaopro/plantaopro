@@ -11,7 +11,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 
 <!-- Aparência -->
-<meta name="theme-color" content="#1a5fad">
+<meta name="theme-color" content="#0e5a63">
 <meta name="description" content="Gestão de plantões médicos — check-in, escala e notificações">
 
 <!-- Ícones iOS (gerados inline via SVG → evita dependência de arquivo) -->
@@ -34,13 +34,14 @@
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
 :root{
-  --blue:#1a5fad;--blue-dark:#0f3d7a;--blue-light:#e8f0fb;
-  --green:#2d7a3a;--green-light:#e8f5eb;
-  --red:#b03030;--red-light:#fdf0f0;
-  --amber:#8a5500;--amber-light:#fdf3e0;
-  --gray:#f5f5f5;--border:#e0e0e0;
-  --text:#1a1a1a;--text2:#555;--text3:#999;
-  --radius:12px;--radius-sm:8px;
+  --blue:#0e5a63;--blue-dark:#0a444b;--blue-light:#e3f0f1;
+  --green:#0a8f5b;--green-light:#eafaf2;
+  --red:#c0392b;--red-light:#fdecea;
+  --amber:#9a6212;--amber-light:#fff8ec;
+  --gray:#eef2f3;--border:#d8e0e2;
+  --text:#0f2b30;--text2:#5b7077;--text3:#8aa0a6;
+  --radius:14px;--radius-sm:10px;
+  --shadow:0 1px 2px rgba(15,43,48,.06),0 6px 18px rgba(15,43,48,.06);
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
   --safe-left: env(safe-area-inset-left, 0px);
@@ -64,10 +65,11 @@ html,body{height:100%;background:#f0f4f8;font-family:-apple-system,BlinkMacSyste
 .tabs{display:flex;background:#fff;border-bottom:1px solid var(--border);position:sticky;top:73px;z-index:9;}
 .tab{flex:1;padding:12px 4px;text-align:center;font-size:11px;font-weight:500;color:var(--text3);border-bottom:2px solid transparent;cursor:pointer;transition:all 0.15s;}
 .tab.active{color:var(--blue);border-bottom-color:var(--blue);}
-.tab-icon{font-size:18px;display:block;margin-bottom:2px;}
+.tab-icon{display:block;margin:0 auto 3px;width:21px;height:21px;}
+.tab-icon svg{width:100%;height:100%;display:block;}
 .content{padding:16px;max-width:480px;margin:0 auto;padding-bottom:32px;}
 .page{display:none;}.page.active{display:block;}
-.card{background:#fff;border-radius:var(--radius);padding:16px;margin-bottom:12px;box-shadow:0 1px 4px rgba(0,0,0,0.08);}
+.card{background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:12px;box-shadow:var(--shadow);}
 .card-title{font-size:13px;font-weight:600;color:var(--text);margin-bottom:12px;text-transform:uppercase;letter-spacing:0.5px;}
 .checkin-status{text-align:center;padding:24px 16px;}
 .checkin-icon{font-size:64px;margin-bottom:12px;display:block;}
@@ -79,7 +81,7 @@ html,body{height:100%;background:#f0f4f8;font-family:-apple-system,BlinkMacSyste
 .dist-loading{background:var(--gray);color:var(--text3);}
 .btn-checkin{width:100%;padding:18px;font-size:16px;font-weight:700;border-radius:var(--radius);border:none;cursor:pointer;transition:all 0.2s;margin-top:16px;letter-spacing:0.3px;}
 .btn-checkin.ok{background:var(--green);color:#fff;}
-.btn-checkin.ok:active{transform:scale(0.97);background:#236130;}
+.btn-checkin.ok:active{transform:scale(0.97);background:#0a7a4e;}
 .btn-checkin.far{background:var(--border);color:var(--text3);cursor:not-allowed;}
 .btn-checkin.loading{background:var(--blue);color:#fff;opacity:0.7;cursor:wait;}
 .proj-select{width:100%;padding:10px 12px;font-size:14px;border:1px solid var(--border);border-radius:var(--radius-sm);background:#fff;color:var(--text);margin-bottom:12px;-webkit-appearance:none;appearance:none;}
@@ -91,7 +93,7 @@ html,body{height:100%;background:#f0f4f8;font-family:-apple-system,BlinkMacSyste
 .checkin-info-proj{font-size:13px;font-weight:500;color:var(--text);}
 .checkin-info-meta{font-size:11px;color:var(--text3);margin-top:2px;}
 .checkin-info-dist{font-size:11px;padding:2px 8px;border-radius:99px;margin-top:3px;display:inline-block;}
-.plantao-card{background:#fff;border-radius:var(--radius);margin-bottom:10px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.08);}
+.plantao-card{background:#fff;border:1px solid var(--border);border-radius:var(--radius);margin-bottom:10px;overflow:hidden;box-shadow:var(--shadow);}
 .plantao-header{padding:12px 16px;display:flex;align-items:center;justify-content:space-between;}
 .plantao-data{font-size:13px;font-weight:700;color:var(--blue);}
 .plantao-proj{font-size:12px;color:var(--text2);margin-top:1px;}
@@ -107,9 +109,9 @@ html,body{height:100%;background:#f0f4f8;font-family:-apple-system,BlinkMacSyste
 /* ACOES PLANTAO CONFIRMADO */
 .plantao-acoes{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:0 16px 14px;}
 .btn-acao{padding:10px 6px;font-size:12px;font-weight:600;border-radius:var(--radius-sm);border:none;cursor:pointer;transition:all 0.15s;display:flex;align-items:center;justify-content:center;gap:5px;width:100%;}
-.btn-acao-transferir{background:var(--blue-light);color:var(--blue);border:1.5px solid #a0c4f0;}
+.btn-acao-transferir{background:var(--blue-light);color:var(--blue);border:1.5px solid #b7d2d6;}
 .btn-acao-transferir:active{background:#c8dcf8;}
-.btn-acao-ausencia{background:var(--red-light);color:var(--red);border:1.5px solid #f0b8b8;}
+.btn-acao-ausencia{background:var(--red-light);color:var(--red);border:1.5px solid #efc9c3;}
 .btn-acao-ausencia:active{background:#f8d8d8;}
 .confirmado-badge{display:inline-flex;align-items:center;gap:4px;background:var(--green-light);color:var(--green);font-size:11px;font-weight:600;padding:3px 10px;border-radius:99px;margin-top:6px;}
 .pendente-badge{display:inline-flex;align-items:center;gap:4px;background:var(--amber-light);color:var(--amber);font-size:11px;font-weight:600;padding:3px 10px;border-radius:99px;margin-top:6px;}
@@ -184,8 +186,8 @@ html,body{height:100%;background:#f0f4f8;font-family:-apple-system,BlinkMacSyste
 .notif-acoes{display:flex;gap:8px;padding:0 16px 14px;}
 .btn-notif{flex:1;padding:10px 8px;font-size:13px;font-weight:700;border-radius:var(--radius-sm);border:none;cursor:pointer;transition:all 0.15s;}
 .btn-notif-aceitar{background:var(--green);color:#fff;}
-.btn-notif-aceitar:active{background:#236130;}
-.btn-notif-recusar{background:#fff;color:var(--red);border:1.5px solid #f0b8b8;}
+.btn-notif-aceitar:active{background:#0a7a4e;}
+.btn-notif-recusar{background:#fff;color:var(--red);border:1.5px solid #efc9c3;}
 .btn-notif-recusar:active{background:var(--red-light);}
 .btn-notif:disabled{opacity:0.5;cursor:not-allowed;}
 </style>
@@ -193,7 +195,7 @@ html,body{height:100%;background:#f0f4f8;font-family:-apple-system,BlinkMacSyste
 <body>
 
 <div id="splash">
-  <div class="splash-logo">&#127973;</div>
+  <div class="splash-logo" style="width:64px;height:64px;background:rgba(255,255,255,.16);border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:30px;font-weight:800;color:#fff;">P</div>
   <div class="splash-title">PlantaoPlus</div>
   <div class="splash-sub">Carregando...</div>
 </div>
@@ -210,25 +212,25 @@ html,body{height:100%;background:#f0f4f8;font-family:-apple-system,BlinkMacSyste
 
 <div class="tabs" id="tabs" style="display:none;">
   <div class="tab active" onclick="showPage('checkin',this)">
-    <span class="tab-icon">&#128205;</span>Check-in
+    <span class="tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg></span>Check-in
   </div>
   <div class="tab" onclick="showPage('plantoes',this)">
-    <span class="tab-icon">&#128197;</span>Plantoes
+    <span class="tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></span>Plantoes
     <span id="badge-confirmacao" style="display:none;background:var(--amber);color:#fff;font-size:9px;font-weight:700;border-radius:99px;padding:1px 5px;margin-left:2px;vertical-align:top;margin-top:2px;"></span>
   </div>
   <div class="tab" onclick="showPage('disponiveis',this)">
-    <span class="tab-icon">&#128226;</span>Disponiveis
+    <span class="tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11v2a1 1 0 0 0 1 1h2l5 4V6L6 10H4a1 1 0 0 0-1 1Z"/><path d="M14 8c1.5 1.5 1.5 6.5 0 8"/><path d="M17.5 5.5c3 3 3 10 0 13"/></svg></span>Disponiveis
     <span id="badge-disp" style="display:none;background:var(--amber);color:#fff;font-size:9px;font-weight:700;border-radius:99px;padding:1px 5px;margin-left:2px;vertical-align:top;margin-top:2px;"></span>
   </div>
   <div class="tab" onclick="showPage('historico',this)">
-    <span class="tab-icon">&#128202;</span>Historico
+    <span class="tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="20" x2="20" y2="20"/><rect x="6" y="12" width="3" height="8"/><rect x="11" y="7" width="3" height="13"/><rect x="16" y="10" width="3" height="10"/></svg></span>Historico
   </div>
   <div class="tab" onclick="showPage('notificacoes',this)">
-    <span class="tab-icon">&#128276;</span>Notif.
+    <span class="tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg></span>Notif.
     <span id="badge-notif" style="display:none;background:var(--red);color:#fff;font-size:9px;font-weight:700;border-radius:99px;padding:1px 5px;margin-left:2px;vertical-align:top;margin-top:2px;"></span>
   </div>
   <div class="tab" onclick="showPage('perfil',this)">
-    <span class="tab-icon">&#128100;</span>Perfil
+    <span class="tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>Perfil
   </div>
 </div>
 
@@ -243,7 +245,7 @@ html,body{height:100%;background:#f0f4f8;font-family:-apple-system,BlinkMacSyste
     </div>
     <div class="card">
       <div class="checkin-status">
-        <span class="checkin-icon" id="ci-icon">&#128205;</span>
+        <span class="checkin-icon" id="ci-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg></span>
         <div class="checkin-title" id="ci-title">Verificando localizacao...</div>
         <div class="checkin-sub" id="ci-sub">Aguarde enquanto obtemos sua posicao</div>
         <div class="checkin-dist dist-loading" id="ci-dist" style="display:none;"></div>
@@ -254,23 +256,23 @@ html,body{height:100%;background:#f0f4f8;font-family:-apple-system,BlinkMacSyste
     </div>
     <div class="card" id="card-checkins-hoje">
       <div class="card-title">Check-ins de hoje</div>
-      <div id="checkins-hoje-lista"><div class="empty"><div class="empty-icon">&#9989;</div>Nenhum check-in hoje</div></div>
+      <div id="checkins-hoje-lista"><div class="empty">Nenhum check-in hoje</div></div>
     </div>
   </div>
 
   <div id="page-plantoes" class="page">
     <div style="display:flex;gap:6px;margin-bottom:12px;">
       <button class="btn-filtro-plantao active" id="fp-prox" onclick="filtrarPlantoes('proximos',this)">Proximos</button>
-      <button class="btn-filtro-plantao" id="fp-pend" onclick="filtrarPlantoes('pendentes',this)">&#9888;&#65039; Pendentes</button>
-      <button class="btn-filtro-plantao" id="fp-conf" onclick="filtrarPlantoes('confirmados',this)">&#9989; Confirmados</button>
+      <button class="btn-filtro-plantao" id="fp-pend" onclick="filtrarPlantoes('pendentes',this)">Pendentes</button>
+      <button class="btn-filtro-plantao" id="fp-conf" onclick="filtrarPlantoes('confirmados',this)">Confirmados</button>
     </div>
     <div class="refresh-hint" id="plantoes-hint">Toque em um plantao confirmado para gerencia-lo</div>
-    <div id="plantoes-lista"><div class="empty"><div class="empty-icon">&#128197;</div>Carregando...</div></div>
+    <div id="plantoes-lista"><div class="empty">Carregando...</div></div>
   </div>
 
   <div id="page-disponiveis" class="page">
     <div class="refresh-hint">Plantoes abertos nos seus hospitais</div>
-    <div id="disponiveis-lista"><div class="empty"><div class="empty-icon">&#128226;</div>Carregando...</div></div>
+    <div id="disponiveis-lista"><div class="empty">Carregando...</div></div>
   </div>
 
   <div id="page-historico" class="page">
@@ -288,14 +290,14 @@ html,body{height:100%;background:#f0f4f8;font-family:-apple-system,BlinkMacSyste
     </div>
     <div class="card">
       <div class="card-title">Plantoes realizados</div>
-      <div id="historico-lista"><div class="empty"><div class="empty-icon">&#128202;</div>Nenhum registro</div></div>
+      <div id="historico-lista"><div class="empty">Nenhum registro</div></div>
     </div>
   </div>
 
 <div id="page-notificacoes" class="page">
     <div id="convites-lista"></div>
     <div class="refresh-hint">Solicitacoes de transferencia recebidas de colegas</div>
-    <div id="notif-lista"><div class="empty"><div class="empty-icon">&#128276;</div>Carregando...</div></div>
+    <div id="notif-lista"><div class="empty">Carregando...</div></div>
   </div>
 
   <!-- PERFIL -->
@@ -309,14 +311,14 @@ html,body{height:100%;background:#f0f4f8;font-family:-apple-system,BlinkMacSyste
           <div id="perfil-esp-exib" style="font-size:12px;color:var(--text2);margin-top:1px;"></div>
         </div>
       </div>
-      <button onclick="abrirEditarPerfil()" style="width:100%;padding:11px;background:var(--blue-light);color:var(--blue);border:1.5px solid #a0c4f0;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;">Editar dados cadastrais</button>
+      <button onclick="abrirEditarPerfil()" style="width:100%;padding:11px;background:var(--blue-light);color:var(--blue);border:1.5px solid #b7d2d6;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;">Editar dados cadastrais</button>
     </div>
     <div class="card" style="margin-bottom:12px;">
       <div class="card-title">Segurança</div>
       <button onclick="abrirAlterarSenha()" style="width:100%;padding:11px;background:#fff;color:var(--text);border:1.5px solid var(--border);border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;margin-bottom:8px;">Alterar senha</button>
-      <button onclick="fazerLogout()" style="width:100%;padding:11px;background:#fff;color:var(--red);border:1.5px solid #f0b8b8;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;">Sair do aplicativo</button>
+      <button onclick="fazerLogout()" style="width:100%;padding:11px;background:#fff;color:var(--red);border:1.5px solid #efc9c3;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;">Sair do aplicativo</button>
     </div>
-    <div class="card" style="background:var(--blue-light);border:1.5px solid #a0c4f0;">
+    <div class="card" style="background:var(--blue-light);border:1.5px solid #b7d2d6;">
       <div style="font-size:12px;color:var(--blue);font-weight:600;margin-bottom:4px;">Como instalar o app no iPhone</div>
       <div style="font-size:12px;color:var(--text2);line-height:1.6;">Toque em <strong>Compartilhar</strong> no Safari e depois em <strong>Adicionar à Tela de Início</strong> para acessar sem abrir o navegador.</div>
     </div>
@@ -324,32 +326,32 @@ html,body{height:100%;background:#f0f4f8;font-family:-apple-system,BlinkMacSyste
 
 </div><!-- /content -->
 
-<div id="tela-erro" style="display:none;padding:0;min-height:100vh;background:linear-gradient(160deg,#0f3d7a 0%,#1a5fad 100%);">
+<div id="tela-erro" style="display:none;padding:0;min-height:100vh;background:linear-gradient(160deg,#0a444b 0%,#0e5a63 100%);">
   <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:32px 24px;">
     <div style="text-align:center;margin-bottom:36px;">
-      <div style="width:72px;height:72px;background:rgba(255,255,255,0.15);border-radius:20px;display:flex;align-items:center;justify-content:center;margin:0 auto 14px;font-size:36px;">&#127973;</div>
+      <div style="width:72px;height:72px;background:rgba(255,255,255,0.15);border-radius:20px;display:flex;align-items:center;justify-content:center;margin:0 auto 14px;font-size:36px;">P</div>
       <div style="font-size:22px;font-weight:800;color:#fff;letter-spacing:-0.5px;">PlantãoPro</div>
       <div style="font-size:13px;color:rgba(255,255,255,0.65);margin-top:4px;">Acesso do profissional</div>
     </div>
     <div style="background:#fff;border-radius:20px;padding:28px 24px;width:100%;max-width:360px;box-shadow:0 8px 32px rgba(0,0,0,0.25);">
-      <div style="font-size:16px;font-weight:700;color:#1a1a1a;margin-bottom:4px;">Bem-vindo</div>
+      <div style="font-size:16px;font-weight:700;color:#0f2b30;margin-bottom:4px;">Bem-vindo</div>
       <div style="font-size:13px;color:#666;margin-bottom:20px;">Entre com seu CPF e senha</div>
       <div style="margin-bottom:12px;">
-        <label style="font-size:11px;font-weight:600;color:#555;text-transform:uppercase;letter-spacing:0.4px;display:block;margin-bottom:5px;">CPF</label>
-        <input id="login-cpf" type="tel" placeholder="000.000.000-00" maxlength="14" oninput="mascaraCPF(this)" onkeydown="if(event.key==='Enter')document.getElementById('login-senha-med').focus()" style="width:100%;padding:12px 14px;font-size:15px;border:1.5px solid #e0e0e0;border-radius:10px;font-family:inherit;outline:none;box-sizing:border-box;">
+        <label style="font-size:11px;font-weight:600;color:#5b7077;text-transform:uppercase;letter-spacing:0.4px;display:block;margin-bottom:5px;">CPF</label>
+        <input id="login-cpf" type="tel" placeholder="000.000.000-00" maxlength="14" oninput="mascaraCPF(this)" onkeydown="if(event.key==='Enter')document.getElementById('login-senha-med').focus()" style="width:100%;padding:12px 14px;font-size:15px;border:1.5px solid #d8e0e2;border-radius:10px;font-family:inherit;outline:none;box-sizing:border-box;">
       </div>
       <div style="margin-bottom:8px;">
-        <label style="font-size:11px;font-weight:600;color:#555;text-transform:uppercase;letter-spacing:0.4px;display:block;margin-bottom:5px;">Senha</label>
-        <input id="login-senha-med" type="password" placeholder="••••••••" onkeydown="if(event.key==='Enter')fazerLoginMedico()" style="width:100%;padding:12px 14px;font-size:15px;border:1.5px solid #e0e0e0;border-radius:10px;font-family:inherit;outline:none;box-sizing:border-box;">
+        <label style="font-size:11px;font-weight:600;color:#5b7077;text-transform:uppercase;letter-spacing:0.4px;display:block;margin-bottom:5px;">Senha</label>
+        <input id="login-senha-med" type="password" placeholder="••••••••" onkeydown="if(event.key==='Enter')fazerLoginMedico()" style="width:100%;padding:12px 14px;font-size:15px;border:1.5px solid #d8e0e2;border-radius:10px;font-family:inherit;outline:none;box-sizing:border-box;">
       </div>
       <div style="text-align:right;margin-bottom:18px;">
-        <button onclick="document.getElementById('modal-esqueci-med').classList.remove('oculto')" style="background:none;border:none;color:#1a5fad;font-size:12px;cursor:pointer;padding:0;font-family:inherit;">Esqueci minha senha</button>
+        <button onclick="document.getElementById('modal-esqueci-med').classList.remove('oculto')" style="background:none;border:none;color:#0e5a63;font-size:12px;cursor:pointer;padding:0;font-family:inherit;">Esqueci minha senha</button>
       </div>
-      <div id="login-erro-med" style="display:none;background:#fdf0f0;color:#b03030;font-size:13px;padding:10px 12px;border-radius:8px;border:1px solid #f0b8b8;margin-bottom:14px;"></div>
-      <button id="btn-login-med" onclick="fazerLoginMedico()" style="width:100%;padding:14px;background:#1a5fad;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;">Entrar</button>
-      <div style="text-align:center;margin-top:20px;padding-top:16px;border-top:1px solid #f0f0f0;">
-        <div style="font-size:12px;color:#999;margin-bottom:8px;">Ainda não tem conta?</div>
-        <button onclick="mostrarCadastroMed()" style="background:none;border:1.5px solid #1a5fad;color:#1a5fad;padding:10px 24px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;">Criar conta gratuita</button>
+      <div id="login-erro-med" style="display:none;background:#fdecea;color:#c0392b;font-size:13px;padding:10px 12px;border-radius:8px;border:1px solid #efc9c3;margin-bottom:14px;"></div>
+      <button id="btn-login-med" onclick="fazerLoginMedico()" style="width:100%;padding:14px;background:#0e5a63;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;">Entrar</button>
+      <div style="text-align:center;margin-top:20px;padding-top:16px;border-top:1px solid #e7edee;">
+        <div style="font-size:12px;color:#8aa0a6;margin-bottom:8px;">Ainda não tem conta?</div>
+        <button onclick="mostrarCadastroMed()" style="background:none;border:1.5px solid #0e5a63;color:#0e5a63;padding:10px 24px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;">Criar conta gratuita</button>
       </div>
     </div>
     <div style="margin-top:20px;font-size:11px;color:rgba(255,255,255,0.35);">Versão para profissionais de saúde</div>
@@ -357,82 +359,80 @@ html,body{height:100%;background:#f0f4f8;font-family:-apple-system,BlinkMacSyste
 </div>
 
 <!-- TELA CADASTRO MÉDICO -->
-<div id="tela-cadastro-med" style="display:none;padding:0;min-height:100vh;background:linear-gradient(160deg,#0f3d7a 0%,#1a5fad 100%);overflow-y:auto;">
+<div id="tela-cadastro-med" style="display:none;padding:0;min-height:100vh;background:linear-gradient(160deg,#0a444b 0%,#0e5a63 100%);overflow-y:auto;">
   <div style="padding:32px 24px;max-width:400px;margin:0 auto;">
     <button onclick="voltarLogin()" style="background:rgba(255,255,255,0.15);border:none;color:#fff;padding:8px 16px;border-radius:8px;font-size:13px;cursor:pointer;margin-bottom:24px;font-family:inherit;">&#8592; Voltar</button>
     <div style="background:#fff;border-radius:20px;padding:28px 24px;box-shadow:0 8px 32px rgba(0,0,0,0.25);">
-      <div style="font-size:16px;font-weight:700;color:#1a1a1a;margin-bottom:4px;">Criar conta</div>
+      <div style="font-size:16px;font-weight:700;color:#0f2b30;margin-bottom:4px;">Criar conta</div>
       <div style="font-size:13px;color:#666;margin-bottom:20px;">Preencha seus dados para se cadastrar</div>
 
       <!-- Dados pessoais -->
-      <div style="font-size:11px;font-weight:700;color:#1a5fad;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px;">Dados pessoais</div>
+      <div style="font-size:11px;font-weight:700;color:#0e5a63;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px;">Dados pessoais</div>
       <div style="margin-bottom:12px;">
-        <label style="font-size:11px;font-weight:600;color:#555;text-transform:uppercase;letter-spacing:0.4px;display:block;margin-bottom:5px;">Nome completo *</label>
-        <input id="cad-nome" type="text" placeholder="Dr. João Silva" style="width:100%;padding:12px 14px;font-size:14px;border:1.5px solid #e0e0e0;border-radius:10px;font-family:inherit;outline:none;box-sizing:border-box;">
+        <label style="font-size:11px;font-weight:600;color:#5b7077;text-transform:uppercase;letter-spacing:0.4px;display:block;margin-bottom:5px;">Nome completo *</label>
+        <input id="cad-nome" type="text" placeholder="Dr. João Silva" style="width:100%;padding:12px 14px;font-size:14px;border:1.5px solid #d8e0e2;border-radius:10px;font-family:inherit;outline:none;box-sizing:border-box;">
       </div>
       <div style="margin-bottom:12px;">
-        <label style="font-size:11px;font-weight:600;color:#555;text-transform:uppercase;letter-spacing:0.4px;display:block;margin-bottom:5px;">CPF *</label>
-        <input id="cad-cpf" type="tel" placeholder="000.000.000-00" maxlength="14" oninput="mascaraCPF(this)" style="width:100%;padding:12px 14px;font-size:14px;border:1.5px solid #e0e0e0;border-radius:10px;font-family:inherit;outline:none;box-sizing:border-box;">
+        <label style="font-size:11px;font-weight:600;color:#5b7077;text-transform:uppercase;letter-spacing:0.4px;display:block;margin-bottom:5px;">CPF *</label>
+        <input id="cad-cpf" type="tel" placeholder="000.000.000-00" maxlength="14" oninput="mascaraCPF(this)" style="width:100%;padding:12px 14px;font-size:14px;border:1.5px solid #d8e0e2;border-radius:10px;font-family:inherit;outline:none;box-sizing:border-box;">
       </div>
       <div style="margin-bottom:12px;">
-        <label style="font-size:11px;font-weight:600;color:#555;text-transform:uppercase;letter-spacing:0.4px;display:block;margin-bottom:5px;">Telefone / WhatsApp *</label>
-        <input id="cad-tel" type="tel" placeholder="(11) 99999-9999" oninput="mascaraTelMed(this)" style="width:100%;padding:12px 14px;font-size:14px;border:1.5px solid #e0e0e0;border-radius:10px;font-family:inherit;outline:none;box-sizing:border-box;">
+        <label style="font-size:11px;font-weight:600;color:#5b7077;text-transform:uppercase;letter-spacing:0.4px;display:block;margin-bottom:5px;">Telefone / WhatsApp *</label>
+        <input id="cad-tel" type="tel" placeholder="(11) 99999-9999" oninput="mascaraTelMed(this)" style="width:100%;padding:12px 14px;font-size:14px;border:1.5px solid #d8e0e2;border-radius:10px;font-family:inherit;outline:none;box-sizing:border-box;">
       </div>
 
       <!-- Dados profissionais -->
-      <div style="font-size:11px;font-weight:700;color:#1a5fad;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px;margin-top:16px;">Dados profissionais</div>
+      <div style="font-size:11px;font-weight:700;color:#0e5a63;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px;margin-top:16px;">Dados profissionais</div>
       <div style="margin-bottom:12px;">
-        <label style="font-size:11px;font-weight:600;color:#555;text-transform:uppercase;letter-spacing:0.4px;display:block;margin-bottom:5px;">CRM *</label>
-        <input id="cad-crm" type="text" placeholder="CRM/SP 123456" style="width:100%;padding:12px 14px;font-size:14px;border:1.5px solid #e0e0e0;border-radius:10px;font-family:inherit;outline:none;box-sizing:border-box;">
+        <label style="font-size:11px;font-weight:600;color:#5b7077;text-transform:uppercase;letter-spacing:0.4px;display:block;margin-bottom:5px;">CRM *</label>
+        <input id="cad-crm" type="text" placeholder="CRM/SP 123456" style="width:100%;padding:12px 14px;font-size:14px;border:1.5px solid #d8e0e2;border-radius:10px;font-family:inherit;outline:none;box-sizing:border-box;">
       </div>
       <div style="margin-bottom:12px;">
-        <label style="font-size:11px;font-weight:600;color:#555;text-transform:uppercase;letter-spacing:0.4px;display:block;margin-bottom:5px;">Especialidades *</label>
-        <button type="button" onclick="abrirSeletorEsp('cad')" style="width:100%;padding:12px 14px;font-size:14px;border:1.5px solid #e0e0e0;border-radius:10px;font-family:inherit;background:#fff;color:#555;text-align:left;cursor:pointer;display:flex;justify-content:space-between;align-items:center;">
-          <span id="cad-esp-label">Selecionar especialidades...</span><span style="color:#aaa;">&#9660;</span>
+        <label style="font-size:11px;font-weight:600;color:#5b7077;text-transform:uppercase;letter-spacing:0.4px;display:block;margin-bottom:5px;">Especialidades *</label>
+        <button type="button" onclick="abrirSeletorEsp('cad')" style="width:100%;padding:12px 14px;font-size:14px;border:1.5px solid #d8e0e2;border-radius:10px;font-family:inherit;background:#fff;color:#5b7077;text-align:left;cursor:pointer;display:flex;justify-content:space-between;align-items:center;">
+          <span id="cad-esp-label">Selecionar especialidades...</span><span style="color:#9fb2b6;">&#9660;</span>
         </button>
         <div id="cad-esp-tags" style="display:flex;flex-wrap:wrap;gap:4px;margin-top:6px;"></div>
       </div>
       <div style="margin-bottom:12px;">
-        <label style="font-size:11px;font-weight:600;color:#555;text-transform:uppercase;letter-spacing:0.4px;display:block;margin-bottom:5px;">RQE <span style="font-weight:400;color:#999;">(se possuir)</span></label>
-        <input id="cad-rqe" type="text" placeholder="Ex: RQE 12345" style="width:100%;padding:12px 14px;font-size:14px;border:1.5px solid #e0e0e0;border-radius:10px;font-family:inherit;outline:none;box-sizing:border-box;">
+        <label style="font-size:11px;font-weight:600;color:#5b7077;text-transform:uppercase;letter-spacing:0.4px;display:block;margin-bottom:5px;">RQE <span style="font-weight:400;color:#8aa0a6;">(se possuir)</span></label>
+        <input id="cad-rqe" type="text" placeholder="Ex: RQE 12345" style="width:100%;padding:12px 14px;font-size:14px;border:1.5px solid #d8e0e2;border-radius:10px;font-family:inherit;outline:none;box-sizing:border-box;">
       </div>
 
       <!-- UFs de interesse -->
-      <div style="font-size:11px;font-weight:700;color:#1a5fad;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;margin-top:16px;">UFs de interesse</div>
+      <div style="font-size:11px;font-weight:700;color:#0e5a63;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;margin-top:16px;">UFs de interesse</div>
       <div style="font-size:12px;color:#888;margin-bottom:8px;">Estados onde quer receber ofertas de plantão</div>
-      <button type="button" onclick="abrirSeletorUF('cad')" style="width:100%;padding:12px 14px;font-size:14px;border:1.5px solid #e0e0e0;border-radius:10px;font-family:inherit;background:#fff;color:#555;text-align:left;cursor:pointer;display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-        <span id="cad-ufs-label">Selecionar estados...</span><span style="color:#aaa;">&#9660;</span>
+      <button type="button" onclick="abrirSeletorUF('cad')" style="width:100%;padding:12px 14px;font-size:14px;border:1.5px solid #d8e0e2;border-radius:10px;font-family:inherit;background:#fff;color:#5b7077;text-align:left;cursor:pointer;display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+        <span id="cad-ufs-label">Selecionar estados...</span><span style="color:#9fb2b6;">&#9660;</span>
       </button>
       <div id="cad-ufs-tags" style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:10px;"></div>
 
       <!-- Senha -->
-      <div style="font-size:11px;font-weight:700;color:#1a5fad;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px;margin-top:4px;">Acesso</div>
+      <div style="font-size:11px;font-weight:700;color:#0e5a63;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px;margin-top:4px;">Acesso</div>
       <div style="margin-bottom:12px;">
-        <label style="font-size:11px;font-weight:600;color:#555;text-transform:uppercase;letter-spacing:0.4px;display:block;margin-bottom:5px;">Senha *</label>
-        <input id="cad-senha" type="password" placeholder="Mínimo 6 caracteres" style="width:100%;padding:12px 14px;font-size:14px;border:1.5px solid #e0e0e0;border-radius:10px;font-family:inherit;outline:none;box-sizing:border-box;">
+        <label style="font-size:11px;font-weight:600;color:#5b7077;text-transform:uppercase;letter-spacing:0.4px;display:block;margin-bottom:5px;">Senha *</label>
+        <input id="cad-senha" type="password" placeholder="Mínimo 6 caracteres" style="width:100%;padding:12px 14px;font-size:14px;border:1.5px solid #d8e0e2;border-radius:10px;font-family:inherit;outline:none;box-sizing:border-box;">
       </div>
       <div style="margin-bottom:20px;">
-        <label style="font-size:11px;font-weight:600;color:#555;text-transform:uppercase;letter-spacing:0.4px;display:block;margin-bottom:5px;">Confirmar senha *</label>
-        <input id="cad-senha2" type="password" placeholder="Repita a senha" style="width:100%;padding:12px 14px;font-size:14px;border:1.5px solid #e0e0e0;border-radius:10px;font-family:inherit;outline:none;box-sizing:border-box;">
+        <label style="font-size:11px;font-weight:600;color:#5b7077;text-transform:uppercase;letter-spacing:0.4px;display:block;margin-bottom:5px;">Confirmar senha *</label>
+        <input id="cad-senha2" type="password" placeholder="Repita a senha" style="width:100%;padding:12px 14px;font-size:14px;border:1.5px solid #d8e0e2;border-radius:10px;font-family:inherit;outline:none;box-sizing:border-box;">
       </div>
 
-      <div id="cad-erro-med" style="display:none;background:#fdf0f0;color:#b03030;font-size:13px;padding:10px 12px;border-radius:8px;border:1px solid #f0b8b8;margin-bottom:14px;"></div>
-      <button id="btn-cad-med" onclick="cadastrarMedico()" style="width:100%;padding:14px;background:#2d7a3a;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;">Criar conta</button>
+      <div id="cad-erro-med" style="display:none;background:#fdecea;color:#c0392b;font-size:13px;padding:10px 12px;border-radius:8px;border:1px solid #efc9c3;margin-bottom:14px;"></div>
+      <button id="btn-cad-med" onclick="cadastrarMedico()" style="width:100%;padding:14px;background:#0a8f5b;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;">Criar conta</button>
     </div>
   </div>
 </div>
 <div id="tela-device" style="display:none;text-align:center;padding:48px 24px;">
-  <div style="font-size:56px;margin-bottom:16px;">&#128245;</div>
-  <div style="font-size:19px;font-weight:700;margin-bottom:10px;color:#1a1a1a;">Acesso negado</div>
-  <div style="font-size:14px;color:#555;line-height:1.7;margin-bottom:24px;">Este app ja esta vinculado a outro dispositivo. Por seguranca, o check-in so pode ser feito pelo celular registrado originalmente.</div>
+  <div style="font-size:19px;font-weight:700;margin-bottom:10px;color:#0f2b30;">Acesso negado</div>
+  <div style="font-size:14px;color:#5b7077;line-height:1.7;margin-bottom:24px;">Este app ja esta vinculado a outro dispositivo. Por seguranca, o check-in so pode ser feito pelo celular registrado originalmente.</div>
   <div style="background:#fff3cd;border:1px solid #ffc107;border-radius:10px;padding:14px 18px;font-size:13px;color:#856404;line-height:1.6;">Se voce trocou de celular, solicite ao administrador que redefina o vinculo do seu dispositivo.</div>
 </div>
 <div id="tela-primeiro-acesso" style="display:none;text-align:center;padding:48px 24px;">
-  <div style="font-size:56px;margin-bottom:16px;">&#128241;</div>
-  <div style="font-size:19px;font-weight:700;margin-bottom:10px;color:#1a1a1a;">Vincular este celular</div>
-  <div style="font-size:14px;color:#555;line-height:1.7;margin-bottom:24px;">Este e o primeiro acesso. Seu celular sera vinculado a sua conta para garantir a seguranca do check-in.</div>
+  <div style="font-size:19px;font-weight:700;margin-bottom:10px;color:#0f2b30;">Vincular este celular</div>
+  <div style="font-size:14px;color:#5b7077;line-height:1.7;margin-bottom:24px;">Este e o primeiro acesso. Seu celular sera vinculado a sua conta para garantir a seguranca do check-in.</div>
   <div style="font-size:13px;color:#888;margin-bottom:28px;">Apos vincular, o app so funcionara neste dispositivo.</div>
-  <button onclick="vincularDispositivo()" style="background:#1a5fad;color:#fff;border:none;padding:16px 40px;border-radius:12px;font-size:16px;font-weight:700;cursor:pointer;width:100%;max-width:280px;">Vincular este celular</button>
+  <button onclick="vincularDispositivo()" style="background:#0e5a63;color:#fff;border:none;padding:16px 40px;border-radius:12px;font-size:16px;font-weight:700;cursor:pointer;width:100%;max-width:280px;">Vincular este celular</button>
 </div>
 
 <!-- MODAL EDITAR PERFIL -->
@@ -449,7 +449,7 @@ html,body{height:100%;background:#f0f4f8;font-family:-apple-system,BlinkMacSyste
       <input class="modal-textarea" id="ep-crm" type="text" style="width:100%;padding:10px 12px;font-size:14px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-family:inherit;margin-bottom:14px;">
       <label class="modal-label">Especialidades</label>
       <button type="button" onclick="abrirSeletorEsp('ep')" style="width:100%;padding:10px 12px;font-size:14px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-family:inherit;background:#fff;color:var(--text2);text-align:left;cursor:pointer;display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-        <span id="ep-esp-label">Selecionar...</span><span style="color:#aaa;">&#9660;</span>
+        <span id="ep-esp-label">Selecionar...</span><span style="color:#9fb2b6;">&#9660;</span>
       </button>
       <div id="ep-esp-tags" style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:14px;"></div>
       <label class="modal-label">RQE <span style="font-weight:400;color:var(--text3);">(se possuir)</span></label>
@@ -460,7 +460,7 @@ html,body{height:100%;background:#f0f4f8;font-family:-apple-system,BlinkMacSyste
       <input class="modal-textarea" id="ep-pix" type="text" placeholder="CPF, e-mail, telefone ou chave aleatória" style="width:100%;padding:10px 12px;font-size:14px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-family:inherit;margin-bottom:14px;">
       <label class="modal-label">UFs de interesse</label>
       <button type="button" onclick="abrirSeletorUF('ep')" style="width:100%;padding:10px 12px;font-size:14px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-family:inherit;background:#fff;color:var(--text2);text-align:left;cursor:pointer;display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-        <span id="ep-ufs-label">Selecionar...</span><span style="color:#aaa;">&#9660;</span>
+        <span id="ep-ufs-label">Selecionar...</span><span style="color:#9fb2b6;">&#9660;</span>
       </button>
       <div id="ep-ufs-tags" style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:4px;"></div>
     </div>
@@ -486,7 +486,7 @@ html,body{height:100%;background:#f0f4f8;font-family:-apple-system,BlinkMacSyste
       <input class="modal-textarea" id="as-nova" type="password" placeholder="Mínimo 6 caracteres" style="width:100%;padding:10px 12px;font-size:14px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-family:inherit;margin-bottom:14px;">
       <label class="modal-label">Confirmar nova senha</label>
       <input class="modal-textarea" id="as-nova2" type="password" placeholder="Repita a nova senha" style="width:100%;padding:10px 12px;font-size:14px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-family:inherit;margin-bottom:4px;">
-      <div id="as-erro" style="display:none;background:var(--red-light);color:var(--red);font-size:12px;padding:8px 12px;border-radius:6px;margin-top:8px;border:1px solid #f0b8b8;"></div>
+      <div id="as-erro" style="display:none;background:var(--red-light);color:var(--red);font-size:12px;padding:8px 12px;border-radius:6px;margin-top:8px;border:1px solid #efc9c3;"></div>
     </div>
     <div class="modal-footer">
       <button class="btn-modal azul" id="btn-salvar-senha" onclick="salvarNovaSenha()">Salvar nova senha</button>
@@ -508,7 +508,7 @@ html,body{height:100%;background:#f0f4f8;font-family:-apple-system,BlinkMacSyste
       <input class="modal-textarea" id="so-nova" type="password" placeholder="Mínimo 6 caracteres" style="width:100%;padding:10px 12px;font-size:14px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-family:inherit;margin-bottom:14px;">
       <label class="modal-label">Confirmar senha</label>
       <input class="modal-textarea" id="so-nova2" type="password" placeholder="Repita a senha" style="width:100%;padding:10px 12px;font-size:14px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-family:inherit;margin-bottom:4px;">
-      <div id="so-erro" style="display:none;background:var(--red-light);color:var(--red);font-size:12px;padding:8px 12px;border-radius:6px;margin-top:8px;border:1px solid #f0b8b8;"></div>
+      <div id="so-erro" style="display:none;background:var(--red-light);color:var(--red);font-size:12px;padding:8px 12px;border-radius:6px;margin-top:8px;border:1px solid #efc9c3;"></div>
     </div>
     <div class="modal-footer">
       <button class="btn-modal azul" onclick="salvarSenhaObrigatoria()">Criar minha senha</button>
@@ -525,7 +525,7 @@ html,body{height:100%;background:#f0f4f8;font-family:-apple-system,BlinkMacSyste
       <div class="modal-sub">Redefina sua senha pelo WhatsApp do suporte.</div>
     </div>
     <div class="modal-body">
-      <div style="font-size:13px;color:#555;line-height:1.6;margin-bottom:14px;">
+      <div style="font-size:13px;color:#5b7077;line-height:1.6;margin-bottom:14px;">
         Para redefinir sua senha, fale com o suporte pelo WhatsApp. A mensagem já vai pronta com o seu CPF.
       </div>
       <button class="btn-modal" style="width:100%;background:#25D366;color:#fff;border:none;font-weight:600;" onclick="abrirWhatsAppSenha()">Falar com o suporte no WhatsApp</button>
@@ -571,7 +571,7 @@ function abrirWhatsAppSenha(){
   <div class="modal-sheet">
     <div class="modal-handle"></div>
     <div class="modal-header">
-      <div class="modal-title">&#128260; Transferir plantao</div>
+      <div class="modal-title">Transferir plantao</div>
       <div class="modal-sub" id="modal-transf-info">-</div>
     </div>
     <div class="modal-body">
@@ -595,7 +595,7 @@ function abrirWhatsAppSenha(){
   <div class="modal-sheet">
     <div class="modal-handle"></div>
     <div class="modal-header">
-      <div class="modal-title">&#9888;&#65039; Avisar ausencia</div>
+      <div class="modal-title">Avisar ausencia</div>
       <div class="modal-sub" id="modal-ausencia-info">-</div>
     </div>
     <div class="modal-body">
@@ -610,7 +610,7 @@ function abrirWhatsAppSenha(){
       </select>
       <label class="modal-label">Detalhes adicionais (opcional)</label>
       <textarea class="modal-textarea" id="ausencia-obs" rows="3" placeholder="Descreva brevemente o que aconteceu..."></textarea>
-      <div style="margin-top:14px;background:var(--red-light);border-radius:var(--radius-sm);padding:12px;border:1px solid #f0b8b8;">
+      <div style="margin-top:14px;background:var(--red-light);border-radius:var(--radius-sm);padding:12px;border:1px solid #efc9c3;">
         <div style="font-size:12px;font-weight:700;color:var(--red);margin-bottom:4px;">Atencao</div>
         <div style="font-size:12px;color:var(--red);line-height:1.5;">A empresa gestora sera notificada imediatamente e buscara um substituto para o seu plantao.</div>
       </div>
@@ -817,7 +817,7 @@ function _setSelecionadas(chave, lista) {
   if (labelEl) labelEl.textContent = lista.length > 0 ? lista.length + ' selecionado(s)' : 'Selecionar...';
   if (tagsEl) {
     tagsEl.innerHTML = lista.map(v =>
-      `<span style="background:var(--blue-light);color:var(--blue);border:1px solid #a0c4f0;padding:3px 10px;border-radius:99px;font-size:12px;font-weight:500;">${v}</span>`
+      `<span style="background:var(--blue-light);color:var(--blue);border:1px solid #b7d2d6;padding:3px 10px;border-radius:99px;font-size:12px;font-weight:500;">${v}</span>`
     ).join('');
   }
 }
@@ -1197,14 +1197,14 @@ function renderPlantoes() {
   if(_filtroAtivo==='pendentes')lista=lista.filter(l=>!l.confirmado);
   if(_filtroAtivo==='confirmados')lista=lista.filter(l=>l.confirmado);
   if(hint)hint.textContent=_filtroAtivo==='confirmados'?'Toque em um plantao para transferir ou avisar ausencia':'Toque em um plantao para confirmar sua presenca';
-  if(!lista.length){el.innerHTML='<div class="empty"><div class="empty-icon">&#128197;</div>'+(_filtroAtivo==='pendentes'?'Nenhum plantao pendente':_filtroAtivo==='confirmados'?'Nenhum plantao confirmado':'Nenhum plantao escalado')+'</div>';return;}
+  if(!lista.length){el.innerHTML='<div class="empty">'+(_filtroAtivo==='pendentes'?'Nenhum plantao pendente':_filtroAtivo==='confirmados'?'Nenhum plantao confirmado':'Nenhum plantao escalado')+'</div>';return;}
   el.innerHTML=lista.map(l=>{
     const turno=l.tipo?.includes('Noturno')?'Noturno':l.tipo?.includes('24')?'24h':'Diurno';
     const bc=turno==='Noturno'?'badge-purple':turno==='24h'?'badge-amber':'badge-green';
     const proj=l.projetos?.nome||'';
     const temTP=_transfersPend.has(l.id),temAU=_ausenciasInf.has(l.id);
     const acoes=l.confirmado
-      ? '<div class="plantao-acoes"><button class="btn-acao btn-acao-transferir" onclick="abrirTransferir(\''+l.id+'\')">&#128260; Transferir plantao</button><button class="btn-acao btn-acao-ausencia" onclick="abrirAusencia(\''+l.id+'\')">&#9888;&#65039; Nao vou comparecer</button></div>'
+      ? '<div class="plantao-acoes"><button class="btn-acao btn-acao-transferir" onclick="abrirTransferir(\''+l.id+'\')">Transferir plantao</button><button class="btn-acao btn-acao-ausencia" onclick="abrirAusencia(\''+l.id+'\')">Nao vou comparecer</button></div>'
       : '<div style="padding:0 16px 14px;"><button class="btn-confirmar pendente" onclick="confirmarPresenca(\''+l.id+'\',this)">Confirmar presenca</button></div>';
     return '<div class="plantao-card"><div class="plantao-header"><div><div class="plantao-data">'+fmtData(l.data)+'</div><div class="plantao-proj">'+proj+(l.setor?' - '+l.setor:'')+'</div>'+(l.confirmado?'<span class="confirmado-badge">Confirmado</span>':'<span class="pendente-badge">Aguardando confirmacao</span>')+(temTP?'<br><span class="transf-badge">Transferencia aguardando resposta</span>':'')+(temAU?'<br><span class="ausencia-badge">Ausencia informada a empresa</span>':'')+'</div><span class="badge '+bc+'">'+turno+'</span></div><div class="plantao-body"><div><div class="plantao-info-label">Horario</div><div class="plantao-info-val">'+(l.hora_ini||'').slice(0,5)+'-'+(l.hora_fim||'').slice(0,5)+'</div></div><div><div class="plantao-info-label">Horas</div><div class="plantao-info-val">'+l.horas+'h</div></div><div class="plantao-valor"><div class="plantao-info-label">Honorarios</div><div class="plantao-valor-val">'+fBRL(l.honorario)+'</div></div></div>'+acoes+'</div>';
   }).join('');
@@ -1286,7 +1286,7 @@ async function carregarNotificacoes() {
   const lista=d||[];
   window._pendTransf=lista.filter(t=>t.status==='pendente').length;
   atualizarBadgeNotif();
-  if(!lista.length){el.innerHTML='<div class="empty"><div class="empty-icon">&#128276;</div>Nenhuma solicitacao recebida</div>';return;}
+  if(!lista.length){el.innerHTML='<div class="empty">Nenhuma solicitacao recebida</div>';return;}
   el.innerHTML=lista.map(t=>{
     const origem=t.medicos?.nome||'Colega';
     const lanc=t.lancamentos;
@@ -1317,7 +1317,7 @@ async function responderTransf(transId, lancId, resp) {
 
 async function carregarDisponiveis() {
   const el=document.getElementById('disponiveis-lista');if(!el||!medico)return;
-  el.innerHTML='<div class="empty"><div class="empty-icon">&#128226;</div>Carregando...</div>';
+  el.innerHTML='<div class="empty">Carregando...</div>';
   const hoje=new Date().toISOString().slice(0,10);
 
   // Buscar plantões abertos — sem filtro de projeto (público geral e por UF também aparecem)
@@ -1359,7 +1359,7 @@ async function carregarDisponiveis() {
   if(bdDisp){bdDisp.textContent=plantoesFiltrados.length;bdDisp.style.display=plantoesFiltrados.length>0?'inline':'none';}
 
   if(!plantoesFiltrados.length){
-    el.innerHTML='<div class="empty"><div class="empty-icon">&#128226;</div>Nenhum plantão disponível no momento</div>';
+    el.innerHTML='<div class="empty">Nenhum plantão disponível no momento</div>';
     return;
   }
 
@@ -1370,9 +1370,9 @@ async function carregarDisponiveis() {
     const vagas=(l.vagas||1)-(l.vagas_preenchidas||0),cheia=vagas<=0;
     const mc=cands.find(c=>c.lancamento_id===l.id);
     const conf=verificarConflito(l,meus);
-    const pubTag = l.publico_alvo==='geral' ? '<span style="font-size:10px;background:#e8f5eb;color:#2d7a3a;padding:2px 6px;border-radius:99px;margin-left:4px;">Público geral</span>'
-                 : l.publico_alvo==='ufs'   ? '<span style="font-size:10px;background:#e8f0fb;color:#1a5fad;padding:2px 6px;border-radius:99px;margin-left:4px;">Por estado</span>' : '';
-    const rqeTag = l.exige_rqe ? '<span style="font-size:10px;background:#fdf3e0;color:#8a5500;padding:2px 6px;border-radius:99px;margin-left:4px;">Exige RQE</span>' : '';
+    const pubTag = l.publico_alvo==='geral' ? '<span style="font-size:10px;background:#eafaf2;color:#0a8f5b;padding:2px 6px;border-radius:99px;margin-left:4px;">Público geral</span>'
+                 : l.publico_alvo==='ufs'   ? '<span style="font-size:10px;background:#e3f0f1;color:#0e5a63;padding:2px 6px;border-radius:99px;margin-left:4px;">Por estado</span>' : '';
+    const rqeTag = l.exige_rqe ? '<span style="font-size:10px;background:#fff8ec;color:#9a6212;padding:2px 6px;border-radius:99px;margin-left:4px;">Exige RQE</span>' : '';
     let btnH='';
     if(mc){if(mc.status==='aprovado')btnH='<button class="btn-candidatar inscrito" disabled>Aprovado - você está escalado</button>';else if(mc.status==='recusado')btnH='<button class="btn-candidatar recusado" disabled>Candidatura recusada</button>';else btnH='<button class="btn-candidatar inscrito" disabled>Candidatura enviada — aguardando aprovação</button>';}
     else if(cheia)btnH='<button class="btn-candidatar inscrito" disabled>Vagas preenchidas</button>';
@@ -1406,7 +1406,7 @@ async function carregarHistorico() {
   document.getElementById('hist-total').textContent=fBRL(total);
   document.getElementById('hist-qtd').textContent=(d||[]).length;
   const el=document.getElementById('historico-lista');
-  if(!d?.length){el.innerHTML='<div class="empty"><div class="empty-icon">&#128202;</div>Nenhum plantao este mes</div>';return;}
+  if(!d?.length){el.innerHTML='<div class="empty">Nenhum plantao este mes</div>';return;}
   el.innerHTML=d.map(l=>{const turno=l.tipo?.includes('Noturno')?'Noturno':l.tipo?.includes('24')?'24h':'Diurno';const bc=turno==='Noturno'?'badge-purple':turno==='24h'?'badge-amber':'badge-green';const dd=new Date(l.data+'T12:00:00');return '<div class="checkin-item"><div><div style="font-size:13px;font-weight:600;color:var(--blue);">'+dd.toLocaleDateString('pt-BR',{day:'2-digit',month:'short'})+'</div><span class="badge '+bc+'" style="margin-top:3px;">'+turno+'</span></div><div class="checkin-info"><div class="checkin-info-proj">'+(l.projetos?.nome||'')+'</div><div class="checkin-info-meta">'+(l.hora_ini||'').slice(0,5)+'-'+(l.hora_fim||'').slice(0,5)+' - '+l.horas+'h'+(l.setor?' - '+l.setor:'')+'</div></div><div style="text-align:right;font-size:13px;font-weight:700;color:var(--green);">'+fBRL(l.honorario)+'</div></div>';}).join('');
 }
 
@@ -1423,7 +1423,7 @@ function showPage(id,el) {
   if(id==='perfil')preencherPerfil();
 }
 
-function toastMed(msg,ok=true){const t=document.getElementById('toast-med');if(!t)return;t.textContent=msg;t.style.background=ok?'#2d7a3a':'#b03030';t.style.display='block';setTimeout(()=>t.style.display='none',3000);}
+function toastMed(msg,ok=true){const t=document.getElementById('toast-med');if(!t)return;t.textContent=msg;t.style.background=ok?'#0a8f5b':'#c0392b';t.style.display='block';setTimeout(()=>t.style.display='none',3000);}
 
 window.addEventListener('load',init);
 </script>
@@ -1458,7 +1458,7 @@ function mostrarDicaInstalacao() {
     setTimeout(() => {
       const banner = document.createElement('div');
       banner.id = 'pwa-banner';
-      banner.style.cssText = 'position:fixed;bottom:0;left:0;right:0;background:#1a5fad;color:#fff;padding:14px 16px calc(14px + env(safe-area-inset-bottom));z-index:9999;display:flex;align-items:center;gap:12px;box-shadow:0 -2px 12px rgba(0,0,0,0.2);';
+      banner.style.cssText = 'position:fixed;bottom:0;left:0;right:0;background:#0e5a63;color:#fff;padding:14px 16px calc(14px + env(safe-area-inset-bottom));z-index:9999;display:flex;align-items:center;gap:12px;box-shadow:0 -2px 12px rgba(0,0,0,0.2);';
       banner.innerHTML = '<div style="flex:1;"><div style="font-size:13px;font-weight:700;margin-bottom:2px;">Instalar PlantaoPro</div><div style="font-size:11px;opacity:0.85;">Toque em <strong>Compartilhar</strong> &#x1F4E4; e depois <strong>Adicionar a Tela de In&iacute;cio</strong></div></div><button onclick="fecharBannerPWA()" style="background:rgba(255,255,255,0.2);border:none;color:#fff;font-size:20px;cursor:pointer;padding:4px 8px;border-radius:6px;">&#10005;</button>';
       document.body.appendChild(banner);
     }, 3000);
