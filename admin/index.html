@@ -3732,6 +3732,12 @@ async function confirmarAgenda() {
 
   if (ok > 0) {
     toast(`${ok} plantão(ões) registrado(s) para ${d.med}!${erros>0?' · '+erros+' com erro':''}`);
+    // Notificar o médico escalado
+    try {
+      const _proj = (typeof projetos!=='undefined'&&projetos) ? projetos.find(p=>p.id===d.projId) : null;
+      const _nomeProj = _proj ? _proj.nome : 'um plantão';
+      notificarMedicoPush(d.medId, `Você foi escalado para ${ok} plantão(ões) em ${_nomeProj}.`, 'escala');
+    } catch(e){ console.error(e); }
     limparAgenda();
     await carregarLancamentos();
     carregarDashboard();
@@ -9664,4 +9670,17 @@ document.addEventListener('click', function(e){
   if(!e.target.closest('.dd')) document.querySelectorAll('.dd.open').forEach(d=>d.classList.remove('open'));
   if(e.target.closest('.dd-menu .nav-item')) document.querySelectorAll('.dd.open').forEach(d=>d.classList.remove('open'));
 });
+</script>
+
+<script>
+// Dispara push para um medico (nao bloqueia a UI se falhar)
+async function notificarMedicoPush(medico_id, corpo, tipo, url){
+  if(!medico_id||!corpo) return;
+  try{
+    await fetch('/api/medicos?action=push', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ medico_id, titulo:'PlantãoPro', corpo, tipo:tipo||null, url:url||'/medico/' })
+    });
+  }catch(e){ console.error('push', e); }
+}
 </script>
