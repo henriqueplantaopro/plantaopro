@@ -211,32 +211,57 @@ html,body{height:100%;background:#f0f4f8;font-family:-apple-system,BlinkMacSyste
 </div>
 
 <div class="tabs" id="tabs" style="display:none;">
-  <div class="tab active" onclick="showPage('checkin',this)">
-    <span class="tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg></span>Check-in
+  <div class="tab active" onclick="showPage('inicio',this)">
+    <span class="tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/><path d="M10 21v-6h4v6"/></svg></span>Inicio
   </div>
   <div class="tab" onclick="showPage('plantoes',this)">
-    <span class="tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></span>Plantoes
+    <span class="tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></span>Escalas
     <span id="badge-confirmacao" style="display:none;background:var(--amber);color:#fff;font-size:9px;font-weight:700;border-radius:99px;padding:1px 5px;margin-left:2px;vertical-align:top;margin-top:2px;"></span>
   </div>
-  <div class="tab" onclick="showPage('disponiveis',this)">
-    <span class="tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11v2a1 1 0 0 0 1 1h2l5 4V6L6 10H4a1 1 0 0 0-1 1Z"/><path d="M14 8c1.5 1.5 1.5 6.5 0 8"/><path d="M17.5 5.5c3 3 3 10 0 13"/></svg></span>Disponiveis
-    <span id="badge-disp" style="display:none;background:var(--amber);color:#fff;font-size:9px;font-weight:700;border-radius:99px;padding:1px 5px;margin-left:2px;vertical-align:top;margin-top:2px;"></span>
+  <div class="tab" onclick="showPage('anuncios',this)">
+    <span class="tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11v2a1 1 0 0 0 1 1h2l5 4V6L6 10H4a1 1 0 0 0-1 1Z"/><path d="M14 8c1.5 1.5 1.5 6.5 0 8"/><path d="M17.5 5.5c3 3 3 10 0 13"/></svg></span>Anuncios
+    <span id="badge-anuncios" style="display:none;background:var(--red);color:#fff;font-size:9px;font-weight:700;border-radius:99px;padding:1px 5px;margin-left:2px;vertical-align:top;margin-top:2px;"></span>
   </div>
-  <div class="tab" onclick="showPage('historico',this)">
-    <span class="tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="20" x2="20" y2="20"/><rect x="6" y="12" width="3" height="8"/><rect x="11" y="7" width="3" height="13"/><rect x="16" y="10" width="3" height="10"/></svg></span>Historico
-  </div>
-  <div class="tab" onclick="showPage('notificacoes',this)">
-    <span class="tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg></span>Notif.
-    <span id="badge-notif" style="display:none;background:var(--red);color:#fff;font-size:9px;font-weight:700;border-radius:99px;padding:1px 5px;margin-left:2px;vertical-align:top;margin-top:2px;"></span>
+  <div class="tab" onclick="showPage('checkin',this)">
+    <span class="tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg></span>Check-in
   </div>
   <div class="tab" onclick="showPage('perfil',this)">
     <span class="tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>Perfil
   </div>
 </div>
 
+
 <div class="content" id="main-content" style="display:none;">
 
-  <div id="page-checkin" class="page active">
+  <div id="page-inicio" class="page">
+    <div class="card">
+      <div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:0.4px;">Recebido no periodo</div>
+      <div style="display:flex;justify-content:space-between;align-items:baseline;">
+        <div style="font-size:26px;font-weight:700;color:var(--green);margin-top:2px;" id="ini-total">R$ 0,00</div>
+        <div style="font-size:12px;color:var(--text3);"><span id="ini-qtd">0</span> plantao(oes)</div>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:12px;">
+        <div style="flex:1;">
+          <label style="font-size:11px;color:var(--text3);display:block;margin-bottom:3px;">De</label>
+          <input type="date" id="ini-d1" onchange="carregarInicio()" style="width:100%;border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:9px 10px;font-size:14px;font-family:inherit;background:#fff;color:var(--text);">
+        </div>
+        <div style="flex:1;">
+          <label style="font-size:11px;color:var(--text3);display:block;margin-bottom:3px;">Ate</label>
+          <input type="date" id="ini-d2" onchange="carregarInicio()" style="width:100%;border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:9px 10px;font-size:14px;font-family:inherit;background:#fff;color:var(--text);">
+        </div>
+      </div>
+    </div>
+    <div class="card" style="padding:0;overflow:hidden;">
+      <div style="display:flex;padding:10px 16px;background:var(--gray);border-bottom:1px solid var(--border);font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.4px;">
+        <div style="width:64px;">Data</div>
+        <div style="flex:1;">Hospital</div>
+        <div style="width:90px;text-align:right;">Valor</div>
+      </div>
+      <div id="ini-lista"><div class="empty">Carregando...</div></div>
+    </div>
+  </div>
+
+  <div id="page-checkin" class="page">
     <div class="card">
       <div class="card-title">Selecionar local</div>
       <select class="proj-select" id="sel-projeto">
@@ -270,33 +295,13 @@ html,body{height:100%;background:#f0f4f8;font-family:-apple-system,BlinkMacSyste
     <div id="plantoes-lista"><div class="empty">Carregando...</div></div>
   </div>
 
-  <div id="page-disponiveis" class="page">
+  
+
+  <div id="page-anuncios" class="page">
+    <div id="convites-lista"></div>
     <div class="refresh-hint">Plantoes abertos nos seus hospitais</div>
     <div id="disponiveis-lista"><div class="empty">Carregando...</div></div>
-  </div>
-
-  <div id="page-historico" class="page">
-    <div class="card">
-      <div style="display:flex;justify-content:space-between;align-items:center;">
-        <div>
-          <div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:0.4px;">Total do mes</div>
-          <div style="font-size:24px;font-weight:700;color:var(--green);margin-top:2px;" id="hist-total">R$ 0,00</div>
-        </div>
-        <div style="text-align:right;">
-          <div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:0.4px;">Plantoes</div>
-          <div style="font-size:24px;font-weight:700;color:var(--text);margin-top:2px;" id="hist-qtd">0</div>
-        </div>
-      </div>
-    </div>
-    <div class="card">
-      <div class="card-title">Plantoes realizados</div>
-      <div id="historico-lista"><div class="empty">Nenhum registro</div></div>
-    </div>
-  </div>
-
-<div id="page-notificacoes" class="page">
-    <div id="convites-lista"></div>
-    <div class="refresh-hint">Solicitacoes de transferencia recebidas de colegas</div>
+    <div class="refresh-hint" style="margin-top:16px;">Solicitacoes de transferencia recebidas de colegas</div>
     <div id="notif-lista"><div class="empty">Carregando...</div></div>
   </div>
 
@@ -712,7 +717,7 @@ function mostrarApp() {
   carregarProjetos();
   iniciarGPS();
   carregarPlantoes();
-  carregarHistorico();
+  carregarInicio();
   carregarCheckinsHoje();
   carregarDisponiveis();
   carregarMedicos();
@@ -1351,6 +1356,9 @@ async function carregarDisponiveis() {
     }
   });
 
+  window._pendDisp = plantoesFiltrados.length;
+  atualizarBadgeNotif();
+
   let cands=[], meus=[];
   try{cands=(await sb('/rest/v1/candidaturas?medico_id=eq.'+medico.id+'&select=*'))||[];}catch(e){}
   try{meus=(await sb('/rest/v1/lancamentos?medico_id=eq.'+medico.id+'&data=gte.'+hoje+'&select=data,hora_ini,hora_fim,horas,tipo,projeto_id,projetos(nome)'))||[];}catch(e){}
@@ -1399,16 +1407,6 @@ async function candidatar(lancId,btn,alerta=null) {
   }catch(e){if(btn)btn.disabled=false;toastMed('Erro de conexao',false);}
 }
 
-async function carregarHistorico() {
-  const hoje=new Date(),d1=new Date(hoje.getFullYear(),hoje.getMonth(),1).toISOString().slice(0,10),d2=new Date(hoje.getFullYear(),hoje.getMonth()+1,0).toISOString().slice(0,10);
-  const d=await sb('/rest/v1/lancamentos?medico_id=eq.'+medico.id+'&data=gte.'+d1+'&data=lte.'+d2+'&select=*,projetos(nome)&order=data.desc');
-  const total=(d||[]).reduce((s,l)=>s+(l.honorario||0),0);
-  document.getElementById('hist-total').textContent=fBRL(total);
-  document.getElementById('hist-qtd').textContent=(d||[]).length;
-  const el=document.getElementById('historico-lista');
-  if(!d?.length){el.innerHTML='<div class="empty">Nenhum plantao este mes</div>';return;}
-  el.innerHTML=d.map(l=>{const turno=l.tipo?.includes('Noturno')?'Noturno':l.tipo?.includes('24')?'24h':'Diurno';const bc=turno==='Noturno'?'badge-purple':turno==='24h'?'badge-amber':'badge-green';const dd=new Date(l.data+'T12:00:00');return '<div class="checkin-item"><div><div style="font-size:13px;font-weight:600;color:var(--blue);">'+dd.toLocaleDateString('pt-BR',{day:'2-digit',month:'short'})+'</div><span class="badge '+bc+'" style="margin-top:3px;">'+turno+'</span></div><div class="checkin-info"><div class="checkin-info-proj">'+(l.projetos?.nome||'')+'</div><div class="checkin-info-meta">'+(l.hora_ini||'').slice(0,5)+'-'+(l.hora_fim||'').slice(0,5)+' - '+l.horas+'h'+(l.setor?' - '+l.setor:'')+'</div></div><div style="text-align:right;font-size:13px;font-weight:700;color:var(--green);">'+fBRL(l.honorario)+'</div></div>';}).join('');
-}
 
 function fecharModal(id){document.getElementById(id).classList.add('oculto');}
 
@@ -1417,9 +1415,10 @@ function showPage(id,el) {
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   document.getElementById('page-'+id).classList.add('active');
   el.classList.add('active');
-  if(id==='notificacoes'){carregarNotificacoes();carregarConvites();}
+  if(id==='inicio')carregarInicio();
+  if(id==='anuncios'){carregarDisponiveis();carregarNotificacoes();carregarConvites();}
   if(id==='plantoes')carregarPlantoes();
-  if(id==='disponiveis')carregarDisponiveis();
+  if(id==='checkin')carregarCheckinsHoje();
   if(id==='perfil')preencherPerfil();
 }
 
@@ -1517,9 +1516,33 @@ async function responderConvite(conviteId, aceito, btn) {
 }
 
 function atualizarBadgeNotif() {
-  const n = (window._pendTransf || 0) + (window._pendConvites || 0);
-  const b = document.getElementById('badge-notif');
+  const n = (window._pendTransf || 0) + (window._pendConvites || 0) + (window._pendDisp || 0);
+  const b = document.getElementById('badge-anuncios');
   if (b) { b.textContent = n; b.style.display = n > 0 ? 'inline' : 'none'; }
+}
+
+async function carregarInicio() {
+  const el = document.getElementById('ini-lista');
+  if (!el || !medico) return;
+  const d1El = document.getElementById('ini-d1'), d2El = document.getElementById('ini-d2');
+  const hoje = new Date();
+  if (!d1El.value) d1El.value = new Date(hoje.getFullYear(), hoje.getMonth(), 1).toISOString().slice(0,10);
+  if (!d2El.value) d2El.value = hoje.toISOString().slice(0,10);
+  const d = await sb('/rest/v1/lancamentos?medico_id=eq.' + medico.id +
+    '&data=gte.' + d1El.value + '&data=lte.' + d2El.value +
+    '&select=data,honorario,projetos(nome)&order=data.desc');
+  const lista = d || [];
+  document.getElementById('ini-total').textContent = fBRL(lista.reduce((s,l)=>s+(l.honorario||0),0));
+  document.getElementById('ini-qtd').textContent = lista.length;
+  if (!lista.length) { el.innerHTML = '<div class="empty">Nenhum plantao no periodo</div>'; return; }
+  el.innerHTML = lista.map(l => {
+    const dd = new Date(l.data + 'T12:00:00');
+    return '<div style="display:flex;align-items:center;padding:12px 16px;border-bottom:1px solid var(--border);">'
+      + '<div style="width:64px;font-size:13px;font-weight:600;color:var(--blue);">' + dd.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'}) + '</div>'
+      + '<div style="flex:1;font-size:13px;color:var(--text);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + (l.projetos?.nome || '-') + '</div>'
+      + '<div style="width:90px;text-align:right;font-size:13px;font-weight:700;color:var(--green);">' + fBRL(l.honorario) + '</div>'
+      + '</div>';
+  }).join('');
 }
 </script>
   
