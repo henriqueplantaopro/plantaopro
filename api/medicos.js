@@ -2,6 +2,48 @@
 import { sbAdmin, hashSenha, json, setCors } from './_lib.js';
 import { exigirSessao } from './_auth.js';
 import { randomUUID } from 'crypto';
+import webpush from 'web-push';
+
+// ── VAPID (push) ─────────────────────────────────────────────────────
+const VAPID_PUBLIC  = process.env.VAPID_PUBLIC  || 'BKlAta-G8hOrfQ4PB6nweofnc8J_m8APNvuBjGIrMxVSe2jxp0a0WC-SRMCagxQHp2mY_vKBjEZt3_fw3gSTQhU';
+const VAPID_PRIVATE = process.env.VAPID_PRIVATE || '';
+if (VAPID_PRIVATE) {
+  try { webpush.setVapidDetails('mailto:suporte@plantaopro.com', VAPID_PUBLIC, VAPID_PRIVATE); } catch (_) {}
+}
+const TIPO_PREF = { escala: 'escalas', vaga: 'vagas', transferencia: 'transferencias', checkin: 'checkin' };
+
+async function enviarPush({ medico_id, titulo, corpo, url, tipo }) {
+  if (!VAPID_PRIVATE) return { erro: 'VAPID_PRIVATE nao configurada', status: 500 };
+  if (!medico_id || !corpo) return { erro: 'medico_id e corpo obrigatorios', status: 400 };
+
+  // Respeitar preferencia do medico
+  const prefKey = tipo ? TIPO_PREF[tipo] : null;
+  if (prefKey) {
+    try {
+      const m = await sbAdmin(`/rest/v1/medicos?id=eq.${medico_id}&select=notif_prefs`);
+      const prefs = m?.[0]?.notif_prefs;
+      if (prefs && prefs[prefKey] === false) return { ok: true, enviados: 0, motivo: 'desativado pelo medico' };
+    } catch (_) {}
+  }
+
+  const subs = await sbAdmin(`/rest/v1/push_subs?medico_id=eq.${medico_id}&select=*`);
+  if (!subs || !subs.length) return { ok: true, enviados: 0, motivo: 'sem inscricoes' };
+
+  const payload = JSON.stringify({ title: titulo || 'PlantaoPro', body: corpo, url: url || '/medico/' });
+  let enviados = 0; const remover = [];
+  await Promise.all(subs.map(async (s) => {
+    try {
+      await webpush.sendNotification({ endpoint: s.endpoint, keys: { p256dh: s.p256dh, auth: s.auth } }, payload);
+      enviados++;
+    } catch (err) {
+      if (err.statusCode === 404 || err.statusCode === 410) remover.push(s.endpoint);
+    }
+  }));
+  for (const ep of remover) {
+    try { await sbAdmin(`/rest/v1/push_subs?endpoint=eq.${encodeURIComponent(ep)}`, { method: 'DELETE', headers: { Prefer: 'return=minimal' } }); } catch (_) {}
+  }
+  return { ok: true, enviados, removidos: remover.length };
+}
 
 // Colunas seguras (referência — o GET usa select=* e remove senha_hash no servidor).
 const SELECT_MEDICO =
@@ -45,6 +87,12 @@ export default async function handler(req, res) {
   const adminId = sessao.adminId;
 
   try {
+    // ── ENVIAR PUSH (escala, vaga) ──────────────────────────────────────
+    if (req.method === 'POST' && req.query.action === 'push') {
+      const r = await enviarPush(req.body || {});
+      return json(res, r.status || 200, r);
+    }
+
     // ── LISTAR ──────────────────────────────────────────────────────────
     if (req.method === 'GET') {
       const dados = await sbAdmin(
