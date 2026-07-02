@@ -4377,13 +4377,28 @@ async function salvarLancamentoRapido() {
     }
     const btn2 = document.querySelector('#modal-rapido .btn-primary');
     if (btn2) { btn2.disabled=true; btn2.textContent='Publicando...'; }
-    try {
-      const res = await fetch(SUPABASE_URL+'/rest/v1/lancamentos', {
-        method:'POST',
-        headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},
-        body: JSON.stringify({projeto_id:projId,data:ds,hora_ini:ini,hora_fim:fim,horas,tipo,setor:setor||null,honorario:valor||0,valor_hora:horas>0&&valor>0?Math.round(valor/horas*100)/100:0,obs:obs||null,aberto:true,vagas,vagas_preenchidas:0,exige_rqe:document.getElementById('mr-exige-rqe')?.checked||false})
-      });
-      if (res.ok || res.status===204 || res.status===201) {
+try {
+      // Público-alvo
+      const _pub = (document.querySelector('input[name="mr-publico"]:checked')?.value) || 'projeto';
+      let _ufsAlvo = [];
+      if (_pub === 'ufs') {
+        _ufsAlvo = Array.from(document.querySelectorAll('#mr-ufs-select button'))
+          .filter(b => b.dataset.sel === '1')
+          .map(b => b.dataset.uf);
+        if (!_ufsAlvo.length) { toast('Selecione ao menos um estado (UF)', true); return; }
+      }
+      const _corpo = {
+        projeto_id:projId, data:ds, hora_ini:ini, hora_fim:fim, horas, tipo,
+        setor:setor||null, honorario:valor||0,
+        valor_hora: horas>0&&valor>0 ? Math.round(valor/horas*100)/100 : 0,
+        obs:obs||null, aberto:true, vagas, vagas_preenchidas:0,
+        exige_rqe: document.getElementById('mr-exige-rqe')?.checked||false,
+        publico_alvo: _pub,
+        ufs_alvo: _ufsAlvo,
+        especialidades_alvo: []
+      };
+      const res = await sbApi('/lancamentos', { method:'POST', body: JSON.stringify(_corpo) });
+      if (res) {
         toast('Plantão publicado! Médicos podem se candidatar.');
         fecharModalRapido();
         await carregarLancamentos(true);
