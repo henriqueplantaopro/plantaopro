@@ -9609,8 +9609,7 @@ window.addEventListener('DOMContentLoaded', async function () {
     if (saved.tipo === 'admin') await posLoginAdmin(saved);
     else await posLoginUsuario(saved);
   } catch (e) {
-    console.error('Falha ao restaurar sessão:', e);
-    try { localStorage.removeItem('pp_user'); } catch (_) {}
+    console.error('Falha ao restaurar sessão (mantendo login):', e);
   }
 });
 </script>
