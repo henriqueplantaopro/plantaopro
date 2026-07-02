@@ -5224,6 +5224,8 @@ async function responderCandidatura(candId, lancId, status, vagas) {
         headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},
         body: JSON.stringify({
           medico_id: medId,
+          confirmado: true,
+          confirmado_em: new Date().toISOString(),
           vagas_preenchidas: (lancamentos.find(l=>l.id===lancId)?.vagas_preenchidas||0) + 1,
           aberto: (lancamentos.find(l=>l.id===lancId)?.vagas_preenchidas||0) + 1 < vagas
         })
