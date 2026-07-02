@@ -76,7 +76,7 @@ self.addEventListener('push', event => {
     self.registration.showNotification(data.title || 'PlantãoPro', {
       body: data.body || '',
       icon: '/medico/icons/icon-192.png',
-      badge: '/medico/icons/icon-96.png',
+      badge: '/medico/icons/icon-badge.png',
       tag: data.tag || 'plantaopro',
       data: { url: data.url || '/medico/' },
       actions: data.actions || [],
