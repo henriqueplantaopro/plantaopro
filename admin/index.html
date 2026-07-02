@@ -7,15 +7,16 @@
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
 :root{
-  --bg:#f8f7f4;--bg2:#ffffff;--bg3:#f0ede8;
-  --text:#1a1a1a;--text2:#555;--text3:#999;
-  --border:#e0dbd2;--border2:#c8c2b8;
-  --blue:#1a5fad;--blue-bg:#e8f0fb;--blue-light:#f0f5ff;
-  --green:#2d7a3a;--green-bg:#e8f5eb;
-  --amber:#8a5500;--amber-bg:#fdf3e0;
-  --red:#b03030;--red-bg:#fdf0f0;
-  --purple:#5040a0;--purple-bg:#f0eeff;
-  --radius:8px;--radius-lg:12px;
+  --bg:#eef2f3;--bg2:#ffffff;--bg3:#e7edee;
+  --text:#0f2b30;--text2:#5b7077;--text3:#8aa0a6;
+  --border:#d8e0e2;--border2:#b9c7c9;
+  --blue:#0e5a63;--blue-bg:#e3f0f1;--blue-light:#f0f6f7;--blue-dark:#0a444b;
+  --green:#0a8f5b;--green-bg:#eafaf2;
+  --amber:#9a6212;--amber-bg:#fff8ec;
+  --red:#c0392b;--red-bg:#fdecea;
+  --purple:#566099;--purple-bg:#eef0f8;
+  --radius:10px;--radius-lg:14px;
+  --shadow:0 1px 2px rgba(15,43,48,.06),0 6px 18px rgba(15,43,48,.06);
 }
 body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);font-size:14px;}
 
@@ -30,7 +31,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 .login-field input{width:100%;padding:10px 12px;font-size:14px;border:1px solid var(--border);border-radius:var(--radius);outline:none;transition:border-color 0.15s;}
 .login-field input:focus{border-color:var(--blue);}
 .btn-login{width:100%;padding:12px;background:var(--blue);color:#fff;border:none;border-radius:var(--radius);font-size:15px;font-weight:600;cursor:pointer;margin-top:8px;}
-.btn-login:hover{background:#154d8f;}
+.btn-login:hover{background:#0a444b;}
 .login-erro{color:var(--red);font-size:13px;text-align:center;margin-top:10px;display:none;}
 
 /* LAYOUT */
@@ -70,10 +71,10 @@ input:focus,select:focus{border-color:var(--blue);}
 
 /* BOTÕES */
 .btn{padding:7px 16px;font-size:13px;font-weight:600;border-radius:var(--radius);cursor:pointer;font-family:inherit;transition:all 0.15s;border:1px solid transparent;display:inline-flex;align-items:center;gap:6px;}
-.btn-primary{background:var(--blue);color:#fff;}.btn-primary:hover{background:#154d8f;}
+.btn-primary{background:var(--blue);color:#fff;}.btn-primary:hover{background:#0a444b;}
 .btn-success{background:var(--green);color:#fff;}.btn-success:hover{background:#236130;}
 .btn-ghost{background:transparent;color:var(--text2);border-color:var(--border);}.btn-ghost:hover{background:var(--bg3);}
-.btn-danger{background:transparent;color:var(--red);border-color:#e8b8b8;font-size:12px;padding:4px 10px;}
+.btn-danger{background:transparent;color:var(--red);border-color:#efc9c3;font-size:12px;padding:4px 10px;}
 .btn-sm{padding:4px 10px;font-size:12px;}
 .btn-link{background:var(--blue-bg);color:var(--blue);border-color:var(--blue-bg);font-size:12px;padding:4px 10px;}
 
@@ -124,7 +125,7 @@ tr:hover td{background:var(--bg3);}
 .modal-rapido-body{flex:1;overflow-y:auto;padding:16px 20px;}
 .modal-rapido-footer{padding:12px 20px;border-top:1px solid var(--border);display:flex;gap:8px;flex-shrink:0;background:#fff;}
 .mr-preview{background:var(--bg3);border-radius:var(--radius);padding:8px 12px;font-size:12px;color:var(--text2);margin-top:8px;display:none;}
-.mr-sucesso{background:var(--green-bg);border:1px solid #a8d8b0;border-radius:var(--radius);padding:10px 12px;font-size:13px;color:var(--green);font-weight:600;margin-bottom:12px;display:none;}
+.mr-sucesso{background:var(--green-bg);border:1px solid #bfe3d3;border-radius:var(--radius);padding:10px 12px;font-size:13px;color:var(--green);font-weight:600;margin-bottom:12px;display:none;}
 .mr-tipo-btn{padding:10px 8px;border:2px solid var(--border);border-radius:var(--radius);background:#fff;font-size:13px;font-weight:500;cursor:pointer;color:var(--text2);transition:all 0.15s;text-align:center;width:100%;}
 .mr-tipo-btn:hover{border-color:var(--blue);color:var(--blue);background:var(--blue-light);}
 .mr-tipo-btn.active{border-color:var(--blue);background:var(--blue);color:#fff;font-weight:700;box-shadow:0 2px 8px rgba(26,95,173,0.3);}
@@ -204,7 +205,7 @@ tr:hover td{background:var(--bg3);}
   /* Escala por profissional */
   .escala-table{width:100%;border-collapse:collapse;min-width:800px;font-size:12px;}
   .escala-th{background:var(--blue);color:#fff;padding:8px 10px;text-align:center;font-size:11px;font-weight:600;white-space:nowrap;position:sticky;top:0;}
-  .escala-th-hoje{background:#0f3d7a;}
+  .escala-th-hoje{background:#0a444b;}
   .escala-td-med{padding:10px 12px;border-bottom:1px solid var(--border);white-space:nowrap;position:sticky;left:0;background:#fff;z-index:1;min-width:180px;border-right:2px solid var(--border);}
   .escala-td-med:hover{background:var(--bg3);}
   .escala-med-nome{font-size:12px;font-weight:600;color:var(--text);}
@@ -215,14 +216,14 @@ tr:hover td{background:var(--bg3);}
   .escala-chip.diurno{background:var(--green-bg);color:var(--green);border-left:3px solid var(--green);}
   .escala-chip.noturno{background:var(--purple-bg);color:var(--purple);border-left:3px solid var(--purple);}
   .escala-chip.h24{background:var(--amber-bg);color:var(--amber);border-left:3px solid var(--amber);}
-  .escala-chip.fds{background:#fce4ec;color:#c2185b;border-left:3px solid #c2185b;}
-  .escala-chip.confirmado::after{content:'✅';font-size:9px;margin-left:4px;}
+  .escala-chip.fds{background:#f4ecf1;color:#8a5273;border-left:3px solid #8a5273;}
+  .escala-chip.confirmado::after{content:'';font-size:9px;margin-left:4px;}
   .escala-add{display:flex;align-items:center;justify-content:center;width:100%;padding:4px;border:1.5px dashed var(--border2);border-radius:5px;background:transparent;cursor:pointer;color:var(--text3);font-size:16px;margin-top:2px;transition:all 0.15s;}
   .escala-add:hover{border-color:var(--blue);color:var(--blue);background:var(--blue-light);}
   /* Tooltip */
   .tooltip{position:fixed;background:#1a1a1a;color:#fff;padding:10px 13px;border-radius:8px;font-size:12px;line-height:1.6;z-index:9999;pointer-events:none;max-width:240px;box-shadow:0 4px 16px rgba(0,0,0,0.3);display:none;}
   .tooltip-row{display:flex;gap:6px;align-items:baseline;}
-  .tooltip-label{color:#aaa;font-size:10px;min-width:60px;}
+  .tooltip-label{color:#9fb2b6;font-size:10px;min-width:60px;}
   .tooltip-val{font-weight:600;}
   /* Lançamento em lote */
   .medico-row{display:grid;grid-template-columns:2fr 1fr 1fr 1fr 36px;gap:8px;align-items:center;padding:10px 12px;border-bottom:1px solid var(--border);transition:background 0.1s;}
@@ -234,9 +235,9 @@ tr:hover td{background:var(--bg3);}
   .medico-crm-lote{font-size:11px;color:var(--text3);font-family:monospace;}
   .lote-input{padding:5px 8px;font-size:12px;border:1px solid var(--border);border-radius:var(--radius);background:#fff;color:var(--text);width:100%;}
   .lote-input:focus{border-color:var(--blue);outline:none;}
-  .medico-row.selecionado .lote-input{border-color:#a0c4f0;}
-  .lote-resumo{background:var(--green-bg);border:1px solid #a8d8b0;border-radius:var(--radius);padding:10px 14px;font-size:13px;color:var(--green);font-weight:600;margin-bottom:14px;display:none;}
-  .lote-erros{background:var(--red-bg);border:1px solid #e8b8b8;border-radius:var(--radius);padding:10px 14px;font-size:12px;color:var(--red);margin-bottom:10px;display:none;}
+  .medico-row.selecionado .lote-input{border-color:#b7d2d6;}
+  .lote-resumo{background:var(--green-bg);border:1px solid #bfe3d3;border-radius:var(--radius);padding:10px 14px;font-size:13px;color:var(--green);font-weight:600;margin-bottom:14px;display:none;}
+  .lote-erros{background:var(--red-bg);border:1px solid #efc9c3;border-radius:var(--radius);padding:10px 14px;font-size:12px;color:var(--red);margin-bottom:10px;display:none;}
   .sel-all-row{display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--bg3);border-bottom:1px solid var(--border);font-size:12px;color:var(--text2);font-weight:500;}
   .busca-medico{width:100%;padding:8px 10px;font-size:13px;border:1px solid var(--border);border-radius:var(--radius);margin-bottom:10px;background:#fff;color:var(--text);}
   .busca-medico:focus{border-color:var(--blue);outline:none;}
@@ -245,7 +246,7 @@ tr:hover td{background:var(--bg3);}
   .sem-th{background:var(--blue);color:#fff;font-size:11px;font-weight:600;padding:8px 6px;text-align:center;position:sticky;top:0;}
   .sem-th-data{font-size:14px;font-weight:700;display:block;}
   .sem-th-dow{font-size:10px;opacity:0.8;text-transform:uppercase;letter-spacing:0.5px;}
-  .sem-th.hoje-col{background:#0f3d7a;}
+  .sem-th.hoje-col{background:#0a444b;}
   .sem-td{vertical-align:top;padding:4px;border:1px solid var(--border);min-width:120px;min-height:80px;}
   .sem-td.hoje-col{background:var(--blue-light);}
   .sem-card{background:#fff;border-radius:6px;padding:5px 7px;margin-bottom:4px;border-left:3px solid var(--green);font-size:11px;cursor:pointer;transition:opacity 0.15s;box-shadow:0 1px 3px rgba(0,0,0,0.08);}
@@ -259,7 +260,7 @@ tr:hover td{background:var(--bg3);}
   .sem-grupo{border-bottom:1px solid var(--border);}
   .sem-grupo:last-of-type{border-bottom:none;}
   .sem-grupo-label{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--text3);padding:4px 6px 2px;background:var(--bg3);border-bottom:1px solid var(--border);}
-  .sem-card{background:#fff;border-radius:0;padding:5px 20px 5px 8px;margin:0;border-left:3px solid var(--green);font-size:11px;cursor:pointer;box-shadow:none;border-bottom:1px solid #f0f0f0;}
+  .sem-card{background:#fff;border-radius:0;padding:5px 20px 5px 8px;margin:0;border-left:3px solid var(--green);font-size:11px;cursor:pointer;box-shadow:none;border-bottom:1px solid #e7edee;}
   .sem-card:last-child{border-bottom:none;}
   .sem-card:hover{background:var(--bg3);}
   .sem-card.noturno{border-left-color:var(--purple);}
@@ -273,7 +274,7 @@ tr:hover td{background:var(--bg3);}
   .sem-colar-btn{display:flex;align-items:center;justify-content:center;width:100%;padding:5px 6px;border:1.5px solid var(--amber);border-radius:6px;background:var(--amber-bg);cursor:pointer;color:var(--amber);font-size:11px;font-weight:600;transition:all 0.15s;margin-top:3px;gap:4px;}
   .sem-colar-btn:hover{background:var(--amber);color:#fff;}
   /* Plantões abertos */
-  .sem-card.aberto{background:repeating-linear-gradient(45deg,#fff8e1,#fff8e1 6px,#fffde7 6px,#fffde7 12px);border-left-color:var(--amber);border:1.5px dashed var(--amber);}
+  .sem-card.aberto{background:repeating-linear-gradient(45deg,#fdf6e8,#fdf6e8 6px,#fffcf4 6px,#fffcf4 12px);border-left-color:var(--amber);border:1.5px dashed var(--amber);}
   .sem-card.aberto .sem-card-nome{color:var(--amber);}
   .vaga-badge{display:inline-block;background:var(--amber);color:#fff;font-size:9px;font-weight:700;padding:1px 6px;border-radius:99px;margin-top:2px;}
   .vaga-badge.cheia{background:var(--green);}
@@ -298,7 +299,7 @@ tr:hover td{background:var(--bg3);}
   .mini-cal-day.hoje{border-color:var(--blue);color:var(--blue);font-weight:700;}
   .mini-cal-day.vazio{cursor:default;}
   .mini-cal-day.passado{opacity:0.35;cursor:default;}
-  .dia-selecionado-chip{display:inline-flex;align-items:center;gap:4px;background:var(--blue-light);color:var(--blue);border:1px solid #a0c4f0;border-radius:99px;padding:3px 10px;font-size:12px;font-weight:500;margin:3px;}
+  .dia-selecionado-chip{display:inline-flex;align-items:center;gap:4px;background:var(--blue-light);color:var(--blue);border:1px solid #b7d2d6;border-radius:99px;padding:3px 10px;font-size:12px;font-weight:500;margin:3px;}
   .dia-selecionado-chip button{background:none;border:none;cursor:pointer;color:var(--blue);font-size:14px;line-height:1;padding:0 0 0 2px;}
 
 
@@ -386,7 +387,7 @@ tr:hover td{background:var(--bg3);}
 <!-- TELA LOGIN -->
 <div id="tela-login">
   <div class="login-box">
-    <div class="login-logo">🏥</div>
+    <div class="login-logo" style="width:54px;height:54px;margin:0 auto 10px;background:var(--blue);color:#fff;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:800;">P</div>
     <div class="login-title">PlantãoPro</div>
     <div class="login-sub">Painel Administrativo</div>
     <div class="login-field"><label>E-mail</label><input id="l-email" type="email" placeholder="admin@email.com" value="admin@plantaoplus.com" onkeydown="if(event.key==='Enter')document.getElementById('l-senha').focus()"></div>
@@ -399,68 +400,68 @@ tr:hover td{background:var(--bg3);}
 <!-- SIDEBAR -->
 <div class="sidebar" id="sidebar" style="display:none;">
   <div class="sidebar-header">
-    <div class="sidebar-logo">🏥 PlantãoPro</div>
+    <div class="sidebar-logo">PlantãoPro</div>
     <div class="sidebar-sub">Painel Admin</div>
   </div>
   <nav class="sidebar-nav">
 
     <!-- Home -->
-    <div class="nav-item active" onclick="showTab('dashboard',this)" style="margin-bottom:2px;">📊 Dashboard</div>
+    <div class="nav-item active" onclick="showTab('dashboard',this)" style="margin-bottom:2px;">Dashboard</div>
 
     <!-- Calendário -->
-    <div class="nav-item" onclick="showTab('calendario',this)" style="margin-bottom:2px;">📅 Calendário</div>
+    <div class="nav-item" onclick="showTab('calendario',this)" style="margin-bottom:2px;">Calendário</div>
     <div class="nav-item" onclick="showTab('ausencias_ci',this);carregarAusenciasCI();">Ausência de check-in</div>
 
     <!-- Cadastros (colapsável) -->
     <div class="nav-group">
       <div class="nav-group-label" onclick="toggleNavGroup(this)">
-        <span class="nav-label-left">🗂️ Cadastros</span>
+        <span class="nav-label-left">Cadastros</span>
         <span class="nav-arrow">▶</span>
       </div>
       <div class="nav-group-items">
-        <div class="nav-item" onclick="showTab('medicos',this)">👨‍⚕️ Médicos</div>
+        <div class="nav-item" onclick="showTab('medicos',this)">Médicos</div>
         <div class="nav-item" onclick="showTab('convites',this);carregarConvites();">Convidar médico</div>
-        <div class="nav-item" onclick="showTab('projetos',this)">📁 Projetos</div>
-        <div class="nav-item" onclick="showTab('tipos',this)">⚙️ Tipos de plantão</div>
+        <div class="nav-item" onclick="showTab('projetos',this)">Projetos</div>
+        <div class="nav-item" onclick="showTab('tipos',this)">Tipos de plantão</div>
       </div>
     </div>
 
     <!-- Lançamentos (colapsável) -->
     <div class="nav-group">
       <div class="nav-group-label" onclick="toggleNavGroup(this)">
-        <span class="nav-label-left">📋 Lançamentos</span>
+        <span class="nav-label-left">Lançamentos</span>
         <span class="nav-arrow">▶</span>
       </div>
       <div class="nav-group-items">
-        <div class="nav-item" onclick="showTab('lancamentos',this)">📋 Lançamentos</div>
-        <div class="nav-item" onclick="showTab('lote',this)">⚡ Em lote</div>
+        <div class="nav-item" onclick="showTab('lancamentos',this)">Lançamentos</div>
+        <div class="nav-item" onclick="showTab('lote',this)">Em lote</div>
       </div>
     </div>
 
     <!-- Operacional (itens soltos sem grupo) -->
-    <div class="nav-item" onclick="showTab('checkins',this)">📍 Check-ins</div>
-    <div class="nav-item" onclick="showTab('candidaturas',this)">📢 Plantões abertos <span id="badge-cand" style="display:none;background:var(--red);color:#fff;font-size:9px;font-weight:700;border-radius:99px;padding:1px 5px;margin-left:4px;"></span></div>
-    <div class="nav-item" onclick="showTab('relatorios',this)">📈 Relatórios</div>
-    <div class="nav-item" onclick="showTab('financeiro',this)">💰 Financeiro</div>
+    <div class="nav-item" onclick="showTab('checkins',this)">Check-ins</div>
+    <div class="nav-item" onclick="showTab('candidaturas',this)">Plantões abertos <span id="badge-cand" style="display:none;background:var(--red);color:#fff;font-size:9px;font-weight:700;border-radius:99px;padding:1px 5px;margin-left:4px;"></span></div>
+    <div class="nav-item" onclick="showTab('relatorios',this)">Relatórios</div>
+    <div class="nav-item" onclick="showTab('financeiro',this)">Financeiro</div>
 
     <!-- Importar/Exportar (colapsável) -->
     <div class="nav-group">
       <div class="nav-group-label" onclick="toggleNavGroup(this)">
-        <span class="nav-label-left">🔄 Importar / Exportar</span>
+        <span class="nav-label-left">Importar / Exportar</span>
         <span class="nav-arrow">▶</span>
       </div>
       <div class="nav-group-items">
-        <div class="nav-item" onclick="showTab('importar',this)">📥 Importar planilha</div>
-        <div class="nav-item" onclick="showTab('exportar',this)">📤 Exportar relatório</div>
+        <div class="nav-item" onclick="showTab('importar',this)">Importar planilha</div>
+        <div class="nav-item" onclick="showTab('exportar',this)">Exportar relatório</div>
       </div>
     </div>
 
     <!-- Secundários — colados ao rodapé -->
     <div style="margin-top:auto;border-top:1px solid var(--border);padding-top:4px;">
-      <div class="nav-item nav-item-small" onclick="showTab('lotemed',this)">📆 Agenda por médico</div>
-      <div class="nav-item nav-item-small" onclick="showTab('escala',this)">👥 Escala por profissional</div>
-      <div class="nav-item nav-item-small" id="nav-usuarios" style="display:none;" onclick="showTab('usuarios',this)">👤 Usuários</div>
-      <div class="nav-item nav-item-small" id="nav-log" style="display:none;" onclick="showTab('log',this)">📋 Log de atividades</div>
+      <div class="nav-item nav-item-small" onclick="showTab('lotemed',this)">Agenda por médico</div>
+      <div class="nav-item nav-item-small" onclick="showTab('escala',this)">Escala por profissional</div>
+      <div class="nav-item nav-item-small" id="nav-usuarios" style="display:none;" onclick="showTab('usuarios',this)">Usuários</div>
+      <div class="nav-item nav-item-small" id="nav-log" style="display:none;" onclick="showTab('log',this)">Log de atividades</div>
     </div>
 
   </nav>
@@ -470,7 +471,7 @@ tr:hover td{background:var(--bg3);}
       <div id="admin-nome" style="font-weight:600;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"></div>
       <div id="sidebar-perfil-badge" style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.5px;"></div>
     </div>
-    <span style="color:var(--text3);font-size:12px;">⚙</span>
+    <span style="color:var(--text3);font-size:12px;"></span>
   </div>
 </div>
 
@@ -478,7 +479,7 @@ tr:hover td{background:var(--bg3);}
 <div class="main" id="main" style="display:none;">
   <!-- Barra de cópia ativa -->
   <div id="barra-copiado">
-    <span>📋 <span id="barra-copiado-txt">Plantão copiado</span> — clique em 📌 Colar em qualquer dia da semana</span>
+    <span><span id="barra-copiado-txt">Plantão copiado</span> — clique em Colar em qualquer dia da semana</span>
     <button onclick="cancelarCopia()">✕ Cancelar cópia</button>
   </div>
 
@@ -492,7 +493,7 @@ tr:hover td{background:var(--bg3);}
       <div class="card" style="border-left:4px solid var(--red);background:var(--red-bg);padding:14px 18px;">
         <div style="display:flex;align-items:center;justify-content:space-between;">
           <div>
-            <div style="font-size:13px;font-weight:700;color:var(--red);">⚠️ Plantões sem confirmação — próximas 48h</div>
+            <div style="font-size:13px;font-weight:700;color:var(--red);">Plantões sem confirmação — próximas 48h</div>
             <div style="font-size:12px;color:var(--text2);margin-top:4px;">Médicos que ainda não confirmaram presença</div>
           </div>
           <div style="font-size:32px;font-weight:700;color:var(--red);" id="dash-furos-count">0</div>
@@ -549,7 +550,7 @@ tr:hover td{background:var(--bg3);}
 
       <!-- KPIs do painel -->
       <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:12px;" id="pc-kpis">
-        <div class="card pc-kpi pc-kpi-total" style="padding:14px 16px;background:#0f3d7a;color:#fff;border:none;">
+        <div class="card pc-kpi pc-kpi-total" style="padding:14px 16px;background:#0a444b;color:#fff;border:none;">
           <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;color:rgba(255,255,255,0.7);margin-bottom:6px;">Custo Total</div>
           <div style="font-size:22px;font-weight:700;line-height:1.15;letter-spacing:-0.4px;color:#fff;font-variant-numeric:tabular-nums;" id="pc-total">—</div>
           <div style="font-size:11px;color:rgba(255,255,255,0.7);margin-top:3px;" id="pc-total-meta">Realizado + Previsto</div>
@@ -577,7 +578,7 @@ tr:hover td{background:var(--bg3);}
       </div>
 
       <!-- Aviso de faltas sem cobertura -->
-      <div id="pc-aviso" style="display:none;background:var(--amber-bg);border:1px solid #f0c060;border-left:3px solid var(--amber);border-radius:5px;padding:10px 14px;font-size:13px;color:var(--amber);margin-bottom:12px;">
+      <div id="pc-aviso" style="display:none;background:var(--amber-bg);border:1px solid #e3cfa6;border-left:3px solid var(--amber);border-radius:5px;padding:10px 14px;font-size:13px;color:var(--amber);margin-bottom:12px;">
         <span style="font-weight:600;">Atenção:</span>
         <span id="pc-aviso-msg">—</span>
       </div>
@@ -631,7 +632,7 @@ tr:hover td{background:var(--bg3);}
     <!-- FILTRO DOS GRÁFICOS -->
     <div class="card" style="padding:12px 16px;margin-bottom:16px;">
       <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
-        <span style="font-size:13px;font-weight:600;color:var(--text2);">📊 Gráficos — período:</span>
+        <span style="font-size:13px;font-weight:600;color:var(--text2);">Gráficos — período:</span>
         <input type="date" id="graf-d1" style="padding:5px 8px;border:1px solid var(--border);border-radius:var(--radius);font-size:13px;">
         <span style="font-size:13px;color:var(--text3);">até</span>
         <input type="date" id="graf-d2" style="padding:5px 8px;border:1px solid var(--border);border-radius:var(--radius);font-size:13px;">
@@ -643,11 +644,11 @@ tr:hover td{background:var(--bg3);}
     <!-- GRÁFICOS linha 1 -->
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
       <div class="card">
-        <div class="card-title">💰 Custo por projeto</div>
+        <div class="card-title">Custo por projeto</div>
         <div style="position:relative;height:280px;"><canvas id="graf-proj"></canvas></div>
       </div>
       <div class="card">
-        <div class="card-title">⏱️ Top 10 médicos — horas trabalhadas</div>
+        <div class="card-title">⏱Top 10 médicos — horas trabalhadas</div>
         <div style="position:relative;height:280px;"><canvas id="graf-horas"></canvas></div>
       </div>
     </div>
@@ -655,14 +656,14 @@ tr:hover td{background:var(--bg3);}
     <!-- GRÁFICOS linha 2 -->
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
       <div class="card">
-        <div class="card-title">✅ Pontualidade — check-ins</div>
+        <div class="card-title">Pontualidade — check-ins</div>
         <div style="display:flex;align-items:center;justify-content:center;gap:24px;">
           <div style="position:relative;height:220px;width:220px;"><canvas id="graf-pontual"></canvas></div>
           <div id="graf-pontual-legend" style="font-size:13px;"></div>
         </div>
       </div>
       <div class="card">
-        <div class="card-title">📋 Status dos plantões — próximos 7 dias</div>
+        <div class="card-title">Status dos plantões — próximos 7 dias</div>
         <div style="display:flex;align-items:center;justify-content:center;gap:24px;">
           <div style="position:relative;height:220px;width:220px;"><canvas id="graf-status"></canvas></div>
           <div id="graf-status-legend" style="font-size:13px;"></div>
@@ -689,9 +690,8 @@ tr:hover td{background:var(--bg3);}
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
       <div class="page-title" style="margin-bottom:0;">Médicos</div>
       <div style="display:flex;gap:8px;">
-        <button class="btn btn-ghost btn-sm" onclick="exportarMedicosXLSX()">⬇ Exportar Excel</button>
-        <label class="btn btn-ghost btn-sm" style="cursor:pointer;" title="Importar médicos via Excel">
-          ⬆ Importar Excel
+        <button class="btn btn-ghost btn-sm" onclick="exportarMedicosXLSX()">Exportar Excel</button>
+        <label class="btn btn-ghost btn-sm" style="cursor:pointer;" title="Importar médicos via Excel"> Importar Excel
           <input type="file" id="import-med-file" accept=".xlsx,.xls" style="display:none;" onchange="importarMedicosXLSX_v2(event)">
         </label>
       </div>
@@ -784,12 +784,10 @@ tr:hover td{background:var(--bg3);}
         <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--text2);margin-bottom:10px;">Dados bancários</div>
         <div class="form-row" style="margin-bottom:10px;">
           <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;margin-bottom:0;">
-            <input type="radio" name="mn-pessoa" value="pf" checked onchange="togglePessoaBancario('novo',this.value)">
-            Pessoa física (CPF)
+            <input type="radio" name="mn-pessoa" value="pf" checked onchange="togglePessoaBancario('novo',this.value)"> Pessoa física (CPF)
           </label>
           <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;margin-bottom:0;">
-            <input type="radio" name="mn-pessoa" value="pj" onchange="togglePessoaBancario('novo',this.value)">
-            Pessoa jurídica (CNPJ)
+            <input type="radio" name="mn-pessoa" value="pj" onchange="togglePessoaBancario('novo',this.value)"> Pessoa jurídica (CNPJ)
           </label>
         </div>
         <div id="mn-pj-row" style="display:none;">
@@ -840,33 +838,33 @@ tr:hover td{background:var(--bg3);}
           <div class="form-group">
             <label>Documento de identidade (RG / CNH)</label>
             <div class="upload-doc-slot" onclick="triggerDocUpload('mn-doc-id')">
-              <span id="mn-doc-id-label">📎 Clique para anexar</span>
+              <span id="mn-doc-id-label">Clique para anexar</span>
               <input type="file" id="mn-doc-id" accept=".pdf,.jpg,.jpeg,.png" style="display:none;" onchange="previewDocLabel('mn-doc-id')">
             </div>
           </div>
           <div class="form-group">
             <label>CRM (carteira / certidão)</label>
             <div class="upload-doc-slot" onclick="triggerDocUpload('mn-doc-crm')">
-              <span id="mn-doc-crm-label">📎 Clique para anexar</span>
+              <span id="mn-doc-crm-label">Clique para anexar</span>
               <input type="file" id="mn-doc-crm" accept=".pdf,.jpg,.jpeg,.png" style="display:none;" onchange="previewDocLabel('mn-doc-crm')">
             </div>
           </div>
           <div class="form-group">
             <label>RQE (se aplicável)</label>
             <div class="upload-doc-slot" onclick="triggerDocUpload('mn-doc-rqe')">
-              <span id="mn-doc-rqe-label">📎 Clique para anexar</span>
+              <span id="mn-doc-rqe-label">Clique para anexar</span>
               <input type="file" id="mn-doc-rqe" accept=".pdf,.jpg,.jpeg,.png" style="display:none;" onchange="previewDocLabel('mn-doc-rqe')">
             </div>
           </div>
           <div class="form-group">
             <label>Título de especialista</label>
             <div class="upload-doc-slot" onclick="triggerDocUpload('mn-doc-titulo')">
-              <span id="mn-doc-titulo-label">📎 Clique para anexar</span>
+              <span id="mn-doc-titulo-label">Clique para anexar</span>
               <input type="file" id="mn-doc-titulo" accept=".pdf,.jpg,.jpeg,.png" style="display:none;" onchange="previewDocLabel('mn-doc-titulo')">
             </div>
           </div>
         </div>
-        <div style="font-size:11px;color:var(--text3);margin-top:6px;">⚠️ Os documentos ficam armazenados no Supabase Storage. Certifique-se de que o bucket <code>medico-docs</code> existe com política de acesso privado.</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:6px;">Os documentos ficam armazenados no Supabase Storage. Certifique-se de que o bucket <code>medico-docs</code> existe com política de acesso privado.</div>
       </div>
 
       <!-- PROJETOS VINCULADOS -->
@@ -881,7 +879,7 @@ tr:hover td{background:var(--bg3);}
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
         <div class="card-title" style="margin-bottom:0;">Médicos cadastrados</div>
         <div style="position:relative;width:280px;">
-          <input id="med-busca" type="text" placeholder="🔍 Buscar por nome ou CRM..."
+          <input id="med-busca" type="text" placeholder="Buscar por nome ou CRM..."
             oninput="filtrarMedicosLista()"
             style="width:100%;padding:7px 30px 7px 10px;border:1px solid var(--border);border-radius:var(--radius);font-size:13px;">
           <span id="med-busca-clear" onclick="limparBuscaMedicos()"
@@ -910,7 +908,7 @@ tr:hover td{background:var(--bg3);}
           <div class="form-group"><label>Valor noturno 12h (R$)</label><input id="pvaln" type="text" placeholder="1.800,00"></div>
           <div class="form-group"><label>Valor sobreaviso (R$)</label><input id="pvalsob" type="text" placeholder="900,00"></div>
         </div>
-        <div style="font-size:12px;color:var(--text3);">💡 Esses valores serão sugeridos automaticamente ao lançar plantões neste projeto.</div>
+        <div style="font-size:12px;color:var(--text3);">Esses valores serão sugeridos automaticamente ao lançar plantões neste projeto.</div>
       </div>
       <!-- GPS -->
       <div class="form-row four">
@@ -919,7 +917,7 @@ tr:hover td{background:var(--bg3);}
         <div class="form-group"><label>Raio check-in (m)</label><input id="praio" type="number" value="100" placeholder="100"></div>
         <div class="form-group"><label>Contrato</label><input id="pnc" type="text" placeholder="CTR-2024-001"></div>
       </div>
-      <div style="font-size:12px;color:var(--text3);margin-bottom:10px;">💡 GPS: abra o Google Maps, clique com botão direito no hospital e copie as coordenadas.</div>
+      <div style="font-size:12px;color:var(--text3);margin-bottom:10px;">GPS: abra o Google Maps, clique com botão direito no hospital e copie as coordenadas.</div>
       <button class="btn btn-primary" onclick="addProjeto()">+ Adicionar projeto</button>
     </div>
     <div class="card"><div class="card-title">Projetos cadastrados</div><div id="projetos-lista"><div class="empty">Carregando...</div></div></div>
@@ -1017,7 +1015,7 @@ tr:hover td{background:var(--bg3);}
     <!-- Seleção de médicos -->
     <div class="card">
       <div class="card-title">2. Selecionar médicos</div>
-      <input class="busca-medico" id="lote-busca" type="text" placeholder="🔍 Buscar médico por nome..." oninput="filtrarMedicosLote()">
+      <input class="busca-medico" id="lote-busca" type="text" placeholder="Buscar médico por nome..." oninput="filtrarMedicosLote()">
       <div style="border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;">
         <div class="sel-all-row">
           <input type="checkbox" class="medico-check" id="lote-sel-all" onchange="selecionarTodosLote(this.checked)">
@@ -1061,7 +1059,7 @@ tr:hover td{background:var(--bg3);}
         <div style="display:flex;gap:6px;align-items:flex-end;">
           <button class="btn btn-primary btn-sm" id="filtro-todos" onclick="filtrarStatusCand('todos',this)">Todos</button>
           <button class="btn btn-ghost btn-sm" id="filtro-pendentes" onclick="filtrarStatusCand('pendente',this)">⏳ Pendentes</button>
-          <button class="btn btn-ghost btn-sm" id="filtro-abertos" onclick="filtrarStatusCand('aberto',this)">📢 Abertos</button>
+          <button class="btn btn-ghost btn-sm" id="filtro-abertos" onclick="filtrarStatusCand('aberto',this)">Abertos</button>
         </div>
       </div>
     </div>
@@ -1076,8 +1074,8 @@ tr:hover td{background:var(--bg3);}
 
     <!-- SUB-ABAS -->
     <div style="display:flex;gap:6px;margin-bottom:16px;">
-      <button class="btn btn-primary" id="ci-tab-presenca" onclick="switchCiTab('presenca')">📋 Presença do dia</button>
-      <button class="btn btn-ghost" id="ci-tab-historico" onclick="switchCiTab('historico')">🕐 Histórico de check-ins</button>
+      <button class="btn btn-primary" id="ci-tab-presenca" onclick="switchCiTab('presenca')">Presença do dia</button>
+      <button class="btn btn-ghost" id="ci-tab-historico" onclick="switchCiTab('historico')">Histórico de check-ins</button>
     </div>
 
     <!-- ABA PRESENÇA -->
@@ -1193,8 +1191,8 @@ tr:hover td{background:var(--bg3);}
 
     <!-- Sub-abas -->
     <div style="display:flex;gap:6px;margin-bottom:16px;">
-      <button class="btn btn-primary" id="cal-tab-mensal" onclick="switchCalTab('mensal')">📅 Mensal</button>
-      <button class="btn btn-ghost" id="cal-tab-semanal" onclick="switchCalTab('semanal')">📋 Semanal</button>
+      <button class="btn btn-primary" id="cal-tab-mensal" onclick="switchCalTab('mensal')">Mensal</button>
+      <button class="btn btn-ghost" id="cal-tab-semanal" onclick="switchCalTab('semanal')">Semanal</button>
     </div>
 
     <!-- FILTROS compartilhados -->
@@ -1216,9 +1214,9 @@ tr:hover td{background:var(--bg3);}
             <button class="btn btn-ghost btn-sm" onclick="navCal(1)">Próximo ›</button>
           </div>
           <div class="cal-legend">
-            <span><span class="cal-legend-dot" style="background:#e8f5eb;"></span>Diurno</span>
+            <span><span class="cal-legend-dot" style="background:#eafaf2;"></span>Diurno</span>
             <span><span class="cal-legend-dot" style="background:#f0eeff;"></span>Noturno</span>
-            <span><span class="cal-legend-dot" style="background:#fdf3e0;"></span>24h</span>
+            <span><span class="cal-legend-dot" style="background:#fff8ec;"></span>24h</span>
           </div>
         </div>
         <div id="cal-filtro-badge" style="font-size:12px;color:var(--blue);margin-bottom:8px;display:none;"></div>
@@ -1245,7 +1243,7 @@ tr:hover td{background:var(--bg3);}
             <button class="btn btn-ghost btn-sm" onclick="irSemanaAtual()">Hoje</button>
           </div>
           <div style="display:flex;gap:8px;">
-            <button class="btn btn-success" onclick="copiarSemana()" title="Copia todos os plantões desta semana para a próxima">📋 Copiar semana</button>
+            <button class="btn btn-success" onclick="copiarSemana()" title="Copia todos os plantões desta semana para a próxima">Copiar semana</button>
           </div>
         </div>
         <div id="sem-grid" style="overflow-x:auto;"></div>
@@ -1271,7 +1269,7 @@ tr:hover td{background:var(--bg3);}
         <p style="font-size:13px;color:var(--text2);margin-bottom:14px;">Colunas: <code>nome · crm · especialidade · valor_hora · tipo · cpf</code><br><span style="font-size:12px;color:var(--text3);">Obrigatórias: nome, crm</span></p>
         <div class="upload-zone" onclick="document.getElementById('file-upload-med').click()">
           <input type="file" id="file-upload-med" accept=".csv" onchange="handleUploadMed(this)" style="display:none;">
-          <div style="font-size:28px;margin-bottom:8px;">📂</div>
+          <div style="font-size:28px;margin-bottom:8px;"></div>
           <div style="font-size:14px;font-weight:600;color:var(--text);">Clique para selecionar CSV de médicos</div>
           <div style="font-size:12px;color:var(--text3);margin-top:4px;">Separador ; ou , · UTF-8 ou ANSI</div>
         </div>
@@ -1286,7 +1284,7 @@ tr:hover td{background:var(--bg3);}
         <p style="font-size:13px;color:var(--text2);margin-bottom:14px;">Planilha inteligente: <code>hospital · setor · tipo_plantao · hora_inicio · hora_fim · valor</code> — cria hospital, setor e tipo automaticamente se não existirem.</p>
         <div class="upload-zone" onclick="document.getElementById('file-upload-proj').click()">
           <input type="file" id="file-upload-proj" accept=".csv,.xlsx,.xls" onchange="handleUploadProj(this)" style="display:none;">
-          <div style="font-size:28px;margin-bottom:8px;">📂</div>
+          <div style="font-size:28px;margin-bottom:8px;"></div>
           <div style="font-size:14px;font-weight:600;color:var(--text);">Clique para selecionar CSV de projetos</div>
           <div style="font-size:12px;color:var(--text3);margin-top:4px;">Separador ; ou , · UTF-8 ou ANSI</div>
         </div>
@@ -1300,11 +1298,11 @@ tr:hover td{background:var(--bg3);}
         <div class="card-title">Importar tipos de plantão</div>
         <p style="font-size:13px;color:var(--text2);margin-bottom:14px;">Colunas: <code>projeto · nome · hora_ini · hora_fim · valor · setor</code></p>
         <div class="upload-area" onclick="document.getElementById('file-upload-tipos').click()">
-          <div>📎 Clique para selecionar arquivo CSV ou Excel</div>
+          <div>Clique para selecionar arquivo CSV ou Excel</div>
           <input type="file" id="file-upload-tipos" accept=".csv,.xlsx,.xls" style="display:none;" onchange="handleUploadTipos(this)">
         </div>
         <div style="margin-top:10px;">
-          <button class="btn btn-ghost btn-sm" onclick="downloadModeloTipos()">⬇ Baixar modelo Excel</button>
+          <button class="btn btn-ghost btn-sm" onclick="downloadModeloTipos()">Baixar modelo Excel</button>
         </div>
         <div id="import-preview-tipos"></div>
       </div>
@@ -1318,7 +1316,7 @@ tr:hover td{background:var(--bg3);}
         <p style="font-size:12px;color:var(--text3);margin-bottom:14px;">Opcionais: <code>tipo · setor · obs · codigo_totvs</code> — O médico e projeto são identificados pelo <strong>nome</strong> (deve estar cadastrado no sistema)</p>
         <div class="upload-zone" onclick="document.getElementById('file-upload-lanc').click()">
           <input type="file" id="file-upload-lanc" accept=".csv" onchange="handleUploadLanc(this)" style="display:none;">
-          <div style="font-size:28px;margin-bottom:8px;">📂</div>
+          <div style="font-size:28px;margin-bottom:8px;"></div>
           <div style="font-size:14px;font-weight:600;color:var(--text);">Clique para selecionar CSV de lançamentos</div>
           <div style="font-size:12px;color:var(--text3);margin-top:4px;">Separador ; ou , · UTF-8 ou ANSI</div>
         </div>
@@ -1330,7 +1328,7 @@ tr:hover td{background:var(--bg3);}
     <div class="card">
       <div class="card-title">Modelos Excel</div>
       <p style="font-size:13px;color:var(--text2);margin-bottom:12px;">Baixe o modelo com abas Médicos, Projetos e <strong>Lançamentos</strong> já formatadas.</p>
-      <button class="btn btn-success" onclick="downloadModeloExcel()">⬇ Baixar modelo Excel (.xlsx)</button>
+      <button class="btn btn-success" onclick="downloadModeloExcel()">Baixar modelo Excel (.xlsx)</button>
     </div>
   </div>
 
@@ -1426,8 +1424,8 @@ tr:hover td{background:var(--bg3);}
         <span><span style="display:inline-block;width:10px;height:10px;background:var(--green-bg);border-left:3px solid var(--green);border-radius:2px;margin-right:4px;"></span>Diurno</span>
         <span><span style="display:inline-block;width:10px;height:10px;background:var(--purple-bg);border-left:3px solid var(--purple);border-radius:2px;margin-right:4px;"></span>Noturno</span>
         <span><span style="display:inline-block;width:10px;height:10px;background:var(--amber-bg);border-left:3px solid var(--amber);border-radius:2px;margin-right:4px;"></span>24h</span>
-        <span><span style="display:inline-block;width:10px;height:10px;background:#fce4ec;border-left:3px solid #c2185b;border-radius:2px;margin-right:4px;"></span>Fim de semana</span>
-        <span style="margin-left:8px;color:var(--text3);">✅ = confirmado pelo médico</span>
+        <span><span style="display:inline-block;width:10px;height:10px;background:#f4ecf1;border-left:3px solid #8a5273;border-radius:2px;margin-right:4px;"></span>Fim de semana</span>
+        <span style="margin-left:8px;color:var(--text3);">= confirmado pelo médico</span>
       </div>
     </div>
 
@@ -1446,7 +1444,7 @@ tr:hover td{background:var(--bg3);}
 
     <!-- Sub-abas -->
     <div style="display:flex;gap:0;border-bottom:2px solid var(--border);margin-bottom:16px;">
-      <button id="fin-tab-lista" class="btn btn-ghost" onclick="finShowTab('lista',this)" style="border-radius:var(--radius) var(--radius) 0 0;border-bottom:2px solid var(--blue);color:var(--blue);font-weight:600;">📋 Fechamentos</button>
+      <button id="fin-tab-lista" class="btn btn-ghost" onclick="finShowTab('lista',this)" style="border-radius:var(--radius) var(--radius) 0 0;border-bottom:2px solid var(--blue);color:var(--blue);font-weight:600;">Fechamentos</button>
       <button id="fin-tab-novo" class="btn btn-ghost" onclick="finShowTab('novo',this)" style="border-radius:var(--radius) var(--radius) 0 0;">+ Novo fechamento</button>
     </div>
 
@@ -1502,9 +1500,9 @@ tr:hover td{background:var(--bg3);}
       <hr>
       <div style="font-size:12px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px;">Formato de exportação</div>
       <div class="export-btns">
-        <button class="btn btn-success" onclick="exportarXLSX()">⬇ Excel (XLSX)</button>
-        <button class="btn btn-primary" onclick="exportarCSV()">⬇ CSV</button>
-        <button class="btn btn-amber" onclick="exportarPDF()">⬇ PDF</button>
+        <button class="btn btn-success" onclick="exportarXLSX()">Excel (XLSX)</button>
+        <button class="btn btn-primary" onclick="exportarCSV()">CSV</button>
+        <button class="btn btn-amber" onclick="exportarPDF()">PDF</button>
         <button class="btn btn-ghost" onclick="previewExport()">Pré-visualizar</button>
       </div>
     </div>
@@ -1514,7 +1512,7 @@ tr:hover td{background:var(--bg3);}
 
   <!-- TELA: USUÁRIOS -->
   <div id="tab-usuarios" class="section" style="display:none;">
-    <div class="page-title">👤 Usuários</div>
+    <div class="page-title">Usuários</div>
     <div class="page-sub" style="color:var(--text3);margin-bottom:20px;">Gerencie os acessos da sua equipe</div>
 
     <!-- Formulário novo usuário -->
@@ -1569,7 +1567,7 @@ tr:hover td{background:var(--bg3);}
 
   <!-- TELA: LOG DE ATIVIDADES -->
   <div id="tab-log" class="section" style="display:none;">
-    <div class="page-title">📋 Log de atividades</div>
+    <div class="page-title">Log de atividades</div>
     <div class="page-sub" style="color:var(--text3);margin-bottom:20px;">Histórico de todas as alterações no sistema</div>
     <div class="card" style="margin-bottom:16px;">
       <div class="form-row">
@@ -1585,7 +1583,7 @@ tr:hover td{background:var(--bg3);}
             <option value="">Todas</option>
             <option value="criar">Criações</option>
             <option value="editar">Edições</option>
-            <option value="excluir">Exclusões ⚠️</option>
+            <option value="excluir">Exclusões </option>
             <option value="login">Logins</option>
           </select>
         </div>
@@ -1610,24 +1608,20 @@ tr:hover td{background:var(--bg3);}
     <!-- Cabeçalho com título + botão Sair -->
     <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px;">
       <div>
-        <div class="page-title">⚙️ Configurações da conta</div>
+        <div class="page-title">Configurações da conta</div>
         <div class="page-sub" style="color:var(--text3);margin-bottom:0;">Gerencie seus dados, plano e acesso</div>
       </div>
-      <button onclick="confirmarLogout()" style="background:#fff;border:1.5px solid var(--red);color:var(--red);padding:8px 16px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:6px;transition:all 0.15s;" onmouseenter="this.style.background='var(--red)';this.style.color='#fff'" onmouseleave="this.style.background='#fff';this.style.color='var(--red)'">
-        🚪 Sair
+      <button onclick="confirmarLogout()" style="background:#fff;border:1.5px solid var(--red);color:var(--red);padding:8px 16px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:6px;transition:all 0.15s;" onmouseenter="this.style.background='var(--red)';this.style.color='#fff'" onmouseleave="this.style.background='#fff';this.style.color='var(--red)'"> Sair
       </button>
     </div>
 
     <!-- Abas internas -->
     <div class="perfil-tabs" style="display:flex;gap:4px;border-bottom:2px solid var(--border);margin:20px 0 24px;">
-      <div class="perfil-tab active" id="perfil-tab-empresa" onclick="switchPerfilTab('empresa', this)" style="padding:10px 18px;cursor:pointer;font-size:13px;font-weight:600;color:var(--text);border-bottom:2px solid var(--blue);margin-bottom:-2px;transition:all 0.15s;">
-        🏢 Dados da empresa
+      <div class="perfil-tab active" id="perfil-tab-empresa" onclick="switchPerfilTab('empresa', this)" style="padding:10px 18px;cursor:pointer;font-size:13px;font-weight:600;color:var(--text);border-bottom:2px solid var(--blue);margin-bottom:-2px;transition:all 0.15s;"> Dados da empresa
       </div>
-      <div class="perfil-tab" id="perfil-tab-usuario" onclick="switchPerfilTab('usuario', this)" style="padding:10px 18px;cursor:pointer;font-size:13px;font-weight:500;color:var(--text2);border-bottom:2px solid transparent;margin-bottom:-2px;transition:all 0.15s;">
-        👤 Dados do usuário
+      <div class="perfil-tab" id="perfil-tab-usuario" onclick="switchPerfilTab('usuario', this)" style="padding:10px 18px;cursor:pointer;font-size:13px;font-weight:500;color:var(--text2);border-bottom:2px solid transparent;margin-bottom:-2px;transition:all 0.15s;"> Dados do usuário
       </div>
-      <div class="perfil-tab" id="perfil-tab-plano" onclick="switchPerfilTab('plano', this)" style="padding:10px 18px;cursor:pointer;font-size:13px;font-weight:500;color:var(--text2);border-bottom:2px solid transparent;margin-bottom:-2px;transition:all 0.15s;">
-        💎 Plano e cobrança
+      <div class="perfil-tab" id="perfil-tab-plano" onclick="switchPerfilTab('plano', this)" style="padding:10px 18px;cursor:pointer;font-size:13px;font-weight:500;color:var(--text2);border-bottom:2px solid transparent;margin-bottom:-2px;transition:all 0.15s;"> Plano e cobrança
       </div>
     </div>
 
@@ -1646,7 +1640,7 @@ tr:hover td{background:var(--bg3);}
           </div>
         </div>
         <div style="display:flex;justify-content:flex-end;margin-top:16px;">
-          <button class="btn btn-primary" onclick="salvarPerfil()">💾 Salvar dados da empresa</button>
+          <button class="btn btn-primary" onclick="salvarPerfil()">Salvar dados da empresa</button>
         </div>
       </div>
     </div>
@@ -1691,7 +1685,7 @@ tr:hover td{background:var(--bg3);}
           </div>
         </div>
         <div style="display:flex;justify-content:flex-end;margin-top:16px;">
-          <button class="btn btn-primary" onclick="salvarPerfil()">💾 Salvar meus dados</button>
+          <button class="btn btn-primary" onclick="salvarPerfil()">Salvar meus dados</button>
         </div>
       </div>
     </div>
@@ -1710,10 +1704,9 @@ tr:hover td{background:var(--bg3);}
               <span style="font-size:13px;font-weight:600;color:var(--text);" id="toggle-upgrade-label">Upgrade automático de plano</span>
             </label>
           </div>
-          <button onclick="mostrarInfoUpgrade()" style="background:none;border:1px solid var(--border);border-radius:6px;padding:4px 10px;font-size:12px;color:var(--text2);cursor:pointer;white-space:nowrap;">ℹ️ Mais informações</button>
+          <button onclick="mostrarInfoUpgrade()" style="background:none;border:1px solid var(--border);border-radius:6px;padding:4px 10px;font-size:12px;color:var(--text2);cursor:pointer;white-space:nowrap;">ℹMais informações</button>
         </div>
-        <div id="upgrade-info-box" style="display:none;background:#fffbf0;border:1px solid #f0c060;border-radius:8px;padding:12px 14px;font-size:13px;color:var(--text2);line-height:1.6;margin:-8px 0 16px;">
-          Quando o número de profissionais cadastrados ultrapassar o limite do seu plano atual, o sistema realiza o upgrade automaticamente para o próximo plano e ajusta a cobrança mensal.
+        <div id="upgrade-info-box" style="display:none;background:#fffcf4;border:1px solid #e3cfa6;border-radius:8px;padding:12px 14px;font-size:13px;color:var(--text2);line-height:1.6;margin:-8px 0 16px;"> Quando o número de profissionais cadastrados ultrapassar o limite do seu plano atual, o sistema realiza o upgrade automaticamente para o próximo plano e ajusta a cobrança mensal.
         </div>
 
         <!-- Lista de planos (cards lado a lado) -->
@@ -1727,7 +1720,7 @@ tr:hover td{background:var(--bg3);}
         </div>
 
         <div style="display:flex;justify-content:flex-end;margin-top:20px;">
-          <button class="btn btn-primary" id="btn-salvar-plano" onclick="salvarAlteracoesPlano()">💾 Salvar alterações no plano</button>
+          <button class="btn btn-primary" id="btn-salvar-plano" onclick="salvarAlteracoesPlano()">Salvar alterações no plano</button>
         </div>
       </div>
     </div>
@@ -1742,8 +1735,8 @@ tr:hover td{background:var(--bg3);}
     <p style="font-size:13px;color:var(--text2);margin-bottom:12px;">Envie este link por WhatsApp para o médico. Ele abre o app direto no celular, sem precisar de senha.</p>
     <div class="link-box" id="link-medico"></div>
     <div style="margin-top:12px;display:flex;gap:8px;">
-      <button class="btn btn-primary" onclick="copiarLink()">📋 Copiar link</button>
-      <button class="btn btn-success" onclick="abrirWhatsapp()">📱 Enviar WhatsApp</button>
+      <button class="btn btn-primary" onclick="copiarLink()">Copiar link</button>
+      <button class="btn btn-success" onclick="abrirWhatsapp()">Enviar WhatsApp</button>
     </div>
     <div class="modal-footer"><button class="btn btn-ghost" onclick="document.getElementById('modal-link').classList.remove('open')">Fechar</button></div>
   </div>
@@ -1764,7 +1757,7 @@ tr:hover td{background:var(--bg3);}
       <div class="form-group" style="margin-bottom:10px;">
         <label>Médicos <span id="mr-med-count" style="color:var(--blue);font-weight:600;font-size:11px;"></span></label>
         <div style="display:flex;gap:6px;margin-bottom:6px;">
-          <input type="text" id="mr-med-busca" placeholder="🔍 Buscar médico..." oninput="filtrarMedMR()" style="flex:1;padding:7px 10px;border:1px solid var(--border);border-radius:var(--radius);font-size:13px;">
+          <input type="text" id="mr-med-busca" placeholder="Buscar médico..." oninput="filtrarMedMR()" style="flex:1;padding:7px 10px;border:1px solid var(--border);border-radius:var(--radius);font-size:13px;">
           <select id="mr-esp-filtro" onchange="filtrarMedMR()" style="padding:7px 10px;border:1px solid var(--border);border-radius:var(--radius);font-size:12px;max-width:160px;">
             <option value="">Todas especialidades</option>
             <option value="Clínica Geral / Emergência">Clínica Geral / Emergência</option>
@@ -1829,10 +1822,10 @@ tr:hover td{background:var(--bg3);}
               </select>
             </div>
             <div id="mr-tipos-btns-wrap" style="display:contents;">
-              <button type="button" id="mr-btn-diurno" data-tipo="Diurno 12h" data-horas="12" data-ini="07:00" onclick="selecionarTipoRapido(this)">☀️ Diurno 12h</button>
-              <button type="button" id="mr-btn-noturno" data-tipo="Noturno 12h" data-horas="12" data-ini="19:00" onclick="selecionarTipoRapido(this)">🌙 Noturno 12h</button>
-              <button type="button" id="mr-btn-24h" data-tipo="24h" data-horas="24" data-ini="07:00" onclick="selecionarTipoRapido(this)">🔄 Plantão 24h</button>
-              <button type="button" id="mr-btn-custom" data-tipo="Personalizado" data-horas="0" data-ini="" onclick="selecionarTipoRapido(this)">✏️ Personalizado</button>
+              <button type="button" id="mr-btn-diurno" data-tipo="Diurno 12h" data-horas="12" data-ini="07:00" onclick="selecionarTipoRapido(this)">Diurno 12h</button>
+              <button type="button" id="mr-btn-noturno" data-tipo="Noturno 12h" data-horas="12" data-ini="19:00" onclick="selecionarTipoRapido(this)">Noturno 12h</button>
+              <button type="button" id="mr-btn-24h" data-tipo="24h" data-horas="24" data-ini="07:00" onclick="selecionarTipoRapido(this)">Plantão 24h</button>
+              <button type="button" id="mr-btn-custom" data-tipo="Personalizado" data-horas="0" data-ini="" onclick="selecionarTipoRapido(this)">Personalizado</button>
             </div>
           </div>
         </div>
@@ -1881,7 +1874,7 @@ tr:hover td{background:var(--bg3);}
           <div class="form-group">
             <label>Horário de início</label>
             <input id="mr-ini-fixo" type="time" value="07:00" disabled style="background:var(--bg3);color:var(--text2);">
-            <span style="font-size:11px;color:var(--text3);margin-top:3px;display:block;">⚑ Horário fixo para este tipo</span>
+            <span style="font-size:11px;color:var(--text3);margin-top:3px;display:block;">Horário fixo para este tipo</span>
           </div>
           <div class="form-group">
      
@@ -1889,7 +1882,7 @@ tr:hover td{background:var(--bg3);}
       </div>
 
       <!-- Preview calculado -->
-      <div id="mr-horario-calc" style="background:var(--blue-light);border:1px solid #a0c4f0;border-radius:var(--radius);padding:8px 12px;font-size:12px;color:var(--blue);margin-bottom:10px;display:none;">
+      <div id="mr-horario-calc" style="background:var(--blue-light);border:1px solid #b7d2d6;border-radius:var(--radius);padding:8px 12px;font-size:12px;color:var(--blue);margin-bottom:10px;display:none;">
         <span id="mr-horario-calc-txt"></span>
       </div>
       <div class="form-group" style="margin-bottom:10px;">
@@ -1909,9 +1902,9 @@ tr:hover td{background:var(--bg3);}
       <div style="border-top:1px solid var(--border);padding-top:10px;margin-top:4px;">
         <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;">
           <input type="checkbox" id="mr-aberto" onchange="toggleAberto()" style="width:16px;height:16px;accent-color:var(--amber);">
-          <span>📢 Publicar como plantão aberto (sem médico vinculado)</span>
+          <span>Publicar como plantão aberto (sem médico vinculado)</span>
         </label>
-        <div id="mr-aberto-opts" style="display:none;margin-top:10px;padding:10px;background:var(--amber-bg);border-radius:var(--radius);border:1px solid #f0c060;">
+        <div id="mr-aberto-opts" style="display:none;margin-top:10px;padding:10px;background:var(--amber-bg);border-radius:var(--radius);border:1px solid #e3cfa6;">
 <div style="margin-top:10px;"><label style="font-size:11px;font-weight:600;color:var(--text2);display:block;margin-bottom:6px;">PÚBLICO-ALVO</label><div style="display:flex;gap:8px;flex-wrap:wrap;"><label style="cursor:pointer;font-size:13px;"><input type="radio" name="mr-publico" value="projeto" checked onchange="onMrPublicoChange(this.value)"> Médicos do projeto</label><label style="cursor:pointer;font-size:13px;"><input type="radio" name="mr-publico" value="ufs" onchange="onMrPublicoChange(this.value)"> Por estado (UF)</label><label style="cursor:pointer;font-size:13px;"><input type="radio" name="mr-publico" value="geral" onchange="onMrPublicoChange(this.value)"> Público geral</label></div><div id="mr-ufs-row" style="display:none;margin-top:8px;"><div id="mr-ufs-select" style="display:flex;flex-wrap:wrap;gap:4px;"></div></div><label style="cursor:pointer;margin-top:8px;display:block;font-size:13px;"><input type="checkbox" id="mr-exige-rqe" onchange="onExigeRQEChange()"> Exige RQE</label></div>
           <div class="form-group">
             <label style="color:var(--amber);">Número de vagas</label>
@@ -1931,22 +1924,22 @@ tr:hover td{background:var(--bg3);}
 
 <!-- MENU DE CONTEXTO — Calendário semanal -->
 <div class="ctx-menu" id="ctx-menu">
-  <div class="ctx-item" id="ctx-editar" onclick="ctxEditar()" style="display:none;">✏️ Editar plantão</div>
-  <div class="ctx-item" id="ctx-copiar" onclick="ctxCopiar()">📋 Copiar plantão</div>
+  <div class="ctx-item" id="ctx-editar" onclick="ctxEditar()" style="display:none;">Editar plantão</div>
+  <div class="ctx-item" id="ctx-copiar" onclick="ctxCopiar()">Copiar plantão</div>
   <div class="ctx-sep"></div>
-  <div class="ctx-item" id="ctx-colar" onclick="ctxColar()" style="display:none;">📌 Colar aqui</div>
+  <div class="ctx-item" id="ctx-colar" onclick="ctxColar()" style="display:none;">Colar aqui</div>
   <div class="ctx-item" id="ctx-colar-dia" style="font-size:11px;color:var(--text3);padding:4px 14px;cursor:default;display:none;"></div>
   <div class="ctx-sep" id="ctx-sep-colar" style="display:none;"></div>
   <div class="ctx-item" onclick="ctxNovoPlantao()">+ Novo plantão</div>
   <div class="ctx-sep" id="ctx-sep-remover"></div>
-  <div class="ctx-item danger" id="ctx-remover" onclick="ctxRemover()" style="display:none;">🗑️ Remover plantão</div>
+  <div class="ctx-item danger" id="ctx-remover" onclick="ctxRemover()" style="display:none;">Remover plantão</div>
 </div>
 
 <!-- MODAL EDITAR MÉDICO -->
 <div class="modal-overlay" id="modal-editar-med" onclick="if(event.target===this)fecharEditarMedico()">
   <div class="modal" style="max-width:680px;">
     <div class="modal-header">
-      <div class="modal-title">✏️ Editar médico</div>
+      <div class="modal-title">Editar médico</div>
       <button class="modal-close" onclick="fecharEditarMedico()">✕</button>
     </div>
     <div class="form-row">
@@ -2090,7 +2083,7 @@ tr:hover td{background:var(--bg3);}
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="fecharEditarMedico()">Cancelar</button>
-      <button class="btn btn-primary" onclick="salvarEdicaoMedico()">💾 Salvar alterações</button>
+      <button class="btn btn-primary" onclick="salvarEdicaoMedico()">Salvar alterações</button>
     </div>
   </div>
 </div>
@@ -2109,18 +2102,17 @@ tr:hover td{background:var(--bg3);}
         <label style="font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:0.4px;display:block;margin-bottom:5px;">E-mail cadastrado</label>
         <input id="esqueci-admin-email" type="email" placeholder="admin@hospital.com" style="width:100%;padding:10px 12px;font-size:14px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;outline:none;box-sizing:border-box;">
       </div>
-      <div id="esqueci-admin-erro" style="display:none;background:#fdf0f0;color:var(--red);font-size:12px;padding:8px 12px;border-radius:6px;margin-bottom:12px;border:1px solid #f0b8b8;"></div>
+      <div id="esqueci-admin-erro" style="display:none;background:#fdecea;color:var(--red);font-size:12px;padding:8px 12px;border-radius:6px;margin-bottom:12px;border:1px solid #f0b8b8;"></div>
       <div style="display:flex;gap:8px;">
         <button onclick="fecharEsqueciSenhaAdmin()" style="flex:1;padding:11px;background:#fff;border:1.5px solid var(--border);border-radius:8px;font-size:13px;cursor:pointer;font-family:inherit;color:var(--text2);">Cancelar</button>
         <button onclick="enviarEsqueciSenhaAdmin()" id="btn-esqueci-admin" style="flex:1;padding:11px;background:var(--blue);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">Enviar solicitação</button>
       </div>
     </div>
     <div id="esqueci-admin-ok" style="display:none;text-align:center;padding:8px 0;">
-      <div style="font-size:36px;margin-bottom:12px;">✉️</div>
+      <div style="font-size:36px;margin-bottom:12px;"></div>
       <div style="font-size:15px;font-weight:700;margin-bottom:8px;">Solicitação enviada!</div>
       <p style="font-size:13px;color:var(--text2);line-height:1.6;margin-bottom:16px;">Nossa equipe entrará em contato em até <strong>1 dia útil</strong> com as instruções para redefinir sua senha.</p>
-      <div style="background:#fdf3e0;border:1px solid #f0c060;border-radius:8px;padding:12px;font-size:12px;color:var(--amber);margin-bottom:18px;">
-        Ou entre em contato: <strong>suporte@plantaopro.com.br</strong>
+      <div style="background:#fff8ec;border:1px solid #e3cfa6;border-radius:8px;padding:12px;font-size:12px;color:var(--amber);margin-bottom:18px;"> Ou entre em contato: <strong>suporte@plantaopro.com.br</strong>
       </div>
       <button onclick="fecharEsqueciSenhaAdmin()" style="width:100%;padding:11px;background:var(--blue);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;">Fechar</button>
     </div>
@@ -2229,7 +2221,7 @@ async function posLoginAdmin(admin) {
   } else if (assinatura.status === 'pendente') {
     _assinaturaAtiva = assinatura;
     _planoConfig = PLANOS_CONFIG[assinatura.plano] || PLANOS_CONFIG['starter'];
-    toast('⚠️ Pagamento pendente — acesso temporário ativo por 3 dias', true);
+    toast('Pagamento pendente — acesso temporário ativo por 3 dias', true);
   } else {
     _assinaturaAtiva = assinatura;
     _planoConfig = PLANOS_CONFIG[assinatura.plano] || PLANOS_CONFIG['starter'];
@@ -2304,17 +2296,15 @@ function mostrarTelaAssinaturaVencida(assinatura) {
   const venc = assinatura.vencimento ? new Date(assinatura.vencimento+'T12:00:00').toLocaleDateString('pt-BR') : '—';
   document.getElementById('tela-login').innerHTML = `
     <div class="login-box" style="max-width:460px;text-align:center;">
-      <div style="font-size:48px;margin-bottom:12px;">🔒</div>
+      <div style="font-size:48px;margin-bottom:12px;"></div>
       <div style="font-size:20px;font-weight:700;color:var(--red);margin-bottom:8px;">Acesso suspenso</div>
-      <div style="font-size:14px;color:var(--text2);line-height:1.6;margin-bottom:20px;">
-        Sua assinatura <strong>PlantãoPro ${(assinatura.plano||'').toUpperCase()}</strong> venceu em <strong>${venc}</strong>.
+      <div style="font-size:14px;color:var(--text2);line-height:1.6;margin-bottom:20px;"> Sua assinatura <strong>PlantãoPro ${(assinatura.plano||'').toUpperCase()}</strong> venceu em <strong>${venc}</strong>.
         <br>Renove para reativar o acesso ao painel.
       </div>
-      <div style="background:#fdf3e0;border:1px solid #f0c060;border-radius:8px;padding:14px;font-size:13px;color:var(--amber);margin-bottom:20px;text-align:left;">
-        <strong>⚠️ Seus dados estão seguros.</strong> Nenhum dado foi excluído. O acesso é restaurado automaticamente assim que o pagamento for confirmado.
+      <div style="background:#fff8ec;border:1px solid #e3cfa6;border-radius:8px;padding:14px;font-size:13px;color:var(--amber);margin-bottom:20px;text-align:left;">
+        <strong>Seus dados estão seguros.</strong> Nenhum dado foi excluído. O acesso é restaurado automaticamente assim que o pagamento for confirmado.
       </div>
-      <a href="https://plantaopro-pi.vercel.app/admin/renovar/" style="display:block;width:100%;padding:14px;background:var(--blue);color:#fff;border-radius:8px;font-size:15px;font-weight:700;text-decoration:none;margin-bottom:10px;">
-        💳 Renovar assinatura agora
+      <a href="https://plantaopro-pi.vercel.app/admin/renovar/" style="display:block;width:100%;padding:14px;background:var(--blue);color:#fff;border-radius:8px;font-size:15px;font-weight:700;text-decoration:none;margin-bottom:10px;"> Renovar assinatura agora
       </a>
       <button onclick="location.reload()" style="background:none;border:none;color:var(--text3);font-size:13px;cursor:pointer;">← Tentar novamente</button>
     </div>`;
@@ -2331,13 +2321,13 @@ function aplicarRestricoesDePlano() {
   if (navFinanceiro && !cfg.financeiro) {
     navFinanceiro.style.opacity = '0.4';
     navFinanceiro.style.cursor = 'not-allowed';
-    navFinanceiro.onclick = () => toast('💎 Módulo Financeiro disponível a partir do plano Pro', true);
+    navFinanceiro.onclick = () => toast('Módulo Financeiro disponível a partir do plano Pro', true);
     navFinanceiro.title = 'Disponível no plano Pro+';
   }
   if (navExportar && !cfg.exportarTotvs) {
     navExportar.style.opacity = '0.4';
     navExportar.style.cursor = 'not-allowed';
-    navExportar.onclick = () => toast('💎 Exportar TOTVS disponível a partir do plano Pro', true);
+    navExportar.onclick = () => toast('Exportar TOTVS disponível a partir do plano Pro', true);
   }
 
   // Mostrar badge do plano no sidebar
@@ -2358,7 +2348,7 @@ function aplicarRestricoesDePlano() {
     const pct = Math.round(pico / limite * 100);
     if (pct >= 80) {
       setTimeout(() => {
-        toast(`⚠️ Atenção: você usou ${pico} de ${limite} profissionais do seu plano (${pct}%). Considere fazer upgrade.`, true);
+        toast(`Atenção: você usou ${pico} de ${limite} profissionais do seu plano (${pct}%). Considere fazer upgrade.`, true);
       }, 3000);
     }
   }
@@ -2478,7 +2468,7 @@ async function carregarDashboard() {
       <td>${c.medicos?.nome||''}</td>
       <td>${c.projetos?.nome||''}</td>
       <td>${new Date(c.feito_em).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}</td>
-      <td>${c.aprovado?'<span class="checkin-ok">✅ Aprovado</span>':'<span class="checkin-fail">❌ Fora do raio</span>'}</td>
+      <td>${c.aprovado?'<span class="checkin-ok">Aprovado</span>':'<span class="checkin-fail">Fora do raio</span>'}</td>
     </tr>`).join('') + '</tbody></table>' : '<div class="empty">Nenhum check-in hoje</div>';
   // Calcular alertas de furos
   calcularFurosDash();
@@ -2697,8 +2687,7 @@ async function carregarPainelCustos() {
         <td style="padding:11px 18px;text-align:right;font-variant-numeric:tabular-nums;color:var(--amber);">${fBRL(p.previsto)}</td>
         <td style="padding:11px 18px;text-align:right;font-variant-numeric:tabular-nums;${p.slots > 0 ? 'color:var(--amber);font-weight:600;' : 'color:var(--text3);'}">${p.slots}</td>
         <td style="padding:11px 18px;text-align:right;font-variant-numeric:tabular-nums;${p.faltas > 0 ? 'color:var(--red);font-weight:600;' : 'color:var(--text3);'}">${p.faltas}</td>
-      </tr>
-    `).join('');
+      </tr> `).join('');
     document.getElementById('pc-foot-total').textContent     = fBRL(custoTotal);
     document.getElementById('pc-foot-realizado').textContent = fBRL(custoRealizado);
     document.getElementById('pc-foot-previsto').textContent  = fBRL(custoPrevisto);
@@ -2734,8 +2723,7 @@ function renderMedicos(filtro='') {
   if (!medicos.length) { el.innerHTML = '<div class="empty">Nenhum médico cadastrado.</div>'; return; }
 
   const lista = filtro
-    ? medicos.filter(m =>
-        m.nome.toLowerCase().includes(filtro.toLowerCase()) ||
+    ? medicos.filter(m => m.nome.toLowerCase().includes(filtro.toLowerCase()) ||
         (m.crm||'').toLowerCase().includes(filtro.toLowerCase()) ||
         (m.especialidade||'').toLowerCase().includes(filtro.toLowerCase()) ||
         (m.cpf||'').includes(filtro)
@@ -2775,9 +2763,9 @@ function renderMedicos(filtro='') {
         <td><span class="badge badge-blue">${m.tipo}</span></td>
         <td style="font-family:monospace;">${fBRL(m.valor_hora||0)}</td>
         <td style="font-size:12px;">${devStatus}${devReset?'<br>'+devReset:''}</td>
-        <td><button class="btn btn-link" onclick="verLinkMedico('${m.token_acesso}','${m.nome}','${m.telefone||''}')">📱 Link</button></td>
+        <td><button class="btn btn-link" onclick="verLinkMedico('${m.token_acesso}','${m.nome}','${m.telefone||''}')">Link</button></td>
         <td style="white-space:nowrap;">
-          <button class="btn btn-ghost btn-sm" onclick="abrirEditarMedico('${m.id}')">✏️ Editar</button>
+          <button class="btn btn-ghost btn-sm" onclick="abrirEditarMedico('${m.id}')">Editar</button>
           <button class="btn btn-ghost btn-sm" onclick="resetSenhaMedico('${m.id}')">Redefinir senha</button>
           <button class="btn btn-danger btn-sm" onclick="delMedico('${m.id}')">Remover</button>
         </td>
@@ -2885,7 +2873,7 @@ async function importarMedicosXLSX(event) {
   // Resumo antes de confirmar
   let msg = `Atualizar ${paraAtualizar.length} médico(s) pelo nome exato?`;
   if (naoEncontrados.length > 0) {
-    msg += `\n\n⚠️ ${naoEncontrados.length} nome(s) NÃO encontrado(s) no sistema (serão ignorados):\n` +
+    msg += `\n\n${naoEncontrados.length} nome(s) NÃO encontrado(s) no sistema (serão ignorados):\n` +
       naoEncontrados.slice(0,10).join('\n') +
       (naoEncontrados.length > 10 ? `\n... e mais ${naoEncontrados.length-10}` : '');
   }
@@ -2904,7 +2892,7 @@ async function importarMedicosXLSX(event) {
 
   event.target.value='';
 
-  let resultado = `✅ ${ok} médico(s) atualizados com sucesso!`;
+  let resultado = `${ok} médico(s) atualizados com sucesso!`;
   if (erros > 0) resultado += ` · ${erros} erro(s).`;
   if (naoEncontrados.length > 0) resultado += ` · ${naoEncontrados.length} nome(s) não encontrado(s) foram ignorados.`;
   toast(resultado);
@@ -2946,8 +2934,7 @@ function abrirEditarMedico(id) {
   if (elProj) {
     elProj.innerHTML = sortedProjetos().map(p => `
       <label style="display:flex;align-items:center;gap:5px;font-size:12px;background:var(--bg3);padding:4px 10px;border-radius:99px;cursor:pointer;border:1px solid ${projVinc.includes(p.id)?'var(--blue)':'var(--border)'};">
-        <input type="checkbox" class="em-proj-chk" value="${p.id}" ${projVinc.includes(p.id)?'checked':''} style="accent-color:var(--blue);">
-        ${p.nome}
+        <input type="checkbox" class="em-proj-chk" value="${p.id}" ${projVinc.includes(p.id)?'checked':''} style="accent-color:var(--blue);"> ${p.nome}
       </label>`).join('');
   }
 
@@ -3017,7 +3004,7 @@ async function salvarEdicaoMedico() {
       body: JSON.stringify(payload)
     });
     if (res.ok) {
-      toast('✅ Médico atualizado!');
+      toast('Médico atualizado!');
       fecharEditarMedico();
       await carregarMedicos();
     } else {
@@ -3025,7 +3012,7 @@ async function salvarEdicaoMedico() {
       toast('Erro ao salvar: ' + err.slice(0,80), true);
     }
   } catch(e) { toast('Erro de conexão', true); }
-  if (btn) { btn.disabled = false; btn.textContent = '💾 Salvar alterações'; }
+  if (btn) { btn.disabled = false; btn.textContent = 'Salvar alterações'; }
 }
 
 async function resetarDispositivo(id, nome) {
@@ -3056,7 +3043,7 @@ function copiarLink() {
 }
 
 function abrirWhatsapp() {
-  const msg = encodeURIComponent(`Olá Dr(a). ${linkMedicoAtual.nome}! 👋\n\nAcesse seu app de plantões pelo link abaixo:\n${linkMedicoAtual.link}\n\nSalve na tela inicial do seu celular para acessar mais fácil! 📱`);
+  const msg = encodeURIComponent(`Olá Dr(a). ${linkMedicoAtual.nome}! \n\nAcesse seu app de plantões pelo link abaixo:\n${linkMedicoAtual.link}\n\nSalve na tela inicial do seu celular para acessar mais fácil! `);
   const tel = linkMedicoAtual.tel.replace(/\D/g,'');
   const url = tel ? `https://wa.me/55${tel}?text=${msg}` : `https://wa.me/?text=${msg}`;
   window.open(url, '_blank');
@@ -3078,7 +3065,7 @@ function renderProjetos() {
         <td style="font-family:monospace;">${p.codigo_cc||'—'}</td>
         <td>${p.contratante||'—'}</td>
         <td style="font-size:12px;color:var(--green);">${rem.length?rem.join('<br>'):'<span style="color:var(--text3);">Não configurada</span>'}</td>
-        <td style="font-size:11px;font-family:monospace;">${p.latitude&&p.longitude?'✅ OK':'<span style="color:var(--amber);">⚠ Sem GPS</span>'}</td>
+        <td style="font-size:11px;font-family:monospace;">${p.latitude&&p.longitude?'OK':'<span style="color:var(--amber);">Sem GPS</span>'}</td>
         <td><span class="badge badge-${p.status==='Ativo'?'green':p.status==='Encerrado'?'red':'amber'}">${p.status}</span></td>
         <td><button class="btn btn-danger" <button class="btn btn-ghost btn-sm" onclick="abrirModalSetores('${p.id}', '${p.nome}')">&#9881; Setores</button> <button onclick="delProjeto('${p.id}')">Remover</button></td>
       </tr>`;
@@ -3280,26 +3267,26 @@ async function carregarPresenca() {
 
       if (atrasado) {
         totalAtrasado++;
-        statusHtml = `<span style="color:var(--amber);font-weight:600;">⚠️ Check-in às ${horaFmt} (${diffTxt} do início)</span>`;
+        statusHtml = `<span style="color:var(--amber);font-weight:600;">Check-in às ${horaFmt} (${diffTxt} do início)</span>`;
         statusClass = 'amber';
       } else {
         totalPresente++;
-        statusHtml = `<span style="color:var(--green);font-weight:600;">✅ Presente às ${horaFmt} (${diffTxt})</span>`;
+        statusHtml = `<span style="color:var(--green);font-weight:600;">Presente às ${horaFmt} (${diffTxt})</span>`;
         statusClass = 'green';
       }
     } else {
       // Plantão já deveria ter começado?
       if (agora > limite15) {
         totalAusente++;
-        statusHtml = `<span style="color:var(--red);font-weight:600;">❌ Ausente — sem check-in</span>`;
+        statusHtml = `<span style="color:var(--red);font-weight:600;">Ausente — sem check-in</span>`;
         statusClass = 'red';
       } else {
         totalPendente++;
         const faltaMin = Math.round((inicioPlan - agora) / 60000);
         const faltaTxt = faltaMin > 0 ? `em ${faltaMin}min` : 'agora';
         const confTxt = confirmado
-          ? `<span style="color:var(--green);font-size:11px;"> · ✅ Confirmou presença</span>`
-          : `<span style="color:var(--amber);font-size:11px;"> · ⚠️ Não confirmou</span>`;
+          ? `<span style="color:var(--green);font-size:11px;"> · Confirmou presença</span>`
+          : `<span style="color:var(--amber);font-size:11px;"> · Não confirmou</span>`;
         statusHtml = `<span style="color:var(--text3);">⏳ Plantão inicia ${faltaTxt}</span>${confTxt}`;
         statusClass = 'gray';
       }
@@ -3307,7 +3294,7 @@ async function carregarPresenca() {
 
     const turno  = l.tipo?.includes('Noturno') ? 'Noturno' : l.tipo?.includes('24') ? '24h' : 'Diurno';
     const badge  = turno==='Noturno' ? 'badge-purple' : turno==='24h' ? 'badge-amber' : 'badge-green';
-    const bgRow  = statusClass==='red' ? 'background:#fff8f8;' : statusClass==='amber' ? 'background:#fffbf0;' : '';
+    const bgRow  = statusClass==='red' ? 'background:#fff8f8;' : statusClass==='amber' ? 'background:#fffcf4;' : '';
 
     return `<tr style="${bgRow}">
       <td>
@@ -3329,15 +3316,15 @@ async function carregarPresenca() {
   resumoEl.style.gap = '10px';
   resumoEl.innerHTML = `
     <div class="metric" style="border-left:3px solid var(--green);">
-      <div class="metric-label">✅ Presentes</div>
+      <div class="metric-label">Presentes</div>
       <div class="metric-val" style="color:var(--green);">${totalPresente}</div>
     </div>
     <div class="metric" style="border-left:3px solid var(--amber);">
-      <div class="metric-label">⚠️ Atrasados (+15min)</div>
+      <div class="metric-label">Atrasados (+15min)</div>
       <div class="metric-val" style="color:var(--amber);">${totalAtrasado}</div>
     </div>
     <div class="metric" style="border-left:3px solid var(--red);">
-      <div class="metric-label">❌ Ausentes</div>
+      <div class="metric-label">Ausentes</div>
       <div class="metric-val" style="color:var(--red);">${totalAusente}</div>
     </div>
     <div class="metric" style="border-left:3px solid var(--text3);">
@@ -3367,7 +3354,7 @@ async function carregarCheckins() {
       <td style="font-family:monospace;">${new Date(c.feito_em).toLocaleString('pt-BR')}</td>
       <td>${c.medicos?.nome||'—'}</td><td>${c.projetos?.nome||'—'}</td>
       <td style="font-family:monospace;">${c.distancia_metros}m</td>
-      <td>${c.aprovado?'<span class="checkin-ok">✅ Aprovado</span>':'<span class="checkin-fail">❌ Fora do raio</span>'}</td>
+      <td>${c.aprovado?'<span class="checkin-ok">Aprovado</span>':'<span class="checkin-fail">Fora do raio</span>'}</td>
     </tr>`).join('')+'</tbody></table>';
 }
 
@@ -3438,14 +3425,14 @@ function exportarPDF() {
     const grupos=Object.values(pd.grupos).sort((a,b)=>a.medico.localeCompare(b.medico,'pt-BR'));
     const projTotal=grupos.reduce((s,g)=>s+g.total,0), projQtd=grupos.reduce((s,g)=>s+g.qtd,0);
     return `<div class="proj-block">
-      <div class="proj-header"><span class="proj-nome">📁 ${proj.toUpperCase()}</span><span class="proj-meta">${projQtd} plantão(ões) · <strong>${fBRL(projTotal)}</strong></span></div>
+      <div class="proj-header"><span class="proj-nome">${proj.toUpperCase()}</span><span class="proj-meta">${projQtd} plantão(ões) · <strong>${fBRL(projTotal)}</strong></span></div>
       <table><thead><tr><th>Médico / CRM</th><th>Horas/plantão</th><th>Turno</th><th>Setor</th><th>Qtd</th><th>Total</th></tr></thead>
-      <tbody>${grupos.map(g=>`<tr><td><strong>${g.medico}</strong><br><span style="font-size:9px;color:#999;">${g.crm}</span></td><td>${g.horas}h</td><td><span class="badge badge-${g.turno==='Noturno'?'p':g.turno==='24h'?'a':'g'}">${g.turno}</span></td><td>${g.setor||'—'}</td><td style="text-align:center;">${g.qtd}</td><td style="text-align:right;color:#2d7a3a;font-weight:700;">${fBRL(Math.round(g.total*100)/100)}</td></tr>`).join('')}</tbody>
-      <tfoot><tr><td colspan="4"><strong>Total do projeto</strong></td><td style="text-align:center;"><strong>${projQtd}</strong></td><td style="text-align:right;color:#2d7a3a;font-weight:700;"><strong>${fBRL(projTotal)}</strong></td></tr></tfoot>
+      <tbody>${grupos.map(g=>`<tr><td><strong>${g.medico}</strong><br><span style="font-size:9px;color:#8aa0a6;">${g.crm}</span></td><td>${g.horas}h</td><td><span class="badge badge-${g.turno==='Noturno'?'p':g.turno==='24h'?'a':'g'}">${g.turno}</span></td><td>${g.setor||'—'}</td><td style="text-align:center;">${g.qtd}</td><td style="text-align:right;color:#0a8f5b;font-weight:700;">${fBRL(Math.round(g.total*100)/100)}</td></tr>`).join('')}</tbody>
+      <tfoot><tr><td colspan="4"><strong>Total do projeto</strong></td><td style="text-align:center;"><strong>${projQtd}</strong></td><td style="text-align:right;color:#0a8f5b;font-weight:700;"><strong>${fBRL(projTotal)}</strong></td></tr></tfoot>
       </table></div>`;
   }).join('');
   const html=`<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>Relatório</title>
-  <style>*{box-sizing:border-box;margin:0;padding:0;}body{font-family:Arial,sans-serif;font-size:11px;padding:24px;}h1{font-size:16px;font-weight:700;margin-bottom:3px;}.sub{font-size:10px;color:#777;margin-bottom:16px;}.summary{background:#f5f5f5;padding:10px 14px;border-radius:6px;margin-bottom:18px;font-size:12px;}.proj-block{margin-bottom:18px;page-break-inside:avoid;}.proj-header{display:flex;justify-content:space-between;background:#fdf6e3;border-left:4px solid #e6a817;padding:8px 12px;border-radius:4px 4px 0 0;}.proj-nome{font-size:12px;font-weight:700;}.proj-meta{font-size:11px;color:#555;}table{width:100%;border-collapse:collapse;}th{background:#1a5fad;color:#fff;font-size:9px;padding:5px 8px;text-align:left;}td{padding:6px 8px;border-bottom:0.5px solid #e0e0e0;font-size:10px;}tfoot td{border-top:2px solid #ccc;background:#f5f5f5;font-weight:700;}tr:nth-child(even) td{background:#fafafa;}.badge{display:inline-block;padding:1px 6px;border-radius:10px;font-size:9px;font-weight:700;}.badge-g{background:#e8f5eb;color:#2d7a3a;}.badge-p{background:#f0eeff;color:#5040a0;}.badge-a{background:#fdf3e0;color:#8a5500;}.footer{margin-top:18px;font-size:9px;color:#aaa;border-top:0.5px solid #e0e0e0;padding-top:8px;text-align:right;}@page{margin:1.5cm;}
+  <style>*{box-sizing:border-box;margin:0;padding:0;}body{font-family:Arial,sans-serif;font-size:11px;padding:24px;}h1{font-size:16px;font-weight:700;margin-bottom:3px;}.sub{font-size:10px;color:#777;margin-bottom:16px;}.summary{background:#f2f5f5;padding:10px 14px;border-radius:6px;margin-bottom:18px;font-size:12px;}.proj-block{margin-bottom:18px;page-break-inside:avoid;}.proj-header{display:flex;justify-content:space-between;background:#fdf6e3;border-left:4px solid #e6a817;padding:8px 12px;border-radius:4px 4px 0 0;}.proj-nome{font-size:12px;font-weight:700;}.proj-meta{font-size:11px;color:#555;}table{width:100%;border-collapse:collapse;}th{background:#0e5a63;color:#fff;font-size:9px;padding:5px 8px;text-align:left;}td{padding:6px 8px;border-bottom:0.5px solid #d8e0e2;font-size:10px;}tfoot td{border-top:2px solid #ccc;background:#f2f5f5;font-weight:700;}tr:nth-child(even) td{background:#fbfcfc;}.badge{display:inline-block;padding:1px 6px;border-radius:10px;font-size:9px;font-weight:700;}.badge-g{background:#eafaf2;color:#0a8f5b;}.badge-p{background:#f0eeff;color:#5040a0;}.badge-a{background:#fff8ec;color:#8a5500;}.footer{margin-top:18px;font-size:9px;color:#9fb2b6;border-top:0.5px solid #d8e0e2;padding-top:8px;text-align:right;}@page{margin:1.5cm;}
   /* Upload de documentos do médico */
   .upload-doc-slot {
     border: 2px dashed var(--border2);
@@ -3464,8 +3451,7 @@ function exportarPDF() {
   </head><body>
   <h1>Relatório de Produção Médica</h1>
   <div class="sub">Período: ${periodo} · Gerado em: ${new Date().toLocaleString('pt-BR')}</div>
-  <div class="summary">Total geral: <strong>${fBRL(tR)}</strong> · ${dados.length} lançamento(s) · ${new Set(dados.map(l=>l.medico_id)).size} médico(s)</div>
-  ${blocos}
+  <div class="summary">Total geral: <strong>${fBRL(tR)}</strong> · ${dados.length} lançamento(s) · ${new Set(dados.map(l=>l.medico_id)).size} médico(s)</div> ${blocos}
   <div class="footer">PlantãoPro · ${new Date().toLocaleString('pt-BR')}</div>
   </body></html>`;
   const win=window.open('','_blank');
@@ -3504,7 +3490,7 @@ function showTab(id,el){
 }
 function toast(msg,err){
   const t=document.getElementById('toast');
-  t.textContent=msg;t.style.background=err?'#b03030':'#2d7a3a';t.style.color='#fff';
+  t.textContent=msg;t.style.background=err?'#b03030':'#0a8f5b';t.style.color='#fff';
   t.style.display='block';setTimeout(()=>t.style.display='none',2800);
 }
 
@@ -3667,10 +3653,9 @@ function gerarPreviewAgenda() {
   const tabela = document.getElementById('agd-preview-tabela');
   tabela.innerHTML = `
     <div style="display:flex;gap:16px;font-size:13px;margin-bottom:14px;flex-wrap:wrap;">
-      <span>👨‍⚕️ <strong>${med?.nome||''}</strong></span>
-      <span>📁 <strong>${proj?.nome||''}</strong></span>
-      <span>🕐 <strong>${ini}–${fim} (${horas}h)</strong></span>
-      ${setor?`<span>🏥 <strong>${setor}</strong></span>`:''}
+      <span><strong>${med?.nome||''}</strong></span>
+      <span><strong>${proj?.nome||''}</strong></span>
+      <span><strong>${ini}–${fim} (${horas}h)</strong></span> ${setor?`<span><strong>${setor}</strong></span>`:''}
     </div>
     <table><thead><tr><th>Data</th><th>Dia da semana</th><th>Tipo</th><th>Horas</th><th>Honorários</th></tr></thead>
     <tbody>${dias.map(d => {
@@ -3740,7 +3725,7 @@ async function confirmarAgenda() {
   }
 
   if (ok > 0) {
-    toast(`✅ ${ok} plantão(ões) registrado(s) para ${d.med}!${erros>0?' · '+erros+' com erro':''}`);
+    toast(`${ok} plantão(ões) registrado(s) para ${d.med}!${erros>0?' · '+erros+' com erro':''}`);
     limparAgenda();
     await carregarLancamentos();
     carregarDashboard();
@@ -3848,8 +3833,7 @@ function renderCal() {
             style="background:none;border:none;cursor:pointer;color:var(--text3);font-size:16px;line-height:1;padding:0 2px;border-radius:4px;opacity:0.6;"
             onmouseenter="this.style.opacity='1';this.style.color='var(--blue)'"
             onmouseleave="this.style.opacity='0.6';this.style.color='var(--text3)'">+</button>
-        </div>
-        ${ev}</div>`;
+        </div> ${ev}</div>`;
   }
   if (grid) grid.innerHTML = html;
   const det = document.getElementById('cal-detail');
@@ -3900,8 +3884,7 @@ function renderSemana() {
 
   // Se nenhum projeto filtrado, renderizar um calendário por projeto
   if (!pid) {
-    const projsComLanc = sortedProjetos().filter(p =>
-      lancamentos.some(l => {
+    const projsComLanc = sortedProjetos().filter(p => lancamentos.some(l => {
         const ds = l.data;
         return l.projeto_id === p.id && ds >= dias[0].toISOString().slice(0,10) && ds <= dias[6].toISOString().slice(0,10);
       })
@@ -3909,10 +3892,8 @@ function renderSemana() {
     // Incluir todos os projetos mesmo sem lançamento na semana
     const todosProjs = sortedProjetos();
     const grid = document.getElementById('sem-grid');
-    grid.innerHTML = todosProjs.map(p =>
-      `<div style="margin-bottom:24px;">
-        <div style="font-size:13px;font-weight:700;color:var(--blue);padding:6px 0 6px;border-bottom:2px solid var(--blue);margin-bottom:6px;display:flex;align-items:center;gap:8px;">
-          🏥 ${p.nome}
+    grid.innerHTML = todosProjs.map(p => `<div style="margin-bottom:24px;">
+        <div style="font-size:13px;font-weight:700;color:var(--blue);padding:6px 0 6px;border-bottom:2px solid var(--blue);margin-bottom:6px;display:flex;align-items:center;gap:8px;"> ${p.nome}
           <button class="btn btn-ghost btn-sm" style="margin-left:auto;" onclick="document.getElementById('cal-proj').value='${p.id}';renderCalAtual()">Ver só este ›</button>
         </div>
         <div id="sem-proj-${p.id}" style="overflow-x:auto;"></div>
@@ -3945,10 +3926,10 @@ function renderSemanaGrid(dias, dows, hj, pid, mid) {
 
   // Categorias de agrupamento
   const categorias = [
-    { key:'diurno',   label:'☀️ Plantão Diurno — 07:00 às 19:00',   cls:'',        fn: l => !l.tipo?.includes('Noturno') && !l.tipo?.includes('24') && l.tipo !== 'Personalizado' && !l.tipo?.includes('Sobre') && !l.tipo?.includes('Rotina') && !l.tipo?.includes('Manhã') && !l.tipo?.includes('Tarde') },
-    { key:'noturno',  label:'🌙 Plantão Noturno — 19:00 às 07:00',   cls:'noturno', fn: l => l.tipo?.includes('Noturno') },
-    { key:'h24',      label:'🔄 Plantão 24 Horas — 07:00 às 07:00',  cls:'h24',     fn: l => !l.tipo?.includes('Noturno') && l.tipo?.includes('24') },
-    { key:'custom',   label:'✏️ Personalizado',                        cls:'custom',  fn: l => !l.tipo?.includes('Noturno') && !l.tipo?.includes('24') && (l.tipo === 'Personalizado' || l.tipo?.includes('Sobre') || l.tipo?.includes('Rotina') || l.tipo?.includes('Manhã') || l.tipo?.includes('Tarde')) },
+    { key:'diurno',   label:'Plantão Diurno — 07:00 às 19:00',   cls:'',        fn: l => !l.tipo?.includes('Noturno') && !l.tipo?.includes('24') && l.tipo !== 'Personalizado' && !l.tipo?.includes('Sobre') && !l.tipo?.includes('Rotina') && !l.tipo?.includes('Manhã') && !l.tipo?.includes('Tarde') },
+    { key:'noturno',  label:'Plantão Noturno — 19:00 às 07:00',   cls:'noturno', fn: l => l.tipo?.includes('Noturno') },
+    { key:'h24',      label:'Plantão 24 Horas — 07:00 às 07:00',  cls:'h24',     fn: l => !l.tipo?.includes('Noturno') && l.tipo?.includes('24') },
+    { key:'custom',   label:'Personalizado',                        cls:'custom',  fn: l => !l.tipo?.includes('Noturno') && !l.tipo?.includes('24') && (l.tipo === 'Personalizado' || l.tipo?.includes('Sobre') || l.tipo?.includes('Rotina') || l.tipo?.includes('Manhã') || l.tipo?.includes('Tarde')) },
   ];
 
   dias.forEach(d => {
@@ -3980,26 +3961,23 @@ function renderSemanaGrid(dias, dows, hj, pid, mid) {
           const nomeAprov = candsAprov[vi] ? candsAprov[vi].split(' ').slice(0,2).join(' ') : `Médico ${vi+1}`;
           html += `<div class="sem-card ${cat.cls}" style="border-left-color:var(--green);">
             <button class="sem-card-opts" onclick="event.stopPropagation();abrirCtxChip(event,'${l.id}','${ds}','${pid||l.projeto_id}')" title="Opções">⋮</button>
-            <div class="sem-card-nome" style="color:var(--green);">✅ ${nomeAprov}</div>
-            <div class="sem-card-hora">${(l.hora_ini||'').slice(0,5)}–${(l.hora_fim||'').slice(0,5)}</div>
-            ${l.setor?`<div class="sem-card-setor">${l.setor}</div>`:''}
+            <div class="sem-card-nome" style="color:var(--green);">${nomeAprov}</div>
+            <div class="sem-card-hora">${(l.hora_ini||'').slice(0,5)}–${(l.hora_fim||'').slice(0,5)}</div> ${l.setor?`<div class="sem-card-setor">${l.setor}</div>`:''}
           </div>`;
         }
         // Cards das vagas abertas restantes
         for (let vi = 0; vi < vagasLivres; vi++) {
           html += `<div class="sem-card ${cat.cls} aberto">
             <button class="sem-card-opts" onclick="event.stopPropagation();abrirCtxChip(event,'${l.id}','${ds}','${pid||l.projeto_id}')" title="Opções">⋮</button>
-            <div class="sem-card-nome">📢 Vaga ${preenchidas + vi + 1}/${totalVagas}</div>
-            <div class="sem-card-hora">${(l.hora_ini||'').slice(0,5)}–${(l.hora_fim||'').slice(0,5)}</div>
-            ${l.setor?`<div class="sem-card-setor">${l.setor}</div>`:''}
+            <div class="sem-card-nome">Vaga ${preenchidas + vi + 1}/${totalVagas}</div>
+            <div class="sem-card-hora">${(l.hora_ini||'').slice(0,5)}–${(l.hora_fim||'').slice(0,5)}</div> ${l.setor?`<div class="sem-card-setor">${l.setor}</div>`:''}
           </div>`;
         }
       } else {
         html += `<div class="sem-card ${cat.cls}">
           <button class="sem-card-opts" onclick="event.stopPropagation();abrirCtxChip(event,'${l.id}','${ds}','${pid||l.projeto_id}')" title="Opções">⋮</button>
           <div class="sem-card-nome" onclick="verDetalhesSemana('${l.id}')">${(l.medico||'').split(' ').slice(0,2).join(' ')}</div>
-          <div class="sem-card-hora">${(l.hora_ini||'').slice(0,5)}–${(l.hora_fim||'').slice(0,5)}</div>
-          ${l.setor?`<div class="sem-card-setor">${l.setor}</div>`:''}
+          <div class="sem-card-hora">${(l.hora_ini||'').slice(0,5)}–${(l.hora_fim||'').slice(0,5)}</div> ${l.setor?`<div class="sem-card-setor">${l.setor}</div>`:''}
         </div>`;
       }
       });
@@ -4009,7 +3987,7 @@ function renderSemanaGrid(dias, dows, hj, pid, mid) {
     // Botões de ação
     html += `<div style="padding:4px;">`;
     html += `<button class="sem-add-btn" onclick="abrirLancamentoRapido('${ds}','${pid}')" title="Adicionar plantão">+</button>`;
-    html += `<button class="sem-colar-btn" id="colar-${ds}" onclick="colarNoDia('${ds}','${pid}')" style="display:none;" title="Colar plantão copiado">📌 Colar</button>`;
+    html += `<button class="sem-colar-btn" id="colar-${ds}" onclick="colarNoDia('${ds}','${pid}')" style="display:none;" title="Colar plantão copiado">Colar</button>`;
     html += `</div>`;
     html += '</td>';
   });
@@ -4400,7 +4378,7 @@ async function salvarLancamentoRapido() {
         body: JSON.stringify({projeto_id:projId,data:ds,hora_ini:ini,hora_fim:fim,horas,tipo,setor:setor||null,honorario:valor||0,valor_hora:horas>0&&valor>0?Math.round(valor/horas*100)/100:0,obs:obs||null,aberto:true,vagas,vagas_preenchidas:0,exige_rqe:document.getElementById('mr-exige-rqe')?.checked||false})
       });
       if (res.ok || res.status===204 || res.status===201) {
-        toast('✅ Plantão publicado! Médicos podem se candidatar.');
+        toast('Plantão publicado! Médicos podem se candidatar.');
         fecharModalRapido();
         await carregarLancamentos(true);
         renderSemana();
@@ -4461,7 +4439,7 @@ async function salvarLancamentoRapido() {
           obs:obs||null, aberto:true, vagas:vagas2, vagas_preenchidas:0})
       });
       if (res2.ok || res2.status===204 || res2.status===201) {
-        toast('✅ Plantão publicado! Médicos podem se candidatar.');
+        toast('Plantão publicado! Médicos podem se candidatar.');
         fecharModalRapido();
         await carregarLancamentos(true);
         renderSemana();
@@ -4581,7 +4559,7 @@ async function copiarSemana() {
     } catch(e) { erros++; }
   }
 
-  toast(`✅ ${ok} plantão(ões) copiado(s)!${erros>0?' · '+erros+' já existiam ou com erro':''}`);
+  toast(`${ok} plantão(ões) copiado(s)!${erros>0?' · '+erros+' já existiam ou com erro':''}`);
   await carregarLancamentos();
   renderSemana();
 }
@@ -4664,7 +4642,7 @@ function renderEscala() {
       const isFds  = d.getDay() === 0 || d.getDay() === 6;
       const evts = lancMed.filter(l => l.data === ds);
 
-      html += `<td class="escala-td${isHoje?' hoje-col':''}" style="${isFds?'background:#fafafa;':''}">`;
+      html += `<td class="escala-td${isHoje?' hoje-col':''}" style="${isFds?'background:#fbfcfc;':''}">`;
 
       evts.forEach(l => {
         const proj = projetos.find(p => p.id === l.projeto_id);
@@ -4708,13 +4686,12 @@ function showTooltip(e, el) {
   const t = document.getElementById('tooltip-escala');
   if (!t) return;
   t.innerHTML = `
-    <div class="tooltip-row"><span class="tooltip-label">Projeto</span><span class="tooltip-val">${el.dataset.proj||'—'}</span></div>
-    ${el.dataset.setor?`<div class="tooltip-row"><span class="tooltip-label">Setor</span><span class="tooltip-val">${el.dataset.setor}</span></div>`:''}
+    <div class="tooltip-row"><span class="tooltip-label">Projeto</span><span class="tooltip-val">${el.dataset.proj||'—'}</span></div> ${el.dataset.setor?`<div class="tooltip-row"><span class="tooltip-label">Setor</span><span class="tooltip-val">${el.dataset.setor}</span></div>`:''}
     <div class="tooltip-row"><span class="tooltip-label">Tipo</span><span class="tooltip-val">${el.dataset.tipo||'—'}</span></div>
     <div class="tooltip-row"><span class="tooltip-label">Horário</span><span class="tooltip-val">${el.dataset.hora}</span></div>
     <div class="tooltip-row"><span class="tooltip-label">Horas</span><span class="tooltip-val">${el.dataset.horas}</span></div>
     <div class="tooltip-row"><span class="tooltip-label">Honorários</span><span class="tooltip-val">${el.dataset.hon}</span></div>
-    <div class="tooltip-row"><span class="tooltip-label">Confirmado</span><span class="tooltip-val">${el.dataset.conf==='Sim'?'✅ Sim':'⚠️ Não'}</span></div>`;
+    <div class="tooltip-row"><span class="tooltip-label">Confirmado</span><span class="tooltip-val">${el.dataset.conf==='Sim'?'Sim':'Não'}</span></div>`;
   t.style.display = 'block';
   posTooltip(e);
 }
@@ -4775,7 +4752,7 @@ async function colarNoDia(ds, projId) {
   if (!_lancCopiado) return;
   const l = _lancCopiado;
   const jaExiste = lancamentos.find(x => x.data===ds && x.medico_id===l.medico_id && x.projeto_id===l.projeto_id);
-  if (jaExiste) { toast('⚠️ ' + l.medico + ' já tem plantão neste dia', true); return; }
+  if (jaExiste) { toast('' + l.medico + ' já tem plantão neste dia', true); return; }
   try {
     const res = await fetch(SUPABASE_URL+'/rest/v1/lancamentos', {
       method: 'POST',
@@ -4863,7 +4840,7 @@ function posCtxMenu(e) {
 function ctxCopiar() {
   if (!_ctxLancamento) return;
   _lancCopiado = { ..._ctxLancamento };
-  toast('✓ Plantão de ' + (_lancCopiado.medico||'') + ' copiado! Clique em 📌 Colar em qualquer dia.');
+  toast('✓ Plantão de ' + (_lancCopiado.medico||'') + ' copiado! Clique em Colar em qualquer dia.');
   fecharCtxMenu();
   atualizarBotoesColar(); // mostrar botões de colar em todas as células
 }
@@ -4875,7 +4852,7 @@ async function ctxColar() {
   const l  = _lancCopiado;
   // Verificar se já existe no dia
   const jaExiste = lancamentos.find(x => x.data===ds && x.medico_id===l.medico_id && x.projeto_id===l.projeto_id);
-  if (jaExiste) { toast('⚠️ ' + l.medico + ' já tem plantão neste dia', true); return; }
+  if (jaExiste) { toast('' + l.medico + ' já tem plantão neste dia', true); return; }
   try {
     const res = await fetch(SUPABASE_URL+'/rest/v1/lancamentos', {
       method: 'POST',
@@ -5028,8 +5005,7 @@ function renderMedProjetosCheck() {
   if (!el) return;
   el.innerHTML = sortedProjetos().map(p => `
     <label style="display:flex;align-items:center;gap:5px;font-size:12px;background:var(--bg3);padding:4px 10px;border-radius:99px;cursor:pointer;border:1px solid var(--border);">
-      <input type="checkbox" class="med-proj-chk" value="${p.id}" style="accent-color:var(--blue);">
-      ${p.nome}
+      <input type="checkbox" class="med-proj-chk" value="${p.id}" style="accent-color:var(--blue);"> ${p.nome}
     </label>`).join('');
 }
 
@@ -5108,7 +5084,7 @@ async function addMedico() {
     document.querySelectorAll('input[name="mn-pessoa"]').forEach((r,i) => r.checked = i===0);
     ['mn-doc-id','mn-doc-crm','mn-doc-rqe','mn-doc-titulo'].forEach(id => {
       const inp = document.getElementById(id); if(inp) inp.value='';
-      const lbl = document.getElementById(id+'-label'); if(lbl) lbl.textContent='📎 Clique para anexar';
+      const lbl = document.getElementById(id+'-label'); if(lbl) lbl.textContent='Clique para anexar';
       const slot = lbl?.closest('.upload-doc-slot'); if(slot) slot.classList.remove('ok');
     });
     await carregarMedicos();
@@ -5160,13 +5136,12 @@ async function carregarCandidaturas() {
     html += `<div class="card" style="margin-bottom:12px;">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;">
         <div>
-          <div style="font-size:14px;font-weight:700;">📢 ${l.projetos?.nome||'—'} · ${fDate(l.data)}</div>
+          <div style="font-size:14px;font-weight:700;">${l.projetos?.nome||'—'} · ${fDate(l.data)}</div>
           <div style="font-size:12px;color:var(--text2);margin-top:2px;">${(l.hora_ini||'').slice(0,5)}–${(l.hora_fim||'').slice(0,5)} · ${l.horas}h · ${l.tipo||''} ${l.setor?'· '+l.setor:''}</div>
         </div>
         <div style="text-align:right;">
           <div style="font-size:12px;color:var(--text2);">${l.vagas_preenchidas||0}/${l.vagas||1} vagas preenchidas</div>
-          <div style="font-size:11px;color:${vagasLivres>0?'var(--amber)':'var(--green)'};">${vagasLivres>0?vagasLivres+' vaga(s) disponível(is)':'Vagas preenchidas ✅'}</div>
-          ${l.honorario?`<div style="font-size:12px;color:var(--green);font-weight:600;">${fBRL(l.honorario)}</div>`:''}
+          <div style="font-size:11px;color:${vagasLivres>0?'var(--amber)':'var(--green)'};">${vagasLivres>0?vagasLivres+' vaga(s) disponível(is)':'Vagas preenchidas '}</div> ${l.honorario?`<div style="font-size:12px;color:var(--green);font-weight:600;">${fBRL(l.honorario)}</div>`:''}
         </div>
       </div>`;
 
@@ -5176,18 +5151,16 @@ async function carregarCandidaturas() {
       html += `<div style="border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;">`;
       candLanc.forEach(c => {
         const statusCls = c.status==='aprovado'?'cand-aprovado':c.status==='recusado'?'cand-recusado':'cand-pendente';
-        const statusTxt = c.status==='aprovado'?'✅ Aprovado':c.status==='recusado'?'❌ Recusado':'⏳ Pendente';
+        const statusTxt = c.status==='aprovado'?'Aprovado':c.status==='recusado'?'Recusado':'⏳ Pendente';
         const temAlerta = c.obs && c.obs.includes('ALERTA');
-        html += `<div class="cand-row" style="${temAlerta?'background:#fff8e1;':''}">
+        html += `<div class="cand-row" style="${temAlerta?'background:#fdf6e8;':''}">
           <div style="flex:1;">
             <strong>${c.medicos?.nome||'—'}</strong>
             <span style="color:var(--text3);margin-left:6px;font-family:monospace;font-size:11px;">${c.medicos?.crm||''}</span>
-            <div style="font-size:11px;color:var(--text3);">Candidatou-se em ${new Date(c.criado_em).toLocaleString('pt-BR',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})}</div>
-            ${temAlerta ? `<div style="font-size:11px;color:var(--amber);font-weight:600;margin-top:3px;">⚠️ ${c.obs}</div>` : ''}
+            <div style="font-size:11px;color:var(--text3);">Candidatou-se em ${new Date(c.criado_em).toLocaleString('pt-BR',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})}</div> ${temAlerta ? `<div style="font-size:11px;color:var(--amber);font-weight:600;margin-top:3px;">${c.obs}</div>` : ''}
           </div>
           <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
-            <span class="cand-status ${statusCls}">${statusTxt}</span>
-            ${c.status==='pendente' ? `
+            <span class="cand-status ${statusCls}">${statusTxt}</span> ${c.status==='pendente' ? `
               <button class="btn btn-success btn-sm" onclick="responderCandidatura('${c.id}','${l.id}','aprovado',${l.vagas||1})">✓ Aprovar</button>
               <button class="btn btn-danger btn-sm" onclick="responderCandidatura('${c.id}','${l.id}','recusado',${l.vagas||1})">✕ Recusar</button>` : ''}
           </div>
@@ -5235,7 +5208,7 @@ async function responderCandidatura(candId, lancId, status, vagas) {
         })
       });
     }
-    toast('✅ Candidatura aprovada! Médico vinculado ao plantão.');
+    toast('Candidatura aprovada! Médico vinculado ao plantão.');
   } else {
     toast('Candidatura recusada.');
   }
@@ -5301,7 +5274,7 @@ async function carregarFechamentos() {
   el.innerHTML = data.map(f => {
     const pct = f.total_valor > 0 ? Math.round(f.total_pago/f.total_valor*100) : 0;
     const statusCls = f.status==='pago'?'fech-status-pago':f.status==='parcial'?'fech-status-parcial':'fech-status-aberto';
-    const statusTxt = f.status==='pago'?'✅ Pago integralmente':f.status==='parcial'?`Pago parcialmente (${pct}%)`:'Sem pagamento';
+    const statusTxt = f.status==='pago'?'Pago integralmente':f.status==='parcial'?`Pago parcialmente (${pct}%)`:'Sem pagamento';
     return `<div class="fech-card" onclick="abrirFechamento('${f.id}')">
       <div>
         <div style="font-size:14px;font-weight:700;">${f.nome}</div>
@@ -5313,7 +5286,7 @@ async function carregarFechamentos() {
           <div style="font-size:11px;color:var(--text3);">Total a pagar</div>
         </div>
         <span class="${statusCls}">${statusTxt}</span>
-        <button class="btn btn-danger btn-sm" onclick="event.stopPropagation();deletarFechamento('${f.id}')" title="Excluir">🗑</button>
+        <button class="btn btn-danger btn-sm" onclick="event.stopPropagation();deletarFechamento('${f.id}')" title="Excluir"></button>
       </div>
     </div>`;
   }).join('');
@@ -5363,7 +5336,7 @@ async function criarFechamento() {
     }
   }
 
-  toast(`✅ Fechamento criado com ${itens.length} profissional(is) — ${fBRL(totalValor)}`);
+  toast(`Fechamento criado com ${itens.length} profissional(is) — ${fBRL(totalValor)}`);
   document.getElementById('fin-nome').value='';
   finShowTab('lista', document.getElementById('fin-tab-lista'));
 }
@@ -5430,7 +5403,7 @@ async function carregarItensFechamento() {
   </tr></thead><tbody>` +
   itens.map(i => {
     const m = i.medicos || {};
-    const pix = m.pix_tipo && m.pix_chave ? `<span style="font-size:10px;background:var(--green-bg);color:var(--green);padding:1px 6px;border-radius:99px;">PIX ${m.pix_tipo}</span> ${m.pix_chave}` : '<span style="color:var(--red);font-size:11px;">⚠️ Sem PIX</span>';
+    const pix = m.pix_tipo && m.pix_chave ? `<span style="font-size:10px;background:var(--green-bg);color:var(--green);padding:1px 6px;border-radius:99px;">PIX ${m.pix_tipo}</span> ${m.pix_chave}` : '<span style="color:var(--red);font-size:11px;">Sem PIX</span>';
     const stCls = i.status==='pago'?'color:var(--green);font-weight:600;':'color:var(--text2);';
     return `<tr>
       <td><strong>${m.nome||'—'}</strong>${m.razao_social?`<br><span style="font-size:10px;color:var(--text3);">${m.razao_social}</span>`:''}</td>
@@ -5440,7 +5413,7 @@ async function carregarItensFechamento() {
       <td style="text-align:center;">${Math.round(i.horas*10)/10}h</td>
       <td class="mono" style="font-weight:600;">${fBRL(i.valor_total)}</td>
       <td class="mono" style="color:var(--green);">${fBRL(i.valor_pago)}</td>
-      <td style="${stCls}">${i.status==='pago'?'✅ Pago':'⏳ Pendente'}</td>
+      <td style="${stCls}">${i.status==='pago'?'Pago':'⏳ Pendente'}</td>
     </tr>`;
   }).join('') +
   `</tbody><tfoot><tr style="border-top:2px solid var(--border2);">
@@ -5491,7 +5464,7 @@ async function gerarRemessa() {
 
   if (cpfInvalidos.length > 0) {
     const nomes = cpfInvalidos.map(i => i.medicos?.nome + ' (CPF: ' + i.medicos?.pix_chave + ')').join('\n');
-    if (!confirm('⚠️ ' + cpfInvalidos.length + ' médico(s) com CPF inválido — o Bradesco irá rejeitar:\n\n' + nomes + '\n\nContinuar assim mesmo?')) return;
+    if (!confirm('' + cpfInvalidos.length + ' médico(s) com CPF inválido — o Bradesco irá rejeitar:\n\n' + nomes + '\n\nContinuar assim mesmo?')) return;
   }
 
   const agora   = new Date();
@@ -5701,10 +5674,9 @@ async function carregarRemessas() {
     <div class="card" style="margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;">
       <div>
         <div style="font-size:13px;font-weight:600;">${r.nome_arquivo}</div>
-        <div style="font-size:11px;color:var(--text2);">Gerado em ${new Date(r.criado_em).toLocaleString('pt-BR',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})} · ${fBRL(r.total)}</div>
-        ${r.retorno_em?`<div style="font-size:11px;color:var(--green);">✅ Retorno processado em ${new Date(r.retorno_em).toLocaleString('pt-BR',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})}</div>`:''}
+        <div style="font-size:11px;color:var(--text2);">Gerado em ${new Date(r.criado_em).toLocaleString('pt-BR',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})} · ${fBRL(r.total)}</div> ${r.retorno_em?`<div style="font-size:11px;color:var(--green);">Retorno processado em ${new Date(r.retorno_em).toLocaleString('pt-BR',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})}</div>`:''}
       </div>
-      <button class="btn btn-ghost btn-sm" onclick="downloadRemessa('${r.id}')">⬇ Download</button>
+      <button class="btn btn-ghost btn-sm" onclick="downloadRemessa('${r.id}')">Download</button>
     </div>`).join('');
 }
 
@@ -5729,7 +5701,7 @@ async function processarRetorno(event) {
   const linhas = txt.split(/\r?\n/).filter(l => l.length >= 240);
 
   if (!linhas.length) {
-    el.innerHTML = '<div class="card"><div class="empty">⚠️ Arquivo não reconhecido. Verifique se é um arquivo de retorno CNAB 240 do Bradesco.</div></div>';
+    el.innerHTML = '<div class="card"><div class="empty">Arquivo não reconhecido. Verifique se é um arquivo de retorno CNAB 240 do Bradesco.</div></div>';
     return;
   }
 
@@ -5854,8 +5826,8 @@ async function processarRetorno(event) {
   // Renderizar resultado
   el.innerHTML = `
     <div class="metrics" style="margin-bottom:12px;">
-      <div class="metric"><div class="metric-label">✅ Pagamentos confirmados</div><div class="metric-val" style="color:var(--green);">${pagosCount}</div></div>
-      <div class="metric"><div class="metric-label">❌ Com ocorrência</div><div class="metric-val" style="color:${errosCount>0?'var(--red)':'var(--text)'};">${errosCount}</div></div>
+      <div class="metric"><div class="metric-label">Pagamentos confirmados</div><div class="metric-val" style="color:var(--green);">${pagosCount}</div></div>
+      <div class="metric"><div class="metric-label">Com ocorrência</div><div class="metric-val" style="color:${errosCount>0?'var(--red)':'var(--text)'};">${errosCount}</div></div>
       <div class="metric"><div class="metric-label">Total pago</div><div class="metric-val">${fBRL(totalPago)}</div></div>
     </div>
     <div class="card">
@@ -5866,13 +5838,11 @@ async function processarRetorno(event) {
           <th>Ocorrência</th>
           <th>Status</th>
         </tr></thead>
-        <tbody>
-          ${resultados.map(r => `<tr>
+        <tbody> ${resultados.map(r => `<tr>
             <td><strong>${r.favorecido||'—'}</strong></td>
             <td class="mono">${fBRL(r.valor)}</td>
             <td class="mono" style="font-size:11px;">${r.ocorrPrincipal||'—'}</td>
-            <td style="color:${r.oc.ok?'var(--green)':'var(--red)'};font-weight:600;font-size:12px;">
-              ${r.oc.ok?'✅':'❌'} ${r.oc.txt}
+            <td style="color:${r.oc.ok?'var(--green)':'var(--red)'};font-weight:600;font-size:12px;"> ${r.oc.ok?'':''} ${r.oc.txt}
             </td>
           </tr>`).join('')}
         </tbody>
@@ -5880,7 +5850,7 @@ async function processarRetorno(event) {
     </div>`;
 
   event.target.value = '';
-  toast(`✅ Retorno processado: ${pagosCount} confirmados, ${errosCount} com ocorrência`);
+  toast(`Retorno processado: ${pagosCount} confirmados, ${errosCount} com ocorrência`);
 }
 
 
@@ -5901,16 +5871,16 @@ function autoPreencherPixEdit() {
   if (!chave) return;
   if (tipo === 'CPF') {
     const cpf = document.getElementById('em-cpf')?.value?.trim();
-    if (cpf) { chave.value=cpf; chave.readOnly=true; chave.style.background='var(--bg3)'; chave.style.color='var(--text2)'; mostrarAvisoPixEdit('✅ Preenchido com o CPF — campo bloqueado.','green'); }
-    else { chave.value=''; chave.readOnly=false; chave.style.background=''; mostrarAvisoPixEdit('⚠️ Preencha o CPF primeiro.','amber'); }
+    if (cpf) { chave.value=cpf; chave.readOnly=true; chave.style.background='var(--bg3)'; chave.style.color='var(--text2)'; mostrarAvisoPixEdit('Preenchido com o CPF — campo bloqueado.','green'); }
+    else { chave.value=''; chave.readOnly=false; chave.style.background=''; mostrarAvisoPixEdit('Preencha o CPF primeiro.','amber'); }
   } else if (tipo === 'CNPJ') {
     chave.readOnly=false; chave.style.background=''; chave.style.color='';
     const cnpj = document.getElementById('em-cnpj')?.value?.trim();
-    if (cnpj) { chave.value=cnpj; mostrarAvisoPixEdit('✅ Preenchido com o CNPJ.','green'); }
-    else { chave.value=''; mostrarAvisoPixEdit('⚠️ Preencha o CNPJ primeiro.','amber'); }
+    if (cnpj) { chave.value=cnpj; mostrarAvisoPixEdit('Preenchido com o CNPJ.','green'); }
+    else { chave.value=''; mostrarAvisoPixEdit('Preencha o CNPJ primeiro.','amber'); }
   } else if (tipo === 'EMAIL') {
     chave.readOnly=false; chave.style.background=''; chave.style.color='';
-    mostrarAvisoPixEdit('ℹ️ Digite o e-mail da chave PIX.','blue');
+    mostrarAvisoPixEdit('ℹDigite o e-mail da chave PIX.','blue');
   } else { chave.readOnly=false; chave.style.background=''; chave.style.color=''; chave.value=''; esconderAvisoPixEdit(); }
   validarPixEdit();
 }
@@ -5923,16 +5893,16 @@ function validarPixEdit() {
   if (!chave||!tipo) { if(st) st.style.display='none'; esconderAvisoPixEdit(); return; }
   if (tipo==='CPF') {
     const cl=limparCpf(chave);
-    if (cpfCad&&cl!==cpfCad) { if(st){st.textContent='⚠️';st.style.display='inline';} mostrarAvisoPixEdit('⚠️ CPF da chave difere do CPF cadastrado.','red'); }
-    else if (cpfCad&&cl===cpfCad) { if(st){st.textContent='✅';st.style.display='inline';} mostrarAvisoPixEdit('✅ Chave confere com o CPF.','green'); }
+    if (cpfCad&&cl!==cpfCad) { if(st){st.textContent='';st.style.display='inline';} mostrarAvisoPixEdit('CPF da chave difere do CPF cadastrado.','red'); }
+    else if (cpfCad&&cl===cpfCad) { if(st){st.textContent='';st.style.display='inline';} mostrarAvisoPixEdit('Chave confere com o CPF.','green'); }
     else { if(st) st.style.display='none'; esconderAvisoPixEdit(); }
   } else if (tipo==='CNPJ') {
     const cl=limparCnpj(chave);
-    if (cnpjCad&&cl!==cnpjCad) { if(st){st.textContent='⚠️';st.style.display='inline';} mostrarAvisoPixEdit('⚠️ CNPJ da chave difere do cadastro.','red'); }
-    else if (cnpjCad&&cl===cnpjCad) { if(st){st.textContent='✅';st.style.display='inline';} mostrarAvisoPixEdit('✅ Confere com o CNPJ cadastrado.','green'); }
+    if (cnpjCad&&cl!==cnpjCad) { if(st){st.textContent='';st.style.display='inline';} mostrarAvisoPixEdit('CNPJ da chave difere do cadastro.','red'); }
+    else if (cnpjCad&&cl===cnpjCad) { if(st){st.textContent='';st.style.display='inline';} mostrarAvisoPixEdit('Confere com o CNPJ cadastrado.','green'); }
     else { if(st) st.style.display='none'; esconderAvisoPixEdit(); }
-  } else if (tipo==='EMAIL') { if(st) st.style.display='none'; mostrarAvisoPixEdit('ℹ️ Use qualquer e-mail da chave PIX.','blue'); }
-  else { if(st) st.style.display='none'; mostrarAvisoPixEdit('ℹ️ Confirme a chave com o médico.','blue'); }
+  } else if (tipo==='EMAIL') { if(st) st.style.display='none'; mostrarAvisoPixEdit('ℹUse qualquer e-mail da chave PIX.','blue'); }
+  else { if(st) st.style.display='none'; mostrarAvisoPixEdit('ℹConfirme a chave com o médico.','blue'); }
 }
 function mostrarAvisoPixEdit(msg,cor) {
   const el=document.getElementById('em-pix-aviso'); if(!el) return;
@@ -5947,16 +5917,16 @@ function autoPreencherPixNovo() {
   if (!chave) return;
   if (tipo==='CPF') {
     const cpf=(document.getElementById('mcpf')?.value||'').trim();
-    if(cpf){chave.value=cpf;chave.readOnly=true;chave.style.background='var(--bg3)';chave.style.color='var(--text2)';mostrarAvisoPixNovo('✅ Preenchido com o CPF — campo bloqueado.','green');}
-    else{chave.value='';chave.readOnly=false;chave.style.background='';mostrarAvisoPixNovo('⚠️ Preencha o CPF acima primeiro.','amber');}
+    if(cpf){chave.value=cpf;chave.readOnly=true;chave.style.background='var(--bg3)';chave.style.color='var(--text2)';mostrarAvisoPixNovo('Preenchido com o CPF — campo bloqueado.','green');}
+    else{chave.value='';chave.readOnly=false;chave.style.background='';mostrarAvisoPixNovo('Preencha o CPF acima primeiro.','amber');}
   } else if (tipo==='CNPJ') {
     chave.readOnly=false;chave.style.background='';chave.style.color='';
     const cnpj=(document.getElementById('mn-cnpj')?.value||'').trim();
-    if(cnpj){chave.value=cnpj;mostrarAvisoPixNovo('✅ Preenchido com o CNPJ.','green');}
-    else{chave.value='';mostrarAvisoPixNovo('⚠️ Preencha o CNPJ primeiro.','amber');}
+    if(cnpj){chave.value=cnpj;mostrarAvisoPixNovo('Preenchido com o CNPJ.','green');}
+    else{chave.value='';mostrarAvisoPixNovo('Preencha o CNPJ primeiro.','amber');}
   } else if (tipo==='EMAIL') {
     chave.readOnly=false;chave.style.background='';chave.style.color='';
-    mostrarAvisoPixNovo('ℹ️ Digite o e-mail da chave PIX.','blue');
+    mostrarAvisoPixNovo('ℹDigite o e-mail da chave PIX.','blue');
   } else { chave.readOnly=false;chave.style.background='';chave.style.color='';chave.value='';esconderAvisoPixNovo(); }
   validarPixNovo();
 }
@@ -5967,10 +5937,10 @@ function validarPixNovo() {
   const cnpjCad=limparCnpj(document.getElementById('mn-cnpj')?.value||'');
   const st=document.getElementById('mn-pix-status');
   if(!chave||!tipo){if(st)st.style.display='none';esconderAvisoPixNovo();return;}
-  if(tipo==='CPF'){const cl=limparCpf(chave);if(cpfCad&&cl!==cpfCad){if(st){st.textContent='⚠️';st.style.display='inline';}mostrarAvisoPixNovo('⚠️ CPF difere do cadastro.','red');}else if(cpfCad&&cl===cpfCad){if(st){st.textContent='✅';st.style.display='inline';}mostrarAvisoPixNovo('✅ Confere com o CPF.','green');}else{if(st)st.style.display='none';esconderAvisoPixNovo();}}
-  else if(tipo==='CNPJ'){const cl=limparCnpj(chave);if(cnpjCad&&cl!==cnpjCad){if(st){st.textContent='⚠️';st.style.display='inline';}mostrarAvisoPixNovo('⚠️ CNPJ difere do cadastro.','red');}else if(cnpjCad&&cl===cnpjCad){if(st){st.textContent='✅';st.style.display='inline';}mostrarAvisoPixNovo('✅ Confere com o CNPJ.','green');}else{if(st)st.style.display='none';esconderAvisoPixNovo();}}
-  else if(tipo==='EMAIL'){if(st)st.style.display='none';mostrarAvisoPixNovo('ℹ️ Use qualquer e-mail da chave PIX.','blue');}
-  else{if(st)st.style.display='none';mostrarAvisoPixNovo('ℹ️ Confirme a chave com o médico.','blue');}
+  if(tipo==='CPF'){const cl=limparCpf(chave);if(cpfCad&&cl!==cpfCad){if(st){st.textContent='';st.style.display='inline';}mostrarAvisoPixNovo('CPF difere do cadastro.','red');}else if(cpfCad&&cl===cpfCad){if(st){st.textContent='';st.style.display='inline';}mostrarAvisoPixNovo('Confere com o CPF.','green');}else{if(st)st.style.display='none';esconderAvisoPixNovo();}}
+  else if(tipo==='CNPJ'){const cl=limparCnpj(chave);if(cnpjCad&&cl!==cnpjCad){if(st){st.textContent='';st.style.display='inline';}mostrarAvisoPixNovo('CNPJ difere do cadastro.','red');}else if(cnpjCad&&cl===cnpjCad){if(st){st.textContent='';st.style.display='inline';}mostrarAvisoPixNovo('Confere com o CNPJ.','green');}else{if(st)st.style.display='none';esconderAvisoPixNovo();}}
+  else if(tipo==='EMAIL'){if(st)st.style.display='none';mostrarAvisoPixNovo('ℹUse qualquer e-mail da chave PIX.','blue');}
+  else{if(st)st.style.display='none';mostrarAvisoPixNovo('ℹConfirme a chave com o médico.','blue');}
 }
 function mostrarAvisoPixNovo(msg,cor){const el=document.getElementById('mn-pix-aviso');if(!el)return;const cores={green:'background:var(--green-bg);color:var(--green);',red:'background:var(--red-bg);color:var(--red);',amber:'background:var(--amber-bg);color:var(--amber);',blue:'background:var(--blue-light);color:var(--blue);'};el.style.cssText=(cores[cor]||cores.blue)+'display:block;font-size:11px;margin-top:4px;padding:5px 9px;border-radius:4px;';el.textContent=msg;}
 function esconderAvisoPixNovo(){const el=document.getElementById('mn-pix-aviso');if(el)el.style.display='none';}
@@ -6011,17 +5981,17 @@ function selecionarRelTipo(tipo,btn){_relTipoAtivo=tipo;document.querySelectorAl
 function filtrarDadosRel(){const pid=document.getElementById('rp').value,mid=document.getElementById('rm').value,d1=document.getElementById('rd1').value,d2=document.getElementById('rd2').value;let dados=[...lancamentos];if(pid)dados=dados.filter(l=>l.projeto_id===pid);if(mid)dados=dados.filter(l=>l.medico_id===mid);if(d1)dados=dados.filter(l=>l.data>=d1);if(d2)dados=dados.filter(l=>l.data<=d2);return dados;}
 function gerarRelatorio(){const el=document.getElementById('rel-resultado');switch(_relTipoAtivo){case'detalhado':gerarRelDetalhado(el);break;case'resumo':gerarRelResumo(el);break;case'horas':gerarRelHoras(el);break;case'faltas':gerarRelFaltas(el);break;case'atrasos':gerarRelAtrasos(el);break;case'checkins':gerarRelCheckinsForaTol(el);break;case'medicos':gerarRelMedicos(el);break;}}
 
-function gerarRelDetalhado(el){const dados=filtrarDadosRel();if(!dados.length){el.innerHTML='<div class="card"><div class="empty">Nenhum dado.</div></div>';return;}const tH=dados.reduce((s,l)=>s+(l.horas||0),0),tR=dados.reduce((s,l)=>s+(l.honorario||0),0),nMeds=new Set(dados.map(l=>l.medico_id)).size;let html=`<div class="metrics"><div class="metric"><div class="metric-label">Plantões</div><div class="metric-val">${dados.length}</div></div><div class="metric"><div class="metric-label">Horas totais</div><div class="metric-val">${Math.round(tH*10)/10}h</div></div><div class="metric"><div class="metric-label">Total honorários</div><div class="metric-val">${fBRL(tR)}</div></div><div class="metric"><div class="metric-label">Médicos</div><div class="metric-val">${nMeds}</div></div></div>`;const porProjeto={};dados.forEach(l=>{const p=l.projeto||'Sem projeto';if(!porProjeto[p])porProjeto[p]=[];porProjeto[p].push(l);});Object.entries(porProjeto).sort((a,b)=>a[0].localeCompare(b[0],'pt-BR')).forEach(([proj,lans])=>{const projH=lans.reduce((s,l)=>s+(l.horas||0),0),projR=lans.reduce((s,l)=>s+(l.honorario||0),0);const grupos={};lans.forEach(l=>{const turno=l.tipo?.includes('Noturno')?'Noturno':l.tipo?.includes('24')?'24h':'Diurno';const chave=`${l.medico}||${l.horas}||${turno}||${l.setor||''}`;if(!grupos[chave])grupos[chave]={medico:l.medico,crm:l.crm,horas:l.horas,turno,setor:l.setor||'',qtd:0,total:0};grupos[chave].qtd++;grupos[chave].total+=l.honorario||0;});const linhas=Object.values(grupos).sort((a,b)=>a.medico.localeCompare(b.medico,'pt-BR')).map(g=>{const badge=g.turno==='Noturno'?'badge-purple':g.turno==='24h'?'badge-amber':'badge-green';return `<tr><td>${g.medico}<br><span class="mono" style="font-size:11px;color:var(--text3);">${g.crm||''}</span></td><td class="mono">${g.horas}h</td><td><span class="badge ${badge}">${g.turno}</span></td><td>${g.setor||'—'}</td><td style="text-align:center;">${g.qtd}</td><td class="mono" style="color:var(--green);font-weight:600;">${fBRL(Math.round(g.total*100)/100)}</td></tr>`;}).join('');html+=`<div class="card" style="margin-bottom:12px;"><div style="display:flex;justify-content:space-between;margin-bottom:10px;"><div class="card-title" style="margin-bottom:0;">📁 ${proj}</div><div style="font-size:12px;color:var(--text2);">${lans.length} plantão(ões) · ${Math.round(projH*10)/10}h · <span style="color:var(--green);font-weight:600;">${fBRL(projR)}</span></div></div><table><thead><tr><th>Médico/CRM</th><th>Hrs/plantão</th><th>Turno</th><th>Setor</th><th style="text-align:center;">Qtd</th><th>Total</th></tr></thead><tbody>${linhas}</tbody><tfoot><tr style="border-top:1.5px solid var(--border2);"><td colspan="4" style="font-weight:600;padding:8px;font-size:12px;">Total</td><td style="text-align:center;font-weight:600;">${lans.length}</td><td class="mono" style="color:var(--green);font-weight:600;">${fBRL(projR)}</td></tr></tfoot></table></div>`;});el.innerHTML=html;}
+function gerarRelDetalhado(el){const dados=filtrarDadosRel();if(!dados.length){el.innerHTML='<div class="card"><div class="empty">Nenhum dado.</div></div>';return;}const tH=dados.reduce((s,l)=>s+(l.horas||0),0),tR=dados.reduce((s,l)=>s+(l.honorario||0),0),nMeds=new Set(dados.map(l=>l.medico_id)).size;let html=`<div class="metrics"><div class="metric"><div class="metric-label">Plantões</div><div class="metric-val">${dados.length}</div></div><div class="metric"><div class="metric-label">Horas totais</div><div class="metric-val">${Math.round(tH*10)/10}h</div></div><div class="metric"><div class="metric-label">Total honorários</div><div class="metric-val">${fBRL(tR)}</div></div><div class="metric"><div class="metric-label">Médicos</div><div class="metric-val">${nMeds}</div></div></div>`;const porProjeto={};dados.forEach(l=>{const p=l.projeto||'Sem projeto';if(!porProjeto[p])porProjeto[p]=[];porProjeto[p].push(l);});Object.entries(porProjeto).sort((a,b)=>a[0].localeCompare(b[0],'pt-BR')).forEach(([proj,lans])=>{const projH=lans.reduce((s,l)=>s+(l.horas||0),0),projR=lans.reduce((s,l)=>s+(l.honorario||0),0);const grupos={};lans.forEach(l=>{const turno=l.tipo?.includes('Noturno')?'Noturno':l.tipo?.includes('24')?'24h':'Diurno';const chave=`${l.medico}||${l.horas}||${turno}||${l.setor||''}`;if(!grupos[chave])grupos[chave]={medico:l.medico,crm:l.crm,horas:l.horas,turno,setor:l.setor||'',qtd:0,total:0};grupos[chave].qtd++;grupos[chave].total+=l.honorario||0;});const linhas=Object.values(grupos).sort((a,b)=>a.medico.localeCompare(b.medico,'pt-BR')).map(g=>{const badge=g.turno==='Noturno'?'badge-purple':g.turno==='24h'?'badge-amber':'badge-green';return `<tr><td>${g.medico}<br><span class="mono" style="font-size:11px;color:var(--text3);">${g.crm||''}</span></td><td class="mono">${g.horas}h</td><td><span class="badge ${badge}">${g.turno}</span></td><td>${g.setor||'—'}</td><td style="text-align:center;">${g.qtd}</td><td class="mono" style="color:var(--green);font-weight:600;">${fBRL(Math.round(g.total*100)/100)}</td></tr>`;}).join('');html+=`<div class="card" style="margin-bottom:12px;"><div style="display:flex;justify-content:space-between;margin-bottom:10px;"><div class="card-title" style="margin-bottom:0;">${proj}</div><div style="font-size:12px;color:var(--text2);">${lans.length} plantão(ões) · ${Math.round(projH*10)/10}h · <span style="color:var(--green);font-weight:600;">${fBRL(projR)}</span></div></div><table><thead><tr><th>Médico/CRM</th><th>Hrs/plantão</th><th>Turno</th><th>Setor</th><th style="text-align:center;">Qtd</th><th>Total</th></tr></thead><tbody>${linhas}</tbody><tfoot><tr style="border-top:1.5px solid var(--border2);"><td colspan="4" style="font-weight:600;padding:8px;font-size:12px;">Total</td><td style="text-align:center;font-weight:600;">${lans.length}</td><td class="mono" style="color:var(--green);font-weight:600;">${fBRL(projR)}</td></tr></tfoot></table></div>`;});el.innerHTML=html;}
 
-function gerarRelResumo(el){const dados=filtrarDadosRel();if(!dados.length){el.innerHTML='<div class="card"><div class="empty">Nenhum dado.</div></div>';return;}const porProjeto={};dados.forEach(l=>{const proj=l.projeto||'Sem projeto';if(!porProjeto[proj])porProjeto[proj]={};const chave=(l.tipo||'Diurno 12h')+'|||'+(l.setor||'(sem setor)');if(!porProjeto[proj][chave])porProjeto[proj][chave]={tipo:l.tipo||'Diurno 12h',setor:l.setor||'(sem setor)',qtd:0,horas:0,total:0};porProjeto[proj][chave].qtd++;porProjeto[proj][chave].horas+=l.horas||0;porProjeto[proj][chave].total+=l.honorario||0;});let html='';Object.entries(porProjeto).sort((a,b)=>a[0].localeCompare(b[0],'pt-BR')).forEach(([proj,grupos])=>{const itens=Object.values(grupos).sort((a,b)=>b.qtd-a.qtd);const totPlant=itens.reduce((s,g)=>s+g.qtd,0),totHoras=itens.reduce((s,g)=>s+g.horas,0),totVal=itens.reduce((s,g)=>s+g.total,0);const linhas=itens.map(g=>{const badge=g.tipo.includes('Noturno')?'badge-purple':g.tipo.includes('24')?'badge-amber':'badge-green';return `<tr><td><span class="badge ${badge}">${g.tipo}</span></td><td>${g.setor}</td><td style="text-align:center;font-size:18px;font-weight:700;color:var(--blue);">${g.qtd}</td><td class="mono">${Math.round(g.horas*10)/10}h</td><td class="mono" style="color:var(--green);font-weight:600;">${fBRL(g.total)}</td></tr>`;}).join('');html+=`<div class="card" style="margin-bottom:12px;"><div style="display:flex;justify-content:space-between;margin-bottom:10px;"><div class="card-title" style="margin-bottom:0;">📁 ${proj}</div><div style="font-size:12px;color:var(--text2);">${totPlant} plantões · ${Math.round(totHoras*10)/10}h · <span style="color:var(--green);font-weight:600;">${fBRL(totVal)}</span></div></div><table><thead><tr><th>Tipo</th><th>Setor</th><th style="text-align:center;">Qtd</th><th>Horas</th><th>Total</th></tr></thead><tbody>${linhas}</tbody></table></div>`;});el.innerHTML=html;}
+function gerarRelResumo(el){const dados=filtrarDadosRel();if(!dados.length){el.innerHTML='<div class="card"><div class="empty">Nenhum dado.</div></div>';return;}const porProjeto={};dados.forEach(l=>{const proj=l.projeto||'Sem projeto';if(!porProjeto[proj])porProjeto[proj]={};const chave=(l.tipo||'Diurno 12h')+'|||'+(l.setor||'(sem setor)');if(!porProjeto[proj][chave])porProjeto[proj][chave]={tipo:l.tipo||'Diurno 12h',setor:l.setor||'(sem setor)',qtd:0,horas:0,total:0};porProjeto[proj][chave].qtd++;porProjeto[proj][chave].horas+=l.horas||0;porProjeto[proj][chave].total+=l.honorario||0;});let html='';Object.entries(porProjeto).sort((a,b)=>a[0].localeCompare(b[0],'pt-BR')).forEach(([proj,grupos])=>{const itens=Object.values(grupos).sort((a,b)=>b.qtd-a.qtd);const totPlant=itens.reduce((s,g)=>s+g.qtd,0),totHoras=itens.reduce((s,g)=>s+g.horas,0),totVal=itens.reduce((s,g)=>s+g.total,0);const linhas=itens.map(g=>{const badge=g.tipo.includes('Noturno')?'badge-purple':g.tipo.includes('24')?'badge-amber':'badge-green';return `<tr><td><span class="badge ${badge}">${g.tipo}</span></td><td>${g.setor}</td><td style="text-align:center;font-size:18px;font-weight:700;color:var(--blue);">${g.qtd}</td><td class="mono">${Math.round(g.horas*10)/10}h</td><td class="mono" style="color:var(--green);font-weight:600;">${fBRL(g.total)}</td></tr>`;}).join('');html+=`<div class="card" style="margin-bottom:12px;"><div style="display:flex;justify-content:space-between;margin-bottom:10px;"><div class="card-title" style="margin-bottom:0;">${proj}</div><div style="font-size:12px;color:var(--text2);">${totPlant} plantões · ${Math.round(totHoras*10)/10}h · <span style="color:var(--green);font-weight:600;">${fBRL(totVal)}</span></div></div><table><thead><tr><th>Tipo</th><th>Setor</th><th style="text-align:center;">Qtd</th><th>Horas</th><th>Total</th></tr></thead><tbody>${linhas}</tbody></table></div>`;});el.innerHTML=html;}
 
 function gerarRelHoras(el){const dados=filtrarDadosRel();if(!dados.length){el.innerHTML='<div class="card"><div class="empty">Nenhum dado.</div></div>';return;}const porMed={};dados.forEach(l=>{const k=l.medico_id;if(!porMed[k])porMed[k]={nome:l.medico,crm:l.crm||'',h12:0,h24:0,hCustom:0,hTotal:0,plantoes:0,total:0};const h=l.horas||0,tipo=l.tipo||'';if(tipo.includes('24'))porMed[k].h24+=h;else if(tipo==='Personalizado')porMed[k].hCustom+=h;else porMed[k].h12+=h;porMed[k].hTotal+=h;porMed[k].plantoes++;porMed[k].total+=l.honorario||0;});const tTotal=Object.values(porMed).reduce((s,m)=>s+m.hTotal,0),tHon=Object.values(porMed).reduce((s,m)=>s+m.total,0);let html=`<div class="metrics"><div class="metric"><div class="metric-label">Profissionais</div><div class="metric-val">${Object.keys(porMed).length}</div></div><div class="metric"><div class="metric-label">Total horas</div><div class="metric-val">${Math.round(tTotal*10)/10}h</div></div><div class="metric"><div class="metric-label">Total honorários</div><div class="metric-val">${fBRL(tHon)}</div></div></div><div class="card"><table><thead><tr><th>Profissional</th><th>CRM</th><th style="text-align:center;">Plantões</th><th style="text-align:center;">Horas 12h</th><th style="text-align:center;">Horas 24h</th><th style="text-align:center;">Outros</th><th style="text-align:center;font-weight:700;">Total</th><th>Honorários</th></tr></thead><tbody>`;Object.values(porMed).sort((a,b)=>b.hTotal-a.hTotal).forEach(m=>{html+=`<tr><td><strong>${m.nome}</strong></td><td class="mono">${m.crm}</td><td style="text-align:center;">${m.plantoes}</td><td style="text-align:center;color:var(--green);">${Math.round(m.h12*10)/10}h</td><td style="text-align:center;color:var(--amber);">${Math.round(m.h24*10)/10}h</td><td style="text-align:center;color:var(--text3);">${Math.round(m.hCustom*10)/10}h</td><td style="text-align:center;font-weight:700;font-size:14px;">${Math.round(m.hTotal*10)/10}h</td><td class="mono" style="color:var(--green);font-weight:600;">${fBRL(m.total)}</td></tr>`;});html+='</tbody></table></div>';el.innerHTML=html;}
 
-async function gerarRelFaltas(el){el.innerHTML='<div class="card"><div class="empty">Carregando...</div></div>';const d1=document.getElementById('rd1').value,d2=document.getElementById('rd2').value;let pathCI='/rest/v1/checkins?aprovado=eq.true&select=medico_id,projeto_id,feito_em';if(d1)pathCI+=`&feito_em=gte.${d1}T00:00:00`;if(d2)pathCI+=`&feito_em=lte.${d2}T23:59:59`;const checkins=await sb(pathCI)||[];const ciKeys=new Set(checkins.map(c=>`${c.medico_id}_${c.projeto_id}_${c.feito_em?.slice(0,10)}`));let dados=filtrarDadosRel().filter(l=>{const ini=new Date(`${l.data}T${l.hora_ini||'00:00'}`);return ini<new Date();});const faltas=dados.filter(l=>!ciKeys.has(`${l.medico_id}_${l.projeto_id}_${l.data}`));if(!faltas.length){el.innerHTML='<div class="card"><div style="text-align:center;padding:24px;"><div style="font-size:40px;">✅</div><div style="font-size:14px;color:var(--green);font-weight:600;margin-top:8px;">Nenhuma falta!</div></div></div>';return;}let html=`<div class="card"><div style="margin-bottom:10px;font-size:13px;color:var(--red);font-weight:600;">❌ ${faltas.length} falta(s)</div><table><thead><tr><th>Médico</th><th>CRM</th><th>Projeto</th><th>Data</th><th>Horário</th><th>Tipo</th><th>Honorários perdidos</th></tr></thead><tbody>`;faltas.sort((a,b)=>b.data.localeCompare(a.data)).forEach(l=>{html+=`<tr><td><strong>${l.medico||'—'}</strong></td><td class="mono">${l.crm||''}</td><td>${l.projeto||'—'}</td><td class="mono">${fDate(l.data)}</td><td class="mono">${(l.hora_ini||'').slice(0,5)}–${(l.hora_fim||'').slice(0,5)}</td><td>${l.tipo||''}</td><td class="mono" style="color:var(--red);">${fBRL(l.honorario||0)}</td></tr>`;});const totFalta=faltas.reduce((s,l)=>s+(l.honorario||0),0);html+=`</tbody><tfoot><tr><td colspan="6" style="font-weight:600;padding:8px;">Total</td><td class="mono" style="color:var(--red);font-weight:600;">${fBRL(totFalta)}</td></tr></tfoot></table></div>`;el.innerHTML=html;}
+async function gerarRelFaltas(el){el.innerHTML='<div class="card"><div class="empty">Carregando...</div></div>';const d1=document.getElementById('rd1').value,d2=document.getElementById('rd2').value;let pathCI='/rest/v1/checkins?aprovado=eq.true&select=medico_id,projeto_id,feito_em';if(d1)pathCI+=`&feito_em=gte.${d1}T00:00:00`;if(d2)pathCI+=`&feito_em=lte.${d2}T23:59:59`;const checkins=await sb(pathCI)||[];const ciKeys=new Set(checkins.map(c=>`${c.medico_id}_${c.projeto_id}_${c.feito_em?.slice(0,10)}`));let dados=filtrarDadosRel().filter(l=>{const ini=new Date(`${l.data}T${l.hora_ini||'00:00'}`);return ini<new Date();});const faltas=dados.filter(l=>!ciKeys.has(`${l.medico_id}_${l.projeto_id}_${l.data}`));if(!faltas.length){el.innerHTML='<div class="card"><div style="text-align:center;padding:24px;"><div style="font-size:40px;"></div><div style="font-size:14px;color:var(--green);font-weight:600;margin-top:8px;">Nenhuma falta!</div></div></div>';return;}let html=`<div class="card"><div style="margin-bottom:10px;font-size:13px;color:var(--red);font-weight:600;">${faltas.length} falta(s)</div><table><thead><tr><th>Médico</th><th>CRM</th><th>Projeto</th><th>Data</th><th>Horário</th><th>Tipo</th><th>Honorários perdidos</th></tr></thead><tbody>`;faltas.sort((a,b)=>b.data.localeCompare(a.data)).forEach(l=>{html+=`<tr><td><strong>${l.medico||'—'}</strong></td><td class="mono">${l.crm||''}</td><td>${l.projeto||'—'}</td><td class="mono">${fDate(l.data)}</td><td class="mono">${(l.hora_ini||'').slice(0,5)}–${(l.hora_fim||'').slice(0,5)}</td><td>${l.tipo||''}</td><td class="mono" style="color:var(--red);">${fBRL(l.honorario||0)}</td></tr>`;});const totFalta=faltas.reduce((s,l)=>s+(l.honorario||0),0);html+=`</tbody><tfoot><tr><td colspan="6" style="font-weight:600;padding:8px;">Total</td><td class="mono" style="color:var(--red);font-weight:600;">${fBRL(totFalta)}</td></tr></tfoot></table></div>`;el.innerHTML=html;}
 
-async function gerarRelAtrasos(el){el.innerHTML='<div class="card"><div class="empty">Carregando...</div></div>';const d1=document.getElementById('rd1').value,d2=document.getElementById('rd2').value;let pathCI='/rest/v1/checkins?aprovado=eq.true&select=*,medicos(nome,crm),projetos(nome)';if(d1)pathCI+=`&feito_em=gte.${d1}T00:00:00`;if(d2)pathCI+=`&feito_em=lte.${d2}T23:59:59`;const checkins=await sb(pathCI)||[];const atrasos=[];checkins.forEach(ci=>{const lanc=lancamentos.find(l=>l.medico_id===ci.medico_id&&l.projeto_id===ci.projeto_id&&l.data===ci.feito_em?.slice(0,10));if(!lanc)return;const diffMin=Math.round((new Date(ci.feito_em)-new Date(`${lanc.data}T${lanc.hora_ini||'00:00'}`))/60000);if(diffMin>15)atrasos.push({...ci,diffMin,lanc});});if(!atrasos.length){el.innerHTML='<div class="card"><div style="text-align:center;padding:24px;"><div style="font-size:40px;">✅</div><div style="font-size:14px;color:var(--green);font-weight:600;margin-top:8px;">Nenhum atraso acima de 15 minutos!</div></div></div>';return;}let html=`<div class="card"><table><thead><tr><th>Médico</th><th>Projeto</th><th>Data</th><th>Previsto</th><th>Check-in</th><th>Atraso</th></tr></thead><tbody>`;atrasos.sort((a,b)=>b.diffMin-a.diffMin).forEach(a=>{const horaReal=new Date(a.feito_em).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});html+=`<tr><td><strong>${a.medicos?.nome||'—'}</strong></td><td>${a.projetos?.nome||'—'}</td><td class="mono">${fDate(a.lanc?.data||'')}</td><td class="mono">${(a.lanc?.hora_ini||'').slice(0,5)}</td><td class="mono">${horaReal}</td><td style="color:var(--amber);font-weight:700;">+${a.diffMin}min</td></tr>`;});html+='</tbody></table></div>';el.innerHTML=html;}
+async function gerarRelAtrasos(el){el.innerHTML='<div class="card"><div class="empty">Carregando...</div></div>';const d1=document.getElementById('rd1').value,d2=document.getElementById('rd2').value;let pathCI='/rest/v1/checkins?aprovado=eq.true&select=*,medicos(nome,crm),projetos(nome)';if(d1)pathCI+=`&feito_em=gte.${d1}T00:00:00`;if(d2)pathCI+=`&feito_em=lte.${d2}T23:59:59`;const checkins=await sb(pathCI)||[];const atrasos=[];checkins.forEach(ci=>{const lanc=lancamentos.find(l=>l.medico_id===ci.medico_id&&l.projeto_id===ci.projeto_id&&l.data===ci.feito_em?.slice(0,10));if(!lanc)return;const diffMin=Math.round((new Date(ci.feito_em)-new Date(`${lanc.data}T${lanc.hora_ini||'00:00'}`))/60000);if(diffMin>15)atrasos.push({...ci,diffMin,lanc});});if(!atrasos.length){el.innerHTML='<div class="card"><div style="text-align:center;padding:24px;"><div style="font-size:40px;"></div><div style="font-size:14px;color:var(--green);font-weight:600;margin-top:8px;">Nenhum atraso acima de 15 minutos!</div></div></div>';return;}let html=`<div class="card"><table><thead><tr><th>Médico</th><th>Projeto</th><th>Data</th><th>Previsto</th><th>Check-in</th><th>Atraso</th></tr></thead><tbody>`;atrasos.sort((a,b)=>b.diffMin-a.diffMin).forEach(a=>{const horaReal=new Date(a.feito_em).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});html+=`<tr><td><strong>${a.medicos?.nome||'—'}</strong></td><td>${a.projetos?.nome||'—'}</td><td class="mono">${fDate(a.lanc?.data||'')}</td><td class="mono">${(a.lanc?.hora_ini||'').slice(0,5)}</td><td class="mono">${horaReal}</td><td style="color:var(--amber);font-weight:700;">+${a.diffMin}min</td></tr>`;});html+='</tbody></table></div>';el.innerHTML=html;}
 
-async function gerarRelCheckinsForaTol(el){el.innerHTML='<div class="card"><div class="empty">Carregando...</div></div>';const d1=document.getElementById('rd1').value,d2=document.getElementById('rd2').value;let pathCI='/rest/v1/checkins?select=*,medicos(nome,crm),projetos(nome)';if(d1)pathCI+=`&feito_em=gte.${d1}T00:00:00`;if(d2)pathCI+=`&feito_em=lte.${d2}T23:59:59`;const checkins=await sb(pathCI)||[];const fora=[];checkins.forEach(ci=>{const lanc=lancamentos.find(l=>l.medico_id===ci.medico_id&&l.projeto_id===ci.projeto_id&&l.data===ci.feito_em?.slice(0,10));if(!lanc)return;const diffMin=Math.round((new Date(ci.feito_em)-new Date(`${lanc.data}T${lanc.hora_ini||'00:00'}`))/60000);if(diffMin>15||!ci.aprovado)fora.push({...ci,diffMin,foraRaio:!ci.aprovado,lanc});});if(!fora.length){el.innerHTML='<div class="card"><div style="text-align:center;padding:24px;"><div style="font-size:40px;">✅</div><div style="font-size:14px;color:var(--green);font-weight:600;margin-top:8px;">Todos dentro da tolerância!</div></div></div>';return;}let html=`<div class="card"><table><thead><tr><th>Médico</th><th>Projeto</th><th>Data</th><th>Previsto</th><th>Check-in</th><th>Atraso</th><th>GPS</th></tr></thead><tbody>`;fora.forEach(c=>{const horaReal=new Date(c.feito_em).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});html+=`<tr><td><strong>${c.medicos?.nome||'—'}</strong></td><td>${c.projetos?.nome||'—'}</td><td class="mono">${fDate(c.lanc?.data||'')}</td><td class="mono">${(c.lanc?.hora_ini||'').slice(0,5)}</td><td class="mono">${horaReal}</td><td style="color:${c.diffMin>15?'var(--amber)':'var(--green)'};font-weight:600;">${c.diffMin>0?'+'+c.diffMin+'min':'no prazo'}</td><td>${c.foraRaio?'❌ Fora':'✅ Ok'}</td></tr>`;});html+='</tbody></table></div>';el.innerHTML=html;}
+async function gerarRelCheckinsForaTol(el){el.innerHTML='<div class="card"><div class="empty">Carregando...</div></div>';const d1=document.getElementById('rd1').value,d2=document.getElementById('rd2').value;let pathCI='/rest/v1/checkins?select=*,medicos(nome,crm),projetos(nome)';if(d1)pathCI+=`&feito_em=gte.${d1}T00:00:00`;if(d2)pathCI+=`&feito_em=lte.${d2}T23:59:59`;const checkins=await sb(pathCI)||[];const fora=[];checkins.forEach(ci=>{const lanc=lancamentos.find(l=>l.medico_id===ci.medico_id&&l.projeto_id===ci.projeto_id&&l.data===ci.feito_em?.slice(0,10));if(!lanc)return;const diffMin=Math.round((new Date(ci.feito_em)-new Date(`${lanc.data}T${lanc.hora_ini||'00:00'}`))/60000);if(diffMin>15||!ci.aprovado)fora.push({...ci,diffMin,foraRaio:!ci.aprovado,lanc});});if(!fora.length){el.innerHTML='<div class="card"><div style="text-align:center;padding:24px;"><div style="font-size:40px;"></div><div style="font-size:14px;color:var(--green);font-weight:600;margin-top:8px;">Todos dentro da tolerância!</div></div></div>';return;}let html=`<div class="card"><table><thead><tr><th>Médico</th><th>Projeto</th><th>Data</th><th>Previsto</th><th>Check-in</th><th>Atraso</th><th>GPS</th></tr></thead><tbody>`;fora.forEach(c=>{const horaReal=new Date(c.feito_em).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});html+=`<tr><td><strong>${c.medicos?.nome||'—'}</strong></td><td>${c.projetos?.nome||'—'}</td><td class="mono">${fDate(c.lanc?.data||'')}</td><td class="mono">${(c.lanc?.hora_ini||'').slice(0,5)}</td><td class="mono">${horaReal}</td><td style="color:${c.diffMin>15?'var(--amber)':'var(--green)'};font-weight:600;">${c.diffMin>0?'+'+c.diffMin+'min':'no prazo'}</td><td>${c.foraRaio?'Fora':'Ok'}</td></tr>`;});html+='</tbody></table></div>';el.innerHTML=html;}
 
 function gerarRelMedicos(el){let lista=[...medicos];const mid=document.getElementById('rm').value;if(mid)lista=lista.filter(m=>m.id===mid);if(!lista.length){el.innerHTML='<div class="card"><div class="empty">Nenhum médico.</div></div>';return;}let html=`<div class="card"><table><thead><tr><th>Nome</th><th>CRM</th><th>Especialidade</th><th>Tipo</th><th>Telefone</th><th>E-mail</th><th>PIX</th><th>Dispositivo</th></tr></thead><tbody>`;lista.sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR')).forEach(m=>{const pix=m.pix_tipo&&m.pix_chave?`${m.pix_tipo}: ${m.pix_chave}`:'—';html+=`<tr><td><strong>${m.nome}</strong></td><td class="mono">${m.crm||'—'}</td><td>${m.especialidade||'—'}</td><td><span class="badge badge-blue">${m.tipo||''}</span></td><td>${m.telefone||'—'}</td><td>${m.email||'—'}</td><td style="font-size:11px;">${pix}</td><td>${m.device_id?'<span class="badge badge-green">✓ Vinculado</span>':'<span class="badge badge-amber">Sem vínculo</span>'}</td></tr>`;});html+='</tbody></table></div>';el.innerHTML=html;}
 
@@ -6069,8 +6039,7 @@ async function gerarRelRisco(el) {
     if (!l.data || !l.hora_ini) return false;
     return new Date(`${l.data}T${l.hora_ini}`) < agora;
   });
-  const faltas = lancPassados.filter(l =>
-    !ciKeys.has(`${l.medico_id}_${l.projeto_id}_${l.data}`)
+  const faltas = lancPassados.filter(l => !ciKeys.has(`${l.medico_id}_${l.projeto_id}_${l.data}`)
   );
 
   // 4. Consolidar por médico
@@ -6128,27 +6097,25 @@ async function gerarRelRisco(el) {
 
   if (!ranking.length) {
     el.innerHTML = `<div class="card"><div style="text-align:center;padding:32px;">
-      <div style="font-size:40px;">✅</div>
-      <div style="font-size:14px;color:var(--green);font-weight:600;margin-top:8px;">
-        Nenhuma ausência, transferência ou falta encontrada no período.
+      <div style="font-size:40px;"></div>
+      <div style="font-size:14px;color:var(--green);font-weight:600;margin-top:8px;"> Nenhuma ausência, transferência ou falta encontrada no período.
       </div></div></div>`;
     return;
   }
 
   // Nível de risco
   const nivelRisco = score => {
-    if (score >= 10) return { label: '🔴 Alto risco', cor: 'var(--red)', bg: 'var(--red-bg, #fdf0f0)' };
-    if (score >= 5)  return { label: '🟡 Risco moderado', cor: 'var(--amber)', bg: 'var(--amber-bg, #fdf3e0)' };
-    return           { label: '🟢 Risco baixo', cor: 'var(--green)', bg: 'var(--green-bg, #e8f5eb)' };
+    if (score >= 10) return { label: 'Alto risco', cor: 'var(--red)', bg: 'var(--red-bg, #fdecea)' };
+    if (score >= 5)  return { label: 'Risco moderado', cor: 'var(--amber)', bg: 'var(--amber-bg, #fff8ec)' };
+    return           { label: 'Risco baixo', cor: 'var(--green)', bg: 'var(--green-bg, #eafaf2)' };
   };
 
   const maxScore = ranking[0].score || 1;
 
   let html = `
   <div class="card" style="margin-bottom:16px;">
-    <div class="card-title">🚨 Ranking de risco operacional</div>
-    <div style="font-size:12px;color:var(--text2);margin-bottom:14px;line-height:1.5;">
-      Médicos ordenados por potencial de deixar plantões descobertos.<br>
+    <div class="card-title">Ranking de risco operacional</div>
+    <div style="font-size:12px;color:var(--text2);margin-bottom:14px;line-height:1.5;"> Médicos ordenados por potencial de deixar plantões descobertos.<br>
       <strong>Score:</strong> falta sem aviso = 5pts · ausência informada = 3pts · solicitação de transferência = 2pts
     </div>
 
@@ -6190,7 +6157,7 @@ async function gerarRelRisco(el) {
   ranking.forEach((m, i) => {
     const { label, cor, bg } = nivelRisco(m.score);
     const pct = Math.round((m.score / maxScore) * 100);
-    const medalha = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${i+1}º`;
+    const medalha = i === 0 ? '' : i === 1 ? '' : i === 2 ? '' : `${i+1}º`;
 
     // Detalhes das ocorrências
     const ultimaFalta = m.faltas.length ? fDate(m.faltas.sort((a,b)=>b.data?.localeCompare(a.data||'')).slice(0,1)[0].data||'') : null;
@@ -6200,8 +6167,7 @@ async function gerarRelRisco(el) {
       <td style="padding:10px;font-size:16px;font-weight:700;color:var(--text2);">${medalha}</td>
       <td style="padding:10px;">
         <strong style="font-size:13px;">${m.nome}</strong><br>
-        <span style="font-size:11px;color:var(--text3);font-family:monospace;">${m.crm}</span>
-        ${ultimaFalta ? `<br><span style="font-size:10px;color:var(--red);">Última falta: ${ultimaFalta}</span>` : ''}
+        <span style="font-size:11px;color:var(--text3);font-family:monospace;">${m.crm}</span> ${ultimaFalta ? `<br><span style="font-size:10px;color:var(--red);">Última falta: ${ultimaFalta}</span>` : ''}
         ${ultimaAus   ? `<br><span style="font-size:10px;color:var(--amber);">Última ausência: ${ultimaAus}</span>` : ''}
       </td>
       <td style="padding:10px;text-align:center;">
@@ -6215,7 +6181,7 @@ async function gerarRelRisco(el) {
       </td>
       <td style="padding:10px;min-width:140px;">
         <div style="display:flex;align-items:center;gap:8px;">
-          <div style="flex:1;background:#f0f0f0;border-radius:99px;height:8px;overflow:hidden;">
+          <div style="flex:1;background:#e7edee;border-radius:99px;height:8px;overflow:hidden;">
             <div style="width:${pct}%;height:100%;background:${cor};border-radius:99px;transition:width 0.4s;"></div>
           </div>
           <span style="font-size:13px;font-weight:700;color:${cor};min-width:28px;">${m.score}</span>
@@ -6234,15 +6200,13 @@ async function gerarRelRisco(el) {
     ].sort((a,b)=>(b.data||'').localeCompare(a.data||''));
 
     if (todasOcorr.length) {
-      html += `<tr style="background:#fafafa;border-bottom:2px solid var(--border);">
+      html += `<tr style="background:#fbfcfc;border-bottom:2px solid var(--border);">
         <td></td>
         <td colspan="6" style="padding:8px 10px 12px;">
           <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:0.4px;margin-bottom:6px;">Histórico de ocorrências</div>
-          <div style="display:flex;flex-wrap:wrap;gap:6px;">
-            ${todasOcorr.map(o => `
+          <div style="display:flex;flex-wrap:wrap;gap:6px;"> ${todasOcorr.map(o => `
               <div style="background:#fff;border:1px solid ${o.cor};border-radius:6px;padding:4px 10px;font-size:11px;">
-                <span style="color:${o.cor};font-weight:600;">${o.tipo}</span>
-                ${o.data ? ` · <span style="color:var(--text2);">${fDate(o.data)}</span>` : ''}
+                <span style="color:${o.cor};font-weight:600;">${o.tipo}</span> ${o.data ? ` · <span style="color:var(--text2);">${fDate(o.data)}</span>` : ''}
                 ${o.projeto ? ` · <span style="color:var(--text3);">${o.projeto}</span>` : ''}
                 ${o.detalhe ? ` · <span style="color:var(--text3);">${o.detalhe}</span>` : ''}
               </div>`).join('')}
@@ -6253,8 +6217,7 @@ async function gerarRelRisco(el) {
   });
 
   html += `</tbody></table>
-  <div style="margin-top:14px;font-size:11px;color:var(--text3);border-top:1px solid var(--border);padding-top:10px;">
-    ⚠️ Falta sem aviso = plantão escalado no passado sem check-in registrado.
+  <div style="margin-top:14px;font-size:11px;color:var(--text3);border-top:1px solid var(--border);padding-top:10px;"> Falta sem aviso = plantão escalado no passado sem check-in registrado.
     Ausência informada = médico avisou que não compareceria pelo app.
     Transferência = médico solicitou passar o plantão para um colega.
   </div>
@@ -6277,8 +6240,7 @@ function initLote() {
 function renderMedicosLote(filtro='') {
   const el = document.getElementById('lote-medicos-lista');
   if (!el) return;
-  const lista = sortedMedicos().filter(m =>
-    !filtro || m.nome.toLowerCase().includes(filtro.toLowerCase()) || (m.crm||'').toLowerCase().includes(filtro.toLowerCase())
+  const lista = sortedMedicos().filter(m => !filtro || m.nome.toLowerCase().includes(filtro.toLowerCase()) || (m.crm||'').toLowerCase().includes(filtro.toLowerCase())
   );
   if (!lista.length) { el.innerHTML = '<div class="empty">Nenhum médico encontrado.</div>'; return; }
   const dataVal = document.getElementById('lote-data')?.value || '';
@@ -6379,8 +6341,7 @@ function gerarPreviewLote() {
   prev.innerHTML = `
     <div class="card" style="margin-top:16px;">
       <div class="card-title">Pré-visualização — ${selecionados.length} plantão(ões)</div>
-      <table><thead><tr><th>Médico</th><th>Projeto</th><th>Data</th><th>Horário</th><th>Horas</th><th>Valor</th></tr></thead><tbody>
-      ${selecionados.map(m => `<tr>
+      <table><thead><tr><th>Médico</th><th>Projeto</th><th>Data</th><th>Horário</th><th>Horas</th><th>Valor</th></tr></thead><tbody> ${selecionados.map(m => `<tr>
         <td>${m.nome}</td><td>${proj?.nome||''}</td>
         <td class="mono">${fDate(data)}</td>
         <td class="mono">${ini}–${fim}</td>
@@ -6430,7 +6391,7 @@ async function salvarLote() {
   }
 
   document.getElementById('lote-preview').innerHTML = '';
-  toast(`✅ ${ok} plantão(ões) registrado(s)${erros > 0 ? ' · ' + erros + ' erro(s)' : ''}`);
+  toast(`${ok} plantão(ões) registrado(s)${erros > 0 ? ' · ' + erros + ' erro(s)' : ''}`);
   if (ok > 0) await carregarLancamentos(true);
 }
 
@@ -6506,10 +6467,8 @@ async function handleUploadTipos(input) {
   const semProjeto = novos.filter(n => !n.proj_id);
   const prev = document.getElementById('import-preview-tipos');
   prev.innerHTML = `<div class="card" style="margin-top:12px;">
-    <div class="card-title">Pré-visualização — ${novos.length} tipo(s)</div>
-    ${semProjeto.length>0 ? `<div style="color:var(--amber);font-size:12px;margin-bottom:8px;">⚠️ ${semProjeto.length} tipo(s) com projeto não encontrado serão ignorados: ${[...new Set(semProjeto.map(n=>n.proj_nome))].join(', ')}</div>` : ''}
-    <table><thead><tr><th>Projeto</th><th>Nome</th><th>Horário</th><th>Horas</th><th>Valor</th><th>Setor</th></tr></thead><tbody>
-    ${novos.slice(0,8).map(n=>`<tr><td style="font-size:12px;">${n.proj_nome||'—'}</td><td><strong>${n.nome}</strong></td><td class="mono">${n.hora_ini}–${n.hora_fim}</td><td class="mono">${n.horas}h</td><td class="mono">${n.valor?fBRL(n.valor):'Padrão'}</td><td>${n.setor||'—'}</td></tr>`).join('')}
+    <div class="card-title">Pré-visualização — ${novos.length} tipo(s)</div> ${semProjeto.length>0 ? `<div style="color:var(--amber);font-size:12px;margin-bottom:8px;">${semProjeto.length} tipo(s) com projeto não encontrado serão ignorados: ${[...new Set(semProjeto.map(n=>n.proj_nome))].join(', ')}</div>` : ''}
+    <table><thead><tr><th>Projeto</th><th>Nome</th><th>Horário</th><th>Horas</th><th>Valor</th><th>Setor</th></tr></thead><tbody> ${novos.slice(0,8).map(n=>`<tr><td style="font-size:12px;">${n.proj_nome||'—'}</td><td><strong>${n.nome}</strong></td><td class="mono">${n.hora_ini}–${n.hora_fim}</td><td class="mono">${n.horas}h</td><td class="mono">${n.valor?fBRL(n.valor):'Padrão'}</td><td>${n.setor||'—'}</td></tr>`).join('')}
     </tbody></table>
     <div style="margin-top:12px;display:flex;gap:8px;">
       <button class="btn btn-primary" id="imp-tipos-btn">Importar ${novos.filter(n=>n.proj_id).length} tipo(s) válido(s)</button>
@@ -6575,8 +6534,7 @@ function handleUploadMed(input) {
     }
     const prev = document.getElementById('import-preview-med');
     prev.innerHTML = `<div class="card"><div class="card-title">Pré-visualização — ${novos.length} médico(s)</div>
-      <table><thead><tr><th>Nome</th><th>CRM</th><th>Especialidade</th><th>Tipo</th></tr></thead><tbody>
-      ${novos.slice(0,6).map(m=>`<tr><td>${m.nome}</td><td class="mono">${m.crm}</td><td>${m.especialidade||'—'}</td><td>${m.tipo}</td></tr>`).join('')}
+      <table><thead><tr><th>Nome</th><th>CRM</th><th>Especialidade</th><th>Tipo</th></tr></thead><tbody> ${novos.slice(0,6).map(m=>`<tr><td>${m.nome}</td><td class="mono">${m.crm}</td><td>${m.especialidade||'—'}</td><td>${m.tipo}</td></tr>`).join('')}
       ${novos.length>6?`<tr><td colspan="4" style="color:var(--text3);font-size:12px;">... e mais ${novos.length-6}</td></tr>`:''}
       </tbody></table>
       <div style="margin-top:12px;display:flex;gap:8px;">
@@ -6934,11 +6892,10 @@ function previewExport() {
     const projTotal = grupos.reduce((s,g)=>s+g.total,0), projQtd = grupos.reduce((s,g)=>s+g.qtd,0);
     html += `<div class="card" style="margin-bottom:12px;">
       <div style="display:flex;justify-content:space-between;margin-bottom:10px;">
-        <div class="card-title" style="margin-bottom:0;">📁 ${proj}</div>
+        <div class="card-title" style="margin-bottom:0;">${proj}</div>
         <div style="font-size:12px;color:var(--text2);">${projQtd} plantão(ões) · <span class="mono" style="color:var(--green);font-weight:600;">${fBRL(projTotal)}</span></div>
       </div>
-      <table><thead><tr><th>Médico / CRM</th><th>Horas</th><th>Turno</th><th>Setor</th><th>Qtd</th><th>Total</th></tr></thead><tbody>
-      ${grupos.map(g=>`<tr><td>${g.medico}<br><span class="mono" style="font-size:11px;color:var(--text3);">${g.crm}</span></td><td class="mono">${g.horas}h</td><td>${g.turno}</td><td>${g.setor||'—'}</td><td style="text-align:center;">${g.qtd}</td><td class="mono" style="color:var(--green);font-weight:600;">${fBRL(Math.round(g.total*100)/100)}</td></tr>`).join('')}
+      <table><thead><tr><th>Médico / CRM</th><th>Horas</th><th>Turno</th><th>Setor</th><th>Qtd</th><th>Total</th></tr></thead><tbody> ${grupos.map(g=>`<tr><td>${g.medico}<br><span class="mono" style="font-size:11px;color:var(--text3);">${g.crm}</span></td><td class="mono">${g.horas}h</td><td>${g.turno}</td><td>${g.setor||'—'}</td><td style="text-align:center;">${g.qtd}</td><td class="mono" style="color:var(--green);font-weight:600;">${fBRL(Math.round(g.total*100)/100)}</td></tr>`).join('')}
       </tbody></table></div>`;
   });
   el.innerHTML = html;
@@ -7004,8 +6961,8 @@ async function renderGrafProj(d1, d2) {
   const values = sorted.map(([,v]) => Math.round(v*100)/100);
 
   const colors = [
-    '#1a5fad','#2ecc71','#e67e22','#9b59b6','#e74c3c',
-    '#1abc9c','#f39c12','#3498db','#27ae60','#8e44ad'
+    '#0e5a63','#0a8f5b','#b8761b','#566099','#c0392b',
+    '#3d8a94','#8a5273','#4a6d8c','#7fa653','#9a8557'
   ];
 
   const ctx = document.getElementById('graf-proj');
@@ -7038,7 +6995,7 @@ async function renderGrafProj(d1, d2) {
       scales: {
         x: {
           ticks: { callback: v => 'R$ ' + (v/1000).toFixed(0) + 'k', font: {size:11} },
-          grid: { color: '#f0f0f0' }
+          grid: { color: '#e7edee' }
         },
         y: { ticks: { font: {size:11} } }
       }
@@ -7090,7 +7047,7 @@ async function renderGrafHoras(d1, d2) {
       scales: {
         y: {
           ticks: { callback: v => v+'h', font: {size:11} },
-          grid: { color: '#f0f0f0' }
+          grid: { color: '#e7edee' }
         },
         x: { ticks: { font: {size:10} } }
       }
@@ -7143,7 +7100,7 @@ async function renderGrafPontual(d1, d2) {
       labels: ['No horário', 'Atrasados', 'Faltas'],
       datasets: [{
         data: [noHorario, atrasados, faltas],
-        backgroundColor: ['#2ecc71','#f39c12','#e74c3c'],
+        backgroundColor: ['#0a8f5b','#b8761b','#c0392b'],
         borderWidth: 2,
         borderColor: '#fff',
         hoverOffset: 6,
@@ -7163,11 +7120,10 @@ async function renderGrafPontual(d1, d2) {
   // Legenda customizada
   const leg = document.getElementById('graf-pontual-legend');
   if (leg) leg.innerHTML = [
-    {label:'No horário', val:noHorario, cor:'#2ecc71'},
-    {label:'Atrasados',  val:atrasados, cor:'#f39c12'},
-    {label:'Faltas',     val:faltas,    cor:'#e74c3c'},
-  ].map(({label, val, cor}) =>
-    `<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+    {label:'No horário', val:noHorario, cor:'#0a8f5b'},
+    {label:'Atrasados',  val:atrasados, cor:'#b8761b'},
+    {label:'Faltas',     val:faltas,    cor:'#c0392b'},
+  ].map(({label, val, cor}) => `<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
       <span style="width:12px;height:12px;border-radius:50%;background:${cor};flex-shrink:0;display:inline-block;"></span>
       <span>${label}</span>
       <span style="font-weight:700;margin-left:4px;">${val}</span>
@@ -7201,7 +7157,7 @@ async function renderGrafStatus() {
       labels: ['Confirmados', 'Não confirmados', 'Vagas abertas'],
       datasets: [{
         data: [confirmados, naoConfirm, comVaga],
-        backgroundColor: ['#1a5fad','#f39c12','#9b59b6'],
+        backgroundColor: ['#0e5a63','#b8761b','#8a5273'],
         borderWidth: 2,
         borderColor: '#fff',
         hoverOffset: 6,
@@ -7220,11 +7176,10 @@ async function renderGrafStatus() {
 
   const leg = document.getElementById('graf-status-legend');
   if (leg) leg.innerHTML = [
-    {label:'Confirmados',       val:confirmados, cor:'#1a5fad'},
-    {label:'Não confirmados',   val:naoConfirm,  cor:'#f39c12'},
-    {label:'Vagas abertas',     val:comVaga,     cor:'#9b59b6'},
-  ].map(({label, val, cor}) =>
-    `<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+    {label:'Confirmados',       val:confirmados, cor:'#0e5a63'},
+    {label:'Não confirmados',   val:naoConfirm,  cor:'#b8761b'},
+    {label:'Vagas abertas',     val:comVaga,     cor:'#8a5273'},
+  ].map(({label, val, cor}) => `<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
       <span style="width:12px;height:12px;border-radius:50%;background:${cor};flex-shrink:0;display:inline-block;"></span>
       <span>${label}</span>
       <span style="font-weight:700;margin-left:4px;">${val}</span>
@@ -7374,12 +7329,10 @@ async function carregarTiposLista() {
     return;
   }
   const mostraProjeto = !projId;
-  el.innerHTML = `<table><thead><tr>
-    ${mostraProjeto ? '<th>Projeto</th>' : ''}
+  el.innerHTML = `<table><thead><tr> ${mostraProjeto ? '<th>Projeto</th>' : ''}
     <th>Nome</th><th>Horário</th><th>Horas</th><th>Valor</th><th>Setor</th><th></th>
   </tr></thead><tbody>` +
-  data.map(t => `<tr>
-    ${mostraProjeto ? `<td style="font-size:12px;color:var(--text3);">${t.projetos?.nome||'—'}</td>` : ''}
+  data.map(t => `<tr> ${mostraProjeto ? `<td style="font-size:12px;color:var(--text3);">${t.projetos?.nome||'—'}</td>` : ''}
     <td><strong>${t.nome}</strong></td>
     <td class="mono">${(t.hora_ini||'').slice(0,5)} – ${(t.hora_fim||'').slice(0,5)}</td>
     <td class="mono">${t.horas}h</td>
@@ -7544,7 +7497,7 @@ function preencherPerfilMenu() {
   if (badge)   badge.textContent   = perfil;
   if (avatar)  {
     avatar.textContent = (u.nome || u.email || 'U')[0].toUpperCase();
-    const cores = {administrador:'#7c3aed',master:'#1a5fad',financeiro:'#059669',operador:'#d97706'};
+    const cores = {administrador:'#7c3aed',master:'#0e5a63',financeiro:'#059669',operador:'#d97706'};
     avatar.style.background = cores[perfil] || 'var(--blue)';
   }
 
@@ -7676,7 +7629,7 @@ async function salvarPerfil() {
     if (res !== null) {
       Object.assign(adminLogado, payload);
       Object.assign(usuarioLogado, payload);
-      toast('✅ Dados salvos!');
+      toast('Dados salvos!');
       preencherPerfilMenu();
     } else toast('Erro ao salvar',true);
   } else {
@@ -7689,7 +7642,7 @@ async function salvarPerfil() {
     if (res !== null) {
       Object.assign(usuarioLogado, payload);
       await registrarLog('editar','usuarios',u.id,'Atualizou dados do perfil');
-      toast('✅ Dados salvos!');
+      toast('Dados salvos!');
       preencherPerfilMenu();
     } else toast('Erro ao salvar',true);
   }
@@ -7818,8 +7771,8 @@ function renderModalPlanos() {
     const stColor = ass.status==='ativa' ? 'var(--green)'
                   : ass.status==='pendente' ? 'var(--amber)'
                   : 'var(--red)';
-    const stTxt = {ativa:'✅ Ativa', pendente:'⏳ Pagamento pendente',
-                   vencida:'❌ Vencida', suspensa:'⛔ Suspensa'}[ass.status] || ass.status;
+    const stTxt = {ativa:'Ativa', pendente:'⏳ Pagamento pendente',
+                   vencida:'Vencida', suspensa:'Suspensa'}[ass.status] || ass.status;
     const planoAtualNome = (PLANOS_LISTA.find(p=>p.id===planoAtual)||{}).nome || planoAtual;
     const planoAtualValor = (PLANOS_LISTA.find(p=>p.id===planoAtual)||{}).valor || 0;
     stEl.innerHTML = `
@@ -7834,8 +7787,7 @@ function renderModalPlanos() {
           <div style="font-size:15px;font-weight:700;">${stTxt}</div>
           <div style="font-size:12px;opacity:0.9;margin-top:4px;">Vencimento: ${venc}</div>
         </div>
-      </div>
-    `;
+      </div> `;
   }
 
   // ── LISTA DE PLANOS COM FEATURES ───────────────────────────
@@ -7858,7 +7810,7 @@ function renderModalPlanos() {
     if (isAtual) {
       badge = `<div style="display:inline-block;font-size:9px;font-weight:700;background:var(--green);color:#fff;padding:2px 8px;border-radius:99px;text-transform:uppercase;letter-spacing:0.4px;margin-bottom:6px;">✓ Plano atual</div>`;
     } else if (p.popular) {
-      badge = `<div style="display:inline-block;font-size:9px;font-weight:700;background:#fdf3e0;color:var(--amber);padding:2px 8px;border-radius:99px;text-transform:uppercase;letter-spacing:0.4px;border:1px solid #f0c060;margin-bottom:6px;">⭐ Popular</div>`;
+      badge = `<div style="display:inline-block;font-size:9px;font-weight:700;background:#fff8ec;color:var(--amber);padding:2px 8px;border-radius:99px;text-transform:uppercase;letter-spacing:0.4px;border:1px solid #e3cfa6;margin-bottom:6px;">Popular</div>`;
     } else {
       // Espaço reservado pra alinhar
       badge = `<div style="height:18px;margin-bottom:6px;"></div>`;
@@ -7869,15 +7821,14 @@ function renderModalPlanos() {
       <div style="display:flex;align-items:flex-start;gap:5px;padding:3px 0;font-size:11px;line-height:1.35;color:${r.inclui?'var(--text)':'var(--text3)'};">
         <span style="flex-shrink:0;color:${r.inclui?'var(--green)':'var(--text3)'};font-weight:700;width:10px;">${r.inclui?'✓':'×'}</span>
         <span style="${r.inclui?'':'text-decoration:line-through;opacity:0.65;'}">${r.label}</span>
-      </div>
-    `).join('');
+      </div> `).join('');
 
     // Botão
     let btnHtml;
     if (isAtual) {
       btnHtml = `<button disabled style="width:100%;padding:8px;background:#e8f5ec;color:var(--green);border:1.5px solid var(--green);border-radius:6px;font-size:11px;font-weight:700;cursor:default;font-family:inherit;opacity:0.85;">✓ Atual</button>`;
     } else if (isSelec) {
-      btnHtml = `<button disabled style="width:100%;padding:8px;background:var(--blue);color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:700;cursor:default;font-family:inherit;">⬇ Selecionado</button>`;
+      btnHtml = `<button disabled style="width:100%;padding:8px;background:var(--blue);color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:700;cursor:default;font-family:inherit;">Selecionado</button>`;
     } else {
       const idxAtual = PLANOS_LISTA.findIndex(x=>x.id===planoAtual);
       const idxThis  = PLANOS_LISTA.findIndex(x=>x.id===p.id);
@@ -7887,12 +7838,11 @@ function renderModalPlanos() {
 
     // Aviso se o pico atual já passou do limite deste plano
     const avisoAbaixo = abaixo
-      ? `<div style="background:#fdf0f0;border:1px solid #f0b8b8;border-radius:4px;padding:5px 7px;font-size:10px;color:var(--red);margin:8px 0 0;line-height:1.3;">⚠ Você tem ${picoAtual}, limite: ${p.limite}</div>`
+      ? `<div style="background:#fdecea;border:1px solid #f0b8b8;border-radius:4px;padding:5px 7px;font-size:10px;color:var(--red);margin:8px 0 0;line-height:1.3;">Você tem ${picoAtual}, limite: ${p.limite}</div>`
       : '';
 
     return `
-      <div style="background:${bgColor};border:2px solid ${borderColor};border-radius:10px;padding:14px 12px;box-shadow:${shadow};transition:all 0.2s;display:flex;flex-direction:column;height:100%;">
-        ${badge}
+      <div style="background:${bgColor};border:2px solid ${borderColor};border-radius:10px;padding:14px 12px;box-shadow:${shadow};transition:all 0.2s;display:flex;flex-direction:column;height:100%;"> ${badge}
         <div style="font-size:15px;font-weight:700;color:var(--text);line-height:1.1;margin-bottom:2px;">${p.nome}</div>
         <div style="margin-bottom:8px;">
           <span style="font-size:18px;font-weight:800;color:var(--text);">R$ ${p.valor.toLocaleString('pt-BR')}</span>
@@ -7900,17 +7850,12 @@ function renderModalPlanos() {
         </div>
         <div style="font-size:10px;color:var(--text2);line-height:1.35;margin-bottom:10px;min-height:28px;">${p.descricao || ''}</div>
 
-        <div style="border-top:1px solid var(--border);padding-top:10px;margin-bottom:10px;flex:1;">
-          ${features}
-        </div>
+        <div style="border-top:1px solid var(--border);padding-top:10px;margin-bottom:10px;flex:1;"> ${features}
+        </div> ${avisoAbaixo}
 
-        ${avisoAbaixo}
-
-        <div style="margin-top:auto;">
-          ${btnHtml}
+        <div style="margin-top:auto;"> ${btnHtml}
         </div>
-      </div>
-    `;
+      </div> `;
   }).join('');
 
   // Atualizar botão "Salvar alterações" (habilitado só se houver mudança)
@@ -7935,9 +7880,9 @@ function atualizarBtnSalvarPlano() {
   btn.style.cursor = houveMudanca ? 'pointer' : 'not-allowed';
   if (mudouPlano) {
     const p = PLANOS_LISTA.find(x=>x.id===planoSelec);
-    btn.textContent = `💾 Confirmar mudança para ${p?.nome || planoSelec}`;
+    btn.textContent = `Confirmar mudança para ${p?.nome || planoSelec}`;
   } else {
-    btn.textContent = '💾 Salvar alterações no plano';
+    btn.textContent = 'Salvar alterações no plano';
   }
 }
 
@@ -7958,8 +7903,8 @@ function podeCadastrar(acao) {
   if (_assinaturaAtiva.status === 'ativa') return true;
   // Pendente ou vencida — bloquear cadastros
   const msg = _assinaturaAtiva.status === 'pendente'
-    ? '⏳ Acesso temporário — regularize o pagamento para cadastrar ' + acao + '.\nClique em "💎 Plano e cobrança" no menu de perfil para ver as instruções.'
-    : '❌ Assinatura vencida — renove para cadastrar ' + acao + '.';
+    ? '⏳ Acesso temporário — regularize o pagamento para cadastrar ' + acao + '.\nClique em "Plano e cobrança" no menu de perfil para ver as instruções.'
+    : 'Assinatura vencida — renove para cadastrar ' + acao + '.';
   toast(msg, true);
   return false;
 }
@@ -7976,9 +7921,9 @@ async function salvarAlteracoesPlano() {
   await fetch(SUPABASE_URL+'/rest/v1/assinaturas?id=eq.'+_assinaturaAtiva.id,{method:'PATCH',headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify(payload)});
   Object.assign(_assinaturaAtiva,payload);
   if (p&&planoNovo!==_assinaturaAtiva.plano) { _planoConfig=PLANOS_CONFIG[planoNovo]||PLANOS_CONFIG['starter']; aplicarRestricoesDePlano(); }
-  toast('✅ Configurações salvas!');
+  toast('Configurações salvas!');
   preencherPerfilMenu();
-  btn.disabled=false; btn.textContent='💾 Salvar alterações no plano';
+  btn.disabled=false; btn.textContent='Salvar alterações no plano';
 }
 
 
@@ -8039,7 +7984,7 @@ async function carregarHistoricoPagamentos() {
   if (!data?.length) { el.innerHTML='<div style="color:var(--text3);font-size:12px;">Nenhum pagamento registrado ainda.</div>'; return; }
   const formaMap={PIX:'PIX',BOLETO:'Boleto',CREDIT_CARD:'Cartão'};
   el.innerHTML='<table style="width:100%;border-collapse:collapse;font-size:12px;"><thead><tr><th style="text-align:left;padding:4px 8px;color:var(--text3);font-size:11px;">Data</th><th style="padding:4px 8px;color:var(--text3);font-size:11px;">Forma</th><th style="text-align:right;padding:4px 8px;color:var(--text3);font-size:11px;">Valor</th><th style="text-align:right;padding:4px 8px;color:var(--text3);font-size:11px;">Status</th></tr></thead><tbody>'+
-    data.map(p=>`<tr style="border-top:1px solid var(--border);"><td style="padding:7px 8px;">${p.pago_em?new Date(p.pago_em).toLocaleDateString('pt-BR'):'—'}</td><td style="padding:7px 8px;">${formaMap[p.forma]||p.forma||'—'}</td><td style="padding:7px 8px;text-align:right;color:var(--green);font-weight:600;">${fBRL(p.valor)}</td><td style="padding:7px 8px;text-align:right;"><span style="font-size:10px;background:var(--green-bg,#e8f5eb);color:var(--green);padding:2px 6px;border-radius:99px;">${p.status==='pago'?'✅ Pago':p.status}</span></td></tr>`).join('')+'</tbody></table>';
+    data.map(p=>`<tr style="border-top:1px solid var(--border);"><td style="padding:7px 8px;">${p.pago_em?new Date(p.pago_em).toLocaleDateString('pt-BR'):'—'}</td><td style="padding:7px 8px;">${formaMap[p.forma]||p.forma||'—'}</td><td style="padding:7px 8px;text-align:right;color:var(--green);font-weight:600;">${fBRL(p.valor)}</td><td style="padding:7px 8px;text-align:right;"><span style="font-size:10px;background:var(--green-bg,#eafaf2);color:var(--green);padding:2px 6px;border-radius:99px;">${p.status==='pago'?'Pago':p.status}</span></td></tr>`).join('')+'</tbody></table>';
 }
 
 
@@ -8101,7 +8046,7 @@ function previewDocLabel(inputId) {
   var slot = lbl ? lbl.closest('.upload-doc-slot') : null;
   if (!inp || !inp.files || !inp.files.length) return;
   var file = inp.files[0];
-  if (lbl) lbl.textContent = '✅ ' + file.name;
+  if (lbl) lbl.textContent = '' + file.name;
   if (slot) slot.classList.add('ok');
 }
 
@@ -8507,16 +8452,16 @@ async function importarTiposPlanilha(input) {
         <button class="modal-close" onclick="fecharModalFechamento()">✕</button>
       </div>
       <div style="display:flex;gap:0;border-bottom:2px solid var(--border);margin-bottom:16px;">
-        <button class="btn btn-ghost mfech-tab-btn active-tab" onclick="mfechTab('fechamento',this)" style="border-radius:4px 4px 0 0;font-size:12px;">📋 Fechamento</button>
-        <button class="btn btn-ghost mfech-tab-btn" onclick="mfechTab('remessa',this)" style="border-radius:4px 4px 0 0;font-size:12px;">📤 Remessa</button>
-        <button class="btn btn-ghost mfech-tab-btn" onclick="mfechTab('retorno',this)" style="border-radius:4px 4px 0 0;font-size:12px;">📥 Retorno</button>
+        <button class="btn btn-ghost mfech-tab-btn active-tab" onclick="mfechTab('fechamento',this)" style="border-radius:4px 4px 0 0;font-size:12px;">Fechamento</button>
+        <button class="btn btn-ghost mfech-tab-btn" onclick="mfechTab('remessa',this)" style="border-radius:4px 4px 0 0;font-size:12px;">Remessa</button>
+        <button class="btn btn-ghost mfech-tab-btn" onclick="mfechTab('retorno',this)" style="border-radius:4px 4px 0 0;font-size:12px;">Retorno</button>
       </div>
       <div id="mfech-page-fechamento">
         <div style="margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
           <div id="mfech-resumo" style="font-size:12px;color:var(--text2);"></div>
           <div style="display:flex;gap:6px;">
-            <button class="btn btn-success btn-sm" onclick="gerarRemessa()">📤 Gerar remessa</button>
-            <button class="btn btn-ghost btn-sm" onclick="exportarFechamentoXLSX()">⬇ Excel</button>
+            <button class="btn btn-success btn-sm" onclick="gerarRemessa()">Gerar remessa</button>
+            <button class="btn btn-ghost btn-sm" onclick="exportarFechamentoXLSX()">Excel</button>
           </div>
         </div>
         <div id="mfech-tabela"></div>
@@ -8526,7 +8471,7 @@ async function importarTiposPlanilha(input) {
       </div>
       <div id="mfech-page-retorno" style="display:none;">
         <div class="card" style="border:2px dashed var(--border);text-align:center;padding:32px;">
-          <div style="font-size:32px;margin-bottom:8px;">📥</div>
+          <div style="font-size:32px;margin-bottom:8px;"></div>
           <div style="font-size:14px;font-weight:600;margin-bottom:4px;">Upload do arquivo de retorno (.RET)</div>
           <div style="font-size:12px;color:var(--text2);margin-bottom:16px;">Gerado pelo Bradesco após processar a remessa</div>
           <input type="file" id="ret-file-input" accept=".ret,.txt,.RET" style="display:none;" onchange="processarRetorno(event)">
@@ -8566,7 +8511,7 @@ async function importarTiposPlanilha(input) {
 <div class="modal-overlay" id="modal-editar-lanc" onclick="if(event.target===this)fecharModalEditarLanc()">
   <div class="modal" style="max-width:480px;">
     <div class="modal-header">
-      <div class="modal-title">✏️ Editar plantão</div>
+      <div class="modal-title">Editar plantão</div>
       <button class="modal-close" onclick="fecharModalEditarLanc()">&#10005;</button>
     </div>
     <div style="padding:0 24px 20px;display:flex;flex-direction:column;gap:12px;">
@@ -8764,12 +8709,12 @@ async function carregarLog() {
     return;
   }
 
-  const icones = { criar:'🟢', editar:'🔵', excluir:'🔴', login:'⚪', logout:'⚪' };
+  const icones = { criar:'', editar:'', excluir:'', login:'', logout:'' };
   const cores  = { criar:'var(--green)', editar:'var(--blue)', excluir:'var(--red)', login:'var(--text3)', logout:'var(--text3)' };
 
   el.innerHTML = logs.map(l => {
     const dt = new Date(l.criado_em).toLocaleString('pt-BR');
-    const icone = icones[l.acao] || '⚪';
+    const icone = icones[l.acao] || '';
     const cor   = cores[l.acao]  || 'var(--text3)';
     const nome  = l.usuario_nome || 'Sistema';
     const perfil = l.usuario_perfil ? `(${l.usuario_perfil})` : '';
@@ -8777,8 +8722,7 @@ async function carregarLog() {
       <span style="font-size:16px;flex-shrink:0;">${icone}</span>
       <div style="flex:1;min-width:0;">
         <div style="font-size:13px;font-weight:500;">${l.descricao || l.acao}</div>
-        <div style="font-size:11px;color:var(--text3);margin-top:2px;">
-          ${nome} ${perfil} · ${dt}
+        <div style="font-size:11px;color:var(--text3);margin-top:2px;"> ${nome} ${perfil} · ${dt}
           ${l.tabela ? `· tabela: ${l.tabela}` : ''}
         </div>
       </div>
@@ -8812,7 +8756,7 @@ function renderUsuarios() {
   }
   const badgePerfil = {
     administrador: 'background:#7c3aed;color:#fff',
-    master:        'background:#1a5fad;color:#fff',
+    master:        'background:#0e5a63;color:#fff',
     financeiro:    'background:#059669;color:#fff',
     operador:      'background:#d97706;color:#fff',
   };
@@ -8821,16 +8765,14 @@ function renderUsuarios() {
       <div>
         <div style="display:flex;align-items:center;gap:8px;">
           <span style="font-size:14px;font-weight:600;">${u.nome}</span>
-          <span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:99px;${badgePerfil[u.perfil]||''}">${u.perfil}</span>
-          ${!u.ativo ? '<span style="font-size:10px;color:var(--text3);">(inativo)</span>' : ''}
+          <span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:99px;${badgePerfil[u.perfil]||''}">${u.perfil}</span> ${!u.ativo ? '<span style="font-size:10px;color:var(--text3);">(inativo)</span>' : ''}
         </div>
-        <div style="font-size:12px;color:var(--text3);margin-top:2px;">${u.email}</div>
-        ${u.perfil==='operador'&&u.pode_criar_projeto ? '<div style="font-size:11px;color:var(--blue);">✓ Pode criar projetos</div>' : ''}
+        <div style="font-size:12px;color:var(--text3);margin-top:2px;">${u.email}</div> ${u.perfil==='operador'&&u.pode_criar_projeto ? '<div style="font-size:11px;color:var(--blue);">✓ Pode criar projetos</div>' : ''}
       </div>
       <div style="display:flex;gap:6px;">
-        <button class="btn btn-sm btn-ghost" onclick="editarUsuario('${u.id}')">✏️ Editar</button>
+        <button class="btn btn-sm btn-ghost" onclick="editarUsuario('${u.id}')">Editar</button>
         <button class="btn btn-sm btn-ghost" onclick="toggleUsuario('${u.id}',${!u.ativo})">${u.ativo?'Desativar':'Ativar'}</button>
-        <button class="btn btn-sm btn-danger" onclick="excluirUsuario('${u.id}','${u.nome}')">🗑️</button>
+        <button class="btn btn-sm btn-danger" onclick="excluirUsuario('${u.id}','${u.nome}')"></button>
       </div>
     </div>`).join('');
 }
@@ -8848,8 +8790,7 @@ function renderNuProjetosList(selecionados) {
   selecionados = selecionados || [];
   el.innerHTML = projetos.map(p => `
     <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;padding:6px 8px;background:var(--bg2);border-radius:6px;">
-      <input type="checkbox" class="nu-proj-chk" value="${p.id}" ${selecionados.includes(p.id)?'checked':''}>
-      ${p.nome}
+      <input type="checkbox" class="nu-proj-chk" value="${p.id}" ${selecionados.includes(p.id)?'checked':''}> ${p.nome}
     </label>`).join('');
 }
 
@@ -8957,7 +8898,7 @@ function _porHospital(dados){
   return Object.entries(m).sort((a,b)=>a[0].localeCompare(b[0],'pt-BR'));
 }
 function _totalGeralCard(label,valor){
-  return `<div class="card" style="margin-bottom:12px;background:#0f3d7a;color:#fff;"><div style="display:flex;justify-content:space-between;"><span style="font-weight:600;">${label}</span><span style="font-weight:700;">${fBRL(valor)}</span></div></div>`;
+  return `<div class="card" style="margin-bottom:12px;background:#0a444b;color:#fff;"><div style="display:flex;justify-content:space-between;"><span style="font-weight:600;">${label}</span><span style="font-weight:700;">${fBRL(valor)}</span></div></div>`;
 }
 
 function gerarRelatorio(){
@@ -9145,7 +9086,7 @@ function gerarRelEscala(el){
       const ehFuro=l.aberto?((l.vagas||1)-(l.vagas_preenchidas||0))>0:!l.medico_id;
       if(ehFuro) totFuros++;
       const resp=ehFuro?'<span style="color:var(--red);font-weight:600;">Sem médico escalado</span>':'<strong>'+(l.medico||'—')+'</strong>';
-      return `<tr style="${ehFuro?'background:#fdf0f0;':''}"><td>${l.projeto||'—'}</td><td>${l.setor||'—'}</td><td class="mono">${(l.hora_ini||'').slice(0,5)}–${(l.hora_fim||'').slice(0,5)}</td><td>${l.tipo||'—'}</td><td>${resp}</td></tr>`;
+      return `<tr style="${ehFuro?'background:#fdecea;':''}"><td>${l.projeto||'—'}</td><td>${l.setor||'—'}</td><td class="mono">${(l.hora_ini||'').slice(0,5)}–${(l.hora_fim||'').slice(0,5)}</td><td>${l.tipo||'—'}</td><td>${resp}</td></tr>`;
     }).join('');
     html+=`<div class="card" style="margin-bottom:12px;"><div class="card-title" style="text-transform:capitalize;">${dow}, ${fDate(data)}</div><table><thead><tr><th>Hospital</th><th>Setor</th><th>Horário</th><th>Tipo</th><th>Profissional</th></tr></thead><tbody>${linhas}</tbody></table></div>`;
   });
@@ -9211,7 +9152,7 @@ function exportarRelPDF(){
   const cont=document.getElementById('rel-resultado');
   if(!cont||!cont.innerHTML.trim()){toast('Gere um relatório primeiro',true);return;}
   const win=window.open('','_blank');
-  win.document.write('<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>Relatório</title><style>body{font-family:Arial,sans-serif;font-size:11px;padding:20px;}table{width:100%;border-collapse:collapse;margin-bottom:14px;}th{background:#1a5fad;color:#fff;padding:6px 8px;text-align:left;font-size:10px;}td{padding:5px 8px;border-bottom:0.5px solid #e0e0e0;font-size:10px;}.card-title{font-weight:700;font-size:12px;margin:10px 0 6px;}@page{margin:1.2cm;}</style></head><body>'+cont.innerHTML+'<div style="margin-top:14px;font-size:9px;color:#999;">PlantãoPro · '+new Date().toLocaleString('pt-BR')+'</div></body></html>');
+  win.document.write('<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>Relatório</title><style>body{font-family:Arial,sans-serif;font-size:11px;padding:20px;}table{width:100%;border-collapse:collapse;margin-bottom:14px;}th{background:#0e5a63;color:#fff;padding:6px 8px;text-align:left;font-size:10px;}td{padding:5px 8px;border-bottom:0.5px solid #d8e0e2;font-size:10px;}.card-title{font-weight:700;font-size:12px;margin:10px 0 6px;}@page{margin:1.2cm;}</style></head><body>'+cont.innerHTML+'<div style="margin-top:14px;font-size:9px;color:#8aa0a6;">PlantãoPro · '+new Date().toLocaleString('pt-BR')+'</div></body></html>');
   win.document.close();setTimeout(()=>{win.focus();win.print();},400);
 }
 </script>
@@ -9236,7 +9177,7 @@ function gerarRelFinAnalitico(el){
   let html='',geral=0;
   _porHospital(dados).forEach(([proj,lst])=>{
     const sub=lst.reduce((s,l)=>s+(l.honorario||0),0);geral+=sub;
-    const linhas=lst.slice().sort((a,b)=>(a.setor||'').localeCompare(b.setor||'','pt-BR')||a.data.localeCompare(b.data)).map(l=>`<tr style="${l.honorario===0&&l.medico==='— (falta)'?'background:#fdf0f0;':''}"><td class="mono">${fDate(l.data)}</td><td><strong>${l.medico||'—'}</strong>${l.crm?'<br><span class="mono" style="font-size:11px;color:var(--text3);">'+l.crm+'</span>':''}</td><td>${l.setor||'—'}</td><td>${l.tipo||'—'}</td><td class="mono">${l.horas}h</td><td class="mono" style="color:${l.honorario?'var(--green)':'var(--text3)'};font-weight:600;">${fBRL(l.honorario||0)}</td></tr>`).join('');
+    const linhas=lst.slice().sort((a,b)=>(a.setor||'').localeCompare(b.setor||'','pt-BR')||a.data.localeCompare(b.data)).map(l=>`<tr style="${l.honorario===0&&l.medico==='— (falta)'?'background:#fdecea;':''}"><td class="mono">${fDate(l.data)}</td><td><strong>${l.medico||'—'}</strong>${l.crm?'<br><span class="mono" style="font-size:11px;color:var(--text3);">'+l.crm+'</span>':''}</td><td>${l.setor||'—'}</td><td>${l.tipo||'—'}</td><td class="mono">${l.horas}h</td><td class="mono" style="color:${l.honorario?'var(--green)':'var(--text3)'};font-weight:600;">${fBRL(l.honorario||0)}</td></tr>`).join('');
     html+=`<div class="card" style="margin-bottom:12px;"><div style="display:flex;justify-content:space-between;margin-bottom:8px;"><div class="card-title" style="margin-bottom:0;">${proj}</div><div style="font-size:12px;color:var(--text2);">${lst.length} plantão(ões) · <span style="color:var(--green);font-weight:600;">${fBRL(sub)}</span></div></div><table><thead><tr><th>Data</th><th>Médico / CRM</th><th>Setor</th><th>Tipo</th><th>Horas</th><th>Valor</th></tr></thead><tbody>${linhas}</tbody><tfoot><tr style="border-top:1.5px solid var(--border2);"><td colspan="5" style="font-weight:600;padding:8px;">Total ${proj}</td><td class="mono" style="color:var(--green);font-weight:700;">${fBRL(sub)}</td></tr></tfoot></table></div>`;
   });
   el.innerHTML=_totalGeralCard('Total geral — '+dados.length+' plantão(ões)',geral)+html;
@@ -9250,7 +9191,7 @@ function gerarRelFinConsolidado(el){
     lst.forEach(l=>{const k=l.medico_id||l.medico;if(!porMed[k])porMed[k]={nome:l.medico||'—',crm:l.crm||'',qtd:0,horas:0,total:0};porMed[k].qtd++;porMed[k].horas+=l.horas||0;porMed[k].total+=l.honorario||0;});
     const arr=Object.values(porMed).sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR'));
     const sub=arr.reduce((s,m)=>s+m.total,0);geral+=sub;
-    const linhas=arr.map(m=>`<tr style="${m.total===0&&m.nome==='— (falta)'?'background:#fdf0f0;':''}"><td><strong>${m.nome}</strong></td><td class="mono">${m.crm}</td><td style="text-align:center;">${m.qtd}</td><td class="mono">${Math.round(m.horas*10)/10}h</td><td class="mono" style="color:${m.total?'var(--green)':'var(--text3)'};font-weight:600;">${fBRL(m.total)}</td></tr>`).join('');
+    const linhas=arr.map(m=>`<tr style="${m.total===0&&m.nome==='— (falta)'?'background:#fdecea;':''}"><td><strong>${m.nome}</strong></td><td class="mono">${m.crm}</td><td style="text-align:center;">${m.qtd}</td><td class="mono">${Math.round(m.horas*10)/10}h</td><td class="mono" style="color:${m.total?'var(--green)':'var(--text3)'};font-weight:600;">${fBRL(m.total)}</td></tr>`).join('');
     html+=`<div class="card" style="margin-bottom:12px;"><div style="display:flex;justify-content:space-between;margin-bottom:8px;"><div class="card-title" style="margin-bottom:0;">${proj}</div><div style="font-size:12px;color:var(--text2);">${arr.length} linha(s) · <span style="color:var(--green);font-weight:600;">${fBRL(sub)}</span></div></div><table><thead><tr><th>Médico</th><th>CRM</th><th style="text-align:center;">Plantões</th><th>Horas</th><th>Total</th></tr></thead><tbody>${linhas}</tbody><tfoot><tr style="border-top:1.5px solid var(--border2);"><td colspan="4" style="font-weight:600;padding:8px;">Total ${proj}</td><td class="mono" style="color:var(--green);font-weight:700;">${fBRL(sub)}</td></tr></tfoot></table></div>`;
   });
   el.innerHTML=_totalGeralCard('Total geral',geral)+html;
@@ -9434,7 +9375,7 @@ async function aciConfirmarSub(id){
 <script>
 // Selo "Confirmado pelo gestor" nos relatórios
 function _tagGestor(l){
-  if(l.status_presenca==='presente') return ' <span style="display:inline-block;font-size:10px;background:#e8f0fb;color:#1a5fad;padding:1px 7px;border-radius:10px;font-weight:600;white-space:nowrap;">Confirmado pelo gestor</span>';
+  if(l.status_presenca==='presente') return ' <span style="display:inline-block;font-size:10px;background:#e3f0f1;color:#0e5a63;padding:1px 7px;border-radius:10px;font-weight:600;white-space:nowrap;">Confirmado pelo gestor</span>';
   if(l.status_presenca==='falta') return ' <span style="display:inline-block;font-size:10px;background:#fdeaea;color:#b03030;padding:1px 7px;border-radius:10px;font-weight:600;white-space:nowrap;">Falta confirmada</span>';
   return '';
 }
@@ -9445,7 +9386,7 @@ function gerarRelFinAnalitico(el){
   let html='',geral=0;
   _porHospital(dados).forEach(([proj,lst])=>{
     const sub=lst.reduce((s,l)=>s+(l.honorario||0),0);geral+=sub;
-    const linhas=lst.slice().sort((a,b)=>(a.setor||'').localeCompare(b.setor||'','pt-BR')||a.data.localeCompare(b.data)).map(l=>`<tr style="${l.status_presenca==='falta'?'background:#fdf0f0;':''}"><td class="mono">${fDate(l.data)}</td><td><strong>${l.medico||'—'}</strong>${_tagGestor(l)}${l.crm?'<br><span class="mono" style="font-size:11px;color:var(--text3);">'+l.crm+'</span>':''}</td><td>${l.setor||'—'}</td><td>${l.tipo||'—'}</td><td class="mono">${l.horas}h</td><td class="mono" style="color:${l.honorario?'var(--green)':'var(--text3)'};font-weight:600;">${fBRL(l.honorario||0)}</td></tr>`).join('');
+    const linhas=lst.slice().sort((a,b)=>(a.setor||'').localeCompare(b.setor||'','pt-BR')||a.data.localeCompare(b.data)).map(l=>`<tr style="${l.status_presenca==='falta'?'background:#fdecea;':''}"><td class="mono">${fDate(l.data)}</td><td><strong>${l.medico||'—'}</strong>${_tagGestor(l)}${l.crm?'<br><span class="mono" style="font-size:11px;color:var(--text3);">'+l.crm+'</span>':''}</td><td>${l.setor||'—'}</td><td>${l.tipo||'—'}</td><td class="mono">${l.horas}h</td><td class="mono" style="color:${l.honorario?'var(--green)':'var(--text3)'};font-weight:600;">${fBRL(l.honorario||0)}</td></tr>`).join('');
     html+=`<div class="card" style="margin-bottom:12px;"><div style="display:flex;justify-content:space-between;margin-bottom:8px;"><div class="card-title" style="margin-bottom:0;">${proj}</div><div style="font-size:12px;color:var(--text2);">${lst.length} plantão(ões) · <span style="color:var(--green);font-weight:600;">${fBRL(sub)}</span></div></div><table><thead><tr><th>Data</th><th>Médico / CRM</th><th>Setor</th><th>Tipo</th><th>Horas</th><th>Valor</th></tr></thead><tbody>${linhas}</tbody><tfoot><tr style="border-top:1.5px solid var(--border2);"><td colspan="5" style="font-weight:600;padding:8px;">Total ${proj}</td><td class="mono" style="color:var(--green);font-weight:700;">${fBRL(sub)}</td></tr></tfoot></table></div>`;
   });
   el.innerHTML=_totalGeralCard('Total geral — '+dados.length+' plantão(ões)',geral)+html;
@@ -9599,7 +9540,7 @@ async function gerarConvite(){
   if(btn){btn.disabled=false;btn.textContent='Gerar convite';}
   if(!r.ok){toast('Erro ao gerar convite',true);return;}
   const c=await r.json(); _ultimoConvite=c;
-  document.getElementById('cv-resultado').innerHTML=`<div class="card" style="background:#e8f0fb;border:1px solid var(--blue);"><div style="font-size:12px;color:var(--text2);margin-bottom:4px;">Código de convite gerado</div><div style="font-size:26px;font-weight:700;letter-spacing:2px;color:var(--blue);font-family:monospace;">${c.codigo}</div><div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;"><button class="btn btn-ghost btn-sm" onclick="copiarCodigoConvite()">Copiar código</button><button class="btn btn-ghost btn-sm" onclick="copiarMsgConvite()">Copiar mensagem p/ WhatsApp</button></div><div style="font-size:11px;color:var(--text3);margin-top:8px;">Válido por 7 dias · uso único</div></div>`;
+  document.getElementById('cv-resultado').innerHTML=`<div class="card" style="background:#e3f0f1;border:1px solid var(--blue);"><div style="font-size:12px;color:var(--text2);margin-bottom:4px;">Código de convite gerado</div><div style="font-size:26px;font-weight:700;letter-spacing:2px;color:var(--blue);font-family:monospace;">${c.codigo}</div><div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;"><button class="btn btn-ghost btn-sm" onclick="copiarCodigoConvite()">Copiar código</button><button class="btn btn-ghost btn-sm" onclick="copiarMsgConvite()">Copiar mensagem p/ WhatsApp</button></div><div style="font-size:11px;color:var(--text3);margin-top:8px;">Válido por 7 dias · uso único</div></div>`;
   ['cv-nome','cv-crm','cv-email'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
   carregarConvites();
 }
@@ -9611,10 +9552,10 @@ async function carregarConvites(){
   el.innerHTML='<div class="empty">Carregando...</div>';
   const r=await fetch('/api/convites'); const lista=r.ok?await r.json():[];
   if(!lista.length){el.innerHTML='<div class="card"><div class="empty">Nenhum convite gerado ainda.</div></div>';return;}
-  const badge=s=>{const m={pendente:['#1a5fad','Pendente'],usado:['#2d7a3a','Usado'],cancelado:['#999','Cancelado']};const x=m[s]||['#999',s];return `<span style="font-size:11px;font-weight:600;color:${x[0]};">${x[1]}</span>`;};
+  const badge=s=>{const m={pendente:['#0e5a63','Pendente'],usado:['#0a8f5b','Usado'],cancelado:['#8aa0a6','Cancelado']};const x=m[s]||['#8aa0a6',s];return `<span style="font-size:11px;font-weight:600;color:${x[0]};">${x[1]}</span>`;};
   const rows=lista.map(c=>{
     const expirado=c.status==='pendente'&&new Date(c.expira_em)<new Date();
-    const st=expirado?'<span style="font-size:11px;font-weight:600;color:#999;">Expirado</span>':badge(c.status);
+    const st=expirado?'<span style="font-size:11px;font-weight:600;color:#8aa0a6;">Expirado</span>':badge(c.status);
     const acao=(c.status==='pendente'&&!expirado)?`<button class="btn btn-ghost btn-sm" onclick="cancelarConvite('${c.id}')">Cancelar</button>`:'';
     return `<tr><td class="mono" style="font-weight:700;">${c.codigo}</td><td>${c.nome||'—'}</td><td class="mono">${c.crm||'—'}</td><td>${st}</td><td class="mono">${fDate((c.criado_em||'').slice(0,10))}</td><td>${acao}</td></tr>`;
   }).join('');
@@ -9627,9 +9568,7 @@ async function cancelarConvite(id){
 }
 </script>
 
-<script>
-  
-async function resetSenhaMedico(id){
+<script> async function resetSenhaMedico(id){
   const med = (typeof medicos!=='undefined' && medicos) ? medicos.find(x=>x.id===id) : null;
   const nome = med && med.nome ? med.nome : 'este médico';
   if(!confirm('Gerar nova senha provisória para '+nome+'?\n\nA senha atual dele deixará de funcionar.')) return;
