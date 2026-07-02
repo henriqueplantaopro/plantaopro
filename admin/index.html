@@ -45,7 +45,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 .nav-item.active{background:var(--blue-light);color:var(--blue);border-left-color:var(--blue);font-weight:600;}
 .sidebar-footer{padding:14px 20px;border-top:1px solid var(--border);font-size:12px;color:var(--text3);}
 .btn-logout{background:none;border:none;color:var(--red);font-size:12px;cursor:pointer;padding:0;margin-top:4px;}
-.main{margin-left:220px;min-height:100vh;padding:28px 32px;}
+.main{max-width:1280px;margin:0 auto;min-height:100vh;padding:24px 20px 60px;}
 .section{display:none;}.section.active{display:block;}
 .page-title{font-size:20px;font-weight:700;margin-bottom:4px;}
 .page-sub{font-size:12px;color:var(--text3);margin-bottom:24px;}
@@ -380,6 +380,30 @@ tr:hover td{background:var(--bg3);}
 @media (max-width: 1400px) { #mp-planos-lista { grid-template-columns: repeat(3, minmax(0,1fr)) !important; } }
 @media (max-width: 900px)  { #mp-planos-lista { grid-template-columns: repeat(2, minmax(0,1fr)) !important; } }
 @media (max-width: 600px)  { #mp-planos-lista { grid-template-columns: 1fr !important; } }
+
+/* ── TOPBAR (menu superior) ─────────────────────────────── */
+.topbar-wrap{position:sticky;top:0;z-index:100;background:var(--blue);box-shadow:var(--shadow);flex-direction:column;}
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 20px 7px;max-width:1280px;margin:0 auto;width:100%;color:#fff;}
+.topbar-brand{display:flex;align-items:baseline;gap:8px;}
+.topbar-brand b{font-size:16px;font-weight:800;letter-spacing:0.2px;}
+.topbar-sub{font-size:11px;opacity:.7;}
+.topbar-user{display:flex;align-items:center;gap:9px;cursor:pointer;padding:4px 10px;border-radius:10px;transition:background .15s;}
+.topbar-user:hover{background:rgba(255,255,255,.12);}
+.topbar-avatar{width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.18);color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0;}
+.topbar-user #admin-nome{font-weight:600;font-size:13px;color:#fff;max-width:220px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.topbar-user #sidebar-perfil-badge{font-size:10px;color:rgba(255,255,255,.65);text-transform:uppercase;letter-spacing:.5px;}
+.topnav{display:flex;align-items:stretch;gap:2px;padding:0 12px;max-width:1280px;margin:0 auto;width:100%;flex-wrap:wrap;}
+.topnav .nav-item,.dd-label{display:flex;align-items:center;gap:6px;padding:9px 12px 11px;font-size:13px;font-weight:600;color:rgba(255,255,255,.82);cursor:pointer;border-left:none;border-bottom:3px solid transparent;white-space:nowrap;user-select:none;transition:color .15s;}
+.topnav > .nav-item:hover,.dd:hover > .dd-label,.dd.open > .dd-label{color:#fff;background:rgba(255,255,255,.08);}
+.topnav > .nav-item.active{color:#fff;background:transparent;border-bottom-color:#fff;}
+.dd{position:relative;}
+.dd-caret{font-size:8px;opacity:.65;margin-left:1px;}
+.dd-menu{display:none;position:absolute;top:100%;left:0;background:var(--bg2);border:1px solid var(--border);border-radius:10px;box-shadow:var(--shadow);min-width:210px;padding:6px;z-index:200;}
+.dd:hover > .dd-menu,.dd.open > .dd-menu{display:block;}
+.dd-menu .nav-item{color:var(--text2);border-bottom:none;border-radius:8px;padding:9px 12px;font-weight:500;white-space:nowrap;}
+.dd-menu .nav-item:hover{background:var(--bg3);color:var(--text);}
+.dd-menu .nav-item.active{background:var(--blue-bg);color:var(--blue);border-bottom:none;font-weight:600;}
+.dd:has(.nav-item.active) > .dd-label{color:#fff;border-bottom-color:#fff;}
 </style>
 </head>
 <body>
@@ -398,81 +422,63 @@ tr:hover td{background:var(--bg3);}
 </div>
 
 <!-- SIDEBAR -->
-<div class="sidebar" id="sidebar" style="display:none;">
-  <div class="sidebar-header">
-    <div class="sidebar-logo">PlantãoPro</div>
-    <div class="sidebar-sub">Painel Admin</div>
-  </div>
-  <nav class="sidebar-nav">
-
-    <!-- Home -->
-    <div class="nav-item active" onclick="showTab('dashboard',this)" style="margin-bottom:2px;">Dashboard</div>
-
-    <!-- Calendário -->
-    <div class="nav-item" onclick="showTab('calendario',this)" style="margin-bottom:2px;">Calendário</div>
-    <div class="nav-item" onclick="showTab('ausencias_ci',this);carregarAusenciasCI();">Ausência de check-in</div>
-
-    <!-- Cadastros (colapsável) -->
-    <div class="nav-group">
-      <div class="nav-group-label" onclick="toggleNavGroup(this)">
-        <span class="nav-label-left">Cadastros</span>
-        <span class="nav-arrow">▶</span>
+<div class="topbar-wrap" id="sidebar" style="display:none;">
+  <header class="topbar">
+    <div class="topbar-brand"><b>PlantãoPro</b><span class="topbar-sub">Painel Admin</span></div>
+    <div class="topbar-user" onclick="showTab('perfil')" title="Meu perfil">
+      <div id="sidebar-avatar" class="topbar-avatar">H</div>
+      <div style="min-width:0;">
+        <div id="admin-nome"></div>
+        <div id="sidebar-perfil-badge"></div>
       </div>
-      <div class="nav-group-items">
+    </div>
+  </header>
+  <nav class="topnav">
+    <div class="nav-item active" onclick="showTab('dashboard',this)">Dashboard</div>
+    <div class="dd">
+      <span class="dd-label" onclick="ddToggle(this)">Calendário <span class="dd-caret">&#9662;</span></span>
+      <div class="dd-menu">
+        <div class="nav-item" onclick="showTab('calendario',this)">Calendário</div>
+        <div class="nav-item" onclick="showTab('lotemed',this)">Agenda por médico</div>
+        <div class="nav-item" onclick="showTab('escala',this)">Escala por profissional</div>
+      </div>
+    </div>
+    <div class="dd">
+      <span class="dd-label" onclick="ddToggle(this)">Lançamentos <span class="dd-caret">&#9662;</span></span>
+      <div class="dd-menu">
+        <div class="nav-item" onclick="showTab('lancamentos',this)">Lançamentos</div>
+        <div class="nav-item" onclick="showTab('lote',this)">Em lote</div>
+        <div class="nav-item" onclick="showTab('importar',this)">Importar planilha</div>
+        <div class="nav-item" onclick="showTab('exportar',this)">Exportar relatório</div>
+      </div>
+    </div>
+    <div class="dd">
+      <span class="dd-label" onclick="ddToggle(this)">Cadastros <span class="dd-caret">&#9662;</span></span>
+      <div class="dd-menu">
         <div class="nav-item" onclick="showTab('medicos',this)">Médicos</div>
         <div class="nav-item" onclick="showTab('convites',this);carregarConvites();">Convidar médico</div>
         <div class="nav-item" onclick="showTab('projetos',this)">Projetos</div>
         <div class="nav-item" onclick="showTab('tipos',this)">Tipos de plantão</div>
       </div>
     </div>
-
-    <!-- Lançamentos (colapsável) -->
-    <div class="nav-group">
-      <div class="nav-group-label" onclick="toggleNavGroup(this)">
-        <span class="nav-label-left">Lançamentos</span>
-        <span class="nav-arrow">▶</span>
-      </div>
-      <div class="nav-group-items">
-        <div class="nav-item" onclick="showTab('lancamentos',this)">Lançamentos</div>
-        <div class="nav-item" onclick="showTab('lote',this)">Em lote</div>
+    <div class="dd">
+      <span class="dd-label" onclick="ddToggle(this)">Check-ins <span class="dd-caret">&#9662;</span></span>
+      <div class="dd-menu">
+        <div class="nav-item" onclick="showTab('checkins',this)">Check-ins</div>
+        <div class="nav-item" onclick="showTab('ausencias_ci',this);carregarAusenciasCI();">Ausência de check-in</div>
       </div>
     </div>
-
-    <!-- Operacional (itens soltos sem grupo) -->
-    <div class="nav-item" onclick="showTab('checkins',this)">Check-ins</div>
-    <div class="nav-item" onclick="showTab('candidaturas',this)">Plantões abertos <span id="badge-cand" style="display:none;background:var(--red);color:#fff;font-size:9px;font-weight:700;border-radius:99px;padding:1px 5px;margin-left:4px;"></span></div>
+    <div class="nav-item" onclick="showTab('candidaturas',this)">Plantões abertos <span id="badge-cand" style="display:none;background:#fff;color:var(--blue);font-size:9px;font-weight:700;border-radius:99px;padding:1px 5px;margin-left:4px;"></span></div>
     <div class="nav-item" onclick="showTab('relatorios',this)">Relatórios</div>
     <div class="nav-item" onclick="showTab('financeiro',this)">Financeiro</div>
-
-    <!-- Importar/Exportar (colapsável) -->
-    <div class="nav-group">
-      <div class="nav-group-label" onclick="toggleNavGroup(this)">
-        <span class="nav-label-left">Importar / Exportar</span>
-        <span class="nav-arrow">▶</span>
-      </div>
-      <div class="nav-group-items">
-        <div class="nav-item" onclick="showTab('importar',this)">Importar planilha</div>
-        <div class="nav-item" onclick="showTab('exportar',this)">Exportar relatório</div>
+    <div class="dd" id="dd-sistema" style="display:none;">
+      <span class="dd-label" onclick="ddToggle(this)">Sistema <span class="dd-caret">&#9662;</span></span>
+      <div class="dd-menu">
+        <div class="nav-item" id="nav-usuarios" style="display:none;" onclick="showTab('usuarios',this)">Usuários</div>
+        <div class="nav-item" id="nav-log" style="display:none;" onclick="showTab('log',this)">Log de atividades</div>
       </div>
     </div>
-
-    <!-- Secundários — colados ao rodapé -->
-    <div style="margin-top:auto;border-top:1px solid var(--border);padding-top:4px;">
-      <div class="nav-item nav-item-small" onclick="showTab('lotemed',this)">Agenda por médico</div>
-      <div class="nav-item nav-item-small" onclick="showTab('escala',this)">Escala por profissional</div>
-      <div class="nav-item nav-item-small" id="nav-usuarios" style="display:none;" onclick="showTab('usuarios',this)">Usuários</div>
-      <div class="nav-item nav-item-small" id="nav-log" style="display:none;" onclick="showTab('log',this)">Log de atividades</div>
-    </div>
-
   </nav>
-  <div class="sidebar-footer" onclick="showTab('perfil')" style="cursor:pointer;padding:12px 16px;display:flex;align-items:center;gap:10px;border-top:1px solid var(--border);transition:background 0.15s;" onmouseenter="this.style.background='var(--bg3)'" onmouseleave="this.style.background=''">
-    <div id="sidebar-avatar" style="width:34px;height:34px;border-radius:50%;background:var(--blue);color:#fff;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;flex-shrink:0;">H</div>
-    <div style="flex:1;min-width:0;">
-      <div id="admin-nome" style="font-weight:600;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"></div>
-      <div id="sidebar-perfil-badge" style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.5px;"></div>
-    </div>
-    <span style="color:var(--text3);font-size:12px;"></span>
-  </div>
 </div>
 
 <!-- MAIN -->
@@ -8657,6 +8663,8 @@ function aplicarPermissoesSidebar() {
   const navLog   = document.getElementById('nav-log');
   if (navUsers) navUsers.style.display = perms.usuarios ? '' : 'none';
   if (navLog)   navLog.style.display   = perms.log     ? '' : 'none';
+  const ddSis = document.getElementById('dd-sistema');
+  if (ddSis) ddSis.style.display = (perms.usuarios || perms.log) ? '' : 'none';
 }
 
 // ════════════════════════════════════════════════════════════════════════════
@@ -9627,4 +9635,17 @@ function qtdPlantao(l){
   // plantão aberto = vagas que ainda faltam preencher; qualquer outro = 1
   return l && l.aberto ? Math.max(0, (l.vagas||1) - (l.vagas_preenchidas||0)) : 1;
 }
+</script>
+
+<script>
+function ddToggle(labelEl){
+  const dd = labelEl.parentElement;
+  const estavaAberto = dd.classList.contains('open');
+  document.querySelectorAll('.dd.open').forEach(d=>d.classList.remove('open'));
+  if(!estavaAberto) dd.classList.add('open');
+}
+document.addEventListener('click', function(e){
+  if(!e.target.closest('.dd')) document.querySelectorAll('.dd.open').forEach(d=>d.classList.remove('open'));
+  if(e.target.closest('.dd-menu .nav-item')) document.querySelectorAll('.dd.open').forEach(d=>d.classList.remove('open'));
+});
 </script>
