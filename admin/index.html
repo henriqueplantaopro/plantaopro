@@ -3176,14 +3176,8 @@ async function addLancamento() {
   const valorH=horas>0&&honorario>0?Math.round(honorario/horas*100)/100:0;
   const payload={ medico_id:mid, projeto_id:pid, data, hora_ini:ini, hora_fim:fim, horas, tipo:document.getElementById('lt').value, setor:document.getElementById('lsetor').value.trim(), honorario, valor_hora:valorH, obs:document.getElementById('lo').value.trim(), codigo_totvs:document.getElementById('lcode').value.trim() };
   try {
-    const res2 = await fetch(SUPABASE_URL + '/rest/v1/lancamentos', {
+    const res2 = await sbApi('/lancamentos', {
       method: 'POST',
-      headers: {
-        'apikey': SUPABASE_KEY,
-        'Authorization': 'Bearer ' + SUPABASE_KEY,
-        'Content-Type': 'application/json',
-        'Prefer': 'return=minimal'
-      },
       body: JSON.stringify(payload)
     });
     if (res2.ok) {
@@ -4447,9 +4441,8 @@ try {
     }
     try {
       const vagas2 = parseInt(document.getElementById('mr-vagas')?.value||'1');
-      const res2 = await fetch(SUPABASE_URL+'/rest/v1/lancamentos', {
+      const res2 = await sbApi('/lancamentos', {
         method:'POST',
-        headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},
         body: JSON.stringify({projeto_id:projId, data:ds, hora_ini:ini, hora_fim:fim, horas, tipo:_tipoNomeAb,
           setor:setorFinalAb||null, honorario:valor||0,
           valor_hora:horas>0&&valor>0?Math.round(valor/horas*100)/100:0,
@@ -4482,9 +4475,8 @@ try {
     for (const medAtual of medsSel) {
       const honAtual = valor || Math.round(horas*(medAtual.valor_hora||0)*100)/100;
       const vhAtual  = horas>0 ? Math.round(honAtual/horas*100)/100 : (medAtual.valor_hora||0);
-      const res = await fetch(SUPABASE_URL+'/rest/v1/lancamentos',{
+      const res = await sbApi('/lancamentos',{
         method:'POST',
-        headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},
         body:JSON.stringify({medico_id:medAtual.id,projeto_id:projId,data:ds,hora_ini:ini,hora_fim:fim,horas,tipo,setor:setor||null,honorario:honAtual,valor_hora:vhAtual,obs:obs||null,codigo_totvs:null})
       });
       if (res.ok || res.status===204 || res.status===201) {
@@ -4517,7 +4509,7 @@ try {
       setTimeout(function(){ var el=document.getElementById('mr-med-busca'); if(el) el.focus(); }, 100);
       // Sincronizar com servidor em background após 2s
       setTimeout(async function(){
-        var d2=await sb('/rest/v1/lancamentos?select=*,medicos(nome,crm),projetos(nome)&order=data.desc&limit=200');
+        var d2=await sbApi('/lancamentos?select=*,medicos(nome,crm),projetos(nome)&order=data.desc&limit=200');
         if(d2){ lancamentos=d2.map(function(l){ return Object.assign({},l,{medico:l.medicos?.nome||'',crm:l.medicos?.crm||'',projeto:l.projetos?.nome||''}); }); renderSemana(); }
       }, 2000);
     } else {
@@ -4567,9 +4559,8 @@ async function copiarSemana() {
       obs: l.obs||null, codigo_totvs: null
     };
     try {
-      const res = await fetch(SUPABASE_URL + '/rest/v1/lancamentos', {
+      const res = await sbApi('/lancamentos', {
         method: 'POST',
-        headers: {'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},
         body: JSON.stringify(reg)
       });
       if (res.ok) ok++; else erros++;
@@ -4771,9 +4762,8 @@ async function colarNoDia(ds, projId) {
   const jaExiste = lancamentos.find(x => x.data===ds && x.medico_id===l.medico_id && x.projeto_id===l.projeto_id);
   if (jaExiste) { toast('' + l.medico + ' já tem plantão neste dia', true); return; }
   try {
-    const res = await fetch(SUPABASE_URL+'/rest/v1/lancamentos', {
+    const res = await sbApi('/lancamentos', {
       method: 'POST',
-      headers: {'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},
       body: JSON.stringify({medico_id:l.medico_id,projeto_id:projId||l.projeto_id,data:ds,hora_ini:l.hora_ini,hora_fim:l.hora_fim,horas:l.horas,tipo:l.tipo,setor:l.setor||null,honorario:l.honorario,valor_hora:l.valor_hora||0,obs:l.obs||null,codigo_totvs:null})
     });
     if (res.ok || res.status===204) {
@@ -4871,9 +4861,8 @@ async function ctxColar() {
   const jaExiste = lancamentos.find(x => x.data===ds && x.medico_id===l.medico_id && x.projeto_id===l.projeto_id);
   if (jaExiste) { toast('' + l.medico + ' já tem plantão neste dia', true); return; }
   try {
-    const res = await fetch(SUPABASE_URL+'/rest/v1/lancamentos', {
+    const res = await sbApi('/lancamentos', {
       method: 'POST',
-      headers: {'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},
       body: JSON.stringify({medico_id:l.medico_id,projeto_id:l.projeto_id,data:ds,hora_ini:l.hora_ini,hora_fim:l.hora_fim,horas:l.horas,tipo:l.tipo,setor:l.setor||null,honorario:l.honorario,valor_hora:l.valor_hora||0,obs:l.obs||null,codigo_totvs:null})
     });
     if (res.ok) {
@@ -4953,7 +4942,7 @@ async function salvarEdicaoLanc() {
   var btn = document.querySelector('#modal-editar-lanc .btn-primary');
   if (btn) { btn.disabled=true; btn.textContent='Salvando...'; }
 
-  var res = await sb('/rest/v1/lancamentos?id=eq.' + id, {
+  var res = await sbApi('/lancamentos?id=eq.' + id, {
     method: 'PATCH',
     headers: {'Prefer': 'return=minimal'},
     body: JSON.stringify(payload)
@@ -4978,9 +4967,8 @@ async function ctxRemover() {
   fecharCtxMenu();
   if (!confirm('Remover plantão de ' + l.medico + ' em ' + fDate(l.data) + '?')) return;
   try {
-    const res = await fetch(SUPABASE_URL+'/rest/v1/lancamentos?id=eq.'+l.id, {
-      method:'DELETE',
-      headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Prefer':'return=minimal'}
+    const res = await sbApi('/lancamentos?id=eq.'+l.id, {
+      method:'DELETE'
     });
     if (res.ok || res.status===204) {
       lancamentos = lancamentos.filter(x => x.id !== l.id && x.id != l.id);
@@ -5215,9 +5203,8 @@ async function responderCandidatura(candId, lancId, status, vagas) {
     if (cand && cand[0]) {
       const medId = cand[0].medico_id;
       // Vincular médico ao lançamento
-      await fetch(SUPABASE_URL+'/rest/v1/lancamentos?id=eq.'+lancId, {
+      await sbApi('/lancamentos?id=eq.'+lancId, {
         method:'PATCH',
-        headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},
         body: JSON.stringify({
           medico_id: medId,
           confirmado: true,
@@ -6400,9 +6387,8 @@ async function salvarLote() {
   let ok = 0, erros = 0;
   for (const m of selecionados) {
     try {
-      const res = await fetch(SUPABASE_URL+'/rest/v1/lancamentos', {
+      const res = await sbApi('/lancamentos', {
         method: 'POST',
-        headers: {'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},
         body: JSON.stringify({medico_id:m.id, projeto_id:projId, data, hora_ini:ini, hora_fim:fim, horas, tipo, setor:setor||null, honorario, valor_hora:valorH, obs:obs||null})
       });
       if (res.ok || res.status === 204) ok++; else erros++;
@@ -6416,7 +6402,7 @@ async function salvarLote() {
 
 // ─── CARREGAR DISPONÍVEIS (plantões abertos) ─────────────
 async function carregarDisponiveis() {
-  const data = await sb('/rest/v1/lancamentos?aberto=eq.true&select=*,projetos(nome)&order=data');
+  const data = await sbApi('/lancamentos?aberto=eq.true&select=*,projetos(nome)&order=data');
   const el = document.getElementById('disp-lista');
   if (!el) return;
   if (!data || !data.length) { el.innerHTML = '<div class="empty">Nenhum plantão aberto.</div>'; return; }
@@ -7264,9 +7250,8 @@ function renderLancamentos() {
 
 async function delLanc(id) {
   if (!confirm('Remover este lançamento?')) return;
-  const res = await fetch(SUPABASE_URL+'/rest/v1/lancamentos?id=eq.'+id, {
-    method:'DELETE',
-    headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Prefer':'return=minimal'}
+  const res = await sbApi('/lancamentos?id=eq.'+id, {
+    method:'DELETE'
   });
   if (res.ok||res.status===204) {
     lancamentos = lancamentos.filter(l=>l.id!==id&&l.id!=id);
@@ -9341,7 +9326,7 @@ async function carregarAusenciasCI(){
   pend.map(l=>`<tr id="aci-row-${l.id}"><td class="mono">${fDate(l.data)}</td><td><strong>${l.medicos?.nome||'—'}</strong><br><span class="mono" style="font-size:11px;color:var(--text3);">${l.medicos?.crm||''}</span></td><td>${l.projetos?.nome||'—'}${l.setor?' — '+l.setor:''}</td><td class="mono">${(l.hora_ini||'').slice(0,5)}–${(l.hora_fim||'').slice(0,5)}</td><td class="mono">${fBRL(l.honorario||0)}</td><td style="white-space:nowrap;"><button class="btn btn-success btn-sm" onclick="aciResolver('${l.id}','presente')">Compareceu</button> <button class="btn btn-danger btn-sm" onclick="aciResolver('${l.id}','falta')">Falta</button> <button class="btn btn-ghost btn-sm" onclick="aciSubstituir('${l.id}')">Substituir</button></td></tr>`).join('')+'</tbody></table></div>';
 }
 async function aciResolver(id,status){
-  const res=await sb('/rest/v1/lancamentos?id=eq.'+id,{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify({status_presenca:status})});
+  const res=await sbApi('/lancamentos?id=eq.'+id,{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify({status_presenca:status})});
   if(res!==null){toast(status==='falta'?'Marcado como falta':'Presença confirmada');const row=document.getElementById('aci-row-'+id);if(row)row.remove();const l=lancamentos.find(x=>x.id===id||x.id==id);if(l)l.status_presenca=status;}
   else toast('Erro ao salvar',true);
 }
@@ -9353,7 +9338,7 @@ function aciSubstituir(id){
 async function aciConfirmarSub(id){
   const novo=document.getElementById('aci-sub-'+id)?.value;
   if(!novo){toast('Selecione o médico substituto',true);return;}
-  const res=await sb('/rest/v1/lancamentos?id=eq.'+id,{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify({medico_id:novo,status_presenca:'presente'})});
+  const res=await sbApi('/lancamentos?id=eq.'+id,{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify({medico_id:novo,status_presenca:'presente'})});
   if(res!==null){toast('Substituição registrada');const row=document.getElementById('aci-row-'+id);if(row)row.remove();await carregarLancamentos(true);}
   else toast('Erro ao salvar',true);
 }
@@ -9364,9 +9349,8 @@ async function aciConfirmarSub(id){
 // Salvar direto com cabeçalhos completos (corrige "Erro ao salvar")
 async function aciSalvar(id, payload){
   try{
-    const res = await fetch(SUPABASE_URL + '/rest/v1/lancamentos?id=eq.' + encodeURIComponent(id), {
+    const res = await sbApi('/lancamentos?id=eq.' + encodeURIComponent(id), {
       method:'PATCH',
-      headers:{ 'apikey':SUPABASE_KEY, 'Authorization':'Bearer '+SUPABASE_KEY, 'Content-Type':'application/json', 'Prefer':'return=minimal' },
       body: JSON.stringify(payload)
     });
     if(!res.ok){ const t=await res.text(); console.error('aci patch error', res.status, t); toast('Erro ao salvar ('+res.status+')',true); return false; }
