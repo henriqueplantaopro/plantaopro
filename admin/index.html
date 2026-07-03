@@ -3182,6 +3182,7 @@ async function addLancamento() {
     });
     if (res2) {
       toast('Plantão registrado!');
+      try { notificarMedicoPush(mid, `Você foi escalado para um plantão.`, 'escala'); } catch(e){}
       ['ld','lval','lsetor','lo','lcode'].forEach(id=>document.getElementById(id).value='');
       document.getElementById('l-preview').style.display='none';
       await carregarLancamentos(); carregarDashboard();
@@ -4479,8 +4480,10 @@ try {
         method:'POST',
         body:JSON.stringify({medico_id:medAtual.id,projeto_id:projId,data:ds,hora_ini:ini,hora_fim:fim,horas,tipo,setor:setor||null,honorario:honAtual,valor_hora:vhAtual,obs:obs||null,codigo_totvs:null})
       });
+      try { if(res && medAtual?.id) notificarMedicoPush(medAtual.id, `Você foi escalado para um plantão.`, 'escala'); } catch(e){}
       if (res) {
         okCount++;
+        try { notificarMedicoPush(medAtual.id, `Você foi escalado para um plantão.`, 'escala'); } catch(e){}
         lancamentos.unshift({id:'tmp_'+Date.now()+'_'+okCount,medico_id:medAtual.id,projeto_id:projId,
           medico:medAtual.nome,crm:medAtual.crm||'',
           projeto:(projetos.find(p=>p.id===projId)||{}).nome||'',
@@ -4567,7 +4570,7 @@ async function copiarSemana() {
     } catch(e) { erros++; }
   }
 
-  toast(`${ok} plantão(ões) copiado(s)!${erros>0?' · '+erros+' já existiam ou com erro':''}`);
+  toast(`${ok} plantão(ões) copiado(s)!${erros>0?' · '+erros+' já existiam ou com erro':''}`); try { if(window._copiaNotif){ for(const _mid in window._copiaNotif){ notificarMedicoPush(_mid, `Você foi escalado para ${window._copiaNotif[_mid]} plantão(ões).`, 'escala'); } window._copiaNotif=null; } } catch(e){};
   await carregarLancamentos();
   renderSemana();
 }
@@ -4766,10 +4769,11 @@ async function colarNoDia(ds, projId) {
       method: 'POST',
       body: JSON.stringify({medico_id:l.medico_id,projeto_id:projId||l.projeto_id,data:ds,hora_ini:l.hora_ini,hora_fim:l.hora_fim,horas:l.horas,tipo:l.tipo,setor:l.setor||null,honorario:l.honorario,valor_hora:l.valor_hora||0,obs:l.obs||null,codigo_totvs:null})
     });
+      try { if(l.medico_id){ window._copiaNotif=window._copiaNotif||{}; window._copiaNotif[l.medico_id]=(window._copiaNotif[l.medico_id]||0)+1; } } catch(e){}
     if (res) {
       lancamentos.unshift({...l, id:'tmp_'+Date.now(), data:ds, projeto_id:projId||l.projeto_id});
       renderSemana();
-      toast('✓ ' + l.medico + ' colado em ' + new Date(ds+'T12:00:00').toLocaleDateString('pt-BR',{day:'2-digit',month:'short'}));
+      toast('✓ ' + l.medico + ' colado em ' + new Date(ds+'T12:00:00').toLocaleDateString('pt-BR',{day:'2-digit',month:'short'})); try { if(window._copiaNotif){ for(const _mid in window._copiaNotif){ notificarMedicoPush(_mid, `Você foi escalado para um plantão.`, 'escala'); } window._copiaNotif=null; } } catch(e){}
     } else { toast('Erro ao colar plantão', true); }
   } catch(e) { toast('Erro de conexão', true); }
 }
@@ -4865,11 +4869,12 @@ async function ctxColar() {
       method: 'POST',
       body: JSON.stringify({medico_id:l.medico_id,projeto_id:l.projeto_id,data:ds,hora_ini:l.hora_ini,hora_fim:l.hora_fim,horas:l.horas,tipo:l.tipo,setor:l.setor||null,honorario:l.honorario,valor_hora:l.valor_hora||0,obs:l.obs||null,codigo_totvs:null})
     });
+      try { if(l.medico_id){ window._copiaNotif=window._copiaNotif||{}; window._copiaNotif[l.medico_id]=(window._copiaNotif[l.medico_id]||0)+1; } } catch(e){}
     if (res) {
       lancamentos.unshift({...l, id:'tmp_'+Date.now(), data:ds});
       renderSemana();
       if (document.getElementById('escala-grid')) renderEscala();
-      toast('✓ Plantão colado em ' + new Date(ds+'T12:00:00').toLocaleDateString('pt-BR',{day:'2-digit',month:'short'}));
+      toast('✓ Plantão colado em ' + new Date(ds+'T12:00:00').toLocaleDateString('pt-BR',{day:'2-digit',month:'short'})); try { if(window._copiaNotif){ for(const _mid in window._copiaNotif){ notificarMedicoPush(_mid, `Você foi escalado para um plantão.`, 'escala'); } window._copiaNotif=null; } } catch(e){}
     } else { toast('Erro ao colar plantão', true); }
   } catch(e) { toast('Erro de conexão', true); }
 }
@@ -6391,12 +6396,12 @@ async function salvarLote() {
         method: 'POST',
         body: JSON.stringify({medico_id:m.id, projeto_id:projId, data, hora_ini:ini, hora_fim:fim, horas, tipo, setor:setor||null, honorario, valor_hora:valorH, obs:obs||null})
       });
-      if (res) ok++; else erros++;
+      if (res) { ok++; _loteMedNotif = _loteMedNotif || {}; _loteMedNotif[m.id]=(_loteMedNotif[m.id]||0)+1; } else erros++;
     } catch(e) { erros++; }
   }
 
   document.getElementById('lote-preview').innerHTML = '';
-  toast(`${ok} plantão(ões) registrado(s)${erros > 0 ? ' · ' + erros + ' erro(s)' : ''}`);
+  toast(`${ok} plantão(ões) registrado(s)${erros > 0 ? ' · ' + erros + ' erro(s)' : ''}`); try { if(typeof _loteMedNotif!=='undefined' && _loteMedNotif){ for(const _mid in _loteMedNotif){ notificarMedicoPush(_mid, `Você foi escalado para ${_loteMedNotif[_mid]} plantão(ões).`, 'escala'); } _loteMedNotif=null; } } catch(e){};
   if (ok > 0) await carregarLancamentos(true);
 }
 
