@@ -4391,6 +4391,7 @@ try {
       const res = await sbApi('/lancamentos', { method:'POST', body: JSON.stringify(_corpo) });
       if (res) {
         toast('Plantão publicado! Médicos podem se candidatar.');
+        try { const _l = Array.isArray(res)&&res[0] ? res[0] : _corpo; notificarVagaAberta(_l); } catch(e){}
         fecharModalRapido();
         await carregarLancamentos(true);
         renderSemana();
@@ -4474,6 +4475,7 @@ try {
   try {
     let okCount = 0;
     for (const medAtual of medsSel) {
+      if (!(await confirmarSeConflito(medAtual.id, ds, ini, fim))) { continue; }
       const honAtual = valor || Math.round(horas*(medAtual.valor_hora||0)*100)/100;
       const vhAtual  = horas>0 ? Math.round(honAtual/horas*100)/100 : (medAtual.valor_hora||0);
       const res = await sbApi('/lancamentos',{
@@ -9661,5 +9663,68 @@ async function notificarMedicoPush(medico_id, corpo, tipo, url){
       body: JSON.stringify({ medico_id, titulo:'PlantãoPro', corpo, tipo:tipo||null, url:url||'/medico/' })
     });
   }catch(e){ console.error('push', e); }
+}
+</script>
+
+<script>
+// ── Verificação de conflito de escala ────────────────────
+function _min(hhmm){ if(!hhmm) return null; const [h,m]=hhmm.slice(0,5).split(':').map(Number); return h*60+m; }
+function checarConflitoEscala(medicoId, data, horaIni, horaFim){
+  // retorna {tipo:'sobreposicao'|'sequencia', msg} ou null
+  if(!medicoId||!data||typeof lancamentos==='undefined') return null;
+  const ini = _min(horaIni), fim0 = _min(horaFim);
+  if(ini==null||fim0==null) return null;
+  let fim = fim0; if(fim<=ini) fim += 1440; // vira o dia (noturno/24h)
+  const doDia = lancamentos.filter(l => l.medico_id===medicoId && l.data===data && !l.aberto);
+  for(const l of doDia){
+    const li=_min(l.hora_ini), lf0=_min(l.hora_fim);
+    if(li==null||lf0==null) continue;
+    let lf=lf0; if(lf<=li) lf+=1440;
+    // sobreposição?
+    if(ini < lf && li < fim){
+      const hosp = l.projeto || (typeof projetos!=='undefined'? (projetos.find(p=>p.id===l.projeto_id)||{}).nome : '') || 'outro plantão';
+      return {tipo:'sobreposicao', msg:`Este médico já tem plantão nesse dia das ${(l.hora_ini||'').slice(0,5)} às ${(l.hora_fim||'').slice(0,5)} em ${hosp}, que se sobrepõe ao horário informado.`};
+    }
+    // sequência: encosta (folga < 60min entre um e outro), hospital diferente
+    const folgaAntes = ini - lf;   // novo começa depois do existente
+    const folgaDepois = li - fim;  // existente começa depois do novo
+    const gap = Math.max(folgaAntes, folgaDepois);
+    if(gap>=0 && gap<60){
+      const hosp = l.projeto || (typeof projetos!=='undefined'? (projetos.find(p=>p.id===l.projeto_id)||{}).nome : '') || 'outro plantão';
+      return {tipo:'sequencia', msg:`Este médico terá plantões em sequência (menos de 1h de intervalo): já há um das ${(l.hora_ini||'').slice(0,5)} às ${(l.hora_fim||'').slice(0,5)} em ${hosp}.`};
+    }
+  }
+  return null;
+}
+async function confirmarSeConflito(medicoId, data, horaIni, horaFim){
+  const c = checarConflitoEscala(medicoId, data, horaIni, horaFim);
+  if(!c) return true;
+  return window.confirm(c.msg + '\n\nDeseja escalar mesmo assim?');
+}
+
+// ── Notificar médicos elegíveis a uma vaga aberta ────────
+function medicosElegiveisVaga(l){
+  if(typeof medicos==='undefined') return [];
+  const pub = l.publico_alvo || 'projeto';
+  return medicos.filter(m => {
+    if(m.ativo===false) return false;
+    if(l.exige_rqe && !m.rqe) return false;
+    if(l.especialidades_alvo?.length>0){
+      const esp = m.especialidades||[]; const e1=m.especialidade;
+      const ok = l.especialidades_alvo.some(x => esp.includes(x) || x===e1);
+      if(!ok) return false;
+    }
+    if(pub==='projeto'){ const pv=m.projetos_vinculados||[]; return pv.includes(l.projeto_id); }
+    if(pub==='ufs'){ const ua=l.ufs_alvo||[], mu=m.ufs_interesse||[]; return ua.some(u=>mu.includes(u)); }
+    return true; // geral
+  });
+}
+async function notificarVagaAberta(lanc){
+  try{
+    const elig = medicosElegiveisVaga(lanc);
+    const _proj = (typeof projetos!=='undefined') ? (projetos.find(p=>p.id===lanc.projeto_id)||{}).nome : '';
+    const corpo = `Nova vaga aberta${_proj?(' em '+_proj):''} para ${fDate ? fDate(lanc.data) : lanc.data}.`;
+    for(const m of elig){ notificarMedicoPush(m.id, corpo, 'vaga'); }
+  }catch(e){ console.error('notif vaga', e); }
 }
 </script>
