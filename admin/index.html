@@ -3180,7 +3180,7 @@ async function addLancamento() {
       method: 'POST',
       body: JSON.stringify(payload)
     });
-    if (res2.ok) {
+    if (res2) {
       toast('Plantão registrado!');
       ['ld','lval','lsetor','lo','lcode'].forEach(id=>document.getElementById(id).value='');
       document.getElementById('l-preview').style.display='none';
@@ -4448,7 +4448,7 @@ try {
           valor_hora:horas>0&&valor>0?Math.round(valor/horas*100)/100:0,
           obs:obs||null, aberto:true, vagas:vagas2, vagas_preenchidas:0})
       });
-      if (res2.ok || res2.status===204 || res2.status===201) {
+      if (res2) {
         toast('Plantão publicado! Médicos podem se candidatar.');
         fecharModalRapido();
         await carregarLancamentos(true);
@@ -4479,7 +4479,7 @@ try {
         method:'POST',
         body:JSON.stringify({medico_id:medAtual.id,projeto_id:projId,data:ds,hora_ini:ini,hora_fim:fim,horas,tipo,setor:setor||null,honorario:honAtual,valor_hora:vhAtual,obs:obs||null,codigo_totvs:null})
       });
-      if (res.ok || res.status===204 || res.status===201) {
+      if (res) {
         okCount++;
         lancamentos.unshift({id:'tmp_'+Date.now()+'_'+okCount,medico_id:medAtual.id,projeto_id:projId,
           medico:medAtual.nome,crm:medAtual.crm||'',
@@ -4563,7 +4563,7 @@ async function copiarSemana() {
         method: 'POST',
         body: JSON.stringify(reg)
       });
-      if (res.ok) ok++; else erros++;
+      if (res) ok++; else erros++;
     } catch(e) { erros++; }
   }
 
@@ -4766,7 +4766,7 @@ async function colarNoDia(ds, projId) {
       method: 'POST',
       body: JSON.stringify({medico_id:l.medico_id,projeto_id:projId||l.projeto_id,data:ds,hora_ini:l.hora_ini,hora_fim:l.hora_fim,horas:l.horas,tipo:l.tipo,setor:l.setor||null,honorario:l.honorario,valor_hora:l.valor_hora||0,obs:l.obs||null,codigo_totvs:null})
     });
-    if (res.ok || res.status===204) {
+    if (res) {
       lancamentos.unshift({...l, id:'tmp_'+Date.now(), data:ds, projeto_id:projId||l.projeto_id});
       renderSemana();
       toast('✓ ' + l.medico + ' colado em ' + new Date(ds+'T12:00:00').toLocaleDateString('pt-BR',{day:'2-digit',month:'short'}));
@@ -4865,7 +4865,7 @@ async function ctxColar() {
       method: 'POST',
       body: JSON.stringify({medico_id:l.medico_id,projeto_id:l.projeto_id,data:ds,hora_ini:l.hora_ini,hora_fim:l.hora_fim,horas:l.horas,tipo:l.tipo,setor:l.setor||null,honorario:l.honorario,valor_hora:l.valor_hora||0,obs:l.obs||null,codigo_totvs:null})
     });
-    if (res.ok) {
+    if (res) {
       lancamentos.unshift({...l, id:'tmp_'+Date.now(), data:ds});
       renderSemana();
       if (document.getElementById('escala-grid')) renderEscala();
@@ -4970,7 +4970,7 @@ async function ctxRemover() {
     const res = await sbApi('/lancamentos?id=eq.'+l.id, {
       method:'DELETE'
     });
-    if (res.ok || res.status===204) {
+    if (res) {
       lancamentos = lancamentos.filter(x => x.id !== l.id && x.id != l.id);
       renderSemana();
       if (document.getElementById('escala-grid')) renderEscala();
@@ -6391,7 +6391,7 @@ async function salvarLote() {
         method: 'POST',
         body: JSON.stringify({medico_id:m.id, projeto_id:projId, data, hora_ini:ini, hora_fim:fim, horas, tipo, setor:setor||null, honorario, valor_hora:valorH, obs:obs||null})
       });
-      if (res.ok || res.status === 204) ok++; else erros++;
+      if (res) ok++; else erros++;
     } catch(e) { erros++; }
   }
 
@@ -7253,7 +7253,7 @@ async function delLanc(id) {
   const res = await sbApi('/lancamentos?id=eq.'+id, {
     method:'DELETE'
   });
-  if (res.ok||res.status===204) {
+  if (res) {
     lancamentos = lancamentos.filter(l=>l.id!==id&&l.id!=id);
     renderLancamentos();
     toast('Lançamento removido!');
@@ -9353,7 +9353,7 @@ async function aciSalvar(id, payload){
       method:'PATCH',
       body: JSON.stringify(payload)
     });
-    if(!res.ok){ const t=await res.text(); console.error('aci patch error', res.status, t); toast('Erro ao salvar ('+res.status+')',true); return false; }
+    if(!res){ console.error('aci patch error'); toast('Erro ao salvar',true); return false; }
     return true;
   }catch(e){ console.error('aci patch exception', e); toast('Erro ao salvar',true); return false; }
 }
