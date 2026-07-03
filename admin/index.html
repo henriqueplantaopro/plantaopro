@@ -2214,6 +2214,7 @@ async function fazerLoginWrapper() {
 
 // Pós-login admin master: carrega assinatura, plano, e abre o painel
 async function posLoginAdmin(admin) {
+  _sessaoAvisada = false;
   // ── Verificar assinatura ─────────────────────────────
   const assinaturas = await sb(`/rest/v1/assinaturas?admin_id=eq.${admin.id}&order=criado_em.desc&limit=1&select=*`);
   const assinatura = assinaturas?.[0];
@@ -2402,6 +2403,7 @@ async function carregarTudo() {
 
 async function carregarMedicos() {
   const resp = await fetch('/api/medicos');
+  if (resp.status === 401) { sessaoExpirou(); return; }
   const data = await resp.json();
   medicos = Array.isArray(data) ? data : [];
   renderMedicos();
@@ -9625,6 +9627,7 @@ async function sbApi(path, opts={}) {
       ...opts,
       headers: { 'Content-Type':'application/json', ...(opts.headers||{}) }
     });
+    if (r.status === 401) { sessaoExpirou(); return null; }
     if (!r.ok) { const e = await r.text(); console.error('DBAPI', r.status, e); return null; }
     if (r.status === 204) return true;
     const ct = r.headers.get('content-type');
@@ -9726,5 +9729,24 @@ async function notificarVagaAberta(lanc){
     const corpo = `Nova vaga aberta${_proj?(' em '+_proj):''} para ${fDate ? fDate(lanc.data) : lanc.data}.`;
     for(const m of elig){ notificarMedicoPush(m.id, corpo, 'vaga'); }
   }catch(e){ console.error('notif vaga', e); }
+}
+</script>
+
+<script>
+// ── Sessão expirada: avisa e volta pro login (em vez de tela vazia) ──
+let _sessaoAvisada = false;
+function sessaoExpirou(){
+  if (_sessaoAvisada) return;   // não repetir se várias chamadas falharem juntas
+  _sessaoAvisada = true;
+  try { localStorage.removeItem('pp_user'); } catch(e){}
+  try { toast('Sua sessão expirou. Faça login novamente.', true); } catch(e){}
+  try {
+    if (typeof fazerLogout === 'function') fazerLogout();
+    else {
+      document.getElementById('tela-login').style.display = 'flex';
+      document.getElementById('sidebar').style.display = 'none';
+      document.getElementById('main').style.display = 'none';
+    }
+  } catch(e){}
 }
 </script>
