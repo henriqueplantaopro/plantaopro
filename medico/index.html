@@ -1321,8 +1321,15 @@ async function confirmarTransferencia() {
   const btn=document.getElementById('btn-enviar-transf');
   btn.disabled=true;btn.textContent='Enviando...';
   const msg=document.getElementById('transf-msg').value.trim();
-  const r=await sb('/rest/v1/transferencias',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify({lancamento_id:_lancAtivo.id,medico_origem_id:medico.id,medico_destino_id:_medSel.id,status:'pendente',mensagem:msg||null,criado_em:new Date().toISOString()})});
-  if(r!==null){toastMed('Solicitacao enviada para '+_medSel.nome.split(' ')[0]+'!');fecharModal('modal-transferir');await carregarPlantoes();await carregarNotificacoes();}
+  const r=await sb('/rest/v1/transferencias',{method:'POST',headers:{'Prefer':'return=representation'},body:JSON.stringify({lancamento_id:_lancAtivo.id,medico_origem_id:medico.id,medico_destino_id:_medSel.id,status:'pendente',mensagem:msg||null,criado_em:new Date().toISOString()})});
+  if(r!==null){
+    // Notificar o médico destino (push)
+    try {
+      const _tid = Array.isArray(r) && r[0] ? r[0].id : null;
+      if(_tid){ fetch('/api/medico-conta?action=notif-transfer',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({transferencia_id:_tid})}); }
+    } catch(e){ console.error('notif transfer', e); }
+    toastMed('Solicitacao enviada para '+_medSel.nome.split(' ')[0]+'!');fecharModal('modal-transferir');await carregarPlantoes();await carregarNotificacoes();
+  }
   else{btn.disabled=false;btn.textContent='Solicitar transferencia';toastMed('Erro ao enviar',false);}
 }
 
