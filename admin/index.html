@@ -4074,7 +4074,17 @@ function abrirLancamentoRapido(ds, projId) {
   document.getElementById('mr-proj').innerHTML = '<option value="">Selecione...</option>' +
     sortedProjetos().map(p=>`<option value="${p.id}">${p.nome}</option>`).join('');
 
-  // Projeto não pré-selecionado — usuário escolhe manualmente para evitar erro
+  // Pré-selecionar o projeto do hospital clicado (quando veio pelo "+" de um hospital)
+  if (projId) {
+    const _sel = document.getElementById('mr-proj');
+    _sel.value = projId;
+    // Se o projeto existe na lista, disparar as dependências (setores/tipos/valor/preview)
+    if (_sel.value === projId) {
+      try { if (typeof onMrProjChange === 'function') onMrProjChange(); } catch(e){}
+      try { if (typeof atualizarValorRapido === 'function') atualizarValorRapido(); } catch(e){}
+      try { if (typeof atualizarPreviewRapido === 'function') atualizarPreviewRapido(); } catch(e){}
+    }
+  }
 
   // Data label
   const d = new Date(ds+'T12:00:00');
