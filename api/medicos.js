@@ -101,7 +101,7 @@ export default async function handler(req, res) {
       let existentesPorCrm = {};
       try {
         const meus = await sbAdmin(
-          `/rest/v1/medicos?select=id,crm,vinculos!inner(admin_id)&vinculos.admin_id=eq.${adminId}`
+          `/rest/v1/medicos?select=id,crm&admin_id=eq.${adminId}`
         );
         for (const m of (meus || [])) {
           if (m.crm) existentesPorCrm[String(m.crm).trim()] = m.id;
