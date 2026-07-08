@@ -112,6 +112,12 @@ export default async function handler(req, res) {
         try {
           const p = sanitizar(bruto || {});
           if (!p.nome || !p.crm) { erros++; detalhes.push({ nome: bruto?.nome || '?', erro: 'sem nome ou CRM' }); continue; }
+          // normalizar 'tipo' (planilha costuma vir vazia)
+          const _tiposOk = ['Plantonista','Diarista','Coordenador','Residente'];
+          if (!p.tipo || !_tiposOk.includes(String(p.tipo).trim())) p.tipo = 'Plantonista';
+          // campos string vazios -> null (evita quebrar constraints)
+          for (const k of Object.keys(p)) { if (p[k] === '') p[k] = null; }
+          if (!p.nome) { erros++; continue; } // nome não pode virar null
           const crmKey = String(p.crm).trim();
           const existenteId = existentesPorCrm[crmKey];
 
