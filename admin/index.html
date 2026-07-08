@@ -698,7 +698,7 @@ tr:hover td{background:var(--bg3);}
       <div style="display:flex;gap:8px;">
         <button class="btn btn-ghost btn-sm" onclick="exportarMedicosXLSX()">Exportar Excel</button>
         <label class="btn btn-ghost btn-sm" style="cursor:pointer;" title="Importar médicos via Excel"> Importar Excel
-          <input type="file" id="import-med-file" accept=".xlsx,.xls" style="display:none;" onchange="importarMedicosXLSX_v2(event)">
+          <input type="file" id="import-med-file" accept=".xlsx,.xls,.csv" style="display:none;" onchange="importarMedicosXLSX_v2(event)">
         </label>
       </div>
     </div>
@@ -8108,13 +8108,33 @@ async function uploadDocsMedico(medId, ctx) {
 
 async function importarMedicosXLSX_v2(event) {
   const file = event.target.files[0]; if (!file) return;
-  const buf = await file.arrayBuffer();
-  const wb  = XLSX.read(buf, {type:'array'});
-  const ws  = wb.Sheets[wb.SheetNames[0]];
-  const rows = XLSX.utils.sheet_to_json(ws, {defval:''});
-  if (!rows.length) { toast('Planilha vazia', true); return; }
+  const nomeArq = (file.name||'').toLowerCase();
+  let rows = [];
 
-  const hdr = Object.keys(rows[0]).map(h => h.toLowerCase().trim());
+  try {
+    if (nomeArq.endsWith('.csv')) {
+      // CSV brasileiro: separador ';' e encoding Latin-1 (corrige acentos)
+      const buf = await file.arrayBuffer();
+      const texto = new TextDecoder('iso-8859-1').decode(buf);
+      const linhas = texto.split(/\r?\n/).filter(l => l.trim().length);
+      if (linhas.length < 2) { toast('CSV vazio ou só com cabeçalho', true); return; }
+      const sep = (linhas[0].split(';').length >= linhas[0].split(',').length) ? ';' : ',';
+      const hdr = linhas[0].split(sep).map(h => h.trim().replace(/^"|"$/g,''));
+      rows = linhas.slice(1).map(l => {
+        const cells = l.split(sep).map(c => c.trim().replace(/^"|"$/g,''));
+        const o = {}; hdr.forEach((h,idx) => o[h] = cells[idx] || '');
+        return o;
+      });
+    } else {
+      const buf = await file.arrayBuffer();
+      const wb  = XLSX.read(buf, {type:'array'});
+      const ws  = wb.Sheets[wb.SheetNames[0]];
+      rows = XLSX.utils.sheet_to_json(ws, {defval:''});
+    }
+  } catch(e) { console.error(e); toast('Erro ao ler o arquivo', true); return; }
+
+  if (!rows.length) { toast('Arquivo vazio', true); return; }
+
   const col = (row, names) => {
     for (const n of names) {
       const k = Object.keys(row).find(k => k.toLowerCase().trim() === n.toLowerCase());
@@ -8123,19 +8143,17 @@ async function importarMedicosXLSX_v2(event) {
     return '';
   };
 
-  const existCPFs = medicos.map(m => (m.cpf||'').replace(/\D/g,''));
-  const existCRMs = medicos.map(m => (m.crm||'').toLowerCase());
-
-  var ok = 0, erros = [];
-
+  // Montar os payloads (SEM exigir CPF — casa por CRM no servidor)
+  const payloads = []; let ignorados = 0;
   for (const row of rows) {
     const nome = col(row, ['nome']);
-    const cpf  = col(row, ['cpf']).replace(/\D/g,'');
     const crm  = col(row, ['crm']);
+    if (!nome || !crm) { ignorados++; continue; }   // só exige nome e CRM
+    const cpf  = col(row, ['cpf']).replace(/\D/g,'');
     const tel  = col(row, ['telefone']);
     const nasc = col(row, ['data_nascimento','nascimento']);
     const email= col(row, ['email']);
-    const tipo = col(row, ['tipo']) || 'Plantonista';
+    const tipoR= col(row, ['tipo']) || 'Plantonista';
     const rqe  = col(row, ['rqe']);
     const esp  = col(row, ['especialidade']);
     const rua  = col(row, ['logradouro','rua','endereco']);
@@ -8155,13 +8173,11 @@ async function importarMedicosXLSX_v2(event) {
     const cc   = col(row, ['conta']);
     const tipoConta = col(row, ['tipo_conta']) || 'corrente';
 
-    if (!nome || !cpf || !crm) { erros.push('Linha sem nome/CPF/CRM'); continue; }
-    if (existCPFs.includes(cpf)) { erros.push('CPF já cadastrado: ' + cpf); continue; }
-
-    const payload = {
-      nome, cpf, crm,
+    payloads.push({
+      nome, crm,
+      cpf: cpf || null,
       telefone: tel||null, data_nascimento: nasc||null, email: email||null,
-      tipo: ['Plantonista','Diarista','Coordenador','Residente'].includes(tipo)?tipo:'Plantonista',
+      tipo: ['Plantonista','Diarista','Coordenador','Residente'].includes(tipoR)?tipoR:'Plantonista',
       rqe: rqe||null,
       especialidade: esp||'', especialidades: esp ? esp.split(';').map(s=>s.trim()).filter(Boolean) : [],
       endereco_rua: rua||null, endereco_numero: numero||null, endereco_comp: comp||null,
@@ -8173,16 +8189,36 @@ async function importarMedicosXLSX_v2(event) {
       pix_tipo: pixTipo||null, pix_chave: pixChave||null,
       banco: banco||null, agencia: ag||null, conta_corrente: cc||null, tipo_conta: tipoConta||'corrente',
       ativo: true, projetos_vinculados: []
-    };
+    });
+  }
 
-    const _r = await fetch('/api/medicos', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload)});
-    if (_r.ok) { ok++; existCPFs.push(cpf); }
-    else erros.push('Erro ao cadastrar: ' + nome);
+  if (!payloads.length) { toast('Nenhuma linha válida (precisa de nome e CRM)', true); return; }
+  if (!confirm(`Importar ${payloads.length} médico(s)? (casando por CRM: cria novos, atualiza existentes)`)) return;
+
+  // Enviar em lotes de 100 para /api/medicos?action=importar
+  let criados=0, atualizados=0, erros=0;
+  const btnMsgIni = 'Importando...';
+  toast(`Importando ${payloads.length} médicos, aguarde...`);
+  for (let k=0; k<payloads.length; k+=100) {
+    const lote = payloads.slice(k, k+100);
+    try {
+      const r = await fetch('/api/medicos?action=importar', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify(lote)
+      });
+      if (r.status === 401) { if(typeof sessaoExpirou==='function') sessaoExpirou(); return; }
+      const out = await r.json().catch(()=>({}));
+      if (r.ok) { criados+=out.criados||0; atualizados+=out.atualizados||0; erros+=out.erros||0; }
+      else { erros += lote.length; }
+    } catch(e) { console.error(e); erros += lote.length; }
   }
 
   event.target.value = '';
-  toast(ok + ' médico(s) importado(s)' + (erros.length ? ' — ' + erros.length + ' erro(s)' : ''), erros.length > 0);
-  if (ok > 0) await carregarMedicos();
+  let msg = `${criados} novo(s), ${atualizados} atualizado(s)`;
+  if (ignorados) msg += ` · ${ignorados} linha(s) sem nome/CRM ignorada(s)`;
+  if (erros) msg += ` · ${erros} erro(s)`;
+  toast(msg, erros>0);
+  await carregarMedicos();
 }
 
 
