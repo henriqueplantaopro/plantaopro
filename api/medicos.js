@@ -87,6 +87,60 @@ export default async function handler(req, res) {
   const adminId = sessao.adminId;
 
   try {
+    // ── IMPORTAR EM LOTE (casar por CRM: cria novos, atualiza existentes) ─
+    if (req.method === 'POST' && req.query.action === 'importar') {
+      const lista = Array.isArray(req.body) ? req.body : [];
+      if (!lista.length) return json(res, 400, { erro: 'Envie um array de médicos' });
+      if (lista.length > 200) return json(res, 400, { erro: 'Máximo 200 por lote' });
+
+      let criados = 0, atualizados = 0, erros = 0;
+      const detalhes = [];
+
+      // CRMs desta empresa já existentes (para decidir criar x atualizar)
+      // Busca os vínculos + crm dos médicos já ligados a este admin
+      let existentesPorCrm = {};
+      try {
+        const meus = await sbAdmin(
+          `/rest/v1/medicos?select=id,crm,vinculos!inner(admin_id)&vinculos.admin_id=eq.${adminId}`
+        );
+        for (const m of (meus || [])) {
+          if (m.crm) existentesPorCrm[String(m.crm).trim()] = m.id;
+        }
+      } catch (_) {}
+
+      for (const bruto of lista) {
+        try {
+          const p = sanitizar(bruto || {});
+          if (!p.nome || !p.crm) { erros++; detalhes.push({ nome: bruto?.nome || '?', erro: 'sem nome ou CRM' }); continue; }
+          const crmKey = String(p.crm).trim();
+          const existenteId = existentesPorCrm[crmKey];
+
+          if (existenteId) {
+            delete p.admin_id;
+            await sbAdmin(`/rest/v1/medicos?id=eq.${existenteId}`, {
+              method: 'PATCH', headers: { Prefer: 'return=minimal' },
+              body: JSON.stringify(p),
+            });
+            atualizados++;
+          } else {
+            p.admin_id = adminId;
+            p.ativo = p.ativo ?? true;
+            p.token_acesso = randomUUID();
+            const criado = await sbAdmin('/rest/v1/medicos', {
+              method: 'POST', headers: { Prefer: 'return=representation' },
+              body: JSON.stringify(p),
+            });
+            // registrar na cache para não duplicar se o CRM repetir no mesmo lote
+            if (criado?.[0]?.id) existentesPorCrm[crmKey] = criado[0].id;
+            criados++;
+          }
+        } catch (e) {
+          erros++; detalhes.push({ nome: bruto?.nome || '?', erro: String(e?.message || e) });
+        }
+      }
+      return json(res, 200, { ok: true, criados, atualizados, erros, detalhes: detalhes.slice(0, 20) });
+    }
+
     // ── ENVIAR PUSH (escala, vaga) ──────────────────────────────────────
     if (req.method === 'POST' && req.query.action === 'push') {
       const r = await enviarPush(req.body || {});
