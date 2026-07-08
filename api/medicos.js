@@ -12,6 +12,24 @@ if (VAPID_PRIVATE) {
 }
 const TIPO_PREF = { escala: 'escalas', vaga: 'vagas', transferencia: 'transferencias', checkin: 'checkin' };
 
+// Converte data BR (dd/mm/aaaa) para ISO (aaaa-mm-dd). Retorna null se inválida/vazia.
+function brParaISO(v){
+  if (!v) return null;
+  const s = String(v).trim();
+  if (!s) return null;
+  // já ISO?
+  let m = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (m) return `${m[1]}-${m[2]}-${m[3]}`;
+  // dd/mm/aaaa ou dd-mm-aaaa
+  m = s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/);
+  if (m) {
+    const d = m[1].padStart(2,'0'), mo = m[2].padStart(2,'0'), y = m[3];
+    if (+mo>=1 && +mo<=12 && +d>=1 && +d<=31) return `${y}-${mo}-${d}`;
+  }
+  return null; // formato desconhecido -> não grava (evita quebrar)
+}
+
+
 async function enviarPush({ medico_id, titulo, corpo, url, tipo }) {
   if (!VAPID_PRIVATE) return { erro: 'VAPID_PRIVATE nao configurada', status: 500 };
   if (!medico_id || !corpo) return { erro: 'medico_id e corpo obrigatorios', status: 400 };
@@ -117,7 +135,22 @@ export default async function handler(req, res) {
           if (!p.tipo || !_tiposOk.includes(String(p.tipo).trim())) p.tipo = 'Plantonista';
           // campos string vazios -> null (evita quebrar constraints)
           for (const k of Object.keys(p)) { if (p[k] === '') p[k] = null; }
+          // data de nascimento: BR -> ISO (ou null se inválida)
+          if (p.data_nascimento !== undefined) p.data_nascimento = brParaISO(p.data_nascimento);
           if (!p.nome) { erros++; continue; } // nome não pode virar null
+          // normalizar data_nascimento DD/MM/AAAA -> AAAA-MM-DD (senão null)
+          if (p.data_nascimento) {
+            const v = String(p.data_nascimento).trim();
+            let iso = null;
+            let m = v.match(/^(\d{4})-(\d{2})-(\d{2})/);
+            if (m) iso = m[1]+'-'+m[2]+'-'+m[3];
+            else {
+              m = v.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/);
+              if (m && +m[2]>=1 && +m[2]<=12 && +m[1]>=1 && +m[1]<=31)
+                iso = m[3]+'-'+m[2].padStart(2,'0')+'-'+m[1].padStart(2,'0');
+            }
+            p.data_nascimento = iso; // inválida -> null (não quebra o insert)
+          }
           const crmKey = String(p.crm).trim();
           const existenteId = existentesPorCrm[crmKey];
 
