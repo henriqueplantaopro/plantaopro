@@ -8199,8 +8199,8 @@ async function importarMedicosXLSX_v2(event) {
   let criados=0, atualizados=0, erros=0;
   const btnMsgIni = 'Importando...';
   toast(`Importando ${payloads.length} médicos, aguarde...`);
-  for (let k=0; k<payloads.length; k+=100) {
-    const lote = payloads.slice(k, k+100);
+  for (let k=0; k<payloads.length; k+=25) {
+    const lote = payloads.slice(k, k+25);
     try {
       const r = await fetch('/api/medicos?action=importar', {
         method:'POST', headers:{'Content-Type':'application/json'},
