@@ -6571,17 +6571,27 @@ function handleUploadMed(input) {
 }
 
 async function importarMedicosSupabase(novos) {
-  const existCRMs = medicos.map(m => m.crm);
-  const filtrados = novos.filter(m => !existCRMs.includes(m.crm));
-  const dup = novos.length - filtrados.length;
-  let ok = 0;
-  for (const m of filtrados) {
-    const _r = await fetch('/api/medicos', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(m)});
-    if (_r.ok) ok++;
+  if (!novos || !novos.length) { toast('Nada para importar', true); return; }
+  toast(`Importando ${novos.length} médico(s), aguarde...`);
+  let criados=0, atualizados=0, erros=0;
+  for (let k=0; k<novos.length; k+=25) {
+    const lote = novos.slice(k, k+25);
+    try {
+      const r = await fetch('/api/medicos?action=importar', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify(lote)
+      });
+      if (r.status === 401) { if(typeof sessaoExpirou==='function') sessaoExpirou(); return; }
+      const out = await r.json().catch(()=>({}));
+      if (r.ok) { criados+=out.criados||0; atualizados+=out.atualizados||0; erros+=out.erros||0; }
+      else { erros += lote.length; }
+    } catch(e) { console.error(e); erros += lote.length; }
   }
-  toast(`${ok} médico(s) importado(s)${dup>0?' · '+dup+' duplicado(s) ignorado(s)':''}`);
-  document.getElementById('import-preview-med').innerHTML = '';
-  document.getElementById('file-upload-med').value = '';
+  let msg = `${criados} novo(s), ${atualizados} atualizado(s)`;
+  if (erros) msg += ` · ${erros} erro(s)`;
+  toast(msg, erros>0);
+  const prev=document.getElementById('import-preview-med'); if(prev) prev.innerHTML='';
+  const fu=document.getElementById('file-upload-med'); if(fu) fu.value='';
   await carregarMedicos();
 }
 
