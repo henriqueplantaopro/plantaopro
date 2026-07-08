@@ -6551,10 +6551,28 @@ function handleUploadMed(input) {
     const eI=hdr.findIndex(h=>h.includes('esp')), vI=hdr.findIndex(h=>h.includes('valor'));
     const tI=hdr.findIndex(h=>h.includes('tipo')), cpfI=hdr.findIndex(h=>h.includes('cpf'));
     if (nI<0||cI<0) { toast('Colunas nome e crm não encontradas', true); return; }
+    // índices de mais colunas do CSV padrão
+    const telI=hdr.findIndex(h=>h.includes('telefone')), nascI=hdr.findIndex(h=>h.includes('nascimento')||h==='data_nascimento');
+    const emailI=hdr.findIndex(h=>h.includes('email')), rqeI=hdr.findIndex(h=>h.includes('rqe'));
+    const ufI=hdr.findIndex(h=>h==='uf'||h.includes('estado'));
     const novos = [];
     for (let i=1; i<rows.length; i++) {
       const c = rows[i]; if (!c[nI]) continue;
-      novos.push({nome:c[nI], crm:c[cI]||'', especialidade:eI>=0?c[eI]:'', valor_hora:vI>=0?parseFloat(c[vI].replace(',','.'))||0:0, tipo:tI>=0?c[tI]:'Plantonista', cpf:cpfI>=0?c[cpfI]:'', ativo:true});
+      const tipoCel = tI>=0 ? String(c[tI]||'').trim() : '';
+      const tipoOk = ['Plantonista','Diarista','Coordenador','Residente'].includes(tipoCel) ? tipoCel : 'Plantonista';
+      novos.push({
+        nome:String(c[nI]||'').trim(),
+        crm:String(c[cI]||'').trim(),
+        especialidade:eI>=0?String(c[eI]||'').trim():'',
+        valor_hora:vI>=0?parseFloat(String(c[vI]||'').replace(',','.'))||0:0,
+        tipo:tipoOk,
+        cpf:cpfI>=0?String(c[cpfI]||'').replace(/\D/g,''):'',
+        telefone:telI>=0?String(c[telI]||'').trim():null,
+        data_nascimento:nascI>=0?String(c[nascI]||'').trim()||null:null,
+        email:emailI>=0?String(c[emailI]||'').trim()||null:null,
+        rqe:rqeI>=0?String(c[rqeI]||'').trim()||null:null,
+        ativo:true
+      });
     }
     const prev = document.getElementById('import-preview-med');
     prev.innerHTML = `<div class="card"><div class="card-title">Pré-visualização — ${novos.length} médico(s)</div>
