@@ -2083,6 +2083,33 @@ tr:hover td{background:var(--bg3);}
         <div id="em-pix-aviso" style="display:none;font-size:11px;margin-top:4px;padding:4px 8px;border-radius:4px;"></div>
       </div>
     </div>
+    <!-- ENDEREÇO -->
+    <div style="border-top:1px solid var(--border);margin:12px 0;padding-top:12px;">
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--text2);margin-bottom:10px;">Endereço</div>
+    </div>
+    <div class="form-row">
+      <div class="form-group" style="flex:2;"><label>Logradouro</label><input id="em-rua" type="text" placeholder="Rua, Av., Estrada..."></div>
+      <div class="form-group"><label>Número</label><input id="em-numero" type="text" placeholder="123"></div>
+      <div class="form-group"><label>Complemento</label><input id="em-comp" type="text" placeholder="Apto, Bloco..."></div>
+    </div>
+    <div class="form-row four">
+      <div class="form-group"><label>Bairro</label><input id="em-bairro" type="text" placeholder="Centro"></div>
+      <div class="form-group"><label>Cidade</label><input id="em-cidade" type="text" placeholder="Rio de Janeiro"></div>
+      <div class="form-group"><label>UF</label><select id="em-uf"><option value="">—</option><option>AC</option><option>AL</option><option>AM</option><option>AP</option><option>BA</option><option>CE</option><option>DF</option><option>ES</option><option>GO</option><option>MA</option><option>MG</option><option>MS</option><option>MT</option><option>PA</option><option>PB</option><option>PE</option><option>PI</option><option>PR</option><option>RJ</option><option>RN</option><option>RO</option><option>RR</option><option>RS</option><option>SC</option><option>SE</option><option>SP</option><option>TO</option></select></div>
+      <div class="form-group"><label>CEP</label><input id="em-cep" type="text" placeholder="00000-000" oninput="mascaraCEP(this)"></div>
+    </div>
+
+    <!-- DADOS BANCÁRIOS (tradicional — alternativa ao PIX) -->
+    <div style="border-top:1px solid var(--border);margin:12px 0;padding-top:12px;">
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--text2);margin-bottom:10px;">Dados bancários <span style="font-weight:400;font-size:10px;color:var(--text3);">(alternativa ao PIX)</span></div>
+      <div class="form-row four">
+        <div class="form-group"><label>Banco</label><input id="em-banco" type="text" placeholder="Bradesco, Itaú..."></div>
+        <div class="form-group"><label>Agência</label><input id="em-ag" type="text" placeholder="0000"></div>
+        <div class="form-group"><label>Conta</label><input id="em-cc" type="text" placeholder="00000-0"></div>
+        <div class="form-group"><label>Tipo de conta</label><select id="em-tipo-cc"><option value="corrente">Corrente</option><option value="poupanca">Poupança</option></select></div>
+      </div>
+    </div>
+
     <div class="form-group">
       <label>Projetos vinculados <span style="font-weight:400;font-size:11px;color:var(--text3);">(plantões disponíveis visíveis no app)</span></label>
       <div id="em-projetos-check" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;"></div>
@@ -2784,35 +2811,65 @@ function renderMedicos(filtro='') {
 
 
 // ─── EXPORTAR / IMPORTAR MÉDICOS ─────────────────────
+// Cabeçalho da planilha de médicos.
+// As 29 primeiras colunas são editáveis e reimportáveis (mesma ordem no parser de importação).
+// As 4 últimas são apenas informativas (somente leitura) e NÃO são importadas.
+const COLUNAS_MEDICO = [
+  'Nome','CRM','RQE','Especialidades','CPF','Data de nascimento','Tipo','Telefone','E-mail',
+  'Valor/hora','Ativo',
+  'Logradouro','Número','Complemento','Bairro','Cidade','UF','CEP',
+  'Pessoa jurídica','Razão social','CNPJ',
+  'Tipo PIX','Chave PIX','Banco','Agência','Conta','Tipo de conta',
+  'UFs de interesse','Projetos vinculados',
+  'Dispositivo','Registro do dispositivo','Primeiro acesso','Data de cadastro'
+];
+
 function exportarMedicosXLSX() {
   if (!medicos.length) { toast('Nenhum médico cadastrado', true); return; }
   const wb = XLSX.utils.book_new();
-  const rows = [
-    ['Nome','CRM','RQE','Especialidade(s)','CPF','Tipo','Nascimento','Telefone','E-mail',
-     'Razão Social','CNPJ','Tipo PIX','Chave PIX','Projetos']
-  ];
-  medicos.sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR')).forEach(m => {
-    const nasc = m.data_nascimento
-      ? new Date(m.data_nascimento+'T12:00:00').toLocaleDateString('pt-BR') : '';
+
+  const fData = (v) => {
+    if (!v) return '';
+    const s = String(v);
+    const d = new Date(s.length <= 10 ? s + 'T12:00:00' : s);
+    return isNaN(d) ? '' : d.toLocaleDateString('pt-BR');
+  };
+  const simNao = (v) => v === true ? 'Sim' : (v === false ? 'Não' : '');
+
+  const rows = [COLUNAS_MEDICO.slice()];
+
+  [...medicos].sort((a,b)=>(a.nome||'').localeCompare(b.nome||'','pt-BR')).forEach(m => {
+    const esps = Array.isArray(m.especialidades) && m.especialidades.length
+      ? m.especialidades.join('; ') : (m.especialidade||'');
     const projs = (m.projetos_vinculados||[]).map(pid => {
       const p = projetos.find(x=>x.id===pid); return p?.nome||pid;
     }).join('; ');
-    const esps = Array.isArray(m.especialidades) ? m.especialidades.join('; ') : (m.especialidade||'');
+    const ufsInt = Array.isArray(m.ufs_interesse) ? m.ufs_interesse.join('; ') : (m.ufs_interesse||'');
     rows.push([
-      m.nome||'', m.crm||'', m.rqe||'', esps, m.cpf||'',
-      m.tipo||'', nasc, m.telefone||'', m.email||'',
-      m.razao_social||'', m.cnpj||'',
-      m.pix_tipo||'', m.pix_chave||'', projs
+      m.nome||'', m.crm||'', m.rqe||'', esps, m.cpf||'', fData(m.data_nascimento), m.tipo||'',
+      m.telefone||'', m.email||'',
+      (m.valor_hora != null && m.valor_hora !== '' ? m.valor_hora : ''), simNao(m.ativo),
+      m.endereco_rua||'', m.endereco_numero||'', m.endereco_comp||'', m.endereco_bairro||'',
+      m.endereco_cidade||'', m.endereco_uf||'', m.endereco_cep||'',
+      simNao(m.pessoa_juridica), m.razao_social||'', m.cnpj||'',
+      m.pix_tipo||'', m.pix_chave||'', m.banco||'', m.agencia||'', m.conta_corrente||'', m.tipo_conta||'',
+      ufsInt, projs,
+      (m.device_id ? 'Registrado' : 'Não registrado'), fData(m.device_registrado_em),
+      simNao(m.primeiro_acesso), fData(m.criado_em)
     ]);
   });
-  // Linha de instruções de importação
+
+  // Linhas de instruções de importação
   rows.push([]);
   rows.push(['--- INSTRUÇÕES DE IMPORTAÇÃO ---']);
-  rows.push(['Para importar: edite as linhas acima, salve o Excel e use o botão "Importar Excel"']);
-  rows.push(['Não altere os cabeçalhos. Coluna CRM é obrigatória para identificar o médico.']);
-  rows.push(['Especialidades separadas por ponto-e-vírgula. Projetos: use o nome exato.']);
+  rows.push(['Edite as linhas acima e use o botão "Importar Excel". Não altere os cabeçalhos.']);
+  rows.push(['A coluna Nome identifica o médico (precisa estar idêntica à cadastrada).']);
+  rows.push(['Especialidades, UFs de interesse e Projetos vinculados: separe por ponto-e-vírgula (;).']);
+  rows.push(['Ativo e Pessoa jurídica: use "Sim" ou "Não". Data de nascimento: dd/mm/aaaa.']);
+  rows.push(['As 4 últimas colunas (Dispositivo, Registro do dispositivo, Primeiro acesso, Data de cadastro) são apenas informativas e NÃO são importadas.']);
+
   const ws = XLSX.utils.aoa_to_sheet(rows);
-  ws['!cols'] = [{wch:30},{wch:15},{wch:10},{wch:40},{wch:15},{wch:15},{wch:12},{wch:15},{wch:30},{wch:10},{wch:30},{wch:18},{wch:12},{wch:30},{wch:40}];
+  ws['!cols'] = COLUNAS_MEDICO.map(h => ({ wch: Math.max(12, Math.min(38, h.length + 6)) }));
   XLSX.utils.book_append_sheet(wb, ws, 'Médicos');
   XLSX.writeFile(wb, 'medicos_plantaopro_'+new Date().toISOString().slice(0,10)+'.xlsx');
   toast('Excel exportado!');
@@ -2828,11 +2885,37 @@ async function importarMedicosXLSX(event) {
   if (rows.length < 2) { toast('Planilha vazia ou sem dados', true); return; }
 
   const header = rows[0].map(h=>String(h).trim());
-  const idx = (col) => header.findIndex(h=>h.toLowerCase().includes(col.toLowerCase()));
-  const iNome=idx('Nome'), iCRM=idx('CRM'), iRQE=idx('RQE'), iEsp=idx('Especialidade'),
-        iCPF=idx('CPF'), iTipo=idx('Tipo'), iNasc=idx('Nascimento'), iTel=idx('Telefone'),
-        iEmail=idx('E-mail'), iVH=idx('Valor'), iRazao=idx('Razão'), iCNPJ=idx('CNPJ'),
-        iPTipo=idx('Tipo PIX'), iPChave=idx('Chave PIX'), iProjs=idx('Projetos');
+  const idx = (col) => {
+    const alvo = col.toLowerCase();
+    let i = header.findIndex(h => h.toLowerCase() === alvo);              // correspondência exata
+    if (i === -1) i = header.findIndex(h => h.toLowerCase().includes(alvo)); // fallback por conteúdo
+    return i;
+  };
+  const iNome=idx('Nome'), iCRM=idx('CRM'), iRQE=idx('RQE'), iEsp=idx('Especialidades'),
+        iCPF=idx('CPF'), iNasc=idx('Data de nascimento'), iTipo=idx('Tipo'), iTel=idx('Telefone'),
+        iEmail=idx('E-mail'), iVH=idx('Valor/hora'), iAtivo=idx('Ativo'),
+        iRua=idx('Logradouro'), iNum=idx('Número'), iComp=idx('Complemento'), iBairro=idx('Bairro'),
+        iCidade=idx('Cidade'), iUF=idx('UF'), iCEP=idx('CEP'),
+        iPJ=idx('Pessoa jurídica'), iRazao=idx('Razão social'), iCNPJ=idx('CNPJ'),
+        iPTipo=idx('Tipo PIX'), iPChave=idx('Chave PIX'), iBanco=idx('Banco'), iAg=idx('Agência'),
+        iConta=idx('Conta'), iTipoConta=idx('Tipo de conta'),
+        iUfsInt=idx('UFs de interesse'), iProjs=idx('Projetos vinculados');
+
+  // Conversões auxiliares para a importação
+  const brToISO = (v) => {
+    const s = String(v||'').trim(); if (!s) return null;
+    let m = s.match(/^(\d{4})-(\d{2})-(\d{2})/); if (m) return `${m[1]}-${m[2]}-${m[3]}`;
+    m = s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/);
+    if (m && +m[2]>=1 && +m[2]<=12 && +m[1]>=1 && +m[1]<=31)
+      return `${m[3]}-${m[2].padStart(2,'0')}-${m[1].padStart(2,'0')}`;
+    return null;
+  };
+  const parseValor = (v) => {
+    let s = String(v==null?'':v).replace(/[^\d,.-]/g,'').trim();
+    if (s.includes(',')) s = s.replace(/\./g,'').replace(',', '.'); // formato BR 1.234,56
+    const n = parseFloat(s); return isNaN(n) ? null : n;
+  };
+  const ehSim = (v) => ['sim','s','true','1','ativo','pj','x'].includes(String(v||'').trim().toLowerCase());
 
   const dataRows = rows.slice(1).filter(r => r[iNome] && !String(r[0]).startsWith('---'));
   if (!dataRows.length) { toast('Nenhum médico encontrado na planilha', true); return; }
@@ -2856,23 +2939,60 @@ async function importarMedicosXLSX(event) {
     const projsVinc = projsStr ? projsStr.split(';').map(s=>s.trim()).filter(Boolean)
       .map(nome => projetos.find(p=>p.nome.toLowerCase()===nome.toLowerCase())?.id)
       .filter(Boolean) : existente.projetos_vinculados || [];
+    // Lê uma coluna; se ausente/vazia retorna '' (para cair no valor já existente).
+    const val = (i) => (i >= 0 && row[i] != null) ? String(row[i]).trim() : '';
+
+    // Data de nascimento (mantém a atual se a célula estiver vazia/ inválida)
+    let nascimento = existente.data_nascimento || null;
+    if (val(iNasc)) { const iso = brToISO(val(iNasc)); if (iso) nascimento = iso; }
+
+    // Valor/hora (mantém o atual se vazio)
+    let valorHora = (existente.valor_hora != null ? existente.valor_hora : 0);
+    if (val(iVH)) { const n = parseValor(val(iVH)); if (n != null) valorHora = n; }
+
+    // Ativo / Pessoa jurídica (Sim/Não → boolean; mantém o atual se vazio)
+    let ativo = existente.ativo;
+    if (val(iAtivo)) ativo = ehSim(val(iAtivo));
+    let pj = existente.pessoa_juridica;
+    if (val(iPJ)) pj = ehSim(val(iPJ));
+
+    // UFs de interesse (lista separada por ;)
+    let ufsInt = existente.ufs_interesse || [];
+    if (val(iUfsInt)) ufsInt = val(iUfsInt).split(';').map(s=>s.trim().toUpperCase()).filter(Boolean);
+
     paraAtualizar.push({
       id: existente.id,
       nome,
       payload: {
         nome,
-        crm:          String(row[iCRM]||existente.crm||'').trim(),
-        rqe:          String(row[iRQE]||existente.rqe||'').trim()||null,
+        crm:          val(iCRM) || existente.crm || '',
+        rqe:          val(iRQE) || existente.rqe || null,
         especialidade: esps.join(', ') || existente.especialidade || '',
         especialidades: esps.length ? esps : (existente.especialidades||[]),
-        cpf:          String(row[iCPF]||existente.cpf||'').trim()||null,
-        tipo:         String(row[iTipo]||existente.tipo||'Plantonista').trim(),
-        telefone:     String(row[iTel]||existente.telefone||'').trim()||null,
-        email:        String(row[iEmail]||existente.email||'').trim()||null,
-        razao_social: String(row[iRazao]||existente.razao_social||'').trim()||null,
-        cnpj:         String(row[iCNPJ]||existente.cnpj||'').trim()||null,
-        pix_tipo:     String(row[iPTipo]||existente.pix_tipo||'').trim()||null,
-        pix_chave:    String(row[iPChave]||existente.pix_chave||'').trim()||null,
+        cpf:          val(iCPF) || existente.cpf || null,
+        data_nascimento: nascimento,
+        tipo:         val(iTipo) || existente.tipo || 'Plantonista',
+        telefone:     val(iTel) || existente.telefone || null,
+        email:        val(iEmail) || existente.email || null,
+        valor_hora:   valorHora,
+        ativo:        ativo,
+        endereco_rua:    val(iRua)    || existente.endereco_rua    || null,
+        endereco_numero: val(iNum)    || existente.endereco_numero || null,
+        endereco_comp:   val(iComp)   || existente.endereco_comp   || null,
+        endereco_bairro: val(iBairro) || existente.endereco_bairro || null,
+        endereco_cidade: val(iCidade) || existente.endereco_cidade || null,
+        endereco_uf:     (val(iUF) || existente.endereco_uf || '').toUpperCase() || null,
+        endereco_cep:    val(iCEP)    || existente.endereco_cep    || null,
+        pessoa_juridica: pj,
+        razao_social: val(iRazao)  || existente.razao_social || null,
+        cnpj:         val(iCNPJ)   || existente.cnpj || null,
+        pix_tipo:     val(iPTipo)  || existente.pix_tipo || null,
+        pix_chave:    val(iPChave) || existente.pix_chave || null,
+        banco:          val(iBanco)     || existente.banco || null,
+        agencia:        val(iAg)        || existente.agencia || null,
+        conta_corrente: val(iConta)     || existente.conta_corrente || null,
+        tipo_conta:     val(iTipoConta) || existente.tipo_conta || null,
+        ufs_interesse: ufsInt,
         projetos_vinculados: projsVinc,
       }
     });
@@ -2963,6 +3083,14 @@ function abrirEditarMedico(id) {
   if (pixTipo)  pixTipo.value  = m.pix_tipo  || '';
   if (pixChave) pixChave.value = m.pix_chave || '';
 
+  // Endereço + dados bancários tradicionais
+  const sv = (id,v)=>{ const el=document.getElementById(id); if(el) el.value = (v==null?'':v); };
+  sv('em-rua', m.endereco_rua);   sv('em-numero', m.endereco_numero); sv('em-comp', m.endereco_comp);
+  sv('em-bairro', m.endereco_bairro); sv('em-cidade', m.endereco_cidade);
+  sv('em-uf', m.endereco_uf);     sv('em-cep', m.endereco_cep);
+  sv('em-banco', m.banco);        sv('em-ag', m.agencia);            sv('em-cc', m.conta_corrente);
+  const elTipoCC = document.getElementById('em-tipo-cc'); if (elTipoCC) elTipoCC.value = m.tipo_conta || 'corrente';
+
   // Se tipo for CPF, bloquear o campo
   if (m.pix_tipo === 'CPF' && m.pix_chave) {
     pixChave.readOnly = true;
@@ -3000,6 +3128,17 @@ async function salvarEdicaoMedico() {
     especialidades: [...document.querySelectorAll('.em-esp-chk:checked')].map(c=>c.value),
     especialidade:  [...document.querySelectorAll('.em-esp-chk:checked')].map(c=>c.value).join(', '),
     valor_hora:     parseFloat(document.getElementById('em-valor').value) || 0,
+    endereco_rua:    document.getElementById('em-rua')?.value.trim()||null,
+    endereco_numero: document.getElementById('em-numero')?.value.trim()||null,
+    endereco_comp:   document.getElementById('em-comp')?.value.trim()||null,
+    endereco_bairro: document.getElementById('em-bairro')?.value.trim()||null,
+    endereco_cidade: document.getElementById('em-cidade')?.value.trim()||null,
+    endereco_uf:     document.getElementById('em-uf')?.value||null,
+    endereco_cep:    document.getElementById('em-cep')?.value.trim()||null,
+    banco:           document.getElementById('em-banco')?.value.trim()||null,
+    agencia:         document.getElementById('em-ag')?.value.trim()||null,
+    conta_corrente:  document.getElementById('em-cc')?.value.trim()||null,
+    tipo_conta:      document.getElementById('em-tipo-cc')?.value||null,
     projetos_vinculados: projsVinc
   };
   if (!payload.nome || !payload.crm) { toast('Nome e CRM são obrigatórios', true); return; }
