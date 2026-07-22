@@ -180,6 +180,52 @@ export default async function handler(req, res) {
       return json(res, 200, { ok: true, criados, atualizados, erros, detalhes: detalhes.slice(0, 20) });
     }
 
+    // ── VINCULAR MÉDICO À MINHA EMPRESA (aprovação de vaga pública) ──────
+    // Idempotente: se já existe vínculo, apenas garante status ativo.
+    if (req.method === 'POST' && req.query.action === 'vincular') {
+      const { medico_id, projeto_id } = req.body || {};
+      if (!medico_id) return json(res, 400, { erro: 'medico_id obrigatório' });
+
+      let ja_vinculado = false;
+      const v = await sbAdmin(
+        `/rest/v1/vinculos?medico_id=eq.${medico_id}&admin_id=eq.${adminId}&select=id,status`
+      );
+      if (v && v.length) {
+        ja_vinculado = true;
+        if (v[0].status !== 'ativo') {
+          await sbAdmin(`/rest/v1/vinculos?id=eq.${v[0].id}`, {
+            method: 'PATCH', headers: { Prefer: 'return=minimal' },
+            body: JSON.stringify({ status: 'ativo' }),
+          });
+        }
+      } else {
+        await sbAdmin('/rest/v1/vinculos', {
+          method: 'POST', headers: { Prefer: 'return=minimal' },
+          body: JSON.stringify({ medico_id, admin_id: adminId, status: 'ativo' }),
+        });
+      }
+
+      // Soma o projeto aos projetos do médico (só se o projeto for desta empresa)
+      let projeto_adicionado = false;
+      if (projeto_id) {
+        const p = await sbAdmin(
+          `/rest/v1/projetos?id=eq.${projeto_id}&admin_id=eq.${adminId}&select=id`
+        );
+        if (p && p.length) {
+          const m = await sbAdmin(`/rest/v1/medicos?id=eq.${medico_id}&select=projetos_vinculados`);
+          const atuais = m?.[0]?.projetos_vinculados || [];
+          if (!atuais.includes(projeto_id)) {
+            await sbAdmin(`/rest/v1/medicos?id=eq.${medico_id}`, {
+              method: 'PATCH', headers: { Prefer: 'return=minimal' },
+              body: JSON.stringify({ projetos_vinculados: [...atuais, projeto_id] }),
+            });
+            projeto_adicionado = true;
+          }
+        }
+      }
+      return json(res, 200, { ok: true, ja_vinculado, projeto_adicionado });
+    }
+
     // ── ENVIAR PUSH (escala, vaga) ──────────────────────────────────────
     if (req.method === 'POST' && req.query.action === 'push') {
       const r = await enviarPush(req.body || {});
