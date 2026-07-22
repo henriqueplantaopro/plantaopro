@@ -4273,9 +4273,7 @@ function abrirLancamentoRapido(ds, projId) {
   if(setorCustom) setorCustom.style.display='none';
   document.getElementById('mr-setor').value = '';
   var _mv = document.getElementById('mr-vagas'); if(_mv) _mv.value = '1';
-  var _mee = document.getElementById('mr-exige-esp'); if(_mee) _mee.checked = false;
-  var _mer = document.getElementById('mr-esp-row'); if(_mer) _mer.style.display = 'none';
-  var _mea = document.getElementById('mr-esp-alvo'); if(_mea) _mea.value = '';
+  resetOpcoesAberto();
   var _sc2 = document.getElementById('mr-setor-custom');
   if (_sc2) { _sc2.value = ''; _sc2.style.display = 'none'; }
   var _tlm2 = document.getElementById('mr-tipo-livre-mode');
@@ -5187,6 +5185,49 @@ function onExigeEspChange() {
   var on = !!(document.getElementById('mr-exige-esp') && document.getElementById('mr-exige-esp').checked);
   if (row) row.style.display = on ? 'block' : 'none';
   if (!on) { var s = document.getElementById('mr-esp-alvo'); if (s) s.value = ''; }
+}
+// Devolve TODO o bloco de "plantão aberto" ao estado inicial
+function resetOpcoesAberto() {
+  var ab = document.getElementById('mr-aberto');
+  if (ab) ab.checked = false;
+  var opts = document.getElementById('mr-aberto-opts');
+  if (opts) opts.style.display = 'none';
+  // Público-alvo volta para "Médicos do projeto"
+  var rads = document.querySelectorAll('input[name="mr-publico"]');
+  Array.prototype.forEach.call(rads, function(r){ r.checked = (r.value === 'projeto'); });
+  // UFs: esconde a linha e desmarca todos os estados
+  var ufsRow = document.getElementById('mr-ufs-row');
+  if (ufsRow) ufsRow.style.display = 'none';
+  var ufsSel = document.getElementById('mr-ufs-select');
+  if (ufsSel) {
+    Array.prototype.forEach.call(ufsSel.children, function(b){
+      b.dataset.sel = '0';
+      b.style.borderColor = 'var(--border)';
+      b.style.background  = '#fff';
+      b.style.color       = 'var(--text2)';
+    });
+  }
+  // RQE e especialidade exigida
+  var rqe = document.getElementById('mr-exige-rqe');
+  if (rqe) rqe.checked = false;
+  var ee = document.getElementById('mr-exige-esp');
+  if (ee) ee.checked = false;
+  var er = document.getElementById('mr-esp-row');
+  if (er) er.style.display = 'none';
+  var ea = document.getElementById('mr-esp-alvo');
+  if (ea) ea.value = '';
+  // Vagas, observação e valor
+  var vg = document.getElementById('mr-vagas');
+  if (vg) vg.value = '1';
+  var ob = document.getElementById('mr-obs');
+  if (ob) ob.value = '';
+  var vl = document.getElementById('mr-valor');
+  if (vl) { vl.value = ''; delete vl.dataset.manual; }
+  var bd = document.getElementById('mr-valor-badge');
+  if (bd) bd.style.display = 'none';
+  // Filtro de especialidade da lista de médicos
+  var ef = document.getElementById('mr-esp-filtro');
+  if (ef) ef.value = '';
 }
 
 // Renderizar checkboxes de projetos no formulário de médico
