@@ -1930,6 +1930,8 @@ tr:hover td{background:var(--bg3);}
 
 <!-- MENU DE CONTEXTO — Calendário semanal -->
 <div class="ctx-menu" id="ctx-menu">
+  <div class="ctx-item" id="ctx-preencher" onclick="ctxPreencherVaga()" style="display:none;font-weight:600;color:var(--blue);">Preencher vaga</div>
+  <div class="ctx-sep" id="ctx-sep-preencher" style="display:none;"></div>
   <div class="ctx-item" id="ctx-editar" onclick="ctxEditar()" style="display:none;">Editar plantão</div>
   <div class="ctx-item" id="ctx-copiar" onclick="ctxCopiar()">Copiar plantão</div>
   <div class="ctx-sep"></div>
@@ -1939,6 +1941,25 @@ tr:hover td{background:var(--bg3);}
   <div class="ctx-item" onclick="ctxNovoPlantao()">+ Novo plantão</div>
   <div class="ctx-sep" id="ctx-sep-remover"></div>
   <div class="ctx-item danger" id="ctx-remover" onclick="ctxRemover()" style="display:none;">Remover plantão</div>
+</div>
+
+<!-- MODAL PREENCHER VAGA -->
+<div class="modal-overlay" id="modal-preencher" onclick="if(event.target===this)fecharPreencherVaga()">
+  <div class="modal" style="max-width:520px;">
+    <div class="modal-header">
+      <div class="modal-title">Preencher vaga</div>
+      <button class="modal-close" onclick="fecharPreencherVaga()">✕</button>
+    </div>
+    <div style="padding:16px;">
+      <div id="pv-info" style="font-size:12px;color:var(--text2);margin-bottom:10px;"></div>
+      <div style="display:flex;gap:6px;margin-bottom:10px;">
+        <button type="button" id="pv-tab-projeto" onclick="setPvModo('projeto')">Médicos do projeto</button>
+        <button type="button" id="pv-tab-todos" onclick="setPvModo('todos')">Todos os médicos</button>
+      </div>
+      <input type="text" id="pv-busca" oninput="renderPvLista()" placeholder="Digite o nome ou o CRM do médico..." style="width:100%;padding:9px;border:1px solid var(--border);border-radius:8px;font-size:13px;margin-bottom:8px;">
+      <div id="pv-lista" style="max-height:320px;overflow-y:auto;border:1px solid var(--border);border-radius:8px;background:#fff;"></div>
+    </div>
+  </div>
 </div>
 
 <!-- MODAL EDITAR MÉDICO -->
@@ -4906,6 +4927,101 @@ function fecharCtxMenu() {
   document.getElementById('ctx-menu').style.display = 'none';
 }
 
+// ── PREENCHER VAGA (plantão aberto -> médico específico) ──────────────
+var _pvLanc = null, _pvModo = 'projeto';
+var _PV_ON  = 'flex:1;padding:8px;font-size:12px;font-weight:600;border-radius:8px;border:1.5px solid var(--blue);background:var(--blue);color:#fff;cursor:pointer;';
+var _PV_OFF = 'flex:1;padding:8px;font-size:12px;font-weight:600;border-radius:8px;border:1.5px solid var(--border);background:#fff;color:var(--text2);cursor:pointer;';
+
+function ctxPreencherVaga() {
+  var l = _ctxLancamento;
+  fecharCtxMenu();
+  if (!l) return;
+  _pvLanc = l;
+  var proj = (typeof projetos !== 'undefined' && projetos) ? projetos.find(function(p){ return p.id === l.projeto_id; }) : null;
+  var info = document.getElementById('pv-info');
+  if (info) {
+    var d = new Date((l.data || '') + 'T12:00:00');
+    var dTxt = isNaN(d.getTime()) ? (l.data || '') : d.toLocaleDateString('pt-BR');
+    var vagas = l.vagas || 1, preench = l.vagas_preenchidas || 0;
+    info.textContent = (proj ? proj.nome : 'Projeto') + ' · ' + dTxt + ' · ' +
+      String(l.hora_ini || '').slice(0,5) + '–' + String(l.hora_fim || '').slice(0,5) +
+      ' · ' + preench + '/' + vagas + ' vaga(s) preenchida(s)';
+  }
+  var b = document.getElementById('pv-busca'); if (b) b.value = '';
+  setPvModo('projeto');
+  document.getElementById('modal-preencher').classList.add('open');
+  if (b) setTimeout(function(){ b.focus(); }, 80);
+}
+
+function fecharPreencherVaga() {
+  var m = document.getElementById('modal-preencher');
+  if (m) m.classList.remove('open');
+  _pvLanc = null;
+}
+
+function setPvModo(modo) {
+  _pvModo = modo;
+  var a = document.getElementById('pv-tab-projeto');
+  var b = document.getElementById('pv-tab-todos');
+  if (a) a.style.cssText = (modo === 'projeto') ? _PV_ON : _PV_OFF;
+  if (b) b.style.cssText = (modo === 'todos')   ? _PV_ON : _PV_OFF;
+  renderPvLista();
+}
+
+function renderPvLista() {
+  var el = document.getElementById('pv-lista');
+  if (!el || !_pvLanc) return;
+  var buscaEl = document.getElementById('pv-busca');
+  var termo = (buscaEl ? buscaEl.value : '').toLowerCase().trim();
+  var base = (typeof sortedMedicos === 'function') ? sortedMedicos() : (medicos || []);
+  var lista = base.filter(function(m) {
+    if (_pvModo === 'projeto' && (m.projetos_vinculados || []).indexOf(_pvLanc.projeto_id) === -1) return false;
+    if (!termo) return true;
+    return String(m.nome || '').toLowerCase().indexOf(termo) !== -1 ||
+           String(m.crm  || '').toLowerCase().indexOf(termo) !== -1;
+  });
+  if (!lista.length) {
+    el.innerHTML = '<div style="padding:14px;font-size:12px;color:var(--text3);text-align:center;">Nenhum médico encontrado.</div>';
+    return;
+  }
+  el.innerHTML = lista.map(function(m) {
+    var sub = 'CRM ' + (m.crm || '—') + (m.especialidade ? ' · ' + m.especialidade : '');
+    return '<div onclick="pvSelecionar(\'' + m.id + '\')" ' +
+      'onmouseover="this.style.background=\'var(--blue-light)\'" onmouseout="this.style.background=\'#fff\'" ' +
+      'style="padding:9px 12px;border-bottom:1px solid var(--border);cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:8px;background:#fff;">' +
+      '<div><div style="font-size:13px;font-weight:600;color:var(--text);">' + (m.nome || '') + '</div>' +
+      '<div style="font-size:11px;color:var(--text3);">' + sub + '</div></div>' +
+      '<span style="font-size:11px;color:var(--blue);font-weight:600;">Vincular</span></div>';
+  }).join('');
+}
+
+async function pvSelecionar(medId) {
+  if (!_pvLanc) return;
+  var l = _pvLanc;
+  var med = (medicos || []).find(function(m){ return m.id === medId; });
+  if (!med) return;
+  if (!confirm('Vincular ' + med.nome + ' a este plantão?')) return;
+  var vagas = l.vagas || 1;
+  var preench = (l.vagas_preenchidas || 0) + 1;
+  var res = await sbApi('/lancamentos?id=eq.' + l.id, {
+    method: 'PATCH',
+    body: JSON.stringify({
+      medico_id: medId,
+      confirmado: true,
+      confirmado_em: new Date().toISOString(),
+      vagas_preenchidas: preench,
+      aberto: preench < vagas
+    })
+  });
+  if (!res) { toast('Erro ao preencher a vaga', true); return; }
+  toast('Vaga preenchida: ' + med.nome);
+  fecharPreencherVaga();
+  await carregarLancamentos(true);
+  try {
+    if (typeof switchCalTab === 'function' && typeof _calTabAtiva !== 'undefined' && _calTabAtiva) switchCalTab(_calTabAtiva);
+  } catch (e) {}
+}
+
 // Mostrar/esconder botões de colar em todas as células
 function atualizarBotoesColar() {
   document.querySelectorAll('.sem-colar-btn').forEach(btn => {
@@ -4965,6 +5081,11 @@ function abrirCtxChip(e, lancId, ds, projId) {
   _ctxProjId     = projId;
 
   const menu = document.getElementById('ctx-menu');
+  var _pvItem = document.getElementById('ctx-preencher');
+  var _pvSep  = document.getElementById('ctx-sep-preencher');
+  var _ehAberto = !!(lanc && lanc.aberto);
+  if (_pvItem) _pvItem.style.display = _ehAberto ? 'flex' : 'none';
+  if (_pvSep)  _pvSep.style.display  = _ehAberto ? 'block' : 'none';
   document.getElementById('ctx-editar').style.display  = lanc ? 'flex' : 'none';
   document.getElementById('ctx-copiar').style.display  = lanc ? 'flex' : 'none';
   document.getElementById('ctx-remover').style.display = lanc ? 'flex' : 'none';
@@ -4986,6 +5107,8 @@ function abrirCtxCelula(e, ds, projId) {
   _ctxProjId     = projId;
 
   const menu = document.getElementById('ctx-menu');
+  var _pvI = document.getElementById('ctx-preencher'); if (_pvI) _pvI.style.display = 'none';
+  var _pvS = document.getElementById('ctx-sep-preencher'); if (_pvS) _pvS.style.display = 'none';
   document.getElementById('ctx-copiar').style.display = 'none';
   document.getElementById('ctx-remover').style.display = 'none';
   atualizarCtxColar(ds);
