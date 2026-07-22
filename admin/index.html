@@ -1911,7 +1911,7 @@ tr:hover td{background:var(--bg3);}
           <span>Publicar como plantão aberto (sem médico vinculado)</span>
         </label>
         <div id="mr-aberto-opts" style="display:none;margin-top:10px;padding:10px;background:var(--amber-bg);border-radius:var(--radius);border:1px solid #e3cfa6;">
-<div style="margin-top:10px;"><label style="font-size:11px;font-weight:600;color:var(--text2);display:block;margin-bottom:6px;">PÚBLICO-ALVO</label><div style="display:flex;gap:8px;flex-wrap:wrap;"><label style="cursor:pointer;font-size:13px;"><input type="radio" name="mr-publico" value="projeto" checked onchange="onMrPublicoChange(this.value)"> Médicos do projeto</label><label style="cursor:pointer;font-size:13px;"><input type="radio" name="mr-publico" value="ufs" onchange="onMrPublicoChange(this.value)"> Por estado (UF)</label><label style="cursor:pointer;font-size:13px;"><input type="radio" name="mr-publico" value="geral" onchange="onMrPublicoChange(this.value)"> Público geral</label></div><div id="mr-ufs-row" style="display:none;margin-top:8px;"><div id="mr-ufs-select" style="display:flex;flex-wrap:wrap;gap:4px;"></div></div><label style="cursor:pointer;margin-top:8px;display:block;font-size:13px;"><input type="checkbox" id="mr-exige-rqe" onchange="onExigeRQEChange()"> Exige RQE</label></div>
+<div style="margin-top:10px;"><label style="font-size:11px;font-weight:600;color:var(--text2);display:block;margin-bottom:6px;">PÚBLICO-ALVO</label><div style="display:flex;gap:8px;flex-wrap:wrap;"><label style="cursor:pointer;font-size:13px;"><input type="radio" name="mr-publico" value="projeto" checked onchange="onMrPublicoChange(this.value)"> Médicos do projeto</label><label style="cursor:pointer;font-size:13px;"><input type="radio" name="mr-publico" value="ufs" onchange="onMrPublicoChange(this.value)"> Por estado (UF)</label><label style="cursor:pointer;font-size:13px;"><input type="radio" name="mr-publico" value="geral" onchange="onMrPublicoChange(this.value)"> Médicos cadastrados</label></div><div id="mr-ufs-row" style="display:none;margin-top:8px;"><div id="mr-ufs-select" style="display:flex;flex-wrap:wrap;gap:4px;"></div></div><label style="cursor:pointer;margin-top:8px;display:block;font-size:13px;"><input type="checkbox" id="mr-exige-rqe" onchange="onExigeRQEChange()"> Exige RQE</label><div style="margin-top:8px;"><label style="cursor:pointer;display:block;font-size:13px;"><input type="checkbox" id="mr-exige-esp" onchange="onExigeEspChange()"> Exigir especialidade específica</label><div id="mr-esp-row" style="display:none;margin-top:6px;"><select id="mr-esp-alvo" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:8px;font-size:13px;background:#fff;"><option value="">Selecione a especialidade...</option><option>Anestesiologia</option><option>Cardiologia</option><option>Cirurgia Geral</option><option>Cirurgia Vascular</option><option>Dermatologia</option><option>Endocrinologia</option><option>Gastroenterologia</option><option>Geriatria</option><option>Ginecologia e Obstetrícia</option><option>Hematologia</option><option>Infectologia</option><option>Medicina Intensiva (UTI)</option><option>Medicina do Trabalho</option><option>Nefrologia</option><option>Neurologia</option><option>Neurocirurgia</option><option>Oftalmologia</option><option>Oncologia</option><option>Ortopedia e Traumatologia</option><option>Otorrinolaringologia</option><option>Pediatria</option><option>Pneumologia</option><option>Psiquiatria</option><option>Radiologia</option><option>Reumatologia</option><option>Urologia</option></select><div style="font-size:11px;color:var(--text3);margin-top:4px;">Só médicos com esta especialidade cadastrada verão e poderão assumir. Sem marcar, a vaga é generalista (todos veem).</div></div></div></div>
           <div class="form-group">
             <label style="color:var(--amber);">Número de vagas</label>
             <input id="mr-vagas" type="number" min="1" max="20" value="1" style="max-width:100px;padding:6px 10px;border:1px solid var(--border);border-radius:var(--radius);">
@@ -4273,6 +4273,9 @@ function abrirLancamentoRapido(ds, projId) {
   if(setorCustom) setorCustom.style.display='none';
   document.getElementById('mr-setor').value = '';
   var _mv = document.getElementById('mr-vagas'); if(_mv) _mv.value = '1';
+  var _mee = document.getElementById('mr-exige-esp'); if(_mee) _mee.checked = false;
+  var _mer = document.getElementById('mr-esp-row'); if(_mer) _mer.style.display = 'none';
+  var _mea = document.getElementById('mr-esp-alvo'); if(_mea) _mea.value = '';
   var _sc2 = document.getElementById('mr-setor-custom');
   if (_sc2) { _sc2.value = ''; _sc2.style.display = 'none'; }
   var _tlm2 = document.getElementById('mr-tipo-livre-mode');
@@ -4544,6 +4547,9 @@ try {
           .map(b => b.dataset.uf);
         if (!_ufsAlvo.length) { toast('Selecione ao menos um estado (UF)', true); return; }
       }
+      const _exigeEsp = !!(document.getElementById('mr-exige-esp') && document.getElementById('mr-exige-esp').checked);
+      const _espAlvo = (document.getElementById('mr-esp-alvo')?.value || '').trim();
+      if (_exigeEsp && !_espAlvo) { toast('Selecione a especialidade exigida', true); return; }
       const _corpo = {
         projeto_id:projId, data:ds, hora_ini:ini, hora_fim:fim, horas, tipo,
         setor:setor||null, honorario:valor||0,
@@ -4552,7 +4558,7 @@ try {
         exige_rqe: document.getElementById('mr-exige-rqe')?.checked||false,
         publico_alvo: _pub,
         ufs_alvo: _ufsAlvo,
-        especialidades_alvo: []
+        especialidades_alvo: (_exigeEsp && _espAlvo) ? [_espAlvo] : []
       };
       const res = await sbApi('/lancamentos', { method:'POST', body: JSON.stringify(_corpo) });
       if (res) {
@@ -5175,6 +5181,12 @@ function onExigeRQEChange() {
   const busca = document.getElementById('mr-med-busca')?.value || '';
   const esp = document.getElementById('mr-med-esp')?.value || '';
   renderMedListaMR(busca, esp);
+}
+function onExigeEspChange() {
+  var row = document.getElementById('mr-esp-row');
+  var on = !!(document.getElementById('mr-exige-esp') && document.getElementById('mr-exige-esp').checked);
+  if (row) row.style.display = on ? 'block' : 'none';
+  if (!on) { var s = document.getElementById('mr-esp-alvo'); if (s) s.value = ''; }
 }
 
 // Renderizar checkboxes de projetos no formulário de médico
