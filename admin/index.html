@@ -1187,7 +1187,7 @@ tr:hover td{background:var(--bg3);}
     <div style="display:flex;gap:6px;margin-bottom:16px;">
       <button class="btn btn-primary" id="cal-tab-mensal" onclick="switchCalTab('mensal')">Mensal</button>
       <button class="btn btn-ghost" id="cal-tab-semanal" onclick="switchCalTab('semanal')">Semanal</button>
-      <button class="btn btn-ghost" id="cal-tab-lista" onclick="switchCalTab('lista')">Mês (lista)</button>
+      <button class="btn btn-ghost" id="cal-tab-lista" onclick="switchCalTab('lista')">Mês (calendário)</button>
     </div>
 
     <!-- FILTROS compartilhados -->
@@ -1213,12 +1213,29 @@ tr:hover td{background:var(--bg3);}
             <span><span class="cal-legend-dot" style="background:#eafaf2;"></span>Diurno</span>
             <span><span class="cal-legend-dot" style="background:#f0eeff;"></span>Noturno</span>
             <span><span class="cal-legend-dot" style="background:#fff8ec;"></span>24h</span>
-            <span style="margin-left:8px;"><span class="cal-legend-dot" style="background:#c0392b;"></span>Furo sem cobertura</span>
+          </div>
+        </div>
+        <div id="cal-filtro-badge" style="font-size:12px;color:var(--blue);margin-bottom:8px;display:none;"></div>
+        <div id="cal-mensal-semanas"></div>
+      </div>
+    </div>
+
+    <!-- VIEW MÊS (CALENDÁRIO) -->
+    <div id="cal-lista" style="display:none;">
+      <div class="card">
+        <div class="cal-header">
+          <div style="display:flex;align-items:center;gap:12px;">
+            <button class="btn btn-ghost btn-sm" onclick="navCalLista(-1)">‹ Anterior</button>
+            <div class="cal-title" id="cal-lista-label"></div>
+            <button class="btn btn-ghost btn-sm" onclick="navCalLista(1)">Próximo ›</button>
+          </div>
+          <div class="cal-legend" style="flex-wrap:wrap;gap:10px;">
+            <span><span class="cal-legend-dot" style="background:#0a8f5b;"></span>Tudo certo</span>
+            <span><span class="cal-legend-dot" style="background:#c0392b;"></span>Furo sem cobertura</span>
             <span><span class="cal-legend-dot" style="background:#d98324;"></span>Futuro sem médico</span>
             <span><span class="cal-legend-dot" style="background:#7c3aed;"></span>Repasse em aberto</span>
           </div>
         </div>
-        <div id="cal-filtro-badge" style="font-size:12px;color:var(--blue);margin-bottom:8px;display:none;"></div>
         <div class="cal-grid">
           <div class="cal-dow">Dom</div><div class="cal-dow">Seg</div><div class="cal-dow">Ter</div>
           <div class="cal-dow">Qua</div><div class="cal-dow">Qui</div><div class="cal-dow">Sex</div><div class="cal-dow">Sáb</div>
@@ -1228,26 +1245,6 @@ tr:hover td{background:var(--bg3);}
       <div class="card" id="cal-detail" style="display:none;">
         <div class="card-title" id="cal-detail-title"></div>
         <div id="cal-detail-body"></div>
-      </div>
-    </div>
-
-    <!-- VIEW SEMANAL -->
-    <!-- VIEW MÊS EM LISTA -->
-    <div id="cal-lista" style="display:none;">
-      <div class="card">
-        <div class="cal-header" style="margin-bottom:12px;">
-          <div style="display:flex;align-items:center;gap:12px;">
-            <button class="btn btn-ghost btn-sm" onclick="navCalLista(-1)">‹ Anterior</button>
-            <div class="cal-title" id="cal-lista-label"></div>
-            <button class="btn btn-ghost btn-sm" onclick="navCalLista(1)">Próximo ›</button>
-          </div>
-          <div class="cal-legend" style="flex-wrap:wrap;gap:10px;">
-            <span><span class="cal-legend-dot" style="background:#c0392b;"></span>Furo sem cobertura (passado)</span>
-            <span><span class="cal-legend-dot" style="background:#d98324;"></span>Futuro sem médico</span>
-            <span><span class="cal-legend-dot" style="background:#7c3aed;"></span>Repasse em aberto</span>
-          </div>
-        </div>
-        <div id="cal-lista-grid"></div>
       </div>
     </div>
 
@@ -4080,59 +4077,59 @@ function renderCal() {
   const labelEl = document.getElementById('cal-label');
   if (!labelEl) return;
   labelEl.textContent = meses[calMonth] + ' ' + calYear;
-  const grid    = document.getElementById('cal-grid');
+  const cont = document.getElementById('cal-mensal-semanas');
+  if (!cont) return;
+
   const pid = document.getElementById('cal-proj')?.value || '';
   const sid = document.getElementById('cal-setor')?.value || '';
-  // A visão mensal só faz sentido com projeto e setor definidos —
-  // com todos os projetos juntos não dá para ler nada.
-  if (!pid || !sid) {
-    if (grid) grid.innerHTML = '<div class="empty" style="padding:28px;text-align:center;">' +
-      '<div style="font-size:14px;font-weight:600;color:var(--text2);margin-bottom:6px;">Selecione um projeto e um setor</div>' +
-      '<div style="font-size:12px;color:var(--text3);">A visão mensal mostra a escala de um setor específico (ex.: GHC · Emergência adulto rotina).</div></div>';
-    const det0 = document.getElementById('cal-detail');
-    if (det0) det0.style.display = 'none';
-    const badge0 = document.getElementById('cal-filtro-badge');
-    if (badge0) badge0.style.display = 'none';
-    return;
-  }
-  const primeiro = new Date(calYear, calMonth, 1).getDay();
-  const dias     = new Date(calYear, calMonth + 1, 0).getDate();
   const mid = document.getElementById('cal-med')?.value  || '';
+
   const badge = document.getElementById('cal-filtro-badge');
   if (badge) {
     const parts = [];
     if (pid) { const p = projetos.find(x => x.id === pid); if (p) parts.push('Projeto: ' + p.nome); }
-    if (mid) { const m = medicos.find(x  => x.id === mid); if (m) parts.push('Médico: '  + m.nome); }
+    if (sid) parts.push('Setor: ' + sid);
+    if (mid) { const m = medicos.find(x => x.id === mid); if (m) parts.push('Médico: ' + m.nome); }
     badge.textContent = parts.length ? '● Filtro ativo: ' + parts.join(' · ') : '';
     badge.style.display = parts.length ? 'block' : 'none';
   }
-  const hj = new Date();
-  let html = '';
-  for (let i = 0; i < primeiro; i++) html += '<div class="cal-day empty"></div>';
-  for (let d = 1; d <= dias; d++) {
-    const ds = `${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-    const isToday = d === hj.getDate() && calMonth === hj.getMonth() && calYear === hj.getFullYear();
-    const evts = getLancsCal(ds);
-    let ev = evts.slice(0, 3).map(l => {
-      const cls = l.tipo?.includes('Noturno') ? 'noturno' : l.tipo?.includes('24') ? 'h24' : 'diurno';
-      return `<div class="cal-event ${cls}" title="${l.medico||''} · ${l.projeto||''}">${(l.medico||'').split(' ')[0]}</div>`;
-    }).join('');
-    if (evts.length > 3) ev += `<div style="font-size:10px;color:var(--text3);">+${evts.length - 3} mais</div>`;
-    var _bols = bolinhasDoDia(evts, ds).map(function(b){
-      return '<span title="'+b.txt+'" style="display:inline-block;width:8px;height:8px;border-radius:50%;background:'+b.cor+';margin-left:3px;"></span>';
-    }).join('');
-    html += `<div class="cal-day${isToday?' today':''}${evts.length?' has-events':''}" onclick="showDayDetailCal('${ds}')">
-        <div style="display:flex;justify-content:space-between;align-items:center;">
-          <div class="cal-day-num">${d}${_bols}</div>
-          <button onclick="event.stopPropagation();abrirLancamentoRapido('${ds}','')" title="Adicionar plantão"
-            style="background:none;border:none;cursor:pointer;color:var(--text3);font-size:16px;line-height:1;padding:0 2px;border-radius:4px;opacity:0.6;"
-            onmouseenter="this.style.opacity='1';this.style.color='var(--blue)'"
-            onmouseleave="this.style.opacity='0.6';this.style.color='var(--text3)'">+</button>
-        </div> ${ev}</div>`;
+
+  if (!pid || !sid) {
+    cont.innerHTML = '<div class="empty" style="padding:28px;text-align:center;">' +
+      '<div style="font-size:14px;font-weight:600;color:var(--text2);margin-bottom:6px;">Selecione um projeto e um setor</div>' +
+      '<div style="font-size:12px;color:var(--text3);">Esta visão mostra todas as semanas do mês, uma abaixo da outra, no mesmo formato da escala semanal.</div></div>';
+    return;
   }
-  if (grid) grid.innerHTML = html;
-  const det = document.getElementById('cal-detail');
-  if (det) det.style.display = 'none';
+
+  const hj = new Date(); hj.setHours(0,0,0,0);
+  const dows = ['Seg','Ter','Qua','Qui','Sex','Sáb','Dom'];
+
+  // Primeira segunda-feira na semana do dia 1 do mês
+  const primeiroDia = new Date(calYear, calMonth, 1);
+  const dowPrim = primeiroDia.getDay(); // 0=dom
+  const inicio = new Date(primeiroDia);
+  inicio.setDate(primeiroDia.getDate() - (dowPrim === 0 ? 6 : dowPrim - 1));
+  inicio.setHours(0,0,0,0);
+  const ultimoDia = new Date(calYear, calMonth + 1, 0);
+
+  let html = '';
+  let cursor = new Date(inicio);
+  let guard = 0;
+  while (cursor <= ultimoDia && guard < 8) {
+    guard++;
+    const dias = Array.from({length:7}, (_,i) => {
+      const d = new Date(cursor); d.setDate(cursor.getDate()+i); return d;
+    });
+    const d1 = dias[0].toLocaleDateString('pt-BR',{day:'2-digit',month:'short'});
+    const d7 = dias[6].toLocaleDateString('pt-BR',{day:'2-digit',month:'short'});
+    const temHoje = dias.some(d => d.getTime() === hj.getTime());
+    html += '<div style="margin-bottom:16px;">' +
+      '<div style="font-size:12px;font-weight:700;color:' + (temHoje ? 'var(--blue)' : 'var(--text2)') + ';margin-bottom:6px;">' +
+      'Semana ' + guard + ' · ' + d1 + ' — ' + d7 + (temHoje ? ' · semana atual' : '') + '</div>' +
+      '<div style="overflow-x:auto;">' + renderSemanaGrid(dias, dows, hj, pid, mid) + '</div></div>';
+    cursor.setDate(cursor.getDate() + 7);
+  }
+  cont.innerHTML = html;
 }
 
 // ─── MÊS EM LISTA (dias empilhados + bolinhas de status) ──────────
@@ -4154,65 +4151,61 @@ function bolinhasDoDia(evts, ds) {
   if (semMedico && passado)  out.push({cor:'#c0392b', txt:'Furo sem cobertura'});
   if (semMedico && !passado) out.push({cor:'#d98324', txt:'Sem médico escalado'});
   if (repasse)               out.push({cor:'#7c3aed', txt:'Repasse em aberto'});
+  if (!out.length && evts.length) out.push({cor:'#0a8f5b', txt:'Todos os plantões cobertos'});
   return out;
 }
 
 function renderCalLista() {
-  var el = document.getElementById('cal-lista-grid');
-  var lbl = document.getElementById('cal-lista-label');
-  if (!el) return;
+  const lbl = document.getElementById('cal-lista-label');
   if (lbl) lbl.textContent = meses[calMonth] + ' ' + calYear;
+  const grid = document.getElementById('cal-grid');
+  if (!grid) return;
 
-  var pid = document.getElementById('cal-proj')?.value || '';
-  var sid = document.getElementById('cal-setor')?.value || '';
+  const pid = document.getElementById('cal-proj')?.value || '';
+  const sid = document.getElementById('cal-setor')?.value || '';
+
   if (!pid || !sid) {
-    el.innerHTML = '<div class="empty" style="padding:28px;text-align:center;">' +
+    grid.style.display = 'block';
+    grid.innerHTML = '<div class="empty" style="padding:28px;text-align:center;">' +
       '<div style="font-size:14px;font-weight:600;color:var(--text2);margin-bottom:6px;">Selecione um projeto e um setor</div>' +
-      '<div style="font-size:12px;color:var(--text3);">Esta visão mostra todos os dias do mês, um abaixo do outro, com a escala do setor escolhido.</div></div>';
+      '<div style="font-size:12px;color:var(--text3);">O calendário mostra o mês inteiro de um setor específico.</div></div>';
+    const det0 = document.getElementById('cal-detail');
+    if (det0) det0.style.display = 'none';
     return;
   }
+  grid.style.display = '';
 
-  var dias = new Date(calYear, calMonth + 1, 0).getDate();
-  var hj = new Date();
-  var semanaNomes = ['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'];
-  var html = '';
-
-  for (var d = 1; d <= dias; d++) {
-    var ds = calYear + '-' + String(calMonth+1).padStart(2,'0') + '-' + String(d).padStart(2,'0');
-    var dt = new Date(ds + 'T12:00:00');
-    var evts = getLancsCal(ds).slice().sort(function(a,b){ return (a.hora_ini||'').localeCompare(b.hora_ini||''); });
-    var isHoje = (d === hj.getDate() && calMonth === hj.getMonth() && calYear === hj.getFullYear());
-    var isFds = (dt.getDay() === 0 || dt.getDay() === 6);
-    var bols = bolinhasDoDia(evts, ds);
-    var bolHtml = bols.map(function(b){
-      return '<span title="'+b.txt+'" style="display:inline-block;width:9px;height:9px;border-radius:50%;background:'+b.cor+';margin-left:5px;"></span>';
+  const primeiro = new Date(calYear, calMonth, 1).getDay();
+  const dias     = new Date(calYear, calMonth + 1, 0).getDate();
+  const hj = new Date();
+  let html = '';
+  for (let i = 0; i < primeiro; i++) html += '<div class="cal-day empty"></div>';
+  for (let d = 1; d <= dias; d++) {
+    const ds = calYear + '-' + String(calMonth+1).padStart(2,'0') + '-' + String(d).padStart(2,'0');
+    const isToday = d === hj.getDate() && calMonth === hj.getMonth() && calYear === hj.getFullYear();
+    const evts = getLancsCal(ds);
+    const bols = bolinhasDoDia(evts, ds).map(function(b){
+      return '<span title="'+b.txt+'" style="display:inline-block;width:8px;height:8px;border-radius:50%;background:'+b.cor+';margin-left:3px;"></span>';
     }).join('');
-
-    var linhas = evts.length ? evts.map(function(l){
-      var med = l.medico || '';
-      var semMed = !l.medico_id;
-      var tagCob = l.cobertura ? '<span style="font-size:10px;background:#eef0f8;color:#566099;padding:1px 5px;border-radius:99px;margin-left:5px;">Cobertura</span>' : '';
-      var tagTr  = (l.aberto && l.transferido_de) ? '<span style="font-size:10px;background:#f3e8ff;color:#7c3aed;padding:1px 5px;border-radius:99px;margin-left:5px;" title="Repassado por '+(l.transferido_de_nome||'colega')+'">↪ '+((l.transferido_de_nome||'colega').split(' ')[0])+'</span>' : '';
-      var nomeCel = semMed
-        ? '<span style="color:'+(new Date(ds+'T12:00:00') < new Date(hj.toDateString()) ? '#c0392b' : '#d98324')+';font-weight:600;">Sem médico</span>'
-        : '<strong>'+med+'</strong>';
-      return '<tr style="cursor:pointer;" onclick="abrirCtxChipLista(event,\''+l.id+'\',\''+ds+'\',\''+l.projeto_id+'\')">' +
-        '<td style="white-space:nowrap;font-family:monospace;font-size:12px;">'+(l.hora_ini||'').slice(0,5)+'–'+(l.hora_fim||'').slice(0,5)+'</td>' +
-        '<td>'+nomeCel+tagCob+tagTr+'</td>' +
-        '<td style="font-size:12px;color:var(--text2);">'+(l.tipo||'—')+'</td>' +
-        '<td style="font-family:monospace;font-size:12px;">'+fBRL(l.honorario||0)+'</td>' +
-        '</tr>';
-    }).join('') : '<tr><td colspan="4" style="color:var(--text3);font-size:12px;padding:6px 0;">Sem plantões neste dia</td></tr>';
-
-    html += '<div style="border:1px solid var(--border);border-radius:var(--radius);margin-bottom:8px;overflow:hidden;'+(isHoje?'box-shadow:0 0 0 2px var(--blue);':'')+'">' +
-      '<div style="display:flex;align-items:center;justify-content:space-between;padding:7px 12px;background:'+(isFds?'#fbfcfc':'var(--bg3)')+';">' +
-        '<div style="font-size:13px;font-weight:600;color:var(--text);">'+String(d).padStart(2,'0')+' · '+semanaNomes[dt.getDay()]+bolHtml+'</div>' +
-        '<button class="btn btn-ghost btn-sm" style="font-size:11px;" onclick="abrirLancamentoRapido(\''+ds+'\',\''+pid+'\')">+ Plantão</button>' +
-      '</div>' +
-      '<table style="width:100%;"><tbody>'+linhas+'</tbody></table>' +
-    '</div>';
+    let ev = evts.slice(0, 3).map(function(l) {
+      const cls = l.tipo && l.tipo.includes('Noturno') ? 'noturno' : (l.tipo && l.tipo.includes('24') ? 'h24' : 'diurno');
+      const nome = l.medico_id ? String(l.medico||'').split(' ')[0] : 'Sem médico';
+      const tag = l.cobertura ? ' ·C' : '';
+      return '<div class="cal-event '+cls+'" title="'+(l.medico||'Sem médico')+' · '+(l.hora_ini||'').slice(0,5)+'">'+nome+tag+'</div>';
+    }).join('');
+    if (evts.length > 3) ev += '<div style="font-size:10px;color:var(--text3);">+'+(evts.length-3)+' mais</div>';
+    html += '<div class="cal-day'+(isToday?' today':'')+(evts.length?' has-events':'')+'" onclick="showDayDetailCal(\''+ds+'\')">' +
+        '<div style="display:flex;justify-content:space-between;align-items:center;">' +
+          '<div class="cal-day-num">'+d+bols+'</div>' +
+          '<button onclick="event.stopPropagation();abrirLancamentoRapido(\''+ds+'\',\''+pid+'\')" title="Adicionar plantão" ' +
+            'style="background:none;border:none;cursor:pointer;color:var(--text3);font-size:16px;line-height:1;padding:0 2px;border-radius:4px;opacity:0.6;" ' +
+            'onmouseenter="this.style.opacity=\'1\';this.style.color=\'var(--blue)\'" ' +
+            'onmouseleave="this.style.opacity=\'0.6\';this.style.color=\'var(--text3)\'">+</button>' +
+        '</div> '+ev+'</div>';
   }
-  el.innerHTML = html;
+  grid.innerHTML = html;
+  const det = document.getElementById('cal-detail');
+  if (det) det.style.display = 'none';
 }
 
 // Abre o mesmo menu de contexto do calendário a partir da lista
@@ -4223,9 +4216,11 @@ function abrirCtxChipLista(e, lancId, ds, projId) {
 function showDayDetailCal(ds) {
   const pid = document.getElementById('cal-proj')?.value || '';
   const mid = document.getElementById('cal-med')?.value  || '';
+  const sid = document.getElementById('cal-setor')?.value || '';
   let evts = lancamentos.filter(l => l.data === ds);
   if (pid) evts = evts.filter(l => l.projeto_id === pid);
   if (mid) evts = evts.filter(l => l.medico_id  === mid);
+  if (sid) evts = evts.filter(l => (l.setor||'') === sid);
   if (!evts.length) return;
   const det = document.getElementById('cal-detail');
   document.getElementById('cal-detail-title').textContent = 'Plantões em ' + fDate(ds);
@@ -4318,6 +4313,8 @@ function renderSemanaGrid(dias, dows, hj, pid, mid) {
     let evts = lancamentos.filter(l=>l.data===ds);
     if(pid) evts=evts.filter(l=>l.projeto_id===pid);
     if(mid) evts=evts.filter(l=>l.medico_id===mid);
+    var _sidSem = document.getElementById('cal-setor')?.value || '';
+    if(_sidSem) evts=evts.filter(l=>(l.setor||'')===_sidSem);
 
     html += `<td class="sem-td${isHoje?' hoje-col':''}" style="padding:0;vertical-align:top;">`;
 
