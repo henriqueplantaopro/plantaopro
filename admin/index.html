@@ -5435,7 +5435,9 @@ function abrirMoverEmMassa(){
         '<button class="modal-close" onclick="document.getElementById(\'modal-mover-massa\').classList.remove(\'open\')">✕</button></div>' +
         '<div style="padding:16px;">' +
           '<div id="mm-info" style="font-size:12px;color:var(--text2);margin-bottom:12px;"></div>' +
-          '<div class="form-group"><label>Projeto de destino</label><select id="mm-proj"></select></div>' +
+          '<div class="form-group"><label>Projeto de destino</label><select id="mm-proj" onchange="carregarSetoresMassa()"></select></div>' +
+          '<div class="form-group"><label>Setor de destino</label><select id="mm-setor"><option value="__manter__">Manter o setor atual</option></select>' +
+            '<div style="font-size:11px;color:var(--text3);margin-top:3px;">Escolha um setor do projeto de destino, ou mantenha o setor que cada plantão já tem.</div></div>' +
           '<div class="form-group"><label>Deslocar datas (semanas)</label><input type="number" id="mm-semanas" value="0" min="-12" max="12" style="max-width:90px;">' +
             '<div style="font-size:11px;color:var(--text3);margin-top:3px;">0 = mantém as mesmas datas. 1 = joga tudo para a semana seguinte.</div></div>' +
           '<div style="display:flex;gap:8px;margin-top:14px;">' +
@@ -5449,19 +5451,47 @@ function abrirMoverEmMassa(){
   }
   const sel = document.getElementById('mm-proj');
   if(sel) sel.innerHTML = sortedProjetos().map(function(p){ return '<option value="'+p.id+'">'+p.nome+'</option>'; }).join('');
+  carregarSetoresMassa();
   const info = document.getElementById('mm-info');
   if(info) info.textContent = _selMulti.length + ' plantão(ões) selecionado(s).';
   m.classList.add('open');
 }
 
+// Carrega os setores do projeto de destino no modal de movimentação em massa
+async function carregarSetoresMassa(){
+  const selP = document.getElementById('mm-proj');
+  const selS = document.getElementById('mm-setor');
+  if(!selP || !selS) return;
+  const pid = selP.value || '';
+  selS.innerHTML = '<option value="__manter__">Manter o setor atual</option>';
+  if(!pid) return;
+  selS.disabled = true;
+  let sets = [];
+  try { sets = await carregarSetoresProjeto(pid) || []; } catch(e){}
+  selS.innerHTML = '<option value="__manter__">Manter o setor atual</option>' +
+    '<option value="__limpar__">Sem setor</option>' +
+    sets.map(function(x){
+      const nm = String(x.nome||'').replace(/"/g,'&quot;');
+      return '<option value="'+nm+'">'+x.nome+'</option>';
+    }).join('');
+  selS.disabled = false;
+  if(!sets.length){
+    selS.innerHTML = '<option value="__manter__">Manter o setor atual</option><option value="__limpar__">Sem setor</option>';
+  }
+}
+
 async function executarMassa(acao){
   const projDest = document.getElementById('mm-proj')?.value || '';
+  const setorEsc = document.getElementById('mm-setor')?.value || '__manter__';
   const semanas = parseInt(document.getElementById('mm-semanas')?.value || '0', 10) || 0;
   if(!projDest){ toast('Escolha o projeto de destino', true); return; }
   const itens = _selMulti.slice();
   if(!itens.length) return;
   const verbo = acao === 'mover' ? 'MOVER' : 'COPIAR';
-  if(!confirm(verbo + ' ' + itens.length + ' plantão(ões) para o projeto selecionado?')) return;
+  const projNomeDest = (projetos.find(function(p){ return p.id === projDest; })||{}).nome || 'projeto selecionado';
+  const setorTxt = setorEsc === '__manter__' ? 'mantendo o setor de cada plantão'
+                 : (setorEsc === '__limpar__' ? 'sem setor' : 'no setor "' + setorEsc + '"');
+  if(!confirm(verbo + ' ' + itens.length + ' plantão(ões) para "' + projNomeDest + '", ' + setorTxt + '?')) return;
 
   let ok = 0, erro = 0;
   for(let i=0; i<itens.length; i++){
@@ -5476,9 +5506,11 @@ async function executarMassa(acao){
     try{
       let res;
       if(acao === 'mover'){
+        const _patch = { projeto_id: projDest, data: novaData };
+        if(setorEsc !== '__manter__') _patch.setor = (setorEsc === '__limpar__') ? null : setorEsc;
         res = await sbApi('/lancamentos?id=eq.' + l.id, {
           method:'PATCH', headers:{'Prefer':'return=minimal'},
-          body: JSON.stringify({ projeto_id: projDest, data: novaData })
+          body: JSON.stringify(_patch)
         });
       } else {
         res = await sbApi('/lancamentos', {
@@ -5486,7 +5518,7 @@ async function executarMassa(acao){
           body: JSON.stringify({
             medico_id: l.medico_id, projeto_id: projDest, data: novaData,
             hora_ini: l.hora_ini, hora_fim: l.hora_fim, horas: l.horas,
-            tipo: l.tipo, setor: l.setor||null,
+            tipo: l.tipo, setor: (setorEsc === '__manter__' ? (l.setor||null) : (setorEsc === '__limpar__' ? null : setorEsc)),
             honorario: l.honorario_bruto !== undefined ? l.honorario_bruto : (l.honorario||0),
             valor_hora: l.valor_hora||0, obs: l.obs||null,
             cobertura: !!l.cobertura, codigo_totvs: null, confirmado: !!l.medico_id
