@@ -2539,7 +2539,7 @@ async function carregarNomesAprovados() {
   const abertos = lancamentos.filter(l => l.aberto && (l.vagas_preenchidas||0) > 0);
   if (!abertos.length) return;
   const ids = abertos.map(l => l.id);
-  const cands = await sb(`/rest/v1/candidaturas?lancamento_id=in.(${ids.join(',')})&status=eq.aprovado&select=lancamento_id,medicos(nome)`) || [];
+  const cands = await sbApi(`/candidaturas?lancamento_id=in.(${ids.join(',')})&status=eq.aprovado&select=lancamento_id,medicos(nome)`) || [];
   window._candsAprovadas = {};
   cands.forEach(c => {
     const lid = c.lancamento_id;
@@ -2692,7 +2692,7 @@ async function carregarPainelCustos() {
   let transferenciasAceitas = [];
   if (idsLancs.length) {
     const filtroIds = `lancamento_id=in.(${idsLancs.join(',')})`;
-    transferenciasAceitas = await sb(`/rest/v1/transferencias?${filtroIds}&status=eq.aceito&select=lancamento_id`) || [];
+    transferenciasAceitas = await sbApi(`/transferencias?${filtroIds}&status=eq.aceito&select=lancamento_id`) || [];
   }
   const coberturasPorTransf = new Set(transferenciasAceitas.map(t => t.lancamento_id));
 
@@ -6145,7 +6145,7 @@ async function carregarCandidaturas() {
 
   // Buscar candidaturas para esses lançamentos
   const ids = abertos.map(l=>l.id);
-  const cands = await sb(`/rest/v1/candidaturas?lancamento_id=in.(${ids.join(',')})&select=*,medicos(nome,crm)&order=criado_em.desc`) || [];
+  const cands = await sbApi(`/candidaturas?lancamento_id=in.(${ids.join(',')})&select=*,medicos(nome,crm)&order=criado_em.desc`) || [];
 
   // Badge de pendentes no menu
   const pendentes = cands.filter(c=>c.status==='pendente').length;
@@ -6212,16 +6212,16 @@ function filtrarStatusCand(status, btn) {
 
 async function responderCandidatura(candId, lancId, status, vagas) {
   // Atualizar status da candidatura
-  const res = await fetch(SUPABASE_URL+'/rest/v1/candidaturas?id=eq.'+candId, {
-    method:'PATCH',
-    headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},
+  const _rc = await sbApi('/candidaturas?id=eq.'+candId, {
+    method:'PATCH', headers:{'Prefer':'return=minimal'},
     body: JSON.stringify({status, respondido_em: new Date().toISOString()})
   });
-  if (!res.ok && res.status!==204) { toast('Erro ao responder', true); return; }
+  if (_rc === null) { toast('Erro ao responder', true); return; }
+  const res = { ok:true, status:200 };
 
   if (status === 'aprovado') {
     // Buscar dados da candidatura para vincular médico
-    const cand = await sb(`/rest/v1/candidaturas?id=eq.${candId}&select=*`);
+    const cand = await sbApi(`/candidaturas?id=eq.${candId}&select=*`);
     if (cand && cand[0]) {
       const medId = cand[0].medico_id;
       // Vincular médico ao lançamento
@@ -7052,11 +7052,11 @@ async function gerarRelRisco(el) {
   const ausencias = await sb(pathAus) || [];
 
   // 2. Buscar transferências solicitadas (como origem — médico tentou passar o plantão)
-  let pathTr = '/rest/v1/transferencias?select=*,medicos!transferencias_medico_origem_id_fkey(id,nome,crm),lancamentos(data,projeto_id,projetos(nome))&order=criado_em.desc';
+  let pathTr = '/transferencias?select=*,medicos!transferencias_medico_origem_id_fkey(id,nome,crm),lancamentos(data,projeto_id,projetos(nome))&order=criado_em.desc';
   if (d1) pathTr += `&criado_em=gte.${d1}T00:00:00`;
   if (d2) pathTr += `&criado_em=lte.${d2}T23:59:59`;
   if (mid) pathTr += `&medico_origem_id=eq.${mid}`;
-  const transferencias = await sb(pathTr) || [];
+  const transferencias = await sbApi(pathTr) || [];
 
   // 3. Buscar faltas (plantões passados sem check-in)
   let pathLanc = `/lancamentos?select=*,medicos(id,nome,crm),projetos(nome)&order=data.desc`;
@@ -10232,10 +10232,10 @@ async function gerarRelEntradaSaida(el){
 async function gerarRelTrocas(el){
   el.innerHTML='<div class="card"><div class="empty">Carregando...</div></div>';
   const d1=document.getElementById('rd1').value,d2=document.getElementById('rd2').value;
-  let path='/rest/v1/transferencias?select=*,lancamentos(data,setor,projetos(nome))&order=criado_em.desc';
+  let path='/transferencias?select=*,lancamentos(data,setor,projetos(nome))&order=criado_em.desc';
   if(d1)path+=`&criado_em=gte.${d1}T00:00:00`;
   if(d2)path+=`&criado_em=lte.${d2}T23:59:59`;
-  const trs=await sb(path)||[];
+  const trs=await sbApi(path)||[];
   if(!trs.length){el.innerHTML='<div class="card"><div class="empty">Nenhuma troca/passagem no período.</div></div>';return;}
   const nome=id=>{const m=medicos.find(x=>x.id===id);return m?m.nome:'—';};
   const linhas=trs.map(t=>{
