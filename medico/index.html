@@ -716,7 +716,7 @@ async function apiLanc(action, dados){
 async function apiPerfil(action, dados){
   try{
     const tk = (typeof medico!=='undefined' && medico && medico.token_acesso) ? medico.token_acesso : _tokenURL();
-    const _act = (action === 'get') ? 'perfil' : (action.indexOf('lanc-') === 0 ? action : ('perfil-' + action));
+    const _act = (action === 'get') ? 'perfil' : (/^(lanc-|cand-|tr-)/.test(action) ? action : ('perfil-' + action));
     const r = await fetch('/api/medico-conta?action=' + _act, {
       method:'POST', headers:{'Content-Type':'application/json'},
       body: JSON.stringify({ token_acesso: tk, dados: dados||{} })
@@ -1252,7 +1252,8 @@ async function carregarPlantoes() {
   const _rl=await apiLanc('lanc-meus',{d1:hoje});
   const d=_rl.ok ? (_rl.dados?.lancamentos||[]) : [];
   _plantoesCache=d||[];
-  const tr=await sb('/rest/v1/transferencias?medico_origem_id=eq.'+medico.id+'&status=eq.pendente&select=lancamento_id');
+  const _rt=await apiLanc('tr-enviadas',{});
+  const tr=_rt.ok?(_rt.dados?.transferencias||[]):[];
   _transfersPend=new Set((tr||[]).map(t=>t.lancamento_id));
   const au=await sb('/rest/v1/ausencias?medico_id=eq.'+medico.id+'&select=lancamento_id');
   _ausenciasInf=new Set((au||[]).map(a=>a.lancamento_id));
@@ -1338,7 +1339,8 @@ async function confirmarTransferencia() {
   const btn=document.getElementById('btn-enviar-transf');
   btn.disabled=true;btn.textContent='Enviando...';
   const msg=document.getElementById('transf-msg').value.trim();
-  const r=await sb('/rest/v1/transferencias',{method:'POST',headers:{'Prefer':'return=representation'},body:JSON.stringify({lancamento_id:_lancAtivo.id,medico_origem_id:medico.id,medico_destino_id:_medSel.id,status:'pendente',mensagem:msg||null,criado_em:new Date().toISOString()})});
+  const _rtc=await apiLanc('tr-criar',{lancamento_id:_lancAtivo.id,medico_destino_id:_medSel.id,mensagem:msg||null});
+  const r=_rtc.ok?[_rtc.dados?.transferencia]:null;
   if(r!==null){
     // Notificar o médico destino (push)
     try {
@@ -1400,7 +1402,8 @@ async function confirmarAusencia() {
 
 async function carregarNotificacoes() {
   const el=document.getElementById('notif-lista');if(!el||!medico)return;
-  const d=await sb('/rest/v1/transferencias?medico_destino_id=eq.'+medico.id+'&select=*,medicos!transferencias_medico_origem_id_fkey(nome,crm),lancamentos(data,hora_ini,hora_fim,horas,honorario,projetos(nome))&order=criado_em.desc&limit=20');
+  const _rr=await apiLanc('tr-recebidas',{});
+  const d=_rr.ok?(_rr.dados?.transferencias||[]):[];
   const lista=d||[];
   window._pendTransf=lista.filter(t=>t.status==='pendente').length;
   atualizarBadgeNotif();
@@ -1423,7 +1426,8 @@ async function carregarNotificacoes() {
 async function responderTransf(transId, lancId, resp) {
   const btns=document.querySelectorAll('[onclick*="\''+transId+'\'"]');
   btns.forEach(b=>{b.disabled=true;});
-  const r=await fetch(SUPABASE_URL+'/rest/v1/transferencias?id=eq.'+transId,{method:'PATCH',headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify({status:resp,respondido_em:new Date().toISOString()})});
+  const _rr2=await apiLanc('tr-responder',{transferencia_id:transId,status:resp});
+  const r={ok:_rr2.ok,status:_rr2.status};
   if(r.ok||r.status===204){
     if(resp==='aceito'){
       await apiLanc('lanc-aceitar',{lancamento_id:lancId});
@@ -1488,7 +1492,7 @@ async function carregarDisponiveis() {
   atualizarBadgeNotif();
 
   let cands=[], meus=[];
-  try{cands=(await sb('/rest/v1/candidaturas?medico_id=eq.'+medico.id+'&select=*'))||[];}catch(e){}
+  try{const _rc=await apiLanc('cand-minhas',{});cands=_rc.ok?(_rc.dados?.candidaturas||[]):[];}catch(e){}
   try{const _rm=await apiLanc('lanc-meus',{d1:hoje,campos:'data,hora_ini,hora_fim,horas,tipo,projeto_id,projetos(nome)'});meus=_rm.ok?(_rm.dados?.lancamentos||[]):[];}catch(e){}
 
   const bdDisp=document.getElementById('badge-disp');
@@ -1530,7 +1534,8 @@ function verificarConflito(p,meus) {
 async function candidatar(lancId,btn,alerta=null) {
   if(btn){btn.disabled=true;btn.textContent='Enviando...';}
   try{
-    const r=await fetch(SUPABASE_URL+'/rest/v1/candidaturas',{method:'POST',headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify({lancamento_id:lancId,medico_id:medico.id,status:'pendente',criado_em:new Date().toISOString(),obs:alerta?'ALERTA: '+alerta:null})});
+    const _rcc=await apiLanc('cand-criar',{lancamento_id:l.id});
+    const r={ok:_rcc.ok,status:_rcc.status,_erro:_rcc.dados?.erro};
     if(r.ok||r.status===204){if(btn){btn.className='btn-candidatar inscrito';btn.textContent='Candidatura enviada - aguardando';btn.disabled=true;}toastMed('Candidatura enviada!');}
     else{if(btn){btn.disabled=false;btn.textContent='Me candidatar para este plantao';}toastMed('Erro ao enviar',false);}
   }catch(e){if(btn)btn.disabled=false;toastMed('Erro de conexao',false);}
