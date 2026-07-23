@@ -78,6 +78,7 @@ const CAMPOS_PERMITIDOS = [
   'endereco_comp','endereco_bairro','endereco_cidade','endereco_uf','endereco_cep',
   'pessoa_juridica','razao_social','cnpj','pix_tipo','pix_chave','banco','agencia',
   'conta_corrente','tipo_conta','ufs_interesse','projetos_vinculados',
+  'data_admissao','tipo_vinculo','status_contrato','rqes','setores_por_projeto',
   'device_id','device_registrado_em', // reset de dispositivo
 ];
 
