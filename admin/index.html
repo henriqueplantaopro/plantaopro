@@ -2677,9 +2677,9 @@ async function carregarPainelCustos() {
   if (!d1 || !d2) return;
 
   // Buscar lançamentos do período
-  let urlLancs = `/rest/v1/lancamentos?data=gte.${d1}&data=lte.${d2}&select=id,data,projeto_id,medico_id,honorario,aberto,vagas,vagas_preenchidas,projetos(nome)`;
+  let urlLancs = `/lancamentos?data=gte.${d1}&data=lte.${d2}&select=id,data,projeto_id,medico_id,honorario,aberto,vagas,vagas_preenchidas,projetos(nome)`;
   if (projFiltro) urlLancs += `&projeto_id=eq.${projFiltro}`;
-  const lancs = await sb(urlLancs) || [];
+  const lancs = await sbApi(urlLancs) || [];
 
   // Buscar ausências do período
   let urlAus = `/rest/v1/ausencias?select=id,lancamento_id,medico_id,status,lancamentos!inner(id,data,projeto_id,medico_id)`;
@@ -3472,7 +3472,7 @@ async function addLancamento() {
 
 async function delLancamento(id) {
   if(!confirm('Remover lançamento?')) return;
-  await sb(`/rest/v1/lancamentos?id=eq.${id}`,{method:'DELETE'});
+  await sbApi(`/lancamentos?id=eq.${id}`,{method:'DELETE'});
   await carregarLancamentos();
 }
 
@@ -3494,9 +3494,9 @@ async function carregarPresenca() {
   const pid  = document.getElementById('ci-proj-p').value;
 
   // Busca lançamentos do dia
-  let pathLanc = `/rest/v1/lancamentos?data=eq.${data}&select=*,medicos(id,nome,crm),projetos(id,nome)&order=hora_ini`;
+  let pathLanc = `/lancamentos?data=eq.${data}&select=*,medicos(id,nome,crm),projetos(id,nome)&order=hora_ini`;
   if (pid) pathLanc += `&projeto_id=eq.${pid}`;
-  const lancDia = await sb(pathLanc) || [];
+  const lancDia = await sbApi(pathLanc) || [];
 
   // Busca check-ins do dia
   const checkinsDia = await sb(
@@ -6132,11 +6132,11 @@ async function carregarCandidaturas() {
   const d2  = document.getElementById('cand-d2')?.value||'';
 
   // Buscar lançamentos abertos
-  let pathL = '/rest/v1/lancamentos?aberto=eq.true&select=*,projetos(nome)&order=data';
+  let pathL = '/lancamentos?aberto=eq.true&select=*,projetos(nome)&order=data';
   if (pid) pathL += `&projeto_id=eq.${pid}`;
   if (d1)  pathL += `&data=gte.${d1}`;
   if (d2)  pathL += `&data=lte.${d2}`;
-  const abertos = await sb(pathL) || [];
+  const abertos = await sbApi(pathL) || [];
 
   if (!abertos.length) {
     el.innerHTML = '<div class="card"><div class="empty">Nenhum plantão aberto encontrado.</div></div>';
@@ -6341,9 +6341,9 @@ async function criarFechamento() {
   if (!nome||!d1||!d2) { toast('Preencha nome e datas', true); return; }
 
   // Calcular total com base nos lançamentos
-  let query = `/rest/v1/lancamentos?data=gte.${d1}&data=lte.${d2}&select=medico_id,honorario,horas,medicos(nome,crm,pix_tipo,pix_chave)`;
+  let query = `/lancamentos?data=gte.${d1}&data=lte.${d2}&select=medico_id,honorario,horas,medicos(nome,crm,pix_tipo,pix_chave)`;
   if (projId) query += `&projeto_id=eq.${projId}`;
-  const lancs = await sb(query) || [];
+  const lancs = await sbApi(query) || [];
 
   // Agrupar por médico
   const porMed = {};
@@ -7059,12 +7059,12 @@ async function gerarRelRisco(el) {
   const transferencias = await sb(pathTr) || [];
 
   // 3. Buscar faltas (plantões passados sem check-in)
-  let pathLanc = `/rest/v1/lancamentos?select=*,medicos(id,nome,crm),projetos(nome)&order=data.desc`;
+  let pathLanc = `/lancamentos?select=*,medicos(id,nome,crm),projetos(nome)&order=data.desc`;
   if (d1) pathLanc += `&data=gte.${d1}`;
   if (d2) pathLanc += `&data=lte.${d2}`;
   else pathLanc += `&data=lte.${new Date().toISOString().slice(0,10)}`;
   if (mid) pathLanc += `&medico_id=eq.${mid}`;
-  const todosLanc = await sb(pathLanc) || [];
+  const todosLanc = await sbApi(pathLanc) || [];
 
   let pathCI = '/rest/v1/checkins?aprovado=eq.true&select=medico_id,projeto_id,feito_em';
   if (d1) pathCI += `&feito_em=gte.${d1}T00:00:00`;
@@ -10411,11 +10411,11 @@ async function carregarAusenciasCI(){
   if(d2)pathCI+=`&feito_em=lte.${d2}T23:59:59`;
   const checkins=await sb(pathCI)||[];
   const ciKeys=new Set(checkins.map(c=>`${c.medico_id}_${c.projeto_id}_${(c.feito_em||'').slice(0,10)}`));
-  let path='/rest/v1/lancamentos?select=*,medicos(nome,crm),projetos(nome)&order=data.desc&limit=500';
+  let path='/lancamentos?select=*,medicos(nome,crm),projetos(nome)&order=data.desc&limit=500';
   if(pid)path+=`&projeto_id=eq.${pid}`;
   if(d1)path+=`&data=gte.${d1}`;
   if(d2)path+=`&data=lte.${d2}`;
-  const lancs=await sb(path)||[];
+  const lancs=await sbApi(path)||[];
   const agora=new Date();
   const pend=lancs.filter(l=>{
     if(!l.medico_id||l.aberto)return false;
@@ -10461,9 +10461,9 @@ async function gerarResumoCI(){
 
   // Busca lançamentos dos dois dias envolvidos (o turno pode virar a noite)
   const dIni = new Date(ini.getTime() - 12*3600000).toISOString().slice(0,10);
-  let path = '/rest/v1/lancamentos?select=*,medicos(nome,crm),projetos(nome)&data=gte.'+dIni+'&data=lte.'+ref+'&order=data.asc&limit=800';
+  let path = '/lancamentos?select=*,medicos(nome,crm),projetos(nome)&data=gte.'+dIni+'&data=lte.'+ref+'&order=data.asc&limit=800';
   if(pid) path += '&projeto_id=eq.'+pid;
-  const lancs = await sb(path) || [];
+  const lancs = await sbApi(path) || [];
 
   const cks = await sb('/rest/v1/checkins?feito_em=gte.'+ini.toISOString()+'&feito_em=lte.'+new Date(fim.getTime()+6*3600000).toISOString()+'&select=lancamento_id,medico_id,projeto_id,tipo,feito_em,aprovado') || [];
 
@@ -10732,11 +10732,11 @@ async function carregarAusenciasCI(view){
   const toggle=`<div style="display:flex;gap:8px;margin-bottom:12px;"><button class="btn ${_aciView==='pendentes'?'btn-primary':'btn-ghost'} btn-sm" onclick="carregarAusenciasCI('pendentes')">Pendentes</button><button class="btn ${_aciView==='historico'?'btn-primary':'btn-ghost'} btn-sm" onclick="carregarAusenciasCI('historico')">Histórico</button></div>`;
   el.innerHTML=toggle+'<div class="empty">Carregando...</div>';
   const pid=selP?.value||'',d1=eD1?.value||'',d2=eD2?.value||'';
-  let path='/rest/v1/lancamentos?select=*,medicos(nome,crm),projetos(nome)&order=data.desc&limit=800';
+  let path='/lancamentos?select=*,medicos(nome,crm),projetos(nome)&order=data.desc&limit=800';
   if(pid)path+=`&projeto_id=eq.${pid}`;
   if(d1)path+=`&data=gte.${d1}`;
   if(d2)path+=`&data=lte.${d2}`;
-  const lancs=await sb(path)||[];
+  const lancs=await sbApi(path)||[];
   if(_aciView==='historico'){
     const hist=lancs.filter(l=>l.status_presenca==='presente'||l.status_presenca==='falta');
     if(!hist.length){el.innerHTML=toggle+'<div class="card"><div class="empty">Nenhum plantão resolvido no período.</div></div>';return;}
