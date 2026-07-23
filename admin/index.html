@@ -466,6 +466,7 @@ tr:hover td{background:var(--bg3);}
       <div class="dd-menu">
         <div class="nav-item" onclick="showTab('checkins',this)">Check-ins</div>
         <div class="nav-item" onclick="showTab('ausencias_ci',this);carregarAusenciasCI();">Ausência de check-in</div>
+        <div class="nav-item" onclick="showTab('resumo_ci',this);">Resumo diário</div>
       </div>
     </div>
     <div class="nav-item" onclick="showTab('candidaturas',this)">Plantões abertos <span id="badge-cand" style="display:none;background:#fff;color:var(--blue);font-size:9px;font-weight:700;border-radius:99px;padding:1px 5px;margin-left:4px;"></span></div>
@@ -1112,6 +1113,24 @@ tr:hover td{background:var(--bg3);}
       <div style="margin-top:8px;"><button class="btn btn-primary" onclick="carregarAusenciasCI()">Atualizar</button></div>
     </div>
     <div id="aci-lista"></div>
+  </div>
+
+<!-- RESUMO DIÁRIO DE CHECK-INS -->
+  <div id="tab-resumo_ci" class="section">
+    <div class="page-title">Resumo diário de check-ins</div>
+    <div class="page-sub">Plantões cujo check-in ou check-out era esperado na janela abaixo. Ausências primeiro, depois atrasos. Quem ficou dentro da tolerância não aparece.</div>
+    <div class="card" style="margin-bottom:12px;">
+      <div class="form-row three">
+        <div class="form-group"><label>Projeto</label><select id="rci-proj"><option value="">Todos</option></select></div>
+        <div class="form-group"><label>Data de referência</label><input type="date" id="rci-data"></div>
+        <div class="form-group"><label>Tolerância (min)</label><input type="number" id="rci-tol" value="15" min="0" max="120" style="max-width:90px;"></div>
+      </div>
+      <div style="margin-top:8px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+        <button class="btn btn-primary" onclick="gerarResumoCI()">Gerar resumo</button>
+        <span id="rci-janela" style="font-size:12px;color:var(--text3);"></span>
+      </div>
+    </div>
+    <div id="rci-lista"><div class="empty">Clique em “Gerar resumo” para carregar.</div></div>
   </div>
 
 <!-- CONVITES -->
@@ -2494,12 +2513,19 @@ async function carregarProjetos() {
 
 async function carregarLancamentos(silencioso=false) {
   const data = await sbApi('/lancamentos?select=*,medicos(nome,crm),projetos(nome)&order=data.desc&limit=200');
-  lancamentos = (data || []).map(l => ({
-    ...l,
-    medico: l.medicos?.nome || '',
-    crm: l.medicos?.crm || '',
-    projeto: l.projetos?.nome || '',
-  }));
+  lancamentos = (data || []).map(l => {
+    const _bruto = l.honorario || 0;
+    return {
+      ...l,
+      medico: l.medicos?.nome || '',
+      crm: l.medicos?.crm || '',
+      projeto: l.projetos?.nome || '',
+      // Valor combinado (nunca some) — usado na edição e no relatório de faltas
+      honorario_bruto: _bruto,
+      // Valor que ENTRA nas contas: falta não aprovada não é paga nem custeia o projeto
+      honorario: (l.status_pagamento === 'falta') ? 0 : _bruto,
+    };
+  });
   if (!silencioso) renderLancamentos();
   else { const el=document.getElementById('lanc-lista'); if(el&&lancamentos.length) renderLancamentos(); }
   // Carregar nomes dos aprovados para plantões abertos
@@ -5451,7 +5477,8 @@ function abrirModalEditarLanc(l) {
   g('el-fim').value   = (l.hora_fim||'').slice(0,5);
   g('el-tipo').value  = l.tipo || '';
   g('el-setor').value = l.setor || '';
-  g('el-valor').value = l.honorario ? l.honorario.toLocaleString('pt-BR',{minimumFractionDigits:2}) : '';
+  var _hb = (l.honorario_bruto !== undefined ? l.honorario_bruto : l.honorario) || 0;
+  g('el-valor').value = _hb ? _hb.toLocaleString('pt-BR',{minimumFractionDigits:2}) : '';
   g('el-obs').value   = l.obs || '';
   g('el-vagas').value = l.vagas || 1;
   // Médico — só os vinculados ao projeto deste plantão
@@ -6633,7 +6660,7 @@ function gerarRelResumo(el){const dados=filtrarDadosRel();if(!dados.length){el.i
 
 function gerarRelHoras(el){const dados=filtrarDadosRel();if(!dados.length){el.innerHTML='<div class="card"><div class="empty">Nenhum dado.</div></div>';return;}const porMed={};dados.forEach(l=>{const k=l.medico_id;if(!porMed[k])porMed[k]={nome:l.medico,crm:l.crm||'',h12:0,h24:0,hCustom:0,hTotal:0,plantoes:0,total:0};const h=l.horas||0,tipo=l.tipo||'';if(tipo.includes('24'))porMed[k].h24+=h;else if(tipo==='Personalizado')porMed[k].hCustom+=h;else porMed[k].h12+=h;porMed[k].hTotal+=h;porMed[k].plantoes++;porMed[k].total+=l.honorario||0;});const tTotal=Object.values(porMed).reduce((s,m)=>s+m.hTotal,0),tHon=Object.values(porMed).reduce((s,m)=>s+m.total,0);let html=`<div class="metrics"><div class="metric"><div class="metric-label">Profissionais</div><div class="metric-val">${Object.keys(porMed).length}</div></div><div class="metric"><div class="metric-label">Total horas</div><div class="metric-val">${Math.round(tTotal*10)/10}h</div></div><div class="metric"><div class="metric-label">Total honorários</div><div class="metric-val">${fBRL(tHon)}</div></div></div><div class="card"><table><thead><tr><th>Profissional</th><th>CRM</th><th style="text-align:center;">Plantões</th><th style="text-align:center;">Horas 12h</th><th style="text-align:center;">Horas 24h</th><th style="text-align:center;">Outros</th><th style="text-align:center;font-weight:700;">Total</th><th>Honorários</th></tr></thead><tbody>`;Object.values(porMed).sort((a,b)=>b.hTotal-a.hTotal).forEach(m=>{html+=`<tr><td><strong>${m.nome}</strong></td><td class="mono">${m.crm}</td><td style="text-align:center;">${m.plantoes}</td><td style="text-align:center;color:var(--green);">${Math.round(m.h12*10)/10}h</td><td style="text-align:center;color:var(--amber);">${Math.round(m.h24*10)/10}h</td><td style="text-align:center;color:var(--text3);">${Math.round(m.hCustom*10)/10}h</td><td style="text-align:center;font-weight:700;font-size:14px;">${Math.round(m.hTotal*10)/10}h</td><td class="mono" style="color:var(--green);font-weight:600;">${fBRL(m.total)}</td></tr>`;});html+='</tbody></table></div>';el.innerHTML=html;}
 
-async function gerarRelFaltas(el){el.innerHTML='<div class="card"><div class="empty">Carregando...</div></div>';const d1=document.getElementById('rd1').value,d2=document.getElementById('rd2').value;let pathCI='/rest/v1/checkins?aprovado=eq.true&select=medico_id,projeto_id,feito_em';if(d1)pathCI+=`&feito_em=gte.${d1}T00:00:00`;if(d2)pathCI+=`&feito_em=lte.${d2}T23:59:59`;const checkins=await sb(pathCI)||[];const ciKeys=new Set(checkins.map(c=>`${c.medico_id}_${c.projeto_id}_${c.feito_em?.slice(0,10)}`));let dados=filtrarDadosRel().filter(l=>{const ini=new Date(`${l.data}T${l.hora_ini||'00:00'}`);return ini<new Date();});const faltas=dados.filter(l=>!ciKeys.has(`${l.medico_id}_${l.projeto_id}_${l.data}`));if(!faltas.length){el.innerHTML='<div class="card"><div style="text-align:center;padding:24px;"><div style="font-size:40px;"></div><div style="font-size:14px;color:var(--green);font-weight:600;margin-top:8px;">Nenhuma falta!</div></div></div>';return;}let html=`<div class="card"><div style="margin-bottom:10px;font-size:13px;color:var(--red);font-weight:600;">${faltas.length} falta(s)</div><table><thead><tr><th>Médico</th><th>CRM</th><th>Projeto</th><th>Data</th><th>Horário</th><th>Tipo</th><th>Honorários perdidos</th></tr></thead><tbody>`;faltas.sort((a,b)=>b.data.localeCompare(a.data)).forEach(l=>{html+=`<tr><td><strong>${l.medico||'—'}</strong></td><td class="mono">${l.crm||''}</td><td>${l.projeto||'—'}</td><td class="mono">${fDate(l.data)}</td><td class="mono">${(l.hora_ini||'').slice(0,5)}–${(l.hora_fim||'').slice(0,5)}</td><td>${l.tipo||''}</td><td class="mono" style="color:var(--red);">${fBRL(l.honorario||0)}</td></tr>`;});const totFalta=faltas.reduce((s,l)=>s+(l.honorario||0),0);html+=`</tbody><tfoot><tr><td colspan="6" style="font-weight:600;padding:8px;">Total</td><td class="mono" style="color:var(--red);font-weight:600;">${fBRL(totFalta)}</td></tr></tfoot></table></div>`;el.innerHTML=html;}
+async function gerarRelFaltas(el){el.innerHTML='<div class="card"><div class="empty">Carregando...</div></div>';const d1=document.getElementById('rd1').value,d2=document.getElementById('rd2').value;let pathCI='/rest/v1/checkins?aprovado=eq.true&select=medico_id,projeto_id,feito_em';if(d1)pathCI+=`&feito_em=gte.${d1}T00:00:00`;if(d2)pathCI+=`&feito_em=lte.${d2}T23:59:59`;const checkins=await sb(pathCI)||[];const ciKeys=new Set(checkins.map(c=>`${c.medico_id}_${c.projeto_id}_${c.feito_em?.slice(0,10)}`));let dados=filtrarDadosRel().filter(l=>{const ini=new Date(`${l.data}T${l.hora_ini||'00:00'}`);return ini<new Date();});const faltas=dados.filter(l=>!ciKeys.has(`${l.medico_id}_${l.projeto_id}_${l.data}`));if(!faltas.length){el.innerHTML='<div class="card"><div style="text-align:center;padding:24px;"><div style="font-size:40px;"></div><div style="font-size:14px;color:var(--green);font-weight:600;margin-top:8px;">Nenhuma falta!</div></div></div>';return;}let html=`<div class="card"><div style="margin-bottom:10px;font-size:13px;color:var(--red);font-weight:600;">${faltas.length} falta(s)</div><table><thead><tr><th>Médico</th><th>CRM</th><th>Projeto</th><th>Data</th><th>Horário</th><th>Tipo</th><th>Honorários perdidos</th></tr></thead><tbody>`;faltas.sort((a,b)=>b.data.localeCompare(a.data)).forEach(l=>{html+=`<tr><td><strong>${l.medico||'—'}</strong></td><td class="mono">${l.crm||''}</td><td>${l.projeto||'—'}</td><td class="mono">${fDate(l.data)}</td><td class="mono">${(l.hora_ini||'').slice(0,5)}–${(l.hora_fim||'').slice(0,5)}</td><td>${l.tipo||''}</td><td class="mono" style="color:var(--red);">${fBRL(l.honorario_bruto||l.honorario||0)}</td></tr>`;});const totFalta=faltas.reduce((s,l)=>s+(l.honorario_bruto||l.honorario||0),0);html+=`</tbody><tfoot><tr><td colspan="6" style="font-weight:600;padding:8px;">Total</td><td class="mono" style="color:var(--red);font-weight:600;">${fBRL(totFalta)}</td></tr></tfoot></table></div>`;el.innerHTML=html;}
 
 async function gerarRelAtrasos(el){el.innerHTML='<div class="card"><div class="empty">Carregando...</div></div>';const d1=document.getElementById('rd1').value,d2=document.getElementById('rd2').value;let pathCI='/rest/v1/checkins?aprovado=eq.true&select=*,medicos(nome,crm),projetos(nome)';if(d1)pathCI+=`&feito_em=gte.${d1}T00:00:00`;if(d2)pathCI+=`&feito_em=lte.${d2}T23:59:59`;const checkins=await sb(pathCI)||[];const atrasos=[];checkins.forEach(ci=>{const lanc=lancamentos.find(l=>l.medico_id===ci.medico_id&&l.projeto_id===ci.projeto_id&&l.data===ci.feito_em?.slice(0,10));if(!lanc)return;const diffMin=Math.round((new Date(ci.feito_em)-new Date(`${lanc.data}T${lanc.hora_ini||'00:00'}`))/60000);if(diffMin>15)atrasos.push({...ci,diffMin,lanc});});if(!atrasos.length){el.innerHTML='<div class="card"><div style="text-align:center;padding:24px;"><div style="font-size:40px;"></div><div style="font-size:14px;color:var(--green);font-weight:600;margin-top:8px;">Nenhum atraso acima de 15 minutos!</div></div></div>';return;}let html=`<div class="card"><table><thead><tr><th>Médico</th><th>Projeto</th><th>Data</th><th>Previsto</th><th>Check-in</th><th>Atraso</th></tr></thead><tbody>`;atrasos.sort((a,b)=>b.diffMin-a.diffMin).forEach(a=>{const horaReal=new Date(a.feito_em).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});html+=`<tr><td><strong>${a.medicos?.nome||'—'}</strong></td><td>${a.projetos?.nome||'—'}</td><td class="mono">${fDate(a.lanc?.data||'')}</td><td class="mono">${(a.lanc?.hora_ini||'').slice(0,5)}</td><td class="mono">${horaReal}</td><td style="color:var(--amber);font-weight:700;">+${a.diffMin}min</td></tr>`;});html+='</tbody></table></div>';el.innerHTML=html;}
 
@@ -10032,13 +10059,157 @@ async function carregarAusenciasCI(){
   });
   if(!pend.length){el.innerHTML='<div class="card"><div style="text-align:center;padding:24px;color:var(--green);font-weight:600;">Nenhuma ausência de check-in pendente.</div></div>';return;}
   el.innerHTML=`<div class="card"><div style="margin-bottom:10px;font-size:13px;color:var(--amber);font-weight:600;">${pend.length} plantão(ões) sem check-in aguardando análise</div><table><thead><tr><th>Data</th><th>Médico</th><th>Projeto / Setor</th><th>Horário</th><th>Valor</th><th>Ação</th></tr></thead><tbody>`+
-  pend.map(l=>`<tr id="aci-row-${l.id}"><td class="mono">${fDate(l.data)}</td><td><strong>${l.medicos?.nome||'—'}</strong><br><span class="mono" style="font-size:11px;color:var(--text3);">${l.medicos?.crm||''}</span></td><td>${l.projetos?.nome||'—'}${l.setor?' — '+l.setor:''}</td><td class="mono">${(l.hora_ini||'').slice(0,5)}–${(l.hora_fim||'').slice(0,5)}</td><td class="mono">${fBRL(l.honorario||0)}</td><td style="white-space:nowrap;"><button class="btn btn-success btn-sm" onclick="aciResolver('${l.id}','presente')">Compareceu</button> <button class="btn btn-danger btn-sm" onclick="aciResolver('${l.id}','falta')">Falta</button> <button class="btn btn-ghost btn-sm" onclick="aciSubstituir('${l.id}')">Substituir</button></td></tr>`).join('')+'</tbody></table></div>';
+  pend.map(l=>`<tr id="aci-row-${l.id}"><td class="mono">${fDate(l.data)}</td><td><strong>${l.medicos?.nome||'—'}</strong><br><span class="mono" style="font-size:11px;color:var(--text3);">${l.medicos?.crm||''}</span></td><td>${l.projetos?.nome||'—'}${l.setor?' — '+l.setor:''}</td><td class="mono">${(l.hora_ini||'').slice(0,5)}–${(l.hora_fim||'').slice(0,5)}</td><td class="mono">${fBRL(l.honorario||0)}</td><td style="white-space:nowrap;"><button class="btn btn-success btn-sm" onclick="aciResolver('${l.id}','presente')">Compareceu</button> <button class="btn btn-danger btn-sm" onclick="aciResolver('${l.id}','falta')">Falta</button> <button class="btn btn-ghost btn-sm" title="Aceitar justificativa e manter o pagamento" onclick="aciJustificar('${l.id}')">Justificar</button> <button class="btn btn-ghost btn-sm" onclick="aciSubstituir('${l.id}')">Substituir</button></td></tr>`).join('')+'</tbody></table></div>';
 }
 async function aciResolver(id,status){
   const res=await sbApi('/lancamentos?id=eq.'+id,{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify({status_presenca:status})});
   if(res!==null){toast(status==='falta'?'Marcado como falta':'Presença confirmada');const row=document.getElementById('aci-row-'+id);if(row)row.remove();const l=lancamentos.find(x=>x.id===id||x.id==id);if(l)l.status_presenca=status;}
   else toast('Erro ao salvar',true);
 }
+// ─── RESUMO DIÁRIO DE CHECK-INS ──────────────────────────────────────
+// Janela: 08:00 do dia anterior até 08:00 do dia de referência.
+// Ordem: ausências primeiro, depois atrasos. Dentro da tolerância não aparece.
+function _rciFmtHora(d){ return d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}); }
+function _rciFmtDataHora(d){ return d.toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}); }
+
+async function gerarResumoCI(){
+  const el = document.getElementById('rci-lista');
+  if(!el) return;
+  const selP = document.getElementById('rci-proj');
+  if(selP && selP.options.length<=1){
+    selP.innerHTML = '<option value="">Todos</option>' + sortedProjetos().map(p=>`<option value="${p.id}">${p.nome}</option>`).join('');
+  }
+  const eData = document.getElementById('rci-data');
+  if(eData && !eData.value) eData.value = new Date().toISOString().slice(0,10);
+  const ref = (eData && eData.value) ? eData.value : new Date().toISOString().slice(0,10);
+  const tol = Math.max(0, parseInt(document.getElementById('rci-tol')?.value || '15', 10));
+  const pid = selP?.value || '';
+
+  // Janela: 08:00 de ontem -> 08:00 do dia de referência
+  const fim = new Date(ref + 'T08:00:00');
+  const ini = new Date(fim.getTime() - 24*3600000);
+  const jan = document.getElementById('rci-janela');
+  if(jan) jan.textContent = 'Janela: ' + _rciFmtDataHora(ini) + ' até ' + _rciFmtDataHora(fim);
+
+  el.innerHTML = '<div class="card"><div class="empty">Carregando...</div></div>';
+
+  // Busca lançamentos dos dois dias envolvidos (o turno pode virar a noite)
+  const dIni = new Date(ini.getTime() - 12*3600000).toISOString().slice(0,10);
+  let path = '/rest/v1/lancamentos?select=*,medicos(nome,crm),projetos(nome)&data=gte.'+dIni+'&data=lte.'+ref+'&order=data.asc&limit=800';
+  if(pid) path += '&projeto_id=eq.'+pid;
+  const lancs = await sb(path) || [];
+
+  const cks = await sb('/rest/v1/checkins?feito_em=gte.'+ini.toISOString()+'&feito_em=lte.'+new Date(fim.getTime()+6*3600000).toISOString()+'&select=lancamento_id,medico_id,projeto_id,tipo,feito_em,aprovado') || [];
+
+  // Indexa check-ins por lançamento e por (médico+projeto+dia), pois nem todo check-in tem lancamento_id
+  const porLanc = {};
+  cks.forEach(function(c){
+    const k = c.lancamento_id || '';
+    if(k){ (porLanc[k] = porLanc[k] || []).push(c); }
+  });
+  const porMedDia = {};
+  cks.forEach(function(c){
+    const k = c.medico_id + '_' + c.projeto_id + '_' + String(c.feito_em||'').slice(0,10);
+    (porMedDia[k] = porMedDia[k] || []).push(c);
+  });
+  function checksDo(l){
+    let arr = porLanc[l.id] || [];
+    if(!arr.length) arr = porMedDia[l.medico_id + '_' + l.projeto_id + '_' + l.data] || [];
+    return arr;
+  }
+
+  const ausentes = [], atrasos = [];
+
+  lancs.forEach(function(l){
+    if(!l.medico_id || l.aberto) return;
+    if(!l.hora_ini) return;
+    const tIni = new Date(l.data + 'T' + l.hora_ini);
+    // turno que vira a noite: fim no dia seguinte
+    let tFim = l.hora_fim ? new Date(l.data + 'T' + l.hora_fim) : null;
+    if(tFim && tFim <= tIni) tFim = new Date(tFim.getTime() + 24*3600000);
+
+    const entradaNaJanela = (tIni >= ini && tIni < fim);
+    const saidaNaJanela   = (tFim && tFim >= ini && tFim < fim);
+    if(!entradaNaJanela && !saidaNaJanela) return;
+
+    const arr = checksDo(l);
+    const ent = arr.filter(function(c){ return (c.tipo||'entrada')==='entrada'; })
+                   .sort(function(a,b){ return new Date(a.feito_em)-new Date(b.feito_em); })[0];
+    const sai = arr.filter(function(c){ return c.tipo==='saida'; })
+                   .sort(function(a,b){ return new Date(b.feito_em)-new Date(a.feito_em); })[0];
+
+    const base = {
+      id: l.id, data: l.data,
+      medico: l.medicos?.nome || '—', crm: l.medicos?.crm || '',
+      projeto: l.projetos?.nome || '—', setor: l.setor || '',
+      hIni: (l.hora_ini||'').slice(0,5), hFim: (l.hora_fim||'').slice(0,5),
+      honorario: l.honorario_bruto !== undefined ? l.honorario_bruto : (l.honorario||0),
+      resolvido: (l.status_presenca==='presente'||l.status_presenca==='falta')
+    };
+
+    if(entradaNaJanela){
+      if(!ent) ausentes.push(Object.assign({}, base, {tipo:'Check-in', esperado:tIni, obs:'Sem registro de entrada'}));
+      else {
+        const diff = Math.round((new Date(ent.feito_em) - tIni)/60000);
+        if(diff > tol) atrasos.push(Object.assign({}, base, {tipo:'Check-in', esperado:tIni, feito:new Date(ent.feito_em), min:diff}));
+      }
+    }
+    if(saidaNaJanela){
+      if(!sai) ausentes.push(Object.assign({}, base, {tipo:'Check-out', esperado:tFim, obs:'Sem registro de saída'}));
+      else {
+        const diff = Math.round((new Date(sai.feito_em) - tFim)/60000);
+        if(Math.abs(diff) > tol) atrasos.push(Object.assign({}, base, {tipo:'Check-out', esperado:tFim, feito:new Date(sai.feito_em), min:diff}));
+      }
+    }
+  });
+
+  ausentes.sort(function(a,b){ return a.esperado - b.esperado; });
+  atrasos.sort(function(a,b){ return Math.abs(b.min) - Math.abs(a.min); });
+
+  let html = '<div class="metrics" style="margin-bottom:12px;">' +
+    '<div class="metric"><div class="metric-label">Ausências</div><div class="metric-val" style="color:var(--red);">'+ausentes.length+'</div></div>' +
+    '<div class="metric"><div class="metric-label">Atrasos (> '+tol+' min)</div><div class="metric-val" style="color:var(--amber);">'+atrasos.length+'</div></div>' +
+    '</div>';
+
+  if(!ausentes.length && !atrasos.length){
+    el.innerHTML = html + '<div class="card"><div style="text-align:center;padding:24px;color:var(--green);font-weight:600;">Nenhuma pendência na janela. Todos dentro da tolerância.</div></div>';
+    return;
+  }
+
+  if(ausentes.length){
+    html += '<div class="card" style="margin-bottom:12px;">' +
+      '<div class="card-title" style="color:var(--red);">Sem registro — '+ausentes.length+'</div>' +
+      '<table><thead><tr><th>Esperado</th><th>O quê</th><th>Médico</th><th>Projeto / Setor</th><th>Horário</th><th>Valor</th><th>Situação</th></tr></thead><tbody>' +
+      ausentes.map(function(r){
+        return '<tr><td class="mono">'+_rciFmtDataHora(r.esperado)+'</td>' +
+          '<td><span class="badge badge-red">'+r.tipo+'</span></td>' +
+          '<td><strong>'+r.medico+'</strong><br><span class="mono" style="font-size:11px;color:var(--text3);">'+r.crm+'</span></td>' +
+          '<td>'+r.projeto+(r.setor?' — '+r.setor:'')+'</td>' +
+          '<td class="mono">'+r.hIni+'–'+r.hFim+'</td>' +
+          '<td class="mono">'+fBRL(r.honorario)+'</td>' +
+          '<td style="font-size:12px;color:'+(r.resolvido?'var(--green)':'var(--text3)')+';">'+(r.resolvido?'Já resolvido':'Aguardando análise')+'</td></tr>';
+      }).join('') + '</tbody></table></div>';
+  }
+
+  if(atrasos.length){
+    html += '<div class="card">' +
+      '<div class="card-title" style="color:var(--amber);">Atrasos e desvios — '+atrasos.length+'</div>' +
+      '<table><thead><tr><th>Esperado</th><th>O quê</th><th>Registrado</th><th>Desvio</th><th>Médico</th><th>Projeto / Setor</th></tr></thead><tbody>' +
+      atrasos.map(function(r){
+        const sinal = r.min > 0 ? '+' : '';
+        const cor = r.min > 0 ? 'var(--amber)' : 'var(--text2)';
+        return '<tr><td class="mono">'+_rciFmtDataHora(r.esperado)+'</td>' +
+          '<td>'+r.tipo+'</td>' +
+          '<td class="mono">'+_rciFmtHora(r.feito)+'</td>' +
+          '<td class="mono" style="color:'+cor+';font-weight:600;">'+sinal+r.min+' min</td>' +
+          '<td><strong>'+r.medico+'</strong></td>' +
+          '<td>'+r.projeto+(r.setor?' — '+r.setor:'')+'</td></tr>';
+      }).join('') + '</tbody></table></div>';
+  }
+
+  el.innerHTML = html;
+}
+
 function aciSubstituir(id){
   const row=document.getElementById('aci-row-'+id); if(!row)return;
   const cell=row.querySelector('td:last-child');
@@ -10067,10 +10238,36 @@ async function aciSalvar(id, payload){
   }catch(e){ console.error('aci patch exception', e); toast('Erro ao salvar',true); return false; }
 }
 async function aciResolver(id,status){
-  if(await aciSalvar(id,{status_presenca:status})){
-    toast(status==='falta'?'Marcado como falta':'Presença confirmada');
+  // Falta sem justificativa aceita => plantão não é pago (não soma em custo/dashboard/relatório)
+  var pag = (status==='falta') ? 'falta' : 'a_pagar';
+  if(await aciSalvar(id,{status_presenca:status, status_pagamento:pag, presenca_em:new Date().toISOString()})){
+    toast(status==='falta'?'Marcado como falta — valor zerado':'Presença confirmada — valor mantido');
     const row=document.getElementById('aci-row-'+id); if(row)row.remove();
-    const l=lancamentos.find(x=>String(x.id)===String(id)); if(l)l.status_presenca=status;
+    const l=lancamentos.find(x=>String(x.id)===String(id));
+    if(l){
+      l.status_presenca=status;
+      l.status_pagamento=pag;
+      l.honorario = (pag==='falta') ? 0 : (l.honorario_bruto||l.honorario||0);
+    }
+  }
+}
+
+// Justificativa aceita pela empresa: registra a falta MAS mantém o pagamento
+async function aciJustificar(id){
+  var motivo = prompt('Justificativa aceita — descreva o motivo (fica registrado no plantão):');
+  if(motivo===null) return;
+  motivo = String(motivo).trim();
+  if(!motivo){ toast('Informe a justificativa',true); return; }
+  if(await aciSalvar(id,{status_presenca:'falta', status_pagamento:'justificado', obs_presenca:motivo, presenca_em:new Date().toISOString()})){
+    toast('Justificativa aceita — valor mantido');
+    const row=document.getElementById('aci-row-'+id); if(row)row.remove();
+    const l=lancamentos.find(x=>String(x.id)===String(id));
+    if(l){
+      l.status_presenca='falta';
+      l.status_pagamento='justificado';
+      l.obs_presenca=motivo;
+      l.honorario = l.honorario_bruto||l.honorario||0;
+    }
   }
 }
 async function aciConfirmarSub(id){
@@ -10198,23 +10395,34 @@ async function carregarAusenciasCI(view){
     return !ciKeys.has(`${l.medico_id}_${l.projeto_id}_${l.data}`);
   });
   if(!pend.length){el.innerHTML=toggle+'<div class="card"><div style="text-align:center;padding:24px;color:var(--green);font-weight:600;">Nenhuma ausência de check-in pendente.</div></div>';return;}
-  const rows=pend.map(l=>`<tr id="aci-row-${l.id}"><td class="mono">${fDate(l.data)}</td><td><strong>${l.medicos?.nome||'—'}</strong><br><span class="mono" style="font-size:11px;color:var(--text3);">${l.medicos?.crm||''}</span></td><td>${l.projetos?.nome||'—'}${l.setor?' — '+l.setor:''}</td><td class="mono">${(l.hora_ini||'').slice(0,5)}–${(l.hora_fim||'').slice(0,5)}</td><td class="mono">${fBRL(l.honorario||0)}</td><td style="white-space:nowrap;"><button class="btn btn-success btn-sm" onclick="aciAbrirObs('${l.id}','presente')">Compareceu</button> <button class="btn btn-danger btn-sm" onclick="aciAbrirObs('${l.id}','falta')">Falta</button> <button class="btn btn-ghost btn-sm" onclick="aciSubstituir('${l.id}')">Substituir</button></td></tr>`).join('');
+  const rows=pend.map(l=>`<tr id="aci-row-${l.id}"><td class="mono">${fDate(l.data)}</td><td><strong>${l.medicos?.nome||'—'}</strong><br><span class="mono" style="font-size:11px;color:var(--text3);">${l.medicos?.crm||''}</span></td><td>${l.projetos?.nome||'—'}${l.setor?' — '+l.setor:''}</td><td class="mono">${(l.hora_ini||'').slice(0,5)}–${(l.hora_fim||'').slice(0,5)}</td><td class="mono">${fBRL(l.honorario||0)}</td><td style="white-space:nowrap;"><button class="btn btn-success btn-sm" onclick="aciAbrirObs('${l.id}','presente')">Compareceu</button> <button class="btn btn-danger btn-sm" onclick="aciAbrirObs('${l.id}','falta')">Falta</button> <button class="btn btn-ghost btn-sm" title="Faltou, mas a empresa aceitou a justificativa — mantém o pagamento" onclick="aciAbrirObs('${l.id}','justificado')">Justificar</button> <button class="btn btn-ghost btn-sm" onclick="aciSubstituir('${l.id}')">Substituir</button></td></tr>`).join('');
   el.innerHTML=toggle+`<div class="card"><div style="margin-bottom:10px;font-size:13px;color:var(--amber);font-weight:600;">${pend.length} plantão(ões) sem check-in aguardando análise</div><table><thead><tr><th>Data</th><th>Médico</th><th>Projeto / Setor</th><th>Horário</th><th>Valor</th><th>Ação</th></tr></thead><tbody>${rows}</tbody></table></div>`;
 }
 
 function aciAbrirObs(id,status){
   const row=document.getElementById('aci-row-'+id); if(!row)return;
   const cell=row.querySelector('td:last-child');
-  const label=status==='presente'?'Confirmar presença':'Confirmar falta';
+  const label=status==='presente'?'Confirmar presença':(status==='justificado'?'Aceitar justificativa':'Confirmar falta');
   const cls=status==='falta'?'btn-danger':'btn-success';
-  cell.innerHTML=`<input id="aci-obs-${id}" placeholder="Observação (opcional)" style="padding:5px 8px;border:1px solid var(--border);border-radius:var(--radius);font-size:12px;width:170px;"> <button class="btn ${cls} btn-sm" onclick="aciResolver('${id}','${status}')">${label}</button> <button class="btn btn-ghost btn-sm" onclick="carregarAusenciasCI()">Cancelar</button>`;
+  const ph=status==='justificado'?'Justificativa (obrigatória)':'Observação (opcional)';
+  cell.innerHTML=`<input id="aci-obs-${id}" placeholder="${ph}" style="padding:5px 8px;border:1px solid var(--border);border-radius:var(--radius);font-size:12px;width:170px;"> <button class="btn ${cls} btn-sm" onclick="aciResolver('${id}','${status}')">${label}</button> <button class="btn btn-ghost btn-sm" onclick="carregarAusenciasCI()">Cancelar</button>`;
   document.getElementById('aci-obs-'+id)?.focus();
 }
-async function aciResolver(id,status){
+async function aciResolver(id,decisao){
   const obs=document.getElementById('aci-obs-'+id)?.value||'';
-  if(await aciSalvar(id,{status_presenca:status,obs_presenca:obs||null,presenca_em:new Date().toISOString()})){
-    toast(status==='falta'?'Marcado como falta':'Presença confirmada');
-    const l=lancamentos.find(x=>String(x.id)===String(id)); if(l){l.status_presenca=status;l.obs_presenca=obs;}
+  // decisao: 'presente' (compareceu) | 'falta' (não pago) | 'justificado' (faltou, mas pago)
+  var presenca = (decisao==='presente') ? 'presente' : 'falta';
+  var pagamento = decisao==='presente' ? 'a_pagar' : (decisao==='justificado' ? 'justificado' : 'falta');
+  if(decisao==='justificado' && !obs.trim()){ toast('Descreva a justificativa aceita',true); return; }
+  if(await aciSalvar(id,{status_presenca:presenca,status_pagamento:pagamento,obs_presenca:obs||null,presenca_em:new Date().toISOString()})){
+    toast(pagamento==='falta' ? 'Falta confirmada — valor zerado'
+        : pagamento==='justificado' ? 'Justificativa aceita — valor mantido'
+        : 'Presença confirmada — valor mantido');
+    const l=lancamentos.find(x=>String(x.id)===String(id));
+    if(l){
+      l.status_presenca=presenca; l.status_pagamento=pagamento; l.obs_presenca=obs;
+      l.honorario = (pagamento==='falta') ? 0 : (l.honorario_bruto||l.honorario||0);
+    }
     carregarAusenciasCI();
   }
 }
