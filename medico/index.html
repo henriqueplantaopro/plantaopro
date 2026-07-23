@@ -650,6 +650,10 @@ function abrirWhatsAppSenha(){
       </div>
       <label class="modal-label">Mensagem para o colega (opcional)</label>
       <textarea class="modal-textarea" id="transf-msg" rows="2" placeholder="Ex: Tenho um compromisso familiar esse dia..."></textarea>
+      <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border);">
+        <div style="font-size:12px;color:var(--text3);margin-bottom:8px;">Ou, se não quiser escolher ninguém agora:</div>
+        <button class="btn-modal" style="background:#eef0f8;color:#566099;border:1.5px solid #c5cae9;" onclick="passarEmAberto()">Deixar em aberto para o projeto</button>
+      </div>
     </div>
     <div class="modal-footer">
       <button class="btn-modal azul" id="btn-enviar-transf" onclick="confirmarTransferencia()" disabled>Solicitar transferencia</button>
@@ -1182,7 +1186,7 @@ async function carregarProjetos() {
 }
 
 async function carregarMedicos() {
-  const d=await sb('/rest/v1/medicos?ativo=eq.true&select=id,nome,crm&order=nome');
+  const d=await sb('/rest/v1/medicos?ativo=eq.true&select=id,nome,crm,projetos_vinculados&order=nome');
   todosMedicos=(d||[]).filter(m=>m.id!==medico.id);
 }
 
@@ -1265,17 +1269,17 @@ function renderPlantoes() {
   let lista=[..._plantoesCache];
   if(_filtroAtivo==='pendentes')lista=lista.filter(l=>!l.confirmado);
   if(_filtroAtivo==='confirmados')lista=lista.filter(l=>l.confirmado);
-  if(hint)hint.textContent=_filtroAtivo==='confirmados'?'Toque em um plantao para transferir ou avisar ausencia':'Toque em um plantao para confirmar sua presenca';
+  if(hint)hint.textContent='Toque em um plantao para transferir ou avisar ausencia';
   if(!lista.length){el.innerHTML='<div class="empty">'+(_filtroAtivo==='pendentes'?'Nenhum plantao pendente':_filtroAtivo==='confirmados'?'Nenhum plantao confirmado':'Nenhum plantao escalado')+'</div>';return;}
   el.innerHTML=lista.map(l=>{
     const turno=l.tipo?.includes('Noturno')?'Noturno':l.tipo?.includes('24')?'24h':'Diurno';
     const bc=turno==='Noturno'?'badge-purple':turno==='24h'?'badge-amber':'badge-green';
     const proj=l.projetos?.nome||'';
     const temTP=_transfersPend.has(l.id),temAU=_ausenciasInf.has(l.id);
-    const acoes=l.confirmado
-      ? '<div class="plantao-acoes"><button class="btn-acao btn-acao-transferir" onclick="abrirTransferir(\''+l.id+'\')">Transferir plantao</button><button class="btn-acao btn-acao-ausencia" onclick="abrirAusencia(\''+l.id+'\')">Nao vou comparecer</button></div>'
-      : '<div style="padding:0 16px 14px;"><button class="btn-confirmar pendente" onclick="confirmarPresenca(\''+l.id+'\',this)">Confirmar presenca</button></div>';
-    return '<div class="plantao-card"><div class="plantao-header"><div><div class="plantao-data">'+fmtData(l.data)+'</div><div class="plantao-proj">'+proj+(l.setor?' - '+l.setor:'')+'</div>'+(l.confirmado?'<span class="confirmado-badge">Confirmado</span>':'<span class="pendente-badge">Aguardando confirmacao</span>')+(temTP?'<br><span class="transf-badge">Transferencia aguardando resposta</span>':'')+(temAU?'<br><span class="ausencia-badge">Ausencia informada a empresa</span>':'')+'</div><span class="badge '+bc+'">'+turno+'</span></div><div class="plantao-body"><div><div class="plantao-info-label">Horario</div><div class="plantao-info-val">'+(l.hora_ini||'').slice(0,5)+'-'+(l.hora_fim||'').slice(0,5)+'</div></div><div><div class="plantao-info-label">Horas</div><div class="plantao-info-val">'+l.horas+'h</div></div><div class="plantao-valor"><div class="plantao-info-label">Honorarios</div><div class="plantao-valor-val">'+fBRL(l.honorario)+'</div></div></div>'+acoes+'</div>';
+    // Escala direta já vale como presença; médico só transfere ou avisa ausência.
+    // (O aceite de transferência DIRETA acontece na aba de notificações.)
+    const acoes='<div class="plantao-acoes"><button class="btn-acao btn-acao-transferir" onclick="abrirTransferir(\''+l.id+'\')">Transferir plantao</button><button class="btn-acao btn-acao-ausencia" onclick="abrirAusencia(\''+l.id+'\')">Nao vou comparecer</button></div>';
+    return '<div class="plantao-card"><div class="plantao-header"><div><div class="plantao-data">'+fmtData(l.data)+'</div><div class="plantao-proj">'+proj+(l.setor?' - '+l.setor:'')+'</div>'+(temTP?'<span class="transf-badge">Transferencia aguardando resposta</span>':'')+(temAU?'<span class="ausencia-badge">Ausencia informada a empresa</span>':'')+'</div><span class="badge '+bc+'">'+turno+'</span></div><div class="plantao-body"><div><div class="plantao-info-label">Horario</div><div class="plantao-info-val">'+(l.hora_ini||'').slice(0,5)+'-'+(l.hora_fim||'').slice(0,5)+'</div></div><div><div class="plantao-info-label">Horas</div><div class="plantao-info-val">'+l.horas+'h</div></div><div class="plantao-valor"><div class="plantao-info-label">Honorarios</div><div class="plantao-valor-val">'+fBRL(l.honorario)+'</div></div></div>'+acoes+'</div>';
   }).join('');
 }
 
@@ -1294,13 +1298,20 @@ function abrirTransferir(lancId) {
   document.getElementById('busca-med-transf').value='';
   document.getElementById('transf-msg').value='';
   document.getElementById('btn-enviar-transf').disabled=true;
-  renderMedLista(todosMedicos);
+  renderMedLista(medicosDoProjetoTransf());
   document.getElementById('modal-transferir').classList.remove('oculto');
+}
+
+// Só médicos vinculados ao MESMO projeto do plantão podem receber a transferência
+function medicosDoProjetoTransf() {
+  var pid = _lancAtivo ? _lancAtivo.projeto_id : null;
+  if(!pid) return todosMedicos;
+  return todosMedicos.filter(function(m){ return (m.projetos_vinculados||[]).indexOf(pid)!==-1; });
 }
 
 function filtrarMedTransf() {
   const q=document.getElementById('busca-med-transf').value.toLowerCase();
-  renderMedLista(todosMedicos.filter(m=>m.nome.toLowerCase().includes(q)||(m.crm||'').toLowerCase().includes(q)));
+  renderMedLista(medicosDoProjetoTransf().filter(m=>m.nome.toLowerCase().includes(q)||(m.crm||'').toLowerCase().includes(q)));
 }
 
 function renderMedLista(lista) {
@@ -1313,7 +1324,7 @@ function selecionarMed(id) {
   _medSel=todosMedicos.find(m=>m.id===id);
   document.getElementById('btn-enviar-transf').disabled=!_medSel;
   const q=document.getElementById('busca-med-transf').value.toLowerCase();
-  renderMedLista(todosMedicos.filter(m=>!q||m.nome.toLowerCase().includes(q)||(m.crm||'').toLowerCase().includes(q)));
+  renderMedLista(medicosDoProjetoTransf().filter(m=>!q||m.nome.toLowerCase().includes(q)||(m.crm||'').toLowerCase().includes(q)));
 }
 
 async function confirmarTransferencia() {
@@ -1331,6 +1342,30 @@ async function confirmarTransferencia() {
     toastMed('Solicitacao enviada para '+_medSel.nome.split(' ')[0]+'!');fecharModal('modal-transferir');await carregarPlantoes();await carregarNotificacoes();
   }
   else{btn.disabled=false;btn.textContent='Solicitar transferencia';toastMed('Erro ao enviar',false);}
+}
+
+// Passar o plantão em aberto para o projeto (sem escolher um colega específico)
+async function passarEmAberto() {
+  if(!_lancAtivo)return;
+  if(!confirm('Deixar este plantão em aberto para os médicos do projeto? Você deixa de ser o responsável assim que alguém aceitar.'))return;
+  const msg=document.getElementById('transf-msg').value.trim();
+  const patch={
+    aberto:true,
+    publico_alvo:'projeto',
+    transferido_de:medico.id,
+    transferido_de_nome:(medico.nome||''),
+    medico_id:null,
+    confirmado:false
+  };
+  const r=await sb('/rest/v1/lancamentos?id=eq.'+_lancAtivo.id,{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify(patch)});
+  if(r!==null){
+    toastMed('Plantão liberado para o projeto!');
+    fecharModal('modal-transferir');
+    await carregarPlantoes();
+    await carregarNotificacoes();
+  } else {
+    toastMed('Erro ao liberar o plantão',false);
+  }
 }
 
 function abrirAusencia(lancId) {
