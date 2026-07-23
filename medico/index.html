@@ -704,6 +704,24 @@ let todosMedicos = [], _lancAtivo = null, _medSel = null;
 let _plantoesCache = [], _filtroAtivo = 'proximos';
 let _transfersPend = new Set(), _ausenciasInf = new Set();
 
+// Fala com o servidor em vez de tocar a tabela `medicos` com a chave pública
+function _tokenURL(){
+  try{ return new URLSearchParams(location.search).get('token') || localStorage.getItem('pp_token') || ''; }
+  catch(e){ return ''; }
+}
+async function apiPerfil(action, dados){
+  try{
+    const tk = (typeof medico!=='undefined' && medico && medico.token_acesso) ? medico.token_acesso : _tokenURL();
+    const _act = (action === 'get') ? 'perfil' : ('perfil-' + action);
+    const r = await fetch('/api/medico-conta?action=' + _act, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ token_acesso: tk, dados: dados||{} })
+    });
+    const j = await r.json().catch(function(){ return {}; });
+    return { ok: r.ok, status: r.status, dados: j };
+  }catch(e){ return { ok:false, status:0, dados:{erro:String(e&&e.message||e)} }; }
+}
+
 async function sb(path, opts={}) {
   try {
     const r = await fetch(SUPABASE_URL+path, {
@@ -739,7 +757,8 @@ async function vincularDispositivo() {
   if(btn){btn.disabled=true;btn.textContent='Vinculando...';}
   if(!medico?.id){alert('Sessao expirada.');if(btn){btn.disabled=false;btn.textContent='Vincular este celular';}return;}
   try {
-    const r=await fetch(SUPABASE_URL+'/rest/v1/medicos?id=eq.'+medico.id,{method:'PATCH',headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify({device_id:getDeviceId(),device_registrado_em:new Date().toISOString()})});
+    const r0=await apiPerfil('device',{device_id:getDeviceId()});
+    const r={ok:r0.ok,status:r0.status};
     if(r.ok||r.status===204){localStorage.setItem('plantaopro_device_vinculado','1');document.getElementById('tela-primeiro-acesso').style.display='none';mostrarApp();}
     else{alert('Erro '+r.status);if(btn){btn.disabled=false;btn.textContent='Vincular este celular';}}
   } catch(e){alert('Erro: '+e.message);if(btn){btn.disabled=false;btn.textContent='Vincular este celular';}}
@@ -759,10 +778,11 @@ async function init() {
 
   if(!token){ mostrarErro(); return; }
 
-  const med=await sb('/rest/v1/medicos?token_acesso=eq.'+token+'&select=*');
-  if(!med?.length){ mostrarErro(); return; }
+  const _rp = await apiPerfil('get', {});
+  if(!_rp.ok || !_rp.dados?.medico){ mostrarErro(); return; }
+  try{ localStorage.setItem('pp_token', token); }catch(e){}
 
-  medico=med[0];
+  medico=_rp.dados.medico;
   const did=getDeviceId();
   if(!medico.device_id){document.getElementById('splash').classList.add('hide');document.getElementById('tela-primeiro-acesso').style.display='block';return;}
   if(medico.device_id!==did){document.getElementById('splash').classList.add('hide');document.getElementById('tela-device').style.display='block';return;}
@@ -971,11 +991,8 @@ async function salvarPerfil() {
     pix_chave:      document.getElementById('ep-pix').value.trim() || null,
     ufs_interesse:  ufs,
   };
-  const r = await fetch(SUPABASE_URL+'/rest/v1/medicos?id=eq.'+medico.id, {
-    method:'PATCH',
-    headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},
-    body: JSON.stringify(payload)
-  });
+  const _r3 = await apiPerfil('update', payload);
+  const r = { ok: _r3.ok, status: _r3.status };
   if (r.ok || r.status===204) {
     Object.assign(medico, payload);
     document.getElementById('modal-editar-perfil').classList.add('oculto');
@@ -1004,17 +1021,14 @@ async function salvarNovaSenha() {
   const erroEl = document.getElementById('as-erro');
   const btn    = document.getElementById('btn-salvar-senha');
   erroEl.style.display = 'none';
-  if (atual !== medico.senha_hash) { erroEl.textContent='Senha atual incorreta.'; erroEl.style.display='block'; return; }
+  // A senha atual é conferida no servidor (bcrypt) — nunca no navegador.
   if (nova.length < 6) { erroEl.textContent='A nova senha deve ter pelo menos 6 caracteres.'; erroEl.style.display='block'; return; }
   if (nova !== nova2) { erroEl.textContent='As senhas não coincidem.'; erroEl.style.display='block'; return; }
   btn.disabled=true; btn.textContent='Salvando...';
-  const r = await fetch(SUPABASE_URL+'/rest/v1/medicos?id=eq.'+medico.id, {
-    method:'PATCH',
-    headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},
-    body: JSON.stringify({senha_hash: nova, primeiro_acesso: false})
-  });
+  const _r4 = await apiPerfil('senha', {atual: (typeof atual!=='undefined'? atual : ''), nova: nova});
+  if(!_r4.ok){ erroEl.textContent = _r4.dados?.erro || 'Não foi possível alterar a senha.'; erroEl.style.display='block'; if(btn){btn.disabled=false;btn.textContent='Salvar';} return; }
+  const r = { ok: true, status: 200 };
   if (r.ok || r.status===204) {
-    medico.senha_hash = nova;
     medico.primeiro_acesso = false;
     document.getElementById('modal-alterar-senha').classList.add('oculto');
     toastMed('Senha alterada!');
@@ -1044,13 +1058,10 @@ async function salvarSenhaObrigatoria() {
   erroEl.style.display = 'none';
   if (nova.length < 6) { erroEl.textContent='Senha mínima: 6 caracteres.'; erroEl.style.display='block'; return; }
   if (nova !== nova2)  { erroEl.textContent='As senhas não coincidem.'; erroEl.style.display='block'; return; }
-  const r = await fetch(SUPABASE_URL+'/rest/v1/medicos?id=eq.'+medico.id, {
-    method:'PATCH',
-    headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},
-    body: JSON.stringify({senha_hash: nova, primeiro_acesso: false})
-  });
+  const _r4 = await apiPerfil('senha', {atual: (typeof atual!=='undefined'? atual : ''), nova: nova});
+  if(!_r4.ok){ erroEl.textContent = _r4.dados?.erro || 'Não foi possível alterar a senha.'; erroEl.style.display='block'; if(btn){btn.disabled=false;btn.textContent='Salvar';} return; }
+  const r = { ok: true, status: 200 };
   if (r.ok || r.status===204) {
-    medico.senha_hash = nova;
     medico.primeiro_acesso = false;
     document.getElementById('modal-senha-obrig').classList.add('oculto');
     toastMed('Senha criada! Bem-vindo ao PlantãoPro.');
@@ -1125,11 +1136,8 @@ async function fazerLoginMedico(){
     }
   } else if (!med.device_id) {
     // Primeiro acesso — vincular dispositivo silenciosamente
-    await fetch(SUPABASE_URL+'/rest/v1/medicos?id=eq.'+med.id,{
-      method:'PATCH',
-      headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},
-      body:JSON.stringify({device_id: did, device_registrado_em: new Date().toISOString()})
-    });
+    await fetch('/api/medico-conta?action=perfil-device',{method:'POST',headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({token_acesso: med.token_acesso, dados:{device_id: did}})});
     medico.device_id = did;
   }
 
@@ -1152,9 +1160,7 @@ async function cadastrarMedico(){
   if(senha.length<6){erroEl.textContent='Senha mínima: 6 caracteres.';erroEl.style.display='block';return;}
   if(senha!==senha2){erroEl.textContent='As senhas não coincidem.';erroEl.style.display='block';return;}
   btn.disabled=true;btn.textContent='Criando conta...';
-  // Verificar CPF duplicado
-  const existe=await sb('/rest/v1/medicos?cpf=eq.'+cpf+'&select=id');
-  if(existe?.length){erroEl.textContent='Este CPF já está cadastrado. Faça login.';erroEl.style.display='block';btn.disabled=false;btn.textContent='Criar conta';return;}
+  // O próprio /api/medico-conta responde 409 se o CPF já existir (sem expor CPFs ao navegador)
   // Criar médico
   const ufs = getUFsSelecionadas('cad');
   const esps = getEspSelecionadas('cad');
@@ -1681,7 +1687,7 @@ function salvarPrefsSino(){
   try { localStorage.setItem("pp_notif_prefs", JSON.stringify(p)); } catch(e){}
   // persiste no cadastro do medico (se a coluna existir; ignora erro)
   if (typeof medico!=="undefined" && medico && medico.id) {
-    try { sb("/rest/v1/medicos?id=eq."+medico.id, {method:"PATCH",headers:{"Prefer":"return=minimal"},body:JSON.stringify({notif_prefs:p})}); } catch(e){}
+    try { apiPerfil('update', {notif_prefs: p}); } catch(e){}
   }
 }
 function aplicarPrefsNaTela(){
