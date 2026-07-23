@@ -4021,7 +4021,10 @@ function switchCalTab(tab) {
 }
 function renderCalAtual() {
   if (_calTabAtiva==='semanal') renderSemana();
-  else if (_calTabAtiva==='lista') renderCalLista();
+  else if (_calTabAtiva==='lista') {
+    renderCalLista();
+    if (_calDetalheDia) showDayDetailCal(_calDetalheDia);
+  }
   else renderCal();
 }
 
@@ -4213,6 +4216,7 @@ function abrirCtxChipLista(e, lancId, ds, projId) {
   abrirCtxChip(e, lancId, ds, projId);
 }
 
+var _calDetalheDia = null;
 function showDayDetailCal(ds) {
   const pid = document.getElementById('cal-proj')?.value || '';
   const mid = document.getElementById('cal-med')?.value  || '';
@@ -4221,13 +4225,62 @@ function showDayDetailCal(ds) {
   if (pid) evts = evts.filter(l => l.projeto_id === pid);
   if (mid) evts = evts.filter(l => l.medico_id  === mid);
   if (sid) evts = evts.filter(l => (l.setor||'') === sid);
-  if (!evts.length) return;
+  evts = evts.slice().sort((a,b) => (a.hora_ini||'').localeCompare(b.hora_ini||''));
+
   const det = document.getElementById('cal-detail');
-  document.getElementById('cal-detail-title').textContent = 'Plantões em ' + fDate(ds);
-  const rowsDetail = evts.map(l => '<tr><td>'+l.medico+'</td><td>'+l.projeto+'</td><td>'+(l.setor||'—')+'</td><td>'+(l.tipo||'')+'</td><td class="mono">'+((l.hora_ini||'').slice(0,5))+'–'+((l.hora_fim||'').slice(0,5))+'</td><td class="mono">'+l.horas+'h</td><td class="mono">'+fBRL(l.honorario||0)+'</td></tr>').join('');
-  document.getElementById('cal-detail-body').innerHTML = '<table><thead><tr><th>Médico</th><th>Projeto</th><th>Setor</th><th>Tipo</th><th>Horário</th><th>Horas</th><th>Honorários</th></tr></thead><tbody>' + rowsDetail + '</tbody></table>';
+  if (!det) return;
+  _calDetalheDia = ds;
+
+  // Cabeçalho com ação de incluir lançamento (mesmo fluxo das outras abas)
+  document.getElementById('cal-detail-title').innerHTML =
+    '<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;">' +
+      '<span>Plantões em ' + fDate(ds) + '</span>' +
+      '<button class="btn btn-primary btn-sm" onclick="abrirLancamentoRapido(\'' + ds + '\',\'' + pid + '\')">+ Novo plantão</button>' +
+    '</div>';
+
+  let corpo;
+  if (!evts.length) {
+    corpo = '<div class="empty" style="padding:18px;text-align:center;font-size:13px;color:var(--text3);">' +
+            'Nenhum plantão neste dia. Use “+ Novo plantão” para incluir.</div>';
+  } else {
+    const linhas = evts.map(function(l) {
+      const semMed = !l.medico_id;
+      const nome = semMed
+        ? '<span style="color:var(--amber);font-weight:600;">Sem médico</span>'
+        : (l.medico || '—');
+      const tagCob = l.cobertura
+        ? '<span style="font-size:10px;background:#eef0f8;color:#566099;padding:1px 5px;border-radius:99px;margin-left:5px;">Cobertura</span>' : '';
+      const tagTr = (l.aberto && l.transferido_de)
+        ? '<span style="font-size:10px;background:#f3e8ff;color:#7c3aed;padding:1px 5px;border-radius:99px;margin-left:5px;" title="Repassado por ' + (l.transferido_de_nome||'colega') + '">↪ ' + String(l.transferido_de_nome||'colega').split(' ')[0] + '</span>' : '';
+      return '<tr>' +
+        '<td>' + nome + tagCob + tagTr + '</td>' +
+        '<td>' + (l.projeto||'—') + '</td>' +
+        '<td>' + (l.setor||'—') + '</td>' +
+        '<td>' + (l.tipo||'') + '</td>' +
+        '<td class="mono">' + (l.hora_ini||'').slice(0,5) + '–' + (l.hora_fim||'').slice(0,5) + '</td>' +
+        '<td class="mono">' + (l.horas||0) + 'h</td>' +
+        '<td class="mono">' + fBRL(l.honorario||0) + '</td>' +
+        '<td style="white-space:nowrap;text-align:right;">' +
+          '<button class="btn btn-ghost btn-sm" onclick="ctxEditarDireto(\'' + l.id + '\')">Editar</button> ' +
+          '<button class="btn btn-ghost btn-sm" title="Mais opções" onclick="event.stopPropagation();abrirCtxChip(event,\'' + l.id + '\',\'' + ds + '\',\'' + (l.projeto_id||'') + '\')">⋮</button>' +
+        '</td>' +
+      '</tr>';
+    }).join('');
+    corpo = '<table><thead><tr><th>Médico</th><th>Projeto</th><th>Setor</th><th>Tipo</th><th>Horário</th><th>Horas</th><th>Honorários</th><th></th></tr></thead><tbody>' + linhas + '</tbody></table>';
+  }
+  document.getElementById('cal-detail-body').innerHTML = corpo;
   det.style.display = 'block';
   det.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+// Abre direto o modal de edição de um lançamento (usado no detalhe do dia)
+function ctxEditarDireto(lancId) {
+  var l = lancamentos.find(function(x){ return x.id === lancId; });
+  if (!l) { toast('Lançamento não encontrado', true); return; }
+  _ctxLancamento = l;
+  _ctxDiaClicado = l.data;
+  _ctxProjId = l.projeto_id;
+  ctxEditar();
 }
 
 
@@ -5476,6 +5529,7 @@ async function salvarEdicaoLanc() {
     toast('Plantão atualizado!');
     fecharModalEditarLanc();
     await carregarLancamentos(true);
+    renderCalAtual();
     renderSemana();
     if (document.getElementById('escala-grid')) renderEscala();
   } else {
