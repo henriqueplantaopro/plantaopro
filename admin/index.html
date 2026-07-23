@@ -895,6 +895,7 @@ tr:hover td{background:var(--bg3);}
       <div class="card-title">Novo projeto</div>
       <div class="form-row"><div class="form-group"><label>Nome do projeto</label><input id="pn" type="text" placeholder="UPA Centro"></div><div class="form-group"><label>Código TOTVS (CC)</label><input id="pc" type="text" placeholder="CC-001"></div></div>
       <div class="form-row"><div class="form-group"><label>Contratante</label><input id="pco" type="text" placeholder="Secretaria Municipal de Saúde"></div><div class="form-group"><label>Status</label><select id="ps"><option>Ativo</option><option>Encerrado</option><option>Em negociação</option></select></div></div>
+      <div class="form-row"><div class="form-group"><label>Cidade</label><input id="pcid" type="text" placeholder="Rio de Janeiro"></div><div class="form-group"><label>Estado (UF)</label><input id="puf" type="text" maxlength="2" placeholder="RJ" style="text-transform:uppercase;"></div></div>
       <!-- Remuneração padrão -->
       <div style="border-top:1px solid var(--border);margin:10px 0 12px;padding-top:12px;">
         <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;color:var(--text2);margin-bottom:10px;">Remuneração padrão</div>
@@ -1217,7 +1218,8 @@ tr:hover td{background:var(--bg3);}
             <option value="">Personalizado</option>
           </select>
         </div>
-        <div class="form-group" style="min-width:190px;"><label>Projeto</label><select id="vg-proj" onchange="vgRenderSetores();renderVagas()"><option value="">Todos os projetos</option></select></div>
+        <div class="form-group" style="min-width:170px;"><label>Cidade</label><select id="vg-cidade" onchange="vgCidadeChange()"><option value="">Todas as cidades</option></select></div>
+        <div class="form-group" style="min-width:190px;"><label>Hospital / Projeto</label><select id="vg-proj" onchange="vgProjChange()"><option value="">Todos os projetos</option></select></div>
         <div class="form-group" style="min-width:190px;">
           <label>Especialidade</label>
           <select id="vg-esp" onchange="renderVagas()">
@@ -1227,9 +1229,9 @@ tr:hover td{background:var(--bg3);}
         </div>
         <button class="btn btn-ghost btn-sm" onclick="limparFiltrosVagas()">Limpar</button>
       </div>
-      <div style="margin-top:10px;">
-        <label style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;color:var(--text2);display:block;margin-bottom:6px;">Setores <span style="font-weight:400;text-transform:none;letter-spacing:0;">(clique para selecionar; nenhum marcado = todos)</span></label>
-        <div id="vg-setores" style="display:flex;flex-wrap:wrap;gap:6px;"></div>
+      <div id="vg-setores-bloco" style="margin-top:10px;display:none;">
+        <label style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;color:var(--text2);display:block;margin-bottom:6px;">Setores</label>
+        <div id="vg-setores" style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;"></div>
       </div>
     </div>
 
@@ -2018,6 +2020,78 @@ tr:hover td{background:var(--bg3);}
   <div class="ctx-item" onclick="ctxNovoPlantao()">+ Novo plantão</div>
   <div class="ctx-sep" id="ctx-sep-remover"></div>
   <div class="ctx-item danger" id="ctx-remover" onclick="ctxRemover()" style="display:none;">Remover plantão</div>
+</div>
+
+<!-- MODAL EDITAR SETOR -->
+<div class="modal-overlay" id="modal-editar-setor" onclick="if(event.target===this)fecharEditarSetor()">
+  <div class="modal" style="max-width:520px;">
+    <div class="modal-header">
+      <div class="modal-title">Editar setor</div>
+      <button class="modal-close" onclick="fecharEditarSetor()">&#10005;</button>
+    </div>
+    <div style="padding:16px;">
+      <input type="hidden" id="es-id">
+      <div class="form-group"><label>Nome do setor</label><input id="es-nome" type="text"></div>
+      <div style="border-top:1px solid var(--border);margin:12px 0;padding-top:12px;">
+        <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;color:var(--text2);margin-bottom:4px;">Remuneração padrão deste setor</div>
+        <div style="font-size:11px;color:var(--text3);margin-bottom:10px;">É o valor sugerido ao lançar plantão neste setor. Em branco, usa o valor do projeto.</div>
+        <div class="form-row">
+          <div class="form-group"><label>Plantão 12h (R$)</label><input id="es-v12" type="text" placeholder="1.800,00"></div>
+          <div class="form-group"><label>Plantão 24h (R$)</label><input id="es-v24" type="text" placeholder="3.600,00"></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>Noturno (R$)</label><input id="es-vn" type="text" placeholder="2.000,00"></div>
+          <div class="form-group"><label>Sobreaviso (R$)</label><input id="es-vs" type="text" placeholder="900,00"></div>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;justify-content:flex-end;">
+        <button class="btn btn-ghost" onclick="fecharEditarSetor()">Cancelar</button>
+        <button class="btn btn-primary" onclick="salvarEdicaoSetor()">Salvar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL EDITAR PROJETO -->
+<div class="modal-overlay" id="modal-editar-proj" onclick="if(event.target===this)fecharEditarProjeto()">
+  <div class="modal" style="max-width:620px;">
+    <div class="modal-header">
+      <div class="modal-title">Editar projeto</div>
+      <button class="modal-close" onclick="fecharEditarProjeto()">&#10005;</button>
+    </div>
+    <div style="padding:16px;">
+      <input type="hidden" id="ep-id">
+      <div class="form-row">
+        <div class="form-group"><label>Nome do projeto</label><input id="ep-nome" type="text"></div>
+        <div class="form-group"><label>Código T (centro de custo)</label><input id="ep-cc" type="text"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Contratante</label><input id="ep-contratante" type="text"></div>
+        <div class="form-group"><label>Status</label><select id="ep-status"><option>Ativo</option><option>Encerrado</option><option>Em negociação</option></select></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Cidade</label><input id="ep-cidade" type="text" placeholder="Rio de Janeiro"></div>
+        <div class="form-group"><label>Estado (UF)</label><input id="ep-uf" type="text" maxlength="2" style="text-transform:uppercase;" placeholder="RJ"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Nº do contrato</label><input id="ep-contrato" type="text"></div>
+        <div class="form-group"><label>CNPJ</label><input id="ep-cnpj" type="text"></div>
+      </div>
+      <div style="border-top:1px solid var(--border);margin:10px 0 12px;padding-top:12px;">
+        <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;color:var(--text2);margin-bottom:10px;">Check-in por GPS</div>
+        <div class="form-row three">
+          <div class="form-group"><label>Latitude</label><input id="ep-lat" type="text"></div>
+          <div class="form-group"><label>Longitude</label><input id="ep-lon" type="text"></div>
+          <div class="form-group"><label>Raio (metros)</label><input id="ep-raio" type="number" min="20" max="2000"></div>
+        </div>
+      </div>
+      <div style="font-size:11px;color:var(--text3);margin-bottom:12px;">A remuneração padrão agora é definida por setor &mdash; use o botão &#9881; Setores.</div>
+      <div style="display:flex;gap:8px;justify-content:flex-end;">
+        <button class="btn btn-ghost" onclick="fecharEditarProjeto()">Cancelar</button>
+        <button class="btn btn-primary" onclick="salvarEdicaoProjeto()">Salvar alterações</button>
+      </div>
+    </div>
+  </div>
 </div>
 
 <!-- MODAL PREENCHER VAGA -->
@@ -3374,7 +3448,11 @@ function renderProjetos() {
         <td style="font-size:12px;color:var(--green);">${rem.length?rem.join('<br>'):'<span style="color:var(--text3);">Não configurada</span>'}</td>
         <td style="font-size:11px;font-family:monospace;">${p.latitude&&p.longitude?'OK':'<span style="color:var(--amber);">Sem GPS</span>'}</td>
         <td><span class="badge badge-${p.status==='Ativo'?'green':p.status==='Encerrado'?'red':'amber'}">${p.status}</span></td>
-        <td><button class="btn btn-danger" <button class="btn btn-ghost btn-sm" onclick="abrirModalSetores('${p.id}', '${p.nome}')">&#9881; Setores</button> <button onclick="delProjeto('${p.id}')">Remover</button></td>
+        <td style="white-space:nowrap;text-align:right;">
+          <button class="btn btn-ghost btn-sm" onclick="abrirEditarProjeto('${p.id}')">Editar</button>
+          <button class="btn btn-ghost btn-sm" onclick="abrirModalSetores('${p.id}', '${p.nome}')">&#9881; Setores</button>
+          <button class="btn btn-danger btn-sm" onclick="delProjeto('${p.id}')">Remover</button>
+        </td>
       </tr>`;
     }).join('') + '</tbody></table>';
 }
@@ -3394,6 +3472,8 @@ async function addProjeto() {
     longitude: parseFloat(document.getElementById('plon').value)||null,
     raio_checkin: parseInt(document.getElementById('praio').value)||100,
     contrato: document.getElementById('pnc').value.trim(),
+    cidade: document.getElementById('pcid').value.trim() || null,
+    uf: (document.getElementById('puf').value.trim() || '').toUpperCase() || null,
     valor_padrao_12h: parseBRLField('pval12'),
     valor_padrao_24h: parseBRLField('pval24'),
     valor_padrao_noturno: parseBRLField('pvaln'),
@@ -3402,10 +3482,63 @@ async function addProjeto() {
   const res = await sbApi('/projetos', { method:'POST', headers:{'Prefer':'return=representation'}, body: JSON.stringify(payload) });
   if (res) {
     toast('Projeto cadastrado!');
-    ['pn','pc','pco','plat','plon','pnc','pval12','pval24','pvaln','pvalsob'].forEach(id=>document.getElementById(id).value='');
+    ['pn','pc','pco','plat','plon','pnc','pcid','puf','pval12','pval24','pvaln','pvalsob'].forEach(id=>document.getElementById(id).value='');
     await carregarProjetos();
   }
   else toast('Erro ao cadastrar projeto', true);
+}
+
+// ── EDITAR PROJETO ──────────────────────────────────────
+function abrirEditarProjeto(id){
+  var p = (projetos||[]).find(function(x){ return String(x.id) === String(id); });
+  if(!p){ toast('Projeto não encontrado', true); return; }
+  var g = function(i){ return document.getElementById(i); };
+  g('ep-id').value = p.id;
+  g('ep-nome').value = p.nome || '';
+  g('ep-cc').value = p.codigo_cc || '';
+  g('ep-contratante').value = p.contratante || '';
+  g('ep-status').value = p.status || 'Ativo';
+  g('ep-cidade').value = p.cidade || '';
+  g('ep-uf').value = p.uf || '';
+  g('ep-contrato').value = p.contrato || '';
+  g('ep-cnpj').value = p.cnpj || '';
+  g('ep-lat').value = p.latitude != null ? p.latitude : '';
+  g('ep-lon').value = p.longitude != null ? p.longitude : '';
+  g('ep-raio').value = p.raio_checkin != null ? p.raio_checkin : 100;
+  g('modal-editar-proj').classList.add('open');
+}
+
+function fecharEditarProjeto(){
+  var m = document.getElementById('modal-editar-proj');
+  if(m) m.classList.remove('open');
+}
+
+async function salvarEdicaoProjeto(){
+  var g = function(i){ return document.getElementById(i); };
+  var id = g('ep-id').value;
+  var nome = g('ep-nome').value.trim();
+  if(!nome){ toast('Nome obrigatório', true); return; }
+  var payload = {
+    nome: nome,
+    codigo_cc: g('ep-cc').value.trim() || null,
+    contratante: g('ep-contratante').value.trim() || null,
+    status: g('ep-status').value,
+    cidade: g('ep-cidade').value.trim() || null,
+    uf: (g('ep-uf').value.trim() || '').toUpperCase() || null,
+    contrato: g('ep-contrato').value.trim() || null,
+    cnpj: g('ep-cnpj').value.trim() || null,
+    latitude: parseFloat(g('ep-lat').value) || null,
+    longitude: parseFloat(g('ep-lon').value) || null,
+    raio_checkin: parseInt(g('ep-raio').value) || 100
+  };
+  var r = await sbApi('/projetos?id=eq.' + id, {
+    method:'PATCH', headers:{'Prefer':'return=minimal'}, body: JSON.stringify(payload)
+  });
+  if(r === null){ toast('Erro ao salvar', true); return; }
+  toast('Projeto atualizado!');
+  fecharEditarProjeto();
+  await carregarProjetos();
+  try { if (document.getElementById('tab-vagas')?.classList.contains('active')) { vgRenderCidades(); renderVagas(); } } catch(e){}
 }
 
 async function delProjeto(id) {
@@ -3843,10 +3976,7 @@ function preencherValorPadraoAgenda() {
   const proj = projetos.find(p => p.id === projId);
   if (!proj) return;
   let val = null;
-  if (tipo.includes('24'))           val = proj.valor_padrao_24h;
-  else if (tipo.includes('Noturno')) val = proj.valor_padrao_noturno;
-  else if (tipo.includes('Sobre'))   val = proj.valor_padrao_sobreaviso;
-  else                               val = proj.valor_padrao_12h;
+  val = valorPadraoDe(proj, _setorAtualParaValor(), tipo);
   if (val) {
     campo.value = val.toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2});
     if (badge) { badge.textContent = '✓ Valor padrão do projeto'; badge.style.display='inline'; }
@@ -4826,10 +4956,7 @@ function atualizarValorRapido() {
   const proj = projetos.find(p=>p.id===projId);
   if (!proj) return;
   let val = null;
-  if (tipo.includes('24'))           val = proj.valor_padrao_24h;
-  else if (tipo.includes('Noturno')) val = proj.valor_padrao_noturno;
-  else if (tipo.includes('Sobre'))   val = proj.valor_padrao_sobreaviso;
-  else                               val = proj.valor_padrao_12h;
+  val = valorPadraoDe(proj, _setorAtualParaValor(), tipo);
   if (val && !campo.value) {
     campo.value = val.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
     if (badge) { badge.textContent='✓ Valor padrão do projeto'; badge.style.display='inline'; }
@@ -5417,6 +5544,7 @@ async function initVagas(){
     sp.innerHTML = '<option value="">Todos os projetos</option>' +
       sortedProjetos().map(function(p){ return '<option value="'+p.id+'">'+p.nome+'</option>'; }).join('');
   }
+  vgRenderCidades();
   var se = document.getElementById('vg-esp');
   if (se && se.options.length <= 2) {
     var esps = [...new Set((medicos||[]).flatMap(function(m){ return m.especialidades || []; }))].sort(function(a,b){ return a.localeCompare(b,'pt-BR'); });
@@ -5445,6 +5573,8 @@ function vgPeriodoRapido(dias){
 
 function limparFiltrosVagas(){
   _vgSetoresSel = [];
+  var sc = document.getElementById('vg-cidade'); if (sc) sc.value = '';
+  vgCidadeChange();
   var sp = document.getElementById('vg-proj'); if (sp) sp.value = '';
   var se = document.getElementById('vg-esp');  if (se) se.value = '';
   var sr = document.getElementById('vg-rapido'); if (sr) sr.value = '7';
@@ -5453,24 +5583,90 @@ function limparFiltrosVagas(){
   renderVagas();
 }
 
-// Chips de setor — montados a partir dos lançamentos do projeto escolhido
+// Cidades vêm dos projetos cadastrados
+function vgRenderCidades(){
+  var sel = document.getElementById('vg-cidade');
+  if (!sel) return;
+  var atual = sel.value || '';
+  var cidades = [...new Set((projetos||[]).map(_vgCidadeDoProjeto).filter(Boolean))]
+    .sort(function(a,b){ return a.localeCompare(b,'pt-BR'); });
+  sel.innerHTML = '<option value="">Todas as cidades</option>' +
+    cidades.map(function(c){ return '<option value="'+c+'">'+c+'</option>'; }).join('');
+  if (cidades.indexOf(atual) !== -1) sel.value = atual;
+}
+
+function _vgCidadeDoProjeto(p){
+  var c = String(p && p.cidade || '').trim();
+  if (!c) return '';
+  return c + (p && p.uf ? ' / ' + String(p.uf).toUpperCase() : '');
+}
+
+// Trocar a cidade limita a lista de hospitais
+function vgCidadeChange(){
+  var cid = document.getElementById('vg-cidade')?.value || '';
+  var sp = document.getElementById('vg-proj');
+  if (sp) {
+    var lista = sortedProjetos().filter(function(p){ return !cid || _vgCidadeDoProjeto(p) === cid; });
+    sp.innerHTML = '<option value="">Todos os projetos</option>' +
+      lista.map(function(p){ return '<option value="'+p.id+'">'+p.nome+'</option>'; }).join('');
+  }
+  vgProjChange();
+}
+
+// Ao escolher o hospital, o setor começa em "Todos os setores"
+function vgProjChange(){
+  _vgSetoresSel = [];
+  _vgSetoresAbertos = false;
+  vgRenderSetores();
+  renderVagas();
+}
+
+var _vgSetoresAbertos = false;
+
 function vgRenderSetores(){
+  var bloco = document.getElementById('vg-setores-bloco');
   var el = document.getElementById('vg-setores');
-  if (!el) return;
+  if (!el || !bloco) return;
   var pid = document.getElementById('vg-proj')?.value || '';
-  var base = (lancamentos||[]).filter(function(l){ return !pid || l.projeto_id === pid; });
+  if (!pid) { bloco.style.display = 'none'; return; }
+  bloco.style.display = 'block';
+
+  var base = (lancamentos||[]).filter(function(l){ return l.projeto_id === pid; });
   var setores = [...new Set(base.map(function(l){ return String(l.setor||'').trim(); }).filter(Boolean))]
     .sort(function(a,b){ return a.localeCompare(b,'pt-BR'); });
   _vgSetoresSel = _vgSetoresSel.filter(function(x){ return setores.indexOf(x) !== -1; });
-  if (!setores.length){ el.innerHTML = '<span style="font-size:12px;color:var(--text3);">Nenhum setor encontrado.</span>'; return; }
-  el.innerHTML = setores.map(function(st){
-    var on = _vgSetoresSel.indexOf(st) !== -1;
-    return '<button type="button" onclick="vgToggleSetor(\''+String(st).replace(/'/g,"\\'")+'\')" ' +
-      'style="font-size:12px;padding:5px 11px;border-radius:99px;cursor:pointer;border:1.5px solid ' +
-      (on?'var(--blue);background:var(--blue);color:#fff;':'var(--border);background:#fff;color:var(--text2);') + '">' + st + '</button>';
-  }).join('');
+
+  if (!setores.length){
+    el.innerHTML = '<span style="font-size:12px;color:var(--text3);">Nenhum setor com lançamentos neste hospital.</span>';
+    return;
+  }
+
+  var todos = (_vgSetoresSel.length === 0);
+  var chipTodos = '<button type="button" onclick="vgToggleTodosSetores()" ' +
+    'title="Clique para escolher setores específicos" ' +
+    'style="font-size:12px;padding:5px 12px;border-radius:99px;cursor:pointer;font-weight:600;border:1.5px solid ' +
+    (todos ? 'var(--blue);background:var(--blue);color:#fff;' : 'var(--border);background:#fff;color:var(--text2);') + '">' +
+    'Todos os setores ' + (_vgSetoresAbertos ? '&#9652;' : '&#9662;') + '</button>';
+
+  var detalhe = '';
+  if (_vgSetoresAbertos || !todos) {
+    detalhe = '<span style="flex-basis:100%;height:0;"></span>' + setores.map(function(st){
+      var on = _vgSetoresSel.indexOf(st) !== -1;
+      return '<button type="button" onclick="vgToggleSetor(\''+String(st).replace(/'/g,"\\'")+'\')" ' +
+        'style="font-size:12px;padding:5px 11px;border-radius:99px;cursor:pointer;border:1.5px solid ' +
+        (on?'var(--blue);background:var(--blue);color:#fff;':'var(--border);background:#fff;color:var(--text2);') + '">' + st + '</button>';
+    }).join('');
+  }
+  el.innerHTML = chipTodos + detalhe;
 }
 
+// "Todos os setores": abre/fecha a lista detalhada e limpa a seleção
+function vgToggleTodosSetores(){
+  if (_vgSetoresSel.length) { _vgSetoresSel = []; _vgSetoresAbertos = true; }
+  else { _vgSetoresAbertos = !_vgSetoresAbertos; }
+  vgRenderSetores();
+  renderVagas();
+}
 function vgToggleSetor(st){
   var i = _vgSetoresSel.indexOf(st);
   if (i === -1) _vgSetoresSel.push(st); else _vgSetoresSel.splice(i,1);
@@ -5492,6 +5688,7 @@ async function renderVagas(){
   var d1 = document.getElementById('vg-d1')?.value || '';
   var d2 = document.getElementById('vg-d2')?.value || '';
   var pid = document.getElementById('vg-proj')?.value || '';
+  var cid = document.getElementById('vg-cidade')?.value || '';
   var esp = document.getElementById('vg-esp')?.value || '';
 
   var lista = (lancamentos||[]).filter(function(l){
@@ -5499,6 +5696,10 @@ async function renderVagas(){
     if (d1 && l.data < d1) return false;
     if (d2 && l.data > d2) return false;
     if (pid && l.projeto_id !== pid) return false;
+    if (cid) {
+      var _p = (projetos||[]).find(function(x){ return x.id === l.projeto_id; });
+      if (_vgCidadeDoProjeto(_p) !== cid) return false;
+    }
     if (_vgSetoresSel.length && _vgSetoresSel.indexOf(String(l.setor||'').trim()) === -1) return false;
     var alvo = l.especialidades_alvo || [];
     if (esp === '__sem__' && alvo.length) return false;
@@ -5562,7 +5763,9 @@ async function renderVagas(){
         '<div style="font-size:11px;color:var(--text3);">'+semanaN[new Date(l.data+'T12:00:00').getDay()]+'</div></td>' +
       '<td style="white-space:nowrap;color:'+corPrazo+';font-weight:600;font-size:12px;">'+prazo+'</td>' +
       '<td class="mono">'+String(l.hora_ini||'').slice(0,5)+'–'+String(l.hora_fim||'').slice(0,5)+'</td>' +
-      '<td>'+(l.projeto||'—')+tagCob+tagTr+'</td>' +
+      '<td>'+(l.projeto||'—')+tagCob+
+        (function(){ var _pp=(projetos||[]).find(function(x){return x.id===l.projeto_id;}); var _c=_vgCidadeDoProjeto(_pp); return _c?'<div style="font-size:11px;color:var(--text3);">'+_c+'</div>':''; })()+
+        tagTr+'</td>' +
       '<td><strong>'+(l.setor||'—')+'</strong></td>' +
       '<td>'+(l.tipo||'—')+'</td>' +
       '<td>'+espTxt+'</td>' +
@@ -7599,10 +7802,7 @@ function atualizarDuracaoLote() {
     const proj = projetos.find(p => p.id === projId);
     if (proj) {
       let val = null;
-      if (tipo.includes('24'))           val = proj.valor_padrao_24h;
-      else if (tipo.includes('Noturno')) val = proj.valor_padrao_noturno;
-      else if (tipo.includes('Sobre'))   val = proj.valor_padrao_sobreaviso;
-      else                               val = proj.valor_padrao_12h;
+      val = valorPadraoDe(proj, (document.getElementById('lote-setor')?.value || ''), tipo);
       const cv = document.getElementById('lote-valor');
       if (cv && !cv.dataset.manual) cv.value = val ? val.toLocaleString('pt-BR',{minimumFractionDigits:2}) : '';
     }
@@ -9520,10 +9720,39 @@ async function importarMedicosXLSX_v2(event) {
 
 var _setoresCache = {};
 
+// Valor sugerido: o do SETOR tem prioridade; o do projeto é fallback
+// Descobre o setor escolhido na tela ativa (modal rápido ou calendário)
+function _setorAtualParaValor(){
+  var sel = document.getElementById('mr-setor');
+  if (sel) {
+    if (sel.value === '_outro') {
+      var cust = document.getElementById('mr-setor-custom');
+      return cust ? cust.value.trim() : '';
+    }
+    if (sel.value) return sel.value;
+  }
+  var cal = document.getElementById('cal-setor');
+  return cal ? (cal.value || '') : '';
+}
+
+function valorPadraoDe(proj, setorNome, tipo){
+  tipo = String(tipo || '');
+  var chave = tipo.includes('24') ? 'valor_padrao_24h'
+            : tipo.includes('Noturno') ? 'valor_padrao_noturno'
+            : tipo.includes('Sobre') ? 'valor_padrao_sobreaviso'
+            : 'valor_padrao_12h';
+  if (proj && setorNome) {
+    var lista = _setoresCache[proj.id] || [];
+    var st = lista.find(function(x){ return String(x.nome).trim() === String(setorNome).trim(); });
+    if (st && st[chave] != null && st[chave] !== '') return st[chave];
+  }
+  return proj ? proj[chave] : null;
+}
+
 async function carregarSetoresProjeto(projetoId) {
   if (!projetoId) return [];
   if (_setoresCache[projetoId]) return _setoresCache[projetoId];
-  var res = await sbApi('/setores?projeto_id=eq.' + projetoId + '&ativo=eq.true&select=id,nome&order=nome');
+  var res = await sbApi('/setores?projeto_id=eq.' + projetoId + '&ativo=eq.true&select=id,nome,valor_padrao_12h,valor_padrao_24h,valor_padrao_noturno,valor_padrao_sobreaviso&order=nome');
   _setoresCache[projetoId] = res || [];
   return _setoresCache[projetoId];
 }
@@ -9568,6 +9797,8 @@ async function onMrProjChange() {
 }
 
 async function onMrSetorChange() {
+  // o valor sugerido agora depende do setor
+  try { setTimeout(function(){ atualizarValorRapido(); }, 0); } catch(e){}
   var setor = document.getElementById('mr-setor') ? document.getElementById('mr-setor').value : '';
   var projId = document.getElementById('mr-proj') ? document.getElementById('mr-proj').value : '';
 
@@ -9715,17 +9946,70 @@ async function renderSetoresList() {
   el.innerHTML = '<div class="empty">Carregando...</div>';
   var res = await sbApi('/setores?projeto_id=eq.' + _setorProjId + '&order=nome&select=*') || [];
   if (!res.length) { el.innerHTML = '<div class="empty">Nenhum setor ainda.</div>'; return; }
+  _setoresDoModal = res;
   el.innerHTML = res.map(function(s) {
     var ativoBtn = s.ativo ? 'Desativar' : 'Ativar';
     var ativoVal = s.ativo ? 'false' : 'true';
-    var nomeHtml = s.nome + (s.ativo ? '' : ' <span style="font-size:11px;color:var(--text3);">(inativo)</span>');
+    var _rem = [];
+    if (s.valor_padrao_12h)        _rem.push('12h ' + fBRL(s.valor_padrao_12h));
+    if (s.valor_padrao_24h)        _rem.push('24h ' + fBRL(s.valor_padrao_24h));
+    if (s.valor_padrao_noturno)    _rem.push('Not. ' + fBRL(s.valor_padrao_noturno));
+    if (s.valor_padrao_sobreaviso) _rem.push('Sob. ' + fBRL(s.valor_padrao_sobreaviso));
+    var remHtml = _rem.length
+      ? '<div style="font-size:11px;color:var(--text3);margin-top:2px;">' + _rem.join(' · ') + '</div>'
+      : '<div style="font-size:11px;color:var(--amber);margin-top:2px;">Sem remuneração definida</div>';
+    var nomeHtml = s.nome + (s.ativo ? '' : ' <span style="font-size:11px;color:var(--text3);">(inativo)</span>') + remHtml;
     return '<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:var(--bg3);border-radius:var(--radius);border:1px solid var(--border);">' +
       '<span style="font-size:14px;font-weight:500;">' + nomeHtml + '</span>' +
       '<div style="display:flex;gap:6px;">' +
+      '<button class="btn btn-sm btn-ghost" onclick="abrirEditarSetor(\'' + s.id + '\')">Editar</button>' +
       '<button class="btn btn-sm btn-ghost" onclick="toggleSetor(\'' + s.id + '\',' + ativoVal + ')">' + ativoBtn + '</button>' +
       '<button class="btn btn-sm btn-danger" onclick="deletarSetor(\'' + s.id + '\')">&#10005;</button>' +
       '</div></div>';
   }).join('');
+}
+
+var _setoresDoModal = [];
+
+function abrirEditarSetor(id){
+  var st = (_setoresDoModal||[]).find(function(x){ return String(x.id) === String(id); });
+  if(!st){ toast('Setor não encontrado', true); return; }
+  var g = function(i){ return document.getElementById(i); };
+  var f = function(v){ return (v == null || v === '') ? '' : Number(v).toLocaleString('pt-BR',{minimumFractionDigits:2}); };
+  g('es-id').value = st.id;
+  g('es-nome').value = st.nome || '';
+  g('es-v12').value = f(st.valor_padrao_12h);
+  g('es-v24').value = f(st.valor_padrao_24h);
+  g('es-vn').value  = f(st.valor_padrao_noturno);
+  g('es-vs').value  = f(st.valor_padrao_sobreaviso);
+  g('modal-editar-setor').classList.add('open');
+}
+
+function fecharEditarSetor(){
+  var m = document.getElementById('modal-editar-setor');
+  if(m) m.classList.remove('open');
+}
+
+async function salvarEdicaoSetor(){
+  var g = function(i){ return document.getElementById(i); };
+  var id = g('es-id').value;
+  var nome = g('es-nome').value.trim();
+  if(!nome){ toast('Nome do setor é obrigatório', true); return; }
+  var payload = {
+    nome: nome,
+    valor_padrao_12h: parseBRLField('es-v12') || null,
+    valor_padrao_24h: parseBRLField('es-v24') || null,
+    valor_padrao_noturno: parseBRLField('es-vn') || null,
+    valor_padrao_sobreaviso: parseBRLField('es-vs') || null
+  };
+  var r = await sbApi('/setores?id=eq.' + id, {
+    method:'PATCH', headers:{'Prefer':'return=minimal'}, body: JSON.stringify(payload)
+  });
+  if(r === null){ toast('Erro ao salvar setor', true); return; }
+  _setoresCache = {};
+  toast('Setor atualizado!');
+  fecharEditarSetor();
+  await renderSetoresList();
 }
 
 async function adicionarSetor() {
