@@ -126,6 +126,90 @@ export default async function handler(req, res) {
       }
     }
 
+    // ── LANÇAMENTOS DO MÉDICO (tira a tabela `lancamentos` do navegador) ─
+    if (['lanc-meus','lanc-abertos','lanc-passar','lanc-ausencia','lanc-aceitar'].includes(req.query.action)) {
+      if (!rateLimit(ip, 60, 60_000)) return json(res, 429, { erro: 'Muitas tentativas. Aguarde 1 minuto.' });
+      const { token_acesso, dados } = req.body || {};
+      const medico = await medicoPorToken(token_acesso);
+      if (!medico) return json(res, 401, { erro: 'Sessão inválida. Faça login novamente.' });
+
+      const hoje = new Date().toISOString().slice(0, 10);
+
+      // Meus plantões (sempre escopado ao médico autenticado)
+      if (req.query.action === 'lanc-meus') {
+        const d1 = dados?.d1 || hoje;
+        const d2 = dados?.d2 || null;
+        const campos = dados?.campos || '*,projetos(nome)';
+        let path = `/rest/v1/lancamentos?medico_id=eq.${medico.id}&data=gte.${d1}` +
+                   `&select=${encodeURIComponent(campos)}&order=data.asc&limit=500`;
+        if (d2) path += `&data=lte.${d2}`;
+        const r = await sbAdmin(path);
+        return json(res, 200, { ok: true, lancamentos: r || [] });
+      }
+
+      // Vagas em aberto (a filtragem por público-alvo continua no app)
+      if (req.query.action === 'lanc-abertos') {
+        const r = await sbAdmin(
+          `/rest/v1/lancamentos?aberto=eq.true&data=gte.${hoje}` +
+          `&select=*,projetos(nome,admin_id)&order=data,hora_ini&limit=500`
+        );
+        return json(res, 200, { ok: true, lancamentos: r || [] });
+      }
+
+      // Confere se o plantão é mesmo do médico antes de qualquer escrita
+      async function meuPlantao(id) {
+        if (!id) return null;
+        const r = await sbAdmin(`/rest/v1/lancamentos?id=eq.${id}&select=id,medico_id&limit=1`);
+        const l = r?.[0];
+        return (l && l.medico_id === medico.id) ? l : null;
+      }
+
+      // Deixar o plantão em aberto para o projeto
+      if (req.query.action === 'lanc-passar') {
+        const l = await meuPlantao(dados?.lancamento_id);
+        if (!l) return json(res, 403, { erro: 'Este plantão não é seu.' });
+        await sbAdmin(`/rest/v1/lancamentos?id=eq.${l.id}`, {
+          method: 'PATCH', headers: { Prefer: 'return=minimal' },
+          body: JSON.stringify({
+            aberto: true, publico_alvo: 'projeto',
+            transferido_de: medico.id, transferido_de_nome: medico.nome || '',
+            medico_id: null, confirmado: false,
+          }),
+        });
+        return json(res, 200, { ok: true });
+      }
+
+      // Avisar que não vai comparecer
+      if (req.query.action === 'lanc-ausencia') {
+        const l = await meuPlantao(dados?.lancamento_id);
+        if (!l) return json(res, 403, { erro: 'Este plantão não é seu.' });
+        await sbAdmin(`/rest/v1/lancamentos?id=eq.${l.id}`, {
+          method: 'PATCH', headers: { Prefer: 'return=minimal' },
+          body: JSON.stringify({ ausencia_informada: true }),
+        });
+        return json(res, 200, { ok: true });
+      }
+
+      // Aceitar transferência: só se existir transferência pendente para este médico
+      if (req.query.action === 'lanc-aceitar') {
+        const lid = dados?.lancamento_id;
+        if (!lid) return json(res, 400, { erro: 'lancamento_id obrigatório' });
+        const tr = await sbAdmin(
+          `/rest/v1/transferencias?lancamento_id=eq.${lid}` +
+          `&medico_destino_id=eq.${medico.id}&select=id,status&limit=1`
+        );
+        if (!tr?.length) return json(res, 403, { erro: 'Não há transferência deste plantão para você.' });
+        await sbAdmin(`/rest/v1/lancamentos?id=eq.${lid}`, {
+          method: 'PATCH', headers: { Prefer: 'return=minimal' },
+          body: JSON.stringify({
+            medico_id: medico.id, confirmado: true,
+            confirmado_em: new Date().toISOString(),
+          }),
+        });
+        return json(res, 200, { ok: true });
+      }
+    }
+
     // ── NOTIFICAR TRANSFERÊNCIA ─────────────────────────────────────────
     // Chamado pelo app do médico após criar a solicitação. Trava anti-spam:
     // só dispara se a transferência existir e estiver pendente.
