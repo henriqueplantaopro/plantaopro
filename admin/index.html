@@ -6426,24 +6426,111 @@ function renderProjSetoresBlocos(pref, elId, vinculados, setoresPorProj){
   if(!el) return;
   vinculados = vinculados || [];
   setoresPorProj = setoresPorProj || {};
-  el.innerHTML = sortedProjetos().map(function(p){
-    const marcado = vinculados.indexOf(p.id) !== -1;
-    return '<div style="border:1px solid '+(marcado?'var(--blue)':'var(--border)')+';border-radius:var(--radius);padding:6px 10px;margin-bottom:6px;background:var(--bg2);">' +
-      '<label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;font-weight:600;">' +
-        '<input type="checkbox" class="'+pref+'-proj-chk" value="'+p.id+'" '+(marcado?'checked':'')+' onchange="onProjChkChange(\''+pref+'\',\''+p.id+'\')" style="accent-color:var(--blue);"> '+p.nome +
-      '</label>' +
-      '<div id="'+pref+'-set-'+p.id+'" style="display:'+(marcado?'block':'none')+';margin-top:6px;padding-left:20px;"></div>' +
-    '</div>';
-  }).join('');
+  // Guarda a seleção inicial para o painel montar o estado certo
+  el.dataset.setoresIni = JSON.stringify(setoresPorProj || {});
+  el.innerHTML =
+    '<div style="position:relative;">' +
+      '<button type="button" id="'+pref+'-dd-btn" onclick="toggleDropProjetos(\''+pref+'\')" ' +
+        'style="width:100%;text-align:left;padding:9px 12px;border:1px solid var(--border);border-radius:var(--radius);background:#fff;cursor:pointer;font-size:13px;display:flex;justify-content:space-between;align-items:center;gap:8px;">' +
+        '<span id="'+pref+'-dd-label">Selecione os projetos…</span><span style="color:var(--text3);">&#9662;</span>' +
+      '</button>' +
+      '<div id="'+pref+'-dd-panel" style="display:none;position:absolute;z-index:60;left:0;right:0;top:100%;margin-top:4px;background:#fff;border:1px solid var(--border2);border-radius:var(--radius);box-shadow:0 8px 24px rgba(0,0,0,0.12);max-height:320px;overflow:auto;">' +
+        '<div style="position:sticky;top:0;background:#fff;padding:8px;border-bottom:1px solid var(--border);">' +
+          '<input type="text" id="'+pref+'-dd-busca" placeholder="Buscar projeto…" oninput="filtrarDropProjetos(\''+pref+'\')" ' +
+            'style="width:100%;padding:7px 9px;border:1px solid var(--border);border-radius:8px;font-size:13px;">' +
+        '</div>' +
+        '<div id="'+pref+'-dd-lista"></div>' +
+      '</div>' +
+    '</div>' +
+    '<div id="'+pref+'-sel-lista" style="margin-top:8px;"></div>';
+
+  // itens do dropdown (checkbox por projeto)
+  var lista = document.getElementById(pref+'-dd-lista');
+  if (lista) {
+    lista.innerHTML = sortedProjetos().map(function(p){
+      var marcado = vinculados.indexOf(p.id) !== -1;
+      return '<label class="'+pref+'-dd-item" data-nome="'+String(p.nome).toLowerCase()+'" ' +
+        'style="display:flex;align-items:center;gap:8px;padding:8px 10px;font-size:13px;cursor:pointer;border-bottom:1px solid var(--border);">' +
+        '<input type="checkbox" class="'+pref+'-proj-chk" value="'+p.id+'" '+(marcado?'checked':'')+' ' +
+          'onchange="onProjChkChange(\''+pref+'\',\''+p.id+'\')" style="accent-color:var(--blue);"> ' +
+        '<span>'+p.nome+'</span></label>';
+    }).join('');
+  }
+  renderProjSelecionados(pref);
   vinculados.forEach(function(pid){ carregarSetoresNoBloco(pref, pid, setoresPorProj[pid]); });
 }
 
+function toggleDropProjetos(pref){
+  var painel = document.getElementById(pref+'-dd-panel');
+  if(!painel) return;
+  var abrir = painel.style.display === 'none';
+  painel.style.display = abrir ? 'block' : 'none';
+  if(abrir){ var b = document.getElementById(pref+'-dd-busca'); if(b){ b.value=''; filtrarDropProjetos(pref); b.focus(); } }
+}
+
+function filtrarDropProjetos(pref){
+  var termo = (document.getElementById(pref+'-dd-busca')?.value || '').toLowerCase().trim();
+  document.querySelectorAll('.'+pref+'-dd-item').forEach(function(it){
+    it.style.display = (!termo || it.dataset.nome.indexOf(termo) !== -1) ? 'flex' : 'none';
+  });
+}
+
+// Cada projeto marcado vira um bloco com os setores dele
+function renderProjSelecionados(pref){
+  var alvo = document.getElementById(pref+'-sel-lista');
+  var lbl  = document.getElementById(pref+'-dd-label');
+  if(!alvo) return;
+  var marcados = [].slice.call(document.querySelectorAll('.'+pref+'-proj-chk:checked')).map(function(c){ return c.value; });
+  if(lbl) lbl.textContent = marcados.length
+    ? marcados.length + ' projeto(s) selecionado(s)'
+    : 'Selecione os projetos…';
+  if(!marcados.length){
+    alvo.innerHTML = '<div style="font-size:12px;color:var(--text3);">Nenhum projeto vinculado ainda.</div>';
+    return;
+  }
+  // preserva os blocos de setor já renderizados
+  var existentes = {};
+  marcados.forEach(function(pid){
+    var b = document.getElementById(pref+'-set-'+pid);
+    if(b) existentes[pid] = b.innerHTML;
+  });
+  alvo.innerHTML = marcados.map(function(pid){
+    var p = (projetos||[]).find(function(x){ return x.id === pid; });
+    return '<div style="border:1px solid var(--blue);border-radius:var(--radius);padding:8px 10px;margin-bottom:6px;background:var(--bg2);">' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">' +
+        '<span style="font-size:12px;font-weight:600;">'+(p?p.nome:'Projeto')+'</span>' +
+        '<button type="button" onclick="desmarcarProjeto(\''+pref+'\',\''+pid+'\')" title="Remover" ' +
+          'style="border:none;background:none;cursor:pointer;color:var(--text3);font-size:15px;line-height:1;">&#10005;</button>' +
+      '</div>' +
+      '<div id="'+pref+'-set-'+pid+'" style="margin-top:6px;padding-left:2px;">'+(existentes[pid]||'')+'</div>' +
+    '</div>';
+  }).join('');
+}
+
+function desmarcarProjeto(pref, pid){
+  var chk = document.querySelector('.'+pref+'-proj-chk[value="'+pid+'"]');
+  if(chk){ chk.checked = false; onProjChkChange(pref, pid); }
+}
+
+// Fecha o dropdown ao clicar fora
+document.addEventListener('click', function(e){
+  ['med','em'].forEach(function(pref){
+    var painel = document.getElementById(pref+'-dd-panel');
+    var btn = document.getElementById(pref+'-dd-btn');
+    if(!painel || painel.style.display === 'none') return;
+    if(e.target.closest && (e.target.closest('#'+pref+'-dd-panel') || e.target.closest('#'+pref+'-dd-btn'))) return;
+    painel.style.display = 'none';
+  });
+});
 async function onProjChkChange(pref, pid){
   const chk = document.querySelector('.'+pref+'-proj-chk[value="'+pid+'"]');
-  const box = document.getElementById(pref+'-set-'+pid);
-  if(!chk || !box) return;
-  if(chk.checked){ box.style.display='block'; await carregarSetoresNoBloco(pref, pid, null); }
-  else { box.style.display='none'; box.innerHTML=''; box.dataset.carregado=''; }
+  if(!chk) return;
+  renderProjSelecionados(pref);          // cria/remove o bloco do projeto
+  if(chk.checked){
+    var ini = {};
+    try { ini = JSON.parse(document.getElementById(pref+'-projetos-check')?.dataset.setoresIni || '{}'); } catch(e){}
+    await carregarSetoresNoBloco(pref, pid, ini[pid] || null);
+  }
 }
 
 async function carregarSetoresNoBloco(pref, pid, selecao){
