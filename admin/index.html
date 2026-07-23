@@ -1277,6 +1277,7 @@ tr:hover td{background:var(--bg3);}
             <button class="btn btn-ghost btn-sm" onclick="irSemanaAtual()">Hoje</button>
           </div>
           <div style="display:flex;gap:8px;">
+            <button class="btn btn-ghost" id="btn-sel-multi" onclick="toggleSelecaoMultipla()" title="Selecionar vários plantões para copiar ou mover de uma vez (somente no computador)">Seleção múltipla</button>
             <button class="btn btn-success" onclick="copiarSemana()" title="Copia todos os plantões desta semana para a próxima">Copiar semana</button>
           </div>
         </div>
@@ -3177,13 +3178,7 @@ function abrirEditarMedico(id) {
 
   // Projetos vinculados
   const projVinc = m.projetos_vinculados || [];
-  const elProj = document.getElementById('em-projetos-check');
-  if (elProj) {
-    elProj.innerHTML = sortedProjetos().map(p => `
-      <label style="display:flex;align-items:center;gap:5px;font-size:12px;background:var(--bg3);padding:4px 10px;border-radius:99px;cursor:pointer;border:1px solid ${projVinc.includes(p.id)?'var(--blue)':'var(--border)'};">
-        <input type="checkbox" class="em-proj-chk" value="${p.id}" ${projVinc.includes(p.id)?'checked':''} style="accent-color:var(--blue);"> ${p.nome}
-      </label>`).join('');
-  }
+  renderProjSetoresBlocos('em', 'em-projetos-check', projVinc, m.setores_por_projeto || {});
 
   document.getElementById('modal-editar-med').classList.add('open');
 
@@ -3249,6 +3244,7 @@ async function salvarEdicaoMedico() {
     tipo_vinculo:   document.getElementById('em-vinculo')?.value || null,
     status_contrato:document.getElementById('em-contrato')?.value || 'sem_contrato',
     especialidades: [...document.querySelectorAll('.em-esp-chk:checked')].map(c=>c.value),
+    setores_por_projeto: coletarSetoresPorProjeto('em'),
     especialidade:  [...document.querySelectorAll('.em-esp-chk:checked')].map(c=>c.value).join(', '),
     valor_hora:     parseFloat(document.getElementById('em-valor').value) || 0,
     endereco_rua:    document.getElementById('em-rua')?.value.trim()||null,
@@ -4395,7 +4391,7 @@ function renderSemanaGrid(dias, dows, hj, pid, mid) {
     var _sidSem = document.getElementById('cal-setor')?.value || '';
     if(_sidSem) evts=evts.filter(l=>(l.setor||'')===_sidSem);
 
-    html += `<td class="sem-td${isHoje?' hoje-col':''}" style="padding:0;vertical-align:top;">`;
+    html += `<td class="sem-td${isHoje?' hoje-col':''}" data-ds="${ds}" data-pid="${pid||''}" style="padding:0;vertical-align:top;">`;
 
     // Renderizar cada categoria
     categorias.forEach(cat => {
@@ -4423,14 +4419,14 @@ function renderSemanaGrid(dias, dows, hj, pid, mid) {
         }
         // Cards das vagas abertas restantes
         for (let vi = 0; vi < vagasLivres; vi++) {
-          html += `<div class="sem-card ${cat.cls} aberto">
+          html += `<div class="sem-card ${cat.cls} aberto" data-lid="${l.id}" draggable="true">
             <button class="sem-card-opts" onclick="event.stopPropagation();abrirCtxChip(event,'${l.id}','${ds}','${pid||l.projeto_id}')" title="Opções">⋮</button>
             <div class="sem-card-nome">Vaga ${preenchidas + vi + 1}/${totalVagas}${l.transferido_de?`<span title="Repassado por ${l.transferido_de_nome||'colega'}" style="font-size:9px;background:#f3e8ff;color:#7c3aed;padding:1px 4px;border-radius:99px;margin-left:3px;">↪ ${(l.transferido_de_nome||'colega').split(' ')[0]}</span>`:''}${l.cobertura?'<span style="font-size:9px;background:#eef0f8;color:#566099;padding:1px 4px;border-radius:99px;margin-left:3px;">Cob.</span>':''}</div>
             <div class="sem-card-hora">${(l.hora_ini||'').slice(0,5)}–${(l.hora_fim||'').slice(0,5)}</div> ${l.setor?`<div class="sem-card-setor">${l.setor}</div>`:''}
           </div>`;
         }
       } else {
-        html += `<div class="sem-card ${cat.cls}">
+        html += `<div class="sem-card ${cat.cls}" data-lid="${l.id}" draggable="true">
           <button class="sem-card-opts" onclick="event.stopPropagation();abrirCtxChip(event,'${l.id}','${ds}','${pid||l.projeto_id}')" title="Opções">⋮</button>
           <div class="sem-card-nome" onclick="verDetalhesSemana('${l.id}')">${(l.medico||'').split(' ').slice(0,2).join(' ')}${l.cobertura?'<span style="font-size:9px;background:#eef0f8;color:#566099;padding:1px 4px;border-radius:99px;margin-left:3px;">Cob.</span>':''}</div>
           <div class="sem-card-hora">${(l.hora_ini||'').slice(0,5)}–${(l.hora_fim||'').slice(0,5)}</div> ${l.setor?`<div class="sem-card-setor">${l.setor}</div>`:''}
@@ -5309,6 +5305,221 @@ async function pvSelecionar(medId) {
   } catch (e) {}
 }
 
+// ─── SELEÇÃO MÚLTIPLA / MOVIMENTAÇÃO EM MASSA (somente PC) ──────────
+var _modoSelecao = false;
+var _selMulti = [];
+
+function _ehDesktop(){
+  try { return window.matchMedia('(pointer:fine)').matches && window.innerWidth >= 1000; }
+  catch(e){ return window.innerWidth >= 1000; }
+}
+
+function toggleSelecaoMultipla(){
+  if(!_modoSelecao && !_ehDesktop()){
+    toast('A seleção múltipla está disponível apenas no computador', true);
+    return;
+  }
+  _modoSelecao = !_modoSelecao;
+  if(!_modoSelecao) _selMulti = [];
+  const btn = document.getElementById('btn-sel-multi');
+  if(btn) btn.className = 'btn ' + (_modoSelecao ? 'btn-primary' : 'btn-ghost');
+  pintarSelecao();
+  atualizarBarraSelecao();
+  if(_modoSelecao) toast('Clique nos plantões para selecionar');
+}
+
+function pintarSelecao(){
+  document.querySelectorAll('.sem-card[data-lid]').forEach(function(c){
+    const sel = _selMulti.indexOf(c.dataset.lid) !== -1;
+    c.style.outline = sel ? '2px solid var(--blue)' : '';
+    c.style.background = sel ? 'var(--blue-light)' : '';
+    c.style.cursor = _modoSelecao ? 'pointer' : '';
+  });
+}
+
+function atualizarBarraSelecao(){
+  let barra = document.getElementById('barra-selecao');
+  if(!barra){
+    barra = document.createElement('div');
+    barra.id = 'barra-selecao';
+    barra.style.cssText = 'position:fixed;left:50%;transform:translateX(-50%);bottom:18px;z-index:1200;background:var(--bg2);border:1px solid var(--border2);box-shadow:0 6px 24px rgba(0,0,0,0.18);border-radius:99px;padding:10px 16px;display:none;align-items:center;gap:12px;';
+    document.body.appendChild(barra);
+  }
+  if(!_modoSelecao || !_selMulti.length){ barra.style.display='none'; return; }
+  barra.style.display = 'flex';
+  barra.innerHTML =
+    '<span style="font-size:13px;font-weight:600;">' + _selMulti.length + ' plantão(ões) selecionado(s)</span>' +
+    '<button class="btn btn-primary btn-sm" onclick="abrirMoverEmMassa()">Copiar / mover…</button>' +
+    '<button class="btn btn-ghost btn-sm" onclick="limparSelecao()">Limpar</button>';
+}
+
+function limparSelecao(){ _selMulti = []; pintarSelecao(); atualizarBarraSelecao(); }
+
+// Intercepta cliques nos cards quando o modo está ligado
+document.addEventListener('click', function(e){
+  if(!_modoSelecao) return;
+  const card = e.target.closest ? e.target.closest('.sem-card[data-lid]') : null;
+  if(!card) return;
+  e.preventDefault(); e.stopPropagation();
+  const id = card.dataset.lid;
+  const i = _selMulti.indexOf(id);
+  if(i === -1) _selMulti.push(id); else _selMulti.splice(i,1);
+  pintarSelecao(); atualizarBarraSelecao();
+}, true);
+
+function abrirMoverEmMassa(){
+  if(!_selMulti.length) return;
+  let m = document.getElementById('modal-mover-massa');
+  if(!m){
+    m = document.createElement('div');
+    m.id = 'modal-mover-massa';
+    m.className = 'modal-overlay';
+    m.innerHTML =
+      '<div class="modal" style="max-width:460px;">' +
+        '<div class="modal-header"><div class="modal-title">Copiar ou mover plantões</div>' +
+        '<button class="modal-close" onclick="document.getElementById(\'modal-mover-massa\').classList.remove(\'open\')">✕</button></div>' +
+        '<div style="padding:16px;">' +
+          '<div id="mm-info" style="font-size:12px;color:var(--text2);margin-bottom:12px;"></div>' +
+          '<div class="form-group"><label>Projeto de destino</label><select id="mm-proj"></select></div>' +
+          '<div class="form-group"><label>Deslocar datas (semanas)</label><input type="number" id="mm-semanas" value="0" min="-12" max="12" style="max-width:90px;">' +
+            '<div style="font-size:11px;color:var(--text3);margin-top:3px;">0 = mantém as mesmas datas. 1 = joga tudo para a semana seguinte.</div></div>' +
+          '<div style="display:flex;gap:8px;margin-top:14px;">' +
+            '<button class="btn btn-primary" style="flex:1;" onclick="executarMassa(\'copiar\')">Copiar</button>' +
+            '<button class="btn btn-danger" style="flex:1;" onclick="executarMassa(\'mover\')">Mover</button>' +
+          '</div>' +
+          '<div style="font-size:11px;color:var(--text3);margin-top:10px;">Copiar cria novos plantões e mantém os originais. Mover altera os plantões existentes.</div>' +
+        '</div>' +
+      '</div>';
+    document.body.appendChild(m);
+  }
+  const sel = document.getElementById('mm-proj');
+  if(sel) sel.innerHTML = sortedProjetos().map(function(p){ return '<option value="'+p.id+'">'+p.nome+'</option>'; }).join('');
+  const info = document.getElementById('mm-info');
+  if(info) info.textContent = _selMulti.length + ' plantão(ões) selecionado(s).';
+  m.classList.add('open');
+}
+
+async function executarMassa(acao){
+  const projDest = document.getElementById('mm-proj')?.value || '';
+  const semanas = parseInt(document.getElementById('mm-semanas')?.value || '0', 10) || 0;
+  if(!projDest){ toast('Escolha o projeto de destino', true); return; }
+  const itens = _selMulti.slice();
+  if(!itens.length) return;
+  const verbo = acao === 'mover' ? 'MOVER' : 'COPIAR';
+  if(!confirm(verbo + ' ' + itens.length + ' plantão(ões) para o projeto selecionado?')) return;
+
+  let ok = 0, erro = 0;
+  for(let i=0; i<itens.length; i++){
+    const l = lancamentos.find(function(x){ return String(x.id) === String(itens[i]); });
+    if(!l){ erro++; continue; }
+    let novaData = l.data;
+    if(semanas !== 0){
+      const d = new Date(l.data + 'T12:00:00');
+      d.setDate(d.getDate() + semanas*7);
+      novaData = d.toISOString().slice(0,10);
+    }
+    try{
+      let res;
+      if(acao === 'mover'){
+        res = await sbApi('/lancamentos?id=eq.' + l.id, {
+          method:'PATCH', headers:{'Prefer':'return=minimal'},
+          body: JSON.stringify({ projeto_id: projDest, data: novaData })
+        });
+      } else {
+        res = await sbApi('/lancamentos', {
+          method:'POST',
+          body: JSON.stringify({
+            medico_id: l.medico_id, projeto_id: projDest, data: novaData,
+            hora_ini: l.hora_ini, hora_fim: l.hora_fim, horas: l.horas,
+            tipo: l.tipo, setor: l.setor||null,
+            honorario: l.honorario_bruto !== undefined ? l.honorario_bruto : (l.honorario||0),
+            valor_hora: l.valor_hora||0, obs: l.obs||null,
+            cobertura: !!l.cobertura, codigo_totvs: null, confirmado: !!l.medico_id
+          })
+        });
+      }
+      if(res !== null) ok++; else erro++;
+    }catch(e){ erro++; }
+  }
+  const mm = document.getElementById('modal-mover-massa');
+  if(mm) mm.classList.remove('open');
+  toast(ok + ' plantão(ões) ' + (acao==='mover'?'movido(s)':'copiado(s)') + (erro? ' · ' + erro + ' com erro':''));
+  limparSelecao();
+  await carregarLancamentos(true);
+  renderSemana();
+  renderCalAtual();
+}
+
+// ─── ARRASTAR E SOLTAR NO CALENDÁRIO SEMANAL (somente PC) ───────────
+var _dragLancId = null;
+
+document.addEventListener('dragstart', function(e){
+  const card = e.target.closest ? e.target.closest('.sem-card[data-lid]') : null;
+  if(!card){ return; }
+  if(!_ehDesktop()){ e.preventDefault(); return; }
+  if(_modoSelecao){ e.preventDefault(); return; }
+  _dragLancId = card.dataset.lid;
+  card.style.opacity = '0.45';
+  try{ e.dataTransfer.effectAllowed='move'; e.dataTransfer.setData('text/plain', _dragLancId); }catch(_){}
+});
+
+document.addEventListener('dragend', function(e){
+  const card = e.target.closest ? e.target.closest('.sem-card[data-lid]') : null;
+  if(card) card.style.opacity = '';
+  document.querySelectorAll('td.sem-td').forEach(function(td){ td.style.boxShadow=''; });
+  _dragLancId = null;
+});
+
+document.addEventListener('dragover', function(e){
+  if(!_dragLancId) return;
+  const td = e.target.closest ? e.target.closest('td.sem-td') : null;
+  if(!td) return;
+  e.preventDefault();
+  try{ e.dataTransfer.dropEffect='move'; }catch(_){}
+  td.style.boxShadow = 'inset 0 0 0 2px var(--blue)';
+});
+
+document.addEventListener('dragleave', function(e){
+  const td = e.target.closest ? e.target.closest('td.sem-td') : null;
+  if(td) td.style.boxShadow = '';
+});
+
+document.addEventListener('drop', async function(e){
+  if(!_dragLancId) return;
+  const td = e.target.closest ? e.target.closest('td.sem-td') : null;
+  if(!td) return;
+  e.preventDefault();
+  td.style.boxShadow = '';
+  const id = _dragLancId; _dragLancId = null;
+  const novoDs = td.dataset.ds || '';
+  const novoPid = td.dataset.pid || '';
+  const l = lancamentos.find(function(x){ return String(x.id)===String(id); });
+  if(!l || !novoDs) return;
+  const mudouData = (l.data !== novoDs);
+  const mudouProj = (novoPid && novoPid !== l.projeto_id);
+  if(!mudouData && !mudouProj) return;
+
+  const projNome = novoPid ? (projetos.find(function(p){return p.id===novoPid;})||{}).nome : null;
+  let msg = 'Mover o plantão de ' + (l.medico||'—') + '?';
+  if(mudouData) msg += '\n\nData: ' + fDate(l.data) + '  ->  ' + fDate(novoDs);
+  if(mudouProj) msg += '\nProjeto: ' + (l.projeto||'—') + '  ->  ' + (projNome||'—');
+  if(!confirm(msg)) return;
+
+  const payload = { data: novoDs };
+  if(mudouProj) payload.projeto_id = novoPid;
+  const res = await sbApi('/lancamentos?id=eq.' + id, {
+    method:'PATCH', headers:{'Prefer':'return=minimal'}, body: JSON.stringify(payload)
+  });
+  if(res !== null){
+    toast('Plantão movido');
+    await carregarLancamentos(true);
+    renderSemana();
+    renderCalAtual();
+  } else {
+    toast('Erro ao mover', true);
+  }
+});
+
 // Mostrar/esconder botões de colar em todas as células
 function atualizarBotoesColar() {
   document.querySelectorAll('.sem-colar-btn').forEach(btn => {
@@ -5658,14 +5869,81 @@ function resetOpcoesAberto() {
   if (ef) ef.value = '';
 }
 
+
+// ── SETORES POR PROJETO NO CADASTRO DE MÉDICO ────────────────────────
+// pref: 'med' (formulário novo) | 'em' (formulário de edição)
+function renderProjSetoresBlocos(pref, elId, vinculados, setoresPorProj){
+  const el = document.getElementById(elId);
+  if(!el) return;
+  vinculados = vinculados || [];
+  setoresPorProj = setoresPorProj || {};
+  el.innerHTML = sortedProjetos().map(function(p){
+    const marcado = vinculados.indexOf(p.id) !== -1;
+    return '<div style="border:1px solid '+(marcado?'var(--blue)':'var(--border)')+';border-radius:var(--radius);padding:6px 10px;margin-bottom:6px;background:var(--bg2);">' +
+      '<label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;font-weight:600;">' +
+        '<input type="checkbox" class="'+pref+'-proj-chk" value="'+p.id+'" '+(marcado?'checked':'')+' onchange="onProjChkChange(\''+pref+'\',\''+p.id+'\')" style="accent-color:var(--blue);"> '+p.nome +
+      '</label>' +
+      '<div id="'+pref+'-set-'+p.id+'" style="display:'+(marcado?'block':'none')+';margin-top:6px;padding-left:20px;"></div>' +
+    '</div>';
+  }).join('');
+  vinculados.forEach(function(pid){ carregarSetoresNoBloco(pref, pid, setoresPorProj[pid]); });
+}
+
+async function onProjChkChange(pref, pid){
+  const chk = document.querySelector('.'+pref+'-proj-chk[value="'+pid+'"]');
+  const box = document.getElementById(pref+'-set-'+pid);
+  if(!chk || !box) return;
+  if(chk.checked){ box.style.display='block'; await carregarSetoresNoBloco(pref, pid, null); }
+  else { box.style.display='none'; box.innerHTML=''; box.dataset.carregado=''; }
+}
+
+async function carregarSetoresNoBloco(pref, pid, selecao){
+  const box = document.getElementById(pref+'-set-'+pid);
+  if(!box) return;
+  box.innerHTML = '<div style="font-size:11px;color:var(--text3);">Carregando setores...</div>';
+  let sets = [];
+  try { sets = await carregarSetoresProjeto(pid) || []; } catch(e){}
+  const todos = (selecao === '__todos__');
+  const lista = Array.isArray(selecao) ? selecao : [];
+  if(!sets.length){
+    box.innerHTML = '<div style="font-size:11px;color:var(--text3);">Nenhum setor cadastrado neste projeto.</div>';
+    box.dataset.carregado='1';
+    return;
+  }
+  box.innerHTML =
+    '<label style="display:inline-flex;align-items:center;gap:5px;font-size:12px;margin-right:12px;font-weight:600;color:var(--blue);">' +
+      '<input type="checkbox" class="'+pref+'-set-todos" data-proj="'+pid+'" '+(todos?'checked':'')+' onchange="onSetorTodos(\''+pref+'\',\''+pid+'\')"> Todos os setores</label>' +
+    sets.map(function(sx){
+      const nm = String(sx.nome||'').replace(/"/g,'&quot;');
+      return '<label style="display:inline-flex;align-items:center;gap:5px;font-size:12px;margin-right:12px;">' +
+        '<input type="checkbox" class="'+pref+'-set-chk" data-proj="'+pid+'" value="'+nm+'" '+(lista.indexOf(sx.nome)!==-1?'checked':'')+' '+(todos?'disabled':'')+'> '+sx.nome+'</label>';
+    }).join('');
+  box.dataset.carregado='1';
+}
+
+function onSetorTodos(pref, pid){
+  const t = document.querySelector('.'+pref+'-set-todos[data-proj="'+pid+'"]');
+  const chks = document.querySelectorAll('.'+pref+'-set-chk[data-proj="'+pid+'"]');
+  if(!t) return;
+  chks.forEach(function(c){ c.disabled = t.checked; if(t.checked) c.checked = false; });
+}
+
+// Monta { projeto_id: "__todos__" | ["Setor A","Setor B"] }
+function coletarSetoresPorProjeto(pref){
+  const out = {};
+  document.querySelectorAll('.'+pref+'-proj-chk:checked').forEach(function(c){
+    const pid = c.value;
+    const t = document.querySelector('.'+pref+'-set-todos[data-proj="'+pid+'"]');
+    if(t && t.checked){ out[pid] = '__todos__'; return; }
+    const sel = [].slice.call(document.querySelectorAll('.'+pref+'-set-chk[data-proj="'+pid+'"]:checked')).map(function(x){ return x.value; });
+    if(sel.length) out[pid] = sel;
+  });
+  return out;
+}
+
 // Renderizar checkboxes de projetos no formulário de médico
 function renderMedProjetosCheck() {
-  const el = document.getElementById('med-projetos-check');
-  if (!el) return;
-  el.innerHTML = sortedProjetos().map(p => `
-    <label style="display:flex;align-items:center;gap:5px;font-size:12px;background:var(--bg3);padding:4px 10px;border-radius:99px;cursor:pointer;border:1px solid var(--border);">
-      <input type="checkbox" class="med-proj-chk" value="${p.id}" style="accent-color:var(--blue);"> ${p.nome}
-    </label>`).join('');
+  renderProjSetoresBlocos('med', 'med-projetos-check', [], {});
 }
 
 // Atualizar addMedico para salvar projetos_vinculados
@@ -5706,6 +5984,7 @@ async function addMedico() {
     rqes: _rqesArr,
     especialidade: espsVinc.join(', ') || '',
     especialidades: espsVinc,
+    setores_por_projeto: coletarSetoresPorProjeto('med'),
     valor_hora: 0,
     // endereço
     endereco_rua:   g('mn-rua'),
