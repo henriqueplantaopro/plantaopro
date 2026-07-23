@@ -4,8 +4,32 @@
 import { sbAdmin, json, setCors } from '../_lib.js';
 import { exigirSessao } from '../_auth.js';
 
-// Só tabelas que têm coluna admin_id. As demais entram depois, com regra própria.
-const ALLOW = new Set(['lancamentos', 'projetos', 'setores']);
+// Tabelas com coluna admin_id — escopadas por admin_id = dono da sessão.
+const ALLOW = new Set([
+  'lancamentos',
+  'projetos',
+  'setores',
+  'medicos',
+  'tipos_plantao',
+  'usuarios',
+  'usuario_projetos',
+  'fechamentos',
+  'fechamento_itens',
+  'remessas',
+  'assinaturas',
+  'log_atividades',
+  'solicitacoes_senha',
+  'pagamentos_log',
+  'checkins',
+  'ausencias',
+  'candidaturas',
+  'transferencias',
+  'vinculos',
+]);
+
+// Tabelas que NÃO têm admin_id e se escopam pela própria chave.
+// `admins`: o administrador só enxerga a si mesmo (id = adminId).
+const ALLOW_POR_ID = new Set(['admins']);
 
 export default async function handler(req, res) {
   setCors(res);
@@ -16,13 +40,21 @@ export default async function handler(req, res) {
   const adminId = sessao.adminId;
 
   const table = req.query.table;
-  if (!ALLOW.has(table)) return json(res, 403, { erro: 'Tabela não permitida' });
+  const porId = ALLOW_POR_ID.has(table);
+  if (!ALLOW.has(table) && !porId) return json(res, 403, { erro: 'Tabela não permitida' });
 
-  // Query crua do cliente, removendo qualquer admin_id que ele tente mandar.
+  // Coluna usada para isolar a empresa nesta tabela
+  const coluna = porId ? 'id' : 'admin_id';
+
+  // Query crua do cliente, removendo qualquer tentativa de mexer no escopo.
   const i = req.url.indexOf('?');
   const qsCru = i >= 0 ? req.url.slice(i + 1) : '';
-  const qs = qsCru.split('&').filter(p => p && !/^admin_id=/i.test(p) && !/^table=/i.test(p)).join('&');
-  const comEscopo = () => `/rest/v1/${table}?${qs ? qs + '&' : ''}admin_id=eq.${adminId}`;
+  const qs = qsCru
+    .split('&')
+    .filter((p) => p && !/^admin_id=/i.test(p) && !/^table=/i.test(p))
+    .join('&');
+  const comEscopo = () =>
+    `/rest/v1/${table}?${qs ? qs + '&' : ''}${coluna}=eq.${adminId}`;
 
   try {
     if (req.method === 'GET') {
@@ -31,6 +63,9 @@ export default async function handler(req, res) {
     }
 
     if (req.method === 'POST') {
+      // Em tabelas escopadas por admin_id, o servidor carimba o dono.
+      // Em `admins` não se cria registro por aqui.
+      if (porId) return json(res, 403, { erro: 'Criação não permitida nesta tabela' });
       const forcar = (o) => ({ ...o, admin_id: adminId });
       const body = Array.isArray(req.body) ? req.body.map(forcar) : forcar(req.body || {});
       const url = qs ? `/rest/v1/${table}?${qs}` : `/rest/v1/${table}`;
@@ -54,7 +89,11 @@ export default async function handler(req, res) {
     }
 
     if (req.method === 'DELETE') {
-      const del = await sbAdmin(comEscopo(), { method: 'DELETE', headers: { Prefer: 'return=representation' } });
+      if (porId) return json(res, 403, { erro: 'Remoção não permitida nesta tabela' });
+      const del = await sbAdmin(comEscopo(), {
+        method: 'DELETE',
+        headers: { Prefer: 'return=representation' },
+      });
       return json(res, 200, del || []);
     }
 
