@@ -228,7 +228,7 @@ export default async function handler(req, res) {
         const lid = dados?.lancamento_id;
         if (!lid) return json(res, 400, { erro: 'lancamento_id obrigatório' });
         const ll = await sbAdmin(
-          `/rest/v1/lancamentos?id=eq.${lid}&select=id,aberto,vagas,vagas_preenchidas,especialidades_alvo,exige_rqe&limit=1`
+          `/rest/v1/lancamentos?id=eq.${lid}&select=id,aberto,vagas,vagas_preenchidas,especialidades_alvo,exige_rqe,admin_id&limit=1`
         );
         const l = ll?.[0];
         if (!l || !l.aberto) return json(res, 409, { erro: 'Esta vaga não está mais aberta.' });
@@ -256,6 +256,7 @@ export default async function handler(req, res) {
           method: 'POST', headers: { Prefer: 'return=representation' },
           body: JSON.stringify({
             lancamento_id: lid, medico_id: medico.id,
+            admin_id: l.admin_id || null,
             status: 'pendente', obs: dados?.obs || null,
           }),
         });
@@ -284,13 +285,14 @@ export default async function handler(req, res) {
       if (req.query.action === 'tr-criar') {
         const lid = dados?.lancamento_id, destino = dados?.medico_destino_id;
         if (!lid || !destino) return json(res, 400, { erro: 'Dados incompletos' });
-        const ll = await sbAdmin(`/rest/v1/lancamentos?id=eq.${lid}&select=id,medico_id&limit=1`);
+        const ll = await sbAdmin(`/rest/v1/lancamentos?id=eq.${lid}&select=id,medico_id,admin_id&limit=1`);
         if (ll?.[0]?.medico_id !== medico.id) return json(res, 403, { erro: 'Este plantão não é seu.' });
         const criado = await sbAdmin('/rest/v1/transferencias', {
           method: 'POST', headers: { Prefer: 'return=representation' },
           body: JSON.stringify({
             lancamento_id: lid, medico_origem_id: medico.id,
             medico_destino_id: destino, mensagem: dados?.mensagem || null,
+            admin_id: ll?.[0]?.admin_id || null,
             status: 'pendente',
           }),
         });
@@ -310,6 +312,101 @@ export default async function handler(req, res) {
         await sbAdmin(`/rest/v1/transferencias?id=eq.${tid}`, {
           method: 'PATCH', headers: { Prefer: 'return=minimal' },
           body: JSON.stringify({ status, respondido_em: new Date().toISOString() }),
+        });
+        return json(res, 200, { ok: true });
+      }
+    }
+
+    // ── DEMAIS DADOS DO APP DO MÉDICO ───────────────────────────────────
+    if (['ctx-inicial','ck-registrar','ck-meus','aus-minhas','aus-criar','push-sub'].includes(req.query.action)) {
+      if (!rateLimit(ip, 60, 60_000)) return json(res, 429, { erro: 'Muitas tentativas. Aguarde 1 minuto.' });
+      const { token_acesso, dados } = req.body || {};
+      const medico = await medicoPorToken(token_acesso);
+      if (!medico) return json(res, 401, { erro: 'Sessão inválida. Faça login novamente.' });
+
+      // Contexto inicial: projetos ativos, colegas (p/ transferência) e minhas empresas
+      if (req.query.action === 'ctx-inicial') {
+        const [projetos, colegas, vinculos] = await Promise.all([
+          sbAdmin('/rest/v1/projetos?status=eq.Ativo&select=id,nome,latitude,longitude,raio_checkin&order=nome'),
+          sbAdmin('/rest/v1/medicos?ativo=eq.true&select=id,nome,crm,projetos_vinculados&order=nome'),
+          sbAdmin(`/rest/v1/vinculos?medico_id=eq.${medico.id}&status=eq.ativo&select=admin_id`),
+        ]);
+        return json(res, 200, {
+          ok: true,
+          projetos: projetos || [],
+          colegas: (colegas || []).filter((m) => m.id !== medico.id),
+          vinculos: vinculos || [],
+        });
+      }
+
+      // Registrar check-in / check-out
+      if (req.query.action === 'ck-registrar') {
+        const d = dados || {};
+        if (!d.projeto_id) return json(res, 400, { erro: 'projeto_id obrigatório' });
+        let _admProj = null;
+        try {
+          const _pp = await sbAdmin(`/rest/v1/projetos?id=eq.${d.projeto_id}&select=admin_id&limit=1`);
+          _admProj = _pp?.[0]?.admin_id || null;
+        } catch (_) {}
+        const criado = await sbAdmin('/rest/v1/checkins', {
+          method: 'POST', headers: { Prefer: 'return=representation' },
+          body: JSON.stringify({
+            medico_id: medico.id,            // sempre o autenticado
+            admin_id: _admProj,
+            projeto_id: d.projeto_id,
+            lancamento_id: d.lancamento_id || null,
+            latitude: d.latitude, longitude: d.longitude,
+            distancia_metros: d.distancia_metros,
+            aprovado: d.aprovado, tipo: d.tipo || 'entrada',
+          }),
+        });
+        return json(res, 200, { ok: true, checkin: criado?.[0] || null });
+      }
+
+      // Meus check-ins de hoje
+      if (req.query.action === 'ck-meus') {
+        const hoje = dados?.dia || new Date().toISOString().slice(0, 10);
+        const r = await sbAdmin(
+          `/rest/v1/checkins?medico_id=eq.${medico.id}&feito_em=gte.${hoje}T00:00:00` +
+          `&select=*,projetos(nome)&order=feito_em.desc&limit=100`
+        );
+        return json(res, 200, { ok: true, checkins: r || [] });
+      }
+
+      // Minhas ausências informadas
+      if (req.query.action === 'aus-minhas') {
+        const r = await sbAdmin(`/rest/v1/ausencias?medico_id=eq.${medico.id}&select=lancamento_id&limit=500`);
+        return json(res, 200, { ok: true, ausencias: r || [] });
+      }
+
+      // Informar ausência (o plantão precisa ser do médico)
+      if (req.query.action === 'aus-criar') {
+        const lid = dados?.lancamento_id;
+        if (!lid) return json(res, 400, { erro: 'lancamento_id obrigatório' });
+        const ll = await sbAdmin(`/rest/v1/lancamentos?id=eq.${lid}&select=id,medico_id,admin_id&limit=1`);
+        if (ll?.[0]?.medico_id !== medico.id) return json(res, 403, { erro: 'Este plantão não é seu.' });
+        await sbAdmin('/rest/v1/ausencias', {
+          method: 'POST', headers: { Prefer: 'return=minimal' },
+          body: JSON.stringify({
+            lancamento_id: lid, medico_id: medico.id,
+            admin_id: ll?.[0]?.admin_id || null,
+            motivo: dados?.motivo || null, obs: dados?.obs || null,
+          }),
+        });
+        return json(res, 200, { ok: true });
+      }
+
+      // Inscrição de notificações push
+      if (req.query.action === 'push-sub') {
+        const d = dados || {};
+        if (!d.endpoint) return json(res, 400, { erro: 'endpoint obrigatório' });
+        await sbAdmin('/rest/v1/push_subs', {
+          method: 'POST',
+          headers: { Prefer: 'resolution=merge-duplicates,return=minimal' },
+          body: JSON.stringify({
+            medico_id: medico.id, endpoint: d.endpoint,
+            p256dh: d.p256dh, auth: d.auth,
+          }),
         });
         return json(res, 200, { ok: true });
       }
