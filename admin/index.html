@@ -1207,8 +1207,8 @@ tr:hover td{background:var(--bg3);}
 
     <div class="card" style="margin-bottom:12px;">
       <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;">
-        <div class="form-group" style="min-width:150px;"><label>De</label><input type="date" id="vg-d1"></div>
-        <div class="form-group" style="min-width:150px;"><label>Até</label><input type="date" id="vg-d2"></div>
+        <div class="form-group" style="min-width:150px;"><label>De</label><input type="date" id="vg-d1" onchange="vgDataManual()"></div>
+        <div class="form-group" style="min-width:150px;"><label>Até</label><input type="date" id="vg-d2" onchange="vgDataManual()"></div>
         <div class="form-group" style="min-width:120px;">
           <label>Período rápido</label>
           <select id="vg-rapido" onchange="vgPeriodoRapido(this.value)">
@@ -5569,6 +5569,13 @@ function vgPeriodoRapido(dias){
   if (e1) e1.value = _vgISO(hoje);
   if (e2) e2.value = _vgISO(fim);
   if (_vgIniciado) renderVagas();
+}
+
+// Datas editadas à mão: o período deixa de ser um atalho e a lista recarrega
+function vgDataManual(){
+  var sr = document.getElementById('vg-rapido');
+  if (sr) sr.value = '';
+  renderVagas();
 }
 
 function limparFiltrosVagas(){
