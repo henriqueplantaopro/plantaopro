@@ -1,5 +1,5 @@
 // /api/medico-conta.js
-import { sbAdmin, hashSenha, json, setCors, rateLimit } from './_lib.js';
+import { sbAdmin, hashSenha, verificarSenha, json, setCors, rateLimit } from './_lib.js';
 import { randomUUID } from 'crypto';
 import webpush from 'web-push';
 
@@ -34,6 +34,33 @@ async function enviarPushMedico(medico_id, titulo, corpo, url, prefKey) {
   return { ok: true, enviados };
 }
 
+// ── PERFIL DO MÉDICO (tira do navegador o acesso direto à tabela `medicos`) ──
+// Campos que o próprio médico pode alterar. Nome, CRM, CPF, valor_hora,
+// ativo, admin_id e projetos_vinculados continuam só pelo admin.
+const CAMPOS_MEDICO = [
+  'telefone', 'email',
+  'especialidade', 'especialidades', 'rqe', 'rqes',
+  'endereco_rua', 'endereco_numero', 'endereco_comp', 'endereco_bairro',
+  'endereco_cidade', 'endereco_uf', 'endereco_cep',
+  'pessoa_juridica', 'razao_social', 'cnpj',
+  'pix_tipo', 'pix_chave', 'banco', 'agencia', 'conta_corrente', 'tipo_conta',
+  'ufs_interesse', 'notif_prefs',
+];
+
+function limparMedico(m) {
+  if (!m) return null;
+  const { senha_hash, ...resto } = m;
+  return resto;
+}
+
+async function medicoPorToken(token) {
+  if (!token) return null;
+  const r = await sbAdmin(
+    `/rest/v1/medicos?token_acesso=eq.${encodeURIComponent(token)}&select=*&limit=1`
+  );
+  return r?.[0] || null;
+}
+
 export default async function handler(req, res) {
   setCors(res);
   if (req.method === 'OPTIONS') return res.status(204).end();
@@ -42,6 +69,63 @@ export default async function handler(req, res) {
   const ip = req.headers['x-forwarded-for']?.split(',')[0].trim() || 'desconhecido';
 
   try {
+    // ── PERFIL: ler/atualizar o próprio cadastro, senha e dispositivo ───
+    if (['perfil','perfil-update','perfil-senha','perfil-device'].includes(req.query.action)) {
+      if (!rateLimit(ip, 60, 60_000)) return json(res, 429, { erro: 'Muitas tentativas. Aguarde 1 minuto.' });
+      const { token_acesso, dados } = req.body || {};
+      const medico = await medicoPorToken(token_acesso);
+      if (!medico) return json(res, 401, { erro: 'Sessão inválida. Faça login novamente.' });
+      if (medico.ativo === false) return json(res, 403, { erro: 'Conta inativa. Contate o administrador.' });
+
+      if (req.query.action === 'perfil') {
+        return json(res, 200, { ok: true, medico: limparMedico(medico) });
+      }
+
+      if (req.query.action === 'perfil-update') {
+        const patch = {};
+        for (const k of CAMPOS_MEDICO) {
+          if (dados && dados[k] !== undefined) patch[k] = dados[k];
+        }
+        if (!Object.keys(patch).length) return json(res, 400, { erro: 'Nada para atualizar' });
+        await sbAdmin(`/rest/v1/medicos?id=eq.${medico.id}`, {
+          method: 'PATCH', headers: { Prefer: 'return=minimal' },
+          body: JSON.stringify(patch),
+        });
+        return json(res, 200, { ok: true, atualizado: Object.keys(patch) });
+      }
+
+      if (req.query.action === 'perfil-senha') {
+        const atual = dados?.atual, nova = dados?.nova;
+        if (!nova || String(nova).length < 6) {
+          return json(res, 400, { erro: 'A nova senha deve ter pelo menos 6 caracteres.' });
+        }
+        if (medico.senha_hash && !medico.primeiro_acesso) {
+          const ok = await verificarSenha(String(atual || ''), medico.senha_hash).catch(() => false);
+          const okLegado = !ok && medico.senha_hash === String(atual || '');
+          if (!ok && !okLegado) return json(res, 401, { erro: 'Senha atual incorreta.' });
+        }
+        const hash = await hashSenha(String(nova));
+        await sbAdmin(`/rest/v1/medicos?id=eq.${medico.id}`, {
+          method: 'PATCH', headers: { Prefer: 'return=minimal' },
+          body: JSON.stringify({ senha_hash: hash, primeiro_acesso: false }),
+        });
+        return json(res, 200, { ok: true });
+      }
+
+      if (req.query.action === 'perfil-device') {
+        const device_id = dados?.device_id;
+        if (!device_id) return json(res, 400, { erro: 'device_id obrigatório' });
+        if (medico.device_id && medico.device_id !== device_id) {
+          return json(res, 409, { erro: 'Já existe um dispositivo vinculado. Peça a redefinição ao administrador.' });
+        }
+        await sbAdmin(`/rest/v1/medicos?id=eq.${medico.id}`, {
+          method: 'PATCH', headers: { Prefer: 'return=minimal' },
+          body: JSON.stringify({ device_id, device_registrado_em: new Date().toISOString() }),
+        });
+        return json(res, 200, { ok: true });
+      }
+    }
+
     // ── NOTIFICAR TRANSFERÊNCIA ─────────────────────────────────────────
     // Chamado pelo app do médico após criar a solicitação. Trava anti-spam:
     // só dispara se a transferência existir e estiver pendente.
