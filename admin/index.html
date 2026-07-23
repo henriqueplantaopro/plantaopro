@@ -1207,6 +1207,9 @@ tr:hover td{background:var(--bg3);}
       <button class="btn btn-primary" id="cal-tab-mensal" onclick="switchCalTab('mensal')">Mensal</button>
       <button class="btn btn-ghost" id="cal-tab-semanal" onclick="switchCalTab('semanal')">Semanal</button>
       <button class="btn btn-ghost" id="cal-tab-lista" onclick="switchCalTab('lista')">Mês (calendário)</button>
+      <div style="margin-left:auto;display:flex;gap:6px;">
+        <button class="btn btn-ghost" id="btn-sel-multi" onclick="toggleSelecaoMultipla()" title="Selecionar vários plantões para copiar ou mover de uma vez (somente no computador)">Selecionar vários</button>
+      </div>
     </div>
 
     <!-- FILTROS compartilhados -->
@@ -1277,7 +1280,6 @@ tr:hover td{background:var(--bg3);}
             <button class="btn btn-ghost btn-sm" onclick="irSemanaAtual()">Hoje</button>
           </div>
           <div style="display:flex;gap:8px;">
-            <button class="btn btn-ghost" id="btn-sel-multi" onclick="toggleSelecaoMultipla()" title="Selecionar vários plantões para copiar ou mover de uma vez (somente no computador)">Seleção múltipla</button>
             <button class="btn btn-success" onclick="copiarSemana()" title="Copia todos os plantões desta semana para a próxima">Copiar semana</button>
           </div>
         </div>
@@ -4358,11 +4360,58 @@ function renderSemana() {
   }
 
   const grid = document.getElementById('sem-grid');
-  grid.innerHTML = `<div style="overflow-x:auto;">${renderSemanaGrid(dias, dows, hj, pid, mid)}</div>`;
+  const sid = document.getElementById('cal-setor')?.value || '';
+
+  if (sid) {
+    // Setor específico escolhido no filtro — um quadro só
+    grid.innerHTML = `<div style="overflow-x:auto;">${renderSemanaGrid(dias, dows, hj, pid, mid, sid)}</div>`;
+    if (_lancCopiado) atualizarBotoesColar();
+    return;
+  }
+
+  // Sem setor no filtro: um quadro de datas para CADA setor do projeto
+  const brutos = lancamentos.filter(l => l.projeto_id === pid).map(l => String(l.setor||'').trim());
+  const comNome = [...new Set(brutos.filter(x => x))].sort((a,b) => a.localeCompare(b,'pt-BR'));
+  const temSemSetor = brutos.some(x => !x);
+  const lista = comNome.concat(temSemSetor ? ['__SEM__'] : []);
+
+  if (!lista.length) {
+    grid.innerHTML = `<div style="overflow-x:auto;">${renderSemanaGrid(dias, dows, hj, pid, mid)}</div>`;
+    if (_lancCopiado) atualizarBotoesColar();
+    return;
+  }
+
+  grid.innerHTML = lista.map((st, idx) => {
+    const nome = (st === '__SEM__') ? 'Sem setor definido' : st;
+    return `<div style="margin-bottom:22px;">
+      <div style="font-size:13px;font-weight:700;color:var(--blue);padding:6px 0;border-bottom:2px solid var(--blue);margin-bottom:6px;display:flex;align-items:center;gap:8px;">${nome}
+        <button class="btn btn-ghost btn-sm" style="margin-left:auto;" onclick="filtrarSetorSemana('${String(st).replace(/'/g,"\\'")}')">Ver só este ›</button>
+      </div>
+      <div id="sem-setor-${idx}" style="overflow-x:auto;"></div>
+    </div>`;
+  }).join('');
+
+  lista.forEach((st, idx) => {
+    const el = document.getElementById('sem-setor-' + idx);
+    if (el) el.innerHTML = renderSemanaGrid(dias, dows, hj, pid, mid, st);
+  });
+
   if (_lancCopiado) atualizarBotoesColar();
 }
 
-function renderSemanaGrid(dias, dows, hj, pid, mid) {
+// Aplica o setor no filtro do topo (o botão "Ver só este" de cada quadro)
+function filtrarSetorSemana(st){
+  if(st === '__SEM__'){ toast('Estes plantões estão sem setor definido'); return; }
+  const sel = document.getElementById('cal-setor');
+  if(!sel) return;
+  let achou = false;
+  for(let i=0;i<sel.options.length;i++){ if(sel.options[i].value === st){ achou = true; break; } }
+  if(!achou){ const op = document.createElement('option'); op.value = st; op.textContent = st; sel.appendChild(op); }
+  sel.value = st;
+  renderCalAtual();
+}
+
+function renderSemanaGrid(dias, dows, hj, pid, mid, setorOverride) {
   let html = `<table class="sem-table"><thead><tr>`;
   dias.forEach((d,i) => {
     const ds = d.toISOString().slice(0,10);
@@ -4388,8 +4437,14 @@ function renderSemanaGrid(dias, dows, hj, pid, mid) {
     let evts = lancamentos.filter(l=>l.data===ds);
     if(pid) evts=evts.filter(l=>l.projeto_id===pid);
     if(mid) evts=evts.filter(l=>l.medico_id===mid);
-    var _sidSem = document.getElementById('cal-setor')?.value || '';
-    if(_sidSem) evts=evts.filter(l=>(l.setor||'')===_sidSem);
+    if(setorOverride === '__SEM__'){
+      evts = evts.filter(l => !String(l.setor||'').trim());
+    } else if(setorOverride){
+      evts = evts.filter(l => String(l.setor||'').trim() === setorOverride);
+    } else {
+      var _sidSem = document.getElementById('cal-setor')?.value || '';
+      if(_sidSem) evts=evts.filter(l=>(l.setor||'')===_sidSem);
+    }
 
     html += `<td class="sem-td${isHoje?' hoje-col':''}" data-ds="${ds}" data-pid="${pid||''}" style="padding:0;vertical-align:top;">`;
 
