@@ -2310,7 +2310,7 @@ async function fazerLoginWrapper() {
 async function posLoginAdmin(admin) {
   _sessaoAvisada = false;
   // ── Verificar assinatura ─────────────────────────────
-  const assinaturas = await sb(`/rest/v1/assinaturas?admin_id=eq.${admin.id}&order=criado_em.desc&limit=1&select=*`);
+  const assinaturas = await sbApi(`/assinaturas?admin_id=eq.${admin.id}&order=criado_em.desc&limit=1&select=*`);
   const assinatura = assinaturas?.[0];
 
   if (!assinatura) {
@@ -2344,7 +2344,7 @@ async function posLoginAdmin(admin) {
 // Pós-login usuário da equipe: carrega admin pai e projetos permitidos
 async function posLoginUsuario(usuario) {
   // Carregar admin pai (pra queries multitenant)
-  const admins = await sb(`/rest/v1/admins?id=eq.${usuario.admin_id}&select=*`);
+  const admins = await sbApi(`/admins?id=eq.${usuario.admin_id}&select=*`);
   if (!admins || !admins.length) {
     document.getElementById('login-erro').textContent = 'Conta corrompida — contate o suporte.';
     document.getElementById('login-erro').style.display = 'block';
@@ -2353,19 +2353,19 @@ async function posLoginUsuario(usuario) {
   adminLogado = admins[0];
 
   // Carregar projetos permitidos
-  const uprojetos = await sb(`/rest/v1/usuario_projetos?usuario_id=eq.${usuario.id}&select=projeto_id`) || [];
+  const uprojetos = await sbApi(`/usuario_projetos?usuario_id=eq.${usuario.id}&select=projeto_id`) || [];
   usuario.projetosPermitidos = uprojetos.map(p => p.projeto_id);
   usuario.isAdmin = false;
   usuarioLogado = usuario;
 
   // Atualizar ultimo_acesso (não-crítico, segue mesmo se falhar)
-  sb(`/rest/v1/usuarios?id=eq.${usuario.id}`, {
+  sbApi(`/usuarios?id=eq.${usuario.id}`, {
     method: 'PATCH', headers: { 'Prefer': 'return=minimal' },
     body: JSON.stringify({ ultimo_acesso: new Date().toISOString(), primeiro_acesso: false }),
   }).catch(() => {});
 
   // Carregar assinatura do admin pai (pra restrições de plano)
-  const assinaturas = await sb(`/rest/v1/assinaturas?admin_id=eq.${adminLogado.id}&order=criado_em.desc&limit=1&select=*`);
+  const assinaturas = await sbApi(`/assinaturas?admin_id=eq.${adminLogado.id}&order=criado_em.desc&limit=1&select=*`);
   const assinatura = assinaturas?.[0];
   if (assinatura) {
     _assinaturaAtiva = assinatura;
@@ -2506,7 +2506,7 @@ async function carregarMedicos() {
 }
 
 async function carregarProjetos() {
-  const data = await sb('/rest/v1/projetos?select=*&order=nome');
+  const data = await sbApi('/projetos?select=*&order=nome');
   projetos = data || [];
   renderProjetos();
   popLancSelects();
@@ -2561,7 +2561,7 @@ async function carregarDashboard() {
   document.getElementById('d-plantoes').textContent = lanMes.reduce((s,l)=>s+qtdPlantao(l),0);
   document.getElementById('d-total').textContent = fBRL(lanMes.reduce((s,l)=>s+(l.honorario||0)*qtdPlantao(l),0));
 
-  const cis = await sb(`/rest/v1/checkins?feito_em=gte.${hj}T00:00:00&select=*,medicos(nome),projetos(nome)&order=feito_em.desc&limit=10`);
+  const cis = await sbApi(`/checkins?feito_em=gte.${hj}T00:00:00&select=*,medicos(nome),projetos(nome)&order=feito_em.desc&limit=10`);
   document.getElementById('d-checkins').textContent = (cis||[]).length;
 
   // Últimos lançamentos
@@ -2682,10 +2682,10 @@ async function carregarPainelCustos() {
   const lancs = await sbApi(urlLancs) || [];
 
   // Buscar ausências do período
-  let urlAus = `/rest/v1/ausencias?select=id,lancamento_id,medico_id,status,lancamentos!inner(id,data,projeto_id,medico_id)`;
+  let urlAus = `/ausencias?select=id,lancamento_id,medico_id,status,lancamentos!inner(id,data,projeto_id,medico_id)`;
   urlAus += `&lancamentos.data=gte.${d1}&lancamentos.data=lte.${d2}`;
   if (projFiltro) urlAus += `&lancamentos.projeto_id=eq.${projFiltro}`;
-  const ausencias = await sb(urlAus) || [];
+  const ausencias = await sbApi(urlAus) || [];
 
   // Buscar transferências aceitas (pra saber se ausência foi coberta)
   const idsLancs = ausencias.map(a => a.lancamento_id).filter(Boolean);
@@ -3360,7 +3360,7 @@ async function addProjeto() {
     valor_padrao_noturno: parseBRLField('pvaln'),
     valor_padrao_sobreaviso: parseBRLField('pvalsob')
   };
-  const res = await sb('/rest/v1/projetos', { method:'POST', body: JSON.stringify(payload) });
+  const res = await sbApi('/projetos', { method:'POST', headers:{'Prefer':'return=representation'}, body: JSON.stringify(payload) });
   if (res) {
     toast('Projeto cadastrado!');
     ['pn','pc','pco','plat','plon','pnc','pval12','pval24','pvaln','pvalsob'].forEach(id=>document.getElementById(id).value='');
@@ -3371,7 +3371,7 @@ async function addProjeto() {
 
 async function delProjeto(id) {
   if (!confirm('Remover projeto?')) return;
-  await sb(`/rest/v1/projetos?id=eq.${id}`, { method:'DELETE' });
+  await sbApi(`/projetos?id=eq.${id}`, { method:'DELETE' });
   await carregarProjetos();
 }
 
@@ -3499,8 +3499,8 @@ async function carregarPresenca() {
   const lancDia = await sbApi(pathLanc) || [];
 
   // Busca check-ins do dia
-  const checkinsDia = await sb(
-    `/rest/v1/checkins?feito_em=gte.${data}T00:00:00&feito_em=lte.${data}T23:59:59&aprovado=eq.true&select=*&order=feito_em`
+  const checkinsDia = await sbApi(
+    `/checkins?feito_em=gte.${data}T00:00:00&feito_em=lte.${data}T23:59:59&aprovado=eq.true&select=*&order=feito_em`
   ) || [];
 
   const el = document.getElementById('presenca-lista');
@@ -3617,12 +3617,12 @@ async function carregarPresenca() {
 async function carregarCheckins() {
   const pid=document.getElementById('ci-proj')?.value, mid=document.getElementById('ci-med')?.value;
   const d1=document.getElementById('ci-d1')?.value, d2=document.getElementById('ci-d2')?.value;
-  let path='/rest/v1/checkins?select=*,medicos(nome),projetos(nome)&order=feito_em.desc&limit=100';
+  let path='/checkins?select=*,medicos(nome),projetos(nome)&order=feito_em.desc&limit=100';
   if(pid) path+=`&projeto_id=eq.${pid}`;
   if(mid) path+=`&medico_id=eq.${mid}`;
   if(d1) path+=`&feito_em=gte.${d1}T00:00:00`;
   if(d2) path+=`&feito_em=lte.${d2}T23:59:59`;
-  const data=await sb(path);
+  const data=await sbApi(path);
   const el=document.getElementById('checkins-lista');
   if(!data||!data.length){ el.innerHTML='<div class="empty">Nenhum check-in encontrado.</div>'; return; }
   el.innerHTML='<table><thead><tr><th>Data/Hora</th><th>Médico</th><th>Projeto</th><th>Distância</th><th>Status</th></tr></thead><tbody>'+
@@ -4831,6 +4831,9 @@ async function salvarLancamentoRapido() {
   const ds    = overlay.dataset.ds;
   const medsSel = getMedsSelecionadosMR();
   const projId= document.getElementById('mr-proj').value;
+  for (const _mid of (medsSel||[])) {
+    if (!(await garantirMedicoNoProjeto(_mid, projId))) return;
+  }
   const ini   = getIniRapido();
   // Tipo: no modo livre, usar o nome digitado pelo usuário
   const _tlmSal = document.getElementById('mr-tipo-livre-mode');
@@ -4868,22 +4871,22 @@ async function salvarLancamentoRapido() {
     if (horas <= 0) { toast('Informe início e fim do plantão', true); return; }
     // Criar setor e tipo se modo livre
     if (_ehModoLivre && _ehSetorNovo && setor) {
-      const _setEx = await sb('/rest/v1/setores?projeto_id=eq.'+projId+'&nome=eq.'+encodeURIComponent(setor)+'&select=id');
+      const _setEx = await sbApi('/setores?projeto_id=eq.'+projId+'&nome=eq.'+encodeURIComponent(setor)+'&select=id');
       if (!_setEx || !_setEx.length) {
-        await sb('/rest/v1/setores', {method:'POST', headers:{'Prefer':'return=minimal'},
+        await sbApi('/setores', {method:'POST', headers:{'Prefer':'return=minimal'},
           body:JSON.stringify({projeto_id:projId, admin_id:adminLogado.id, nome:setor, ativo:true})});
         _setoresCache = {};
       }
     }
     const _tipoNomeAb2 = _ehModoLivre ? ((document.getElementById('mr-tipo-custom')?.value||'').trim()||'Normal') : tipo;
     if (_ehModoLivre && _tipoNomeAb2) {
-      const _tpEx = await sb('/rest/v1/tipos_plantao?projeto_id=eq.'+projId+'&nome=eq.'+encodeURIComponent(_tipoNomeAb2)+'&select=id');
+      const _tpEx = await sbApi('/tipos_plantao?projeto_id=eq.'+projId+'&nome=eq.'+encodeURIComponent(_tipoNomeAb2)+'&select=id');
       if (!_tpEx || !_tpEx.length) {
         const hIAb2=document.getElementById('mr-tipo-custom-ini')?.value||'';
         const hFAb2=document.getElementById('mr-tipo-custom-fim')?.value||'';
         let hrsAb2=null;
         if(hIAb2&&hFAb2){const[hi,mi]=hIAb2.split(':').map(Number),[hf,mf]=hFAb2.split(':').map(Number);let mn=(hf*60+mf)-(hi*60+mi);if(mn<0)mn+=1440;hrsAb2=mn/60;}
-        await sb('/rest/v1/tipos_plantao', {method:'POST', headers:{'Prefer':'return=minimal'},
+        await sbApi('/tipos_plantao', {method:'POST', headers:{'Prefer':'return=minimal'},
           body:JSON.stringify({projeto_id:projId, nome:_tipoNomeAb2, setor:setor||null,
             hora_ini:hIAb2||null, hora_fim:hFAb2||null, horas:hrsAb2, valor:valor||null, ativo:true})});
         await carregarTiposPlantao();
@@ -4941,9 +4944,9 @@ try {
     // Criar setor e tipo antes de publicar
     let setorFinalAb = setor;
     if (_ehSetorNovo && setor) {
-      const setAbEx = await sb('/rest/v1/setores?projeto_id=eq.'+projId+'&nome=eq.'+encodeURIComponent(setor)+'&select=id');
+      const setAbEx = await sbApi('/setores?projeto_id=eq.'+projId+'&nome=eq.'+encodeURIComponent(setor)+'&select=id');
       if (!setAbEx || !setAbEx.length) {
-        await sb('/rest/v1/setores', {method:'POST', headers:{'Prefer':'return=minimal'},
+        await sbApi('/setores', {method:'POST', headers:{'Prefer':'return=minimal'},
           body:JSON.stringify({projeto_id:projId, admin_id:adminLogado.id, nome:setor, ativo:true})});
         _setoresCache = {};
         toast('Setor "'+setor+'" criado!');
@@ -4954,14 +4957,14 @@ try {
     const hIAb = document.getElementById('mr-tipo-custom-ini')?.value||'';
     const hFAb = document.getElementById('mr-tipo-custom-fim')?.value||'';
     if (_tipoNomeAb) {
-      const tpAbEx = await sb('/rest/v1/tipos_plantao?projeto_id=eq.'+projId+'&nome=eq.'+encodeURIComponent(_tipoNomeAb)+'&select=id');
+      const tpAbEx = await sbApi('/tipos_plantao?projeto_id=eq.'+projId+'&nome=eq.'+encodeURIComponent(_tipoNomeAb)+'&select=id');
       if (!tpAbEx || !tpAbEx.length) {
         let hrsAb = null;
         if (hIAb && hFAb) {
           const [hi,mi]=hIAb.split(':').map(Number), [hf,mf]=hFAb.split(':').map(Number);
           let mn=(hf*60+mf)-(hi*60+mi); if(mn<0)mn+=1440; hrsAb=mn/60;
         }
-        await sb('/rest/v1/tipos_plantao', {method:'POST', headers:{'Prefer':'return=minimal'},
+        await sbApi('/tipos_plantao', {method:'POST', headers:{'Prefer':'return=minimal'},
           body:JSON.stringify({projeto_id:projId, nome:_tipoNomeAb, setor:setorFinalAb||null,
             hora_ini:hIAb||null, hora_fim:hFAb||null, horas:hrsAb, valor:valor||null, ativo:true})});
         await carregarTiposPlantao();
@@ -5799,6 +5802,31 @@ function fecharModalEditarLanc() {
 
 var _elMedicoOriginal = null;
 
+// Rede de segurança: nenhum plantão deve ser gravado com médico fora do projeto.
+// Se acontecer (fluxo antigo, aba aberta há muito tempo), pergunta e corrige o vínculo.
+async function garantirMedicoNoProjeto(medId, projId){
+  if(!medId || !projId) return true;
+  const m = (medicos||[]).find(x => String(x.id) === String(medId));
+  if(!m) return true;
+  const vinc = m.projetos_vinculados || [];
+  if(vinc.indexOf(projId) !== -1) return true;
+  const proj = (projetos||[]).find(p => p.id === projId);
+  const nomeProj = proj ? proj.nome : 'este projeto';
+  if(!confirm('Dr(a). ' + (m.nome||'') + ' não está vinculado(a) a "' + nomeProj + '".\n\nDeseja vincular agora e continuar com o lançamento?')){
+    return false;
+  }
+  try{
+    const novos = vinc.concat([projId]);
+    const r = await fetch('/api/medicos?id=' + medId, {
+      method:'PATCH', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ projetos_vinculados: novos })
+    });
+    if(!r.ok){ toast('Não foi possível vincular o médico ao projeto', true); return false; }
+    m.projetos_vinculados = novos;
+    return true;
+  }catch(e){ toast('Erro ao vincular o médico', true); return false; }
+}
+
 async function salvarEdicaoLanc() {
   var g = function(id) { return document.getElementById(id); };
   var id    = g('el-id').value;
@@ -5819,6 +5847,9 @@ async function salvarEdicaoLanc() {
   var mins = (hf*60+mf)-(hi*60+mi);
   if (mins < 0) mins += 1440;
   var horas = mins/60;
+
+  var _lEdit = (lancamentos||[]).find(function(x){ return String(x.id) === String(id); });
+  if (medId && !(await garantirMedicoNoProjeto(medId, _lEdit && _lEdit.projeto_id))) return;
 
   var payload = {
     data: data, hora_ini: ini, hora_fim: fim, horas: horas,
@@ -6305,7 +6336,7 @@ async function carregarFechamentos() {
   const el = document.getElementById('fin-lista');
   if (!el) return;
   el.innerHTML = '<div class="empty">Carregando...</div>';
-  const data = await sb('/rest/v1/fechamentos?select=*,projetos(nome)&order=criado_em.desc') || [];
+  const data = await sbApi('/fechamentos?select=*,projetos(nome)&order=criado_em.desc') || [];
   if (!data.length) {
     el.innerHTML = '<div class="empty">Nenhum fechamento criado ainda. Clique em "+ Novo fechamento" para começar.</div>';
     return;
@@ -6358,7 +6389,7 @@ async function criarFechamento() {
   const totalValor = itens.reduce((s,i)=>s+i.valor,0);
 
   // Criar fechamento
-  const res = await sb('/rest/v1/fechamentos', {
+  const res = await sbApi('/fechamentos', {
     method:'POST',
     body: JSON.stringify({ nome, projeto_id:projId||null, data_inicio:d1, data_fim:d2, obs:obs||null, status:'aberto', total_valor:totalValor, total_pago:0 })
   });
@@ -6368,7 +6399,7 @@ async function criarFechamento() {
   // Criar itens
   if (itens.length > 0) {
     for (const it of itens) {
-      await sb('/rest/v1/fechamento_itens', {
+      await sbApi('/fechamento_itens', {
         method:'POST',
         body: JSON.stringify({ fechamento_id:fechId, medico_id:it.medico_id, plantoes:it.plantoes, horas:it.horas, valor_total:it.valor, valor_pago:0, status:'pendente' })
       });
@@ -6382,13 +6413,13 @@ async function criarFechamento() {
 
 async function deletarFechamento(id) {
   if (!confirm('Excluir fechamento?')) return;
-  await sb(`/rest/v1/fechamentos?id=eq.${id}`, {method:'DELETE'});
+  await sbApi(`/fechamentos?id=eq.${id}`, {method:'DELETE'});
   carregarFechamentos();
 }
 
 // ── ABRIR FECHAMENTO (MODAL) ───────────────────────────
 async function abrirFechamento(id) {
-  const fech = (await sb(`/rest/v1/fechamentos?id=eq.${id}&select=*,projetos(nome)`))||[];
+  const fech = (await sbApi(`/fechamentos?id=eq.${id}&select=*,projetos(nome)`))||[];
   if (!fech[0]) return;
   _fechAtivo = fech[0];
 
@@ -6421,7 +6452,7 @@ async function carregarItensFechamento() {
   const el = document.getElementById('mfech-tabela');
   el.innerHTML='<div class="empty">Carregando...</div>';
 
-  const itens = await sb(`/rest/v1/fechamento_itens?fechamento_id=eq.${_fechAtivo.id}&select=*,medicos(nome,crm,cpf,cnpj,pix_tipo,pix_chave,razao_social)&order=medicos(nome)`) || [];
+  const itens = await sbApi(`/fechamento_itens?fechamento_id=eq.${_fechAtivo.id}&select=*,medicos(nome,crm,cpf,cnpj,pix_tipo,pix_chave,razao_social)&order=medicos(nome)`) || [];
   _fechItens = itens;
 
   const totPlan = itens.reduce((s,i)=>s+i.plantoes,0);
@@ -6689,7 +6720,7 @@ async function gerarRemessa() {
   const conteudo = linhas.join(CRLF) + CRLF;
   const nomeArq  = 'Remessa_' + agora.toISOString().replace(/[-:.TZ]/g,'').slice(0,14) + '.rem';
 
-  await sb('/rest/v1/remessas', {
+  await sbApi('/remessas', {
     method: 'POST',
     body: JSON.stringify({ fechamento_id: _fechAtivo.id, nome_arquivo: nomeArq, conteudo, total: totLote })
   });
@@ -6707,7 +6738,7 @@ async function gerarRemessa() {
 async function carregarRemessas() {
   if (!_fechAtivo) return;
   const el = document.getElementById('mfech-remessas-lista');
-  const data = await sb(`/rest/v1/remessas?fechamento_id=eq.${_fechAtivo.id}&order=criado_em.desc`) || [];
+  const data = await sbApi(`/remessas?fechamento_id=eq.${_fechAtivo.id}&order=criado_em.desc`) || [];
   if (!data.length) { el.innerHTML='<div class="empty">Nenhuma remessa gerada ainda.</div>'; return; }
   el.innerHTML = data.map(r => `
     <div class="card" style="margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;">
@@ -6720,7 +6751,7 @@ async function carregarRemessas() {
 }
 
 async function downloadRemessa(id) {
-  const data = await sb(`/rest/v1/remessas?id=eq.${id}&select=nome_arquivo,conteudo`) || [];
+  const data = await sbApi(`/remessas?id=eq.${id}&select=nome_arquivo,conteudo`) || [];
   if (!data[0]) return;
   const blob = new Blob([data[0].conteudo], {type:'text/plain;charset=utf-8'});
   const url  = URL.createObjectURL(blob);
@@ -6850,11 +6881,11 @@ async function processarRetorno(event) {
     const novoTotalPago = Math.min(totalPago, _fechAtivo.total_valor);
     const novoStatus = novoTotalPago >= _fechAtivo.total_valor ? 'pago'
                      : novoTotalPago > 0 ? 'parcial' : 'aberto';
-    await sb('/rest/v1/fechamentos?id=eq.'+_fechAtivo.id, {
+    await sbApi('/fechamentos?id=eq.'+_fechAtivo.id, {
       method: 'PATCH',
       body: JSON.stringify({ total_pago: novoTotalPago, status: novoStatus })
     });
-    await sb('/rest/v1/remessas?fechamento_id=eq.'+_fechAtivo.id+'&order=criado_em.desc&limit=1', {
+    await sbApi('/remessas?fechamento_id=eq.'+_fechAtivo.id+'&order=criado_em.desc&limit=1', {
       method: 'PATCH',
       body: JSON.stringify({ retorno_em: new Date().toISOString(), retorno_status: 'processado' })
     });
@@ -7026,11 +7057,11 @@ function gerarRelResumo(el){const dados=filtrarDadosRel();if(!dados.length){el.i
 
 function gerarRelHoras(el){const dados=filtrarDadosRel();if(!dados.length){el.innerHTML='<div class="card"><div class="empty">Nenhum dado.</div></div>';return;}const porMed={};dados.forEach(l=>{const k=l.medico_id;if(!porMed[k])porMed[k]={nome:l.medico,crm:l.crm||'',h12:0,h24:0,hCustom:0,hTotal:0,plantoes:0,total:0};const h=l.horas||0,tipo=l.tipo||'';if(tipo.includes('24'))porMed[k].h24+=h;else if(tipo==='Personalizado')porMed[k].hCustom+=h;else porMed[k].h12+=h;porMed[k].hTotal+=h;porMed[k].plantoes++;porMed[k].total+=l.honorario||0;});const tTotal=Object.values(porMed).reduce((s,m)=>s+m.hTotal,0),tHon=Object.values(porMed).reduce((s,m)=>s+m.total,0);let html=`<div class="metrics"><div class="metric"><div class="metric-label">Profissionais</div><div class="metric-val">${Object.keys(porMed).length}</div></div><div class="metric"><div class="metric-label">Total horas</div><div class="metric-val">${Math.round(tTotal*10)/10}h</div></div><div class="metric"><div class="metric-label">Total honorários</div><div class="metric-val">${fBRL(tHon)}</div></div></div><div class="card"><table><thead><tr><th>Profissional</th><th>CRM</th><th style="text-align:center;">Plantões</th><th style="text-align:center;">Horas 12h</th><th style="text-align:center;">Horas 24h</th><th style="text-align:center;">Outros</th><th style="text-align:center;font-weight:700;">Total</th><th>Honorários</th></tr></thead><tbody>`;Object.values(porMed).sort((a,b)=>b.hTotal-a.hTotal).forEach(m=>{html+=`<tr><td><strong>${m.nome}</strong></td><td class="mono">${m.crm}</td><td style="text-align:center;">${m.plantoes}</td><td style="text-align:center;color:var(--green);">${Math.round(m.h12*10)/10}h</td><td style="text-align:center;color:var(--amber);">${Math.round(m.h24*10)/10}h</td><td style="text-align:center;color:var(--text3);">${Math.round(m.hCustom*10)/10}h</td><td style="text-align:center;font-weight:700;font-size:14px;">${Math.round(m.hTotal*10)/10}h</td><td class="mono" style="color:var(--green);font-weight:600;">${fBRL(m.total)}</td></tr>`;});html+='</tbody></table></div>';el.innerHTML=html;}
 
-async function gerarRelFaltas(el){el.innerHTML='<div class="card"><div class="empty">Carregando...</div></div>';const d1=document.getElementById('rd1').value,d2=document.getElementById('rd2').value;let pathCI='/rest/v1/checkins?aprovado=eq.true&select=medico_id,projeto_id,feito_em';if(d1)pathCI+=`&feito_em=gte.${d1}T00:00:00`;if(d2)pathCI+=`&feito_em=lte.${d2}T23:59:59`;const checkins=await sb(pathCI)||[];const ciKeys=new Set(checkins.map(c=>`${c.medico_id}_${c.projeto_id}_${c.feito_em?.slice(0,10)}`));let dados=filtrarDadosRel().filter(l=>{const ini=new Date(`${l.data}T${l.hora_ini||'00:00'}`);return ini<new Date();});const faltas=dados.filter(l=>!ciKeys.has(`${l.medico_id}_${l.projeto_id}_${l.data}`));if(!faltas.length){el.innerHTML='<div class="card"><div style="text-align:center;padding:24px;"><div style="font-size:40px;"></div><div style="font-size:14px;color:var(--green);font-weight:600;margin-top:8px;">Nenhuma falta!</div></div></div>';return;}let html=`<div class="card"><div style="margin-bottom:10px;font-size:13px;color:var(--red);font-weight:600;">${faltas.length} falta(s)</div><table><thead><tr><th>Médico</th><th>CRM</th><th>Projeto</th><th>Data</th><th>Horário</th><th>Tipo</th><th>Honorários perdidos</th></tr></thead><tbody>`;faltas.sort((a,b)=>b.data.localeCompare(a.data)).forEach(l=>{html+=`<tr><td><strong>${l.medico||'—'}</strong></td><td class="mono">${l.crm||''}</td><td>${l.projeto||'—'}</td><td class="mono">${fDate(l.data)}</td><td class="mono">${(l.hora_ini||'').slice(0,5)}–${(l.hora_fim||'').slice(0,5)}</td><td>${l.tipo||''}</td><td class="mono" style="color:var(--red);">${fBRL(l.honorario_bruto||l.honorario||0)}</td></tr>`;});const totFalta=faltas.reduce((s,l)=>s+(l.honorario_bruto||l.honorario||0),0);html+=`</tbody><tfoot><tr><td colspan="6" style="font-weight:600;padding:8px;">Total</td><td class="mono" style="color:var(--red);font-weight:600;">${fBRL(totFalta)}</td></tr></tfoot></table></div>`;el.innerHTML=html;}
+async function gerarRelFaltas(el){el.innerHTML='<div class="card"><div class="empty">Carregando...</div></div>';const d1=document.getElementById('rd1').value,d2=document.getElementById('rd2').value;let pathCI='/checkins?aprovado=eq.true&select=medico_id,projeto_id,feito_em';if(d1)pathCI+=`&feito_em=gte.${d1}T00:00:00`;if(d2)pathCI+=`&feito_em=lte.${d2}T23:59:59`;const checkins=await sbApi(pathCI)||[];const ciKeys=new Set(checkins.map(c=>`${c.medico_id}_${c.projeto_id}_${c.feito_em?.slice(0,10)}`));let dados=filtrarDadosRel().filter(l=>{const ini=new Date(`${l.data}T${l.hora_ini||'00:00'}`);return ini<new Date();});const faltas=dados.filter(l=>!ciKeys.has(`${l.medico_id}_${l.projeto_id}_${l.data}`));if(!faltas.length){el.innerHTML='<div class="card"><div style="text-align:center;padding:24px;"><div style="font-size:40px;"></div><div style="font-size:14px;color:var(--green);font-weight:600;margin-top:8px;">Nenhuma falta!</div></div></div>';return;}let html=`<div class="card"><div style="margin-bottom:10px;font-size:13px;color:var(--red);font-weight:600;">${faltas.length} falta(s)</div><table><thead><tr><th>Médico</th><th>CRM</th><th>Projeto</th><th>Data</th><th>Horário</th><th>Tipo</th><th>Honorários perdidos</th></tr></thead><tbody>`;faltas.sort((a,b)=>b.data.localeCompare(a.data)).forEach(l=>{html+=`<tr><td><strong>${l.medico||'—'}</strong></td><td class="mono">${l.crm||''}</td><td>${l.projeto||'—'}</td><td class="mono">${fDate(l.data)}</td><td class="mono">${(l.hora_ini||'').slice(0,5)}–${(l.hora_fim||'').slice(0,5)}</td><td>${l.tipo||''}</td><td class="mono" style="color:var(--red);">${fBRL(l.honorario_bruto||l.honorario||0)}</td></tr>`;});const totFalta=faltas.reduce((s,l)=>s+(l.honorario_bruto||l.honorario||0),0);html+=`</tbody><tfoot><tr><td colspan="6" style="font-weight:600;padding:8px;">Total</td><td class="mono" style="color:var(--red);font-weight:600;">${fBRL(totFalta)}</td></tr></tfoot></table></div>`;el.innerHTML=html;}
 
-async function gerarRelAtrasos(el){el.innerHTML='<div class="card"><div class="empty">Carregando...</div></div>';const d1=document.getElementById('rd1').value,d2=document.getElementById('rd2').value;let pathCI='/rest/v1/checkins?aprovado=eq.true&select=*,medicos(nome,crm),projetos(nome)';if(d1)pathCI+=`&feito_em=gte.${d1}T00:00:00`;if(d2)pathCI+=`&feito_em=lte.${d2}T23:59:59`;const checkins=await sb(pathCI)||[];const atrasos=[];checkins.forEach(ci=>{const lanc=lancamentos.find(l=>l.medico_id===ci.medico_id&&l.projeto_id===ci.projeto_id&&l.data===ci.feito_em?.slice(0,10));if(!lanc)return;const diffMin=Math.round((new Date(ci.feito_em)-new Date(`${lanc.data}T${lanc.hora_ini||'00:00'}`))/60000);if(diffMin>15)atrasos.push({...ci,diffMin,lanc});});if(!atrasos.length){el.innerHTML='<div class="card"><div style="text-align:center;padding:24px;"><div style="font-size:40px;"></div><div style="font-size:14px;color:var(--green);font-weight:600;margin-top:8px;">Nenhum atraso acima de 15 minutos!</div></div></div>';return;}let html=`<div class="card"><table><thead><tr><th>Médico</th><th>Projeto</th><th>Data</th><th>Previsto</th><th>Check-in</th><th>Atraso</th></tr></thead><tbody>`;atrasos.sort((a,b)=>b.diffMin-a.diffMin).forEach(a=>{const horaReal=new Date(a.feito_em).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});html+=`<tr><td><strong>${a.medicos?.nome||'—'}</strong></td><td>${a.projetos?.nome||'—'}</td><td class="mono">${fDate(a.lanc?.data||'')}</td><td class="mono">${(a.lanc?.hora_ini||'').slice(0,5)}</td><td class="mono">${horaReal}</td><td style="color:var(--amber);font-weight:700;">+${a.diffMin}min</td></tr>`;});html+='</tbody></table></div>';el.innerHTML=html;}
+async function gerarRelAtrasos(el){el.innerHTML='<div class="card"><div class="empty">Carregando...</div></div>';const d1=document.getElementById('rd1').value,d2=document.getElementById('rd2').value;let pathCI='/checkins?aprovado=eq.true&select=*,medicos(nome,crm),projetos(nome)';if(d1)pathCI+=`&feito_em=gte.${d1}T00:00:00`;if(d2)pathCI+=`&feito_em=lte.${d2}T23:59:59`;const checkins=await sbApi(pathCI)||[];const atrasos=[];checkins.forEach(ci=>{const lanc=lancamentos.find(l=>l.medico_id===ci.medico_id&&l.projeto_id===ci.projeto_id&&l.data===ci.feito_em?.slice(0,10));if(!lanc)return;const diffMin=Math.round((new Date(ci.feito_em)-new Date(`${lanc.data}T${lanc.hora_ini||'00:00'}`))/60000);if(diffMin>15)atrasos.push({...ci,diffMin,lanc});});if(!atrasos.length){el.innerHTML='<div class="card"><div style="text-align:center;padding:24px;"><div style="font-size:40px;"></div><div style="font-size:14px;color:var(--green);font-weight:600;margin-top:8px;">Nenhum atraso acima de 15 minutos!</div></div></div>';return;}let html=`<div class="card"><table><thead><tr><th>Médico</th><th>Projeto</th><th>Data</th><th>Previsto</th><th>Check-in</th><th>Atraso</th></tr></thead><tbody>`;atrasos.sort((a,b)=>b.diffMin-a.diffMin).forEach(a=>{const horaReal=new Date(a.feito_em).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});html+=`<tr><td><strong>${a.medicos?.nome||'—'}</strong></td><td>${a.projetos?.nome||'—'}</td><td class="mono">${fDate(a.lanc?.data||'')}</td><td class="mono">${(a.lanc?.hora_ini||'').slice(0,5)}</td><td class="mono">${horaReal}</td><td style="color:var(--amber);font-weight:700;">+${a.diffMin}min</td></tr>`;});html+='</tbody></table></div>';el.innerHTML=html;}
 
-async function gerarRelCheckinsForaTol(el){el.innerHTML='<div class="card"><div class="empty">Carregando...</div></div>';const d1=document.getElementById('rd1').value,d2=document.getElementById('rd2').value;let pathCI='/rest/v1/checkins?select=*,medicos(nome,crm),projetos(nome)';if(d1)pathCI+=`&feito_em=gte.${d1}T00:00:00`;if(d2)pathCI+=`&feito_em=lte.${d2}T23:59:59`;const checkins=await sb(pathCI)||[];const fora=[];checkins.forEach(ci=>{const lanc=lancamentos.find(l=>l.medico_id===ci.medico_id&&l.projeto_id===ci.projeto_id&&l.data===ci.feito_em?.slice(0,10));if(!lanc)return;const diffMin=Math.round((new Date(ci.feito_em)-new Date(`${lanc.data}T${lanc.hora_ini||'00:00'}`))/60000);if(diffMin>15||!ci.aprovado)fora.push({...ci,diffMin,foraRaio:!ci.aprovado,lanc});});if(!fora.length){el.innerHTML='<div class="card"><div style="text-align:center;padding:24px;"><div style="font-size:40px;"></div><div style="font-size:14px;color:var(--green);font-weight:600;margin-top:8px;">Todos dentro da tolerância!</div></div></div>';return;}let html=`<div class="card"><table><thead><tr><th>Médico</th><th>Projeto</th><th>Data</th><th>Previsto</th><th>Check-in</th><th>Atraso</th><th>GPS</th></tr></thead><tbody>`;fora.forEach(c=>{const horaReal=new Date(c.feito_em).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});html+=`<tr><td><strong>${c.medicos?.nome||'—'}</strong></td><td>${c.projetos?.nome||'—'}</td><td class="mono">${fDate(c.lanc?.data||'')}</td><td class="mono">${(c.lanc?.hora_ini||'').slice(0,5)}</td><td class="mono">${horaReal}</td><td style="color:${c.diffMin>15?'var(--amber)':'var(--green)'};font-weight:600;">${c.diffMin>0?'+'+c.diffMin+'min':'no prazo'}</td><td>${c.foraRaio?'Fora':'Ok'}</td></tr>`;});html+='</tbody></table></div>';el.innerHTML=html;}
+async function gerarRelCheckinsForaTol(el){el.innerHTML='<div class="card"><div class="empty">Carregando...</div></div>';const d1=document.getElementById('rd1').value,d2=document.getElementById('rd2').value;let pathCI='/checkins?select=*,medicos(nome,crm),projetos(nome)';if(d1)pathCI+=`&feito_em=gte.${d1}T00:00:00`;if(d2)pathCI+=`&feito_em=lte.${d2}T23:59:59`;const checkins=await sbApi(pathCI)||[];const fora=[];checkins.forEach(ci=>{const lanc=lancamentos.find(l=>l.medico_id===ci.medico_id&&l.projeto_id===ci.projeto_id&&l.data===ci.feito_em?.slice(0,10));if(!lanc)return;const diffMin=Math.round((new Date(ci.feito_em)-new Date(`${lanc.data}T${lanc.hora_ini||'00:00'}`))/60000);if(diffMin>15||!ci.aprovado)fora.push({...ci,diffMin,foraRaio:!ci.aprovado,lanc});});if(!fora.length){el.innerHTML='<div class="card"><div style="text-align:center;padding:24px;"><div style="font-size:40px;"></div><div style="font-size:14px;color:var(--green);font-weight:600;margin-top:8px;">Todos dentro da tolerância!</div></div></div>';return;}let html=`<div class="card"><table><thead><tr><th>Médico</th><th>Projeto</th><th>Data</th><th>Previsto</th><th>Check-in</th><th>Atraso</th><th>GPS</th></tr></thead><tbody>`;fora.forEach(c=>{const horaReal=new Date(c.feito_em).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});html+=`<tr><td><strong>${c.medicos?.nome||'—'}</strong></td><td>${c.projetos?.nome||'—'}</td><td class="mono">${fDate(c.lanc?.data||'')}</td><td class="mono">${(c.lanc?.hora_ini||'').slice(0,5)}</td><td class="mono">${horaReal}</td><td style="color:${c.diffMin>15?'var(--amber)':'var(--green)'};font-weight:600;">${c.diffMin>0?'+'+c.diffMin+'min':'no prazo'}</td><td>${c.foraRaio?'Fora':'Ok'}</td></tr>`;});html+='</tbody></table></div>';el.innerHTML=html;}
 
 function gerarRelMedicos(el){let lista=[...medicos];const mid=document.getElementById('rm').value;if(mid)lista=lista.filter(m=>m.id===mid);if(!lista.length){el.innerHTML='<div class="card"><div class="empty">Nenhum médico.</div></div>';return;}let html=`<div class="card"><table><thead><tr><th>Nome</th><th>CRM</th><th>Especialidade</th><th>Tipo</th><th>Telefone</th><th>E-mail</th><th>PIX</th><th>Dispositivo</th></tr></thead><tbody>`;lista.sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR')).forEach(m=>{const pix=m.pix_tipo&&m.pix_chave?`${m.pix_tipo}: ${m.pix_chave}`:'—';html+=`<tr><td><strong>${m.nome}</strong></td><td class="mono">${m.crm||'—'}</td><td>${m.especialidade||'—'}</td><td><span class="badge badge-blue">${m.tipo||''}</span></td><td>${m.telefone||'—'}</td><td>${m.email||'—'}</td><td style="font-size:11px;">${pix}</td><td>${m.device_id?'<span class="badge badge-green">✓ Vinculado</span>':'<span class="badge badge-amber">Sem vínculo</span>'}</td></tr>`;});html+='</tbody></table></div>';el.innerHTML=html;}
 
@@ -7045,11 +7076,11 @@ async function gerarRelRisco(el) {
   const mid = document.getElementById('rm').value;
 
   // 1. Buscar ausências informadas (tabela ausencias)
-  let pathAus = '/rest/v1/ausencias?select=*,medicos(id,nome,crm),lancamentos(data,projeto_id,projetos(nome))&order=criado_em.desc';
+  let pathAus = '/ausencias?select=*,medicos(id,nome,crm),lancamentos(data,projeto_id,projetos(nome))&order=criado_em.desc';
   if (d1) pathAus += `&criado_em=gte.${d1}T00:00:00`;
   if (d2) pathAus += `&criado_em=lte.${d2}T23:59:59`;
   if (mid) pathAus += `&medico_id=eq.${mid}`;
-  const ausencias = await sb(pathAus) || [];
+  const ausencias = await sbApi(pathAus) || [];
 
   // 2. Buscar transferências solicitadas (como origem — médico tentou passar o plantão)
   let pathTr = '/transferencias?select=*,medicos!transferencias_medico_origem_id_fkey(id,nome,crm),lancamentos(data,projeto_id,projetos(nome))&order=criado_em.desc';
@@ -7066,10 +7097,10 @@ async function gerarRelRisco(el) {
   if (mid) pathLanc += `&medico_id=eq.${mid}`;
   const todosLanc = await sbApi(pathLanc) || [];
 
-  let pathCI = '/rest/v1/checkins?aprovado=eq.true&select=medico_id,projeto_id,feito_em';
+  let pathCI = '/checkins?aprovado=eq.true&select=medico_id,projeto_id,feito_em';
   if (d1) pathCI += `&feito_em=gte.${d1}T00:00:00`;
   if (d2) pathCI += `&feito_em=lte.${d2}T23:59:59`;
-  const checkins = await sb(pathCI) || [];
+  const checkins = await sbApi(pathCI) || [];
   const ciKeys = new Set(checkins.map(c => `${c.medico_id}_${c.projeto_id}_${c.feito_em?.slice(0,10)}`));
 
   // Plantões passados (já deveriam ter ocorrido)
@@ -7516,7 +7547,7 @@ async function handleUploadTipos(input) {
     const validos = novos.filter(n => n.proj_id);
     let ok=0;
     for (const t of validos) {
-      const res = await sb('/rest/v1/tipos_plantao', { method:'POST', body: JSON.stringify({projeto_id:t.proj_id,nome:t.nome,hora_ini:t.hora_ini,hora_fim:t.hora_fim,horas:t.horas,valor:t.valor,setor:t.setor,ativo:true}) });
+      const res = await sbApi('/tipos_plantao', { method:'POST', headers:{'Prefer':'return=representation'}, body: JSON.stringify({projeto_id:t.proj_id,nome:t.nome,hora_ini:t.hora_ini,hora_fim:t.hora_fim,horas:t.horas,valor:t.valor,setor:t.setor,ativo:true}) });
       if (res) ok++;
     }
     toast(`${ok} tipo(s) importado(s)!`);
@@ -7712,7 +7743,7 @@ async function handleUploadHospitaisSetoresTipos(input) {
             if (lat) payload.latitude = lat;
             if (lon) payload.longitude = lon;
             if (raio) payload.raio_checkin = raio;
-            const res = await sb('/rest/v1/projetos', {method:'POST', headers:{'Prefer':'return=representation'}, body:JSON.stringify(payload)});
+            const res = await sbApi('/projetos', {method:'POST', headers:{'Prefer':'return=representation'}, body:JSON.stringify(payload)});
             if (!res || !res[0]) { erros.push('Erro ao criar hospital: '+hospNome); continue; }
             proj = res[0];
             projetosLocais.push(proj);
@@ -7729,7 +7760,7 @@ async function handleUploadHospitaisSetoresTipos(input) {
           const setores = await carregarSetoresProjeto(proj.id);
           let setor = setores.find(s => s.nome.toLowerCase() === setorNome.toLowerCase());
           if (!setor) {
-            const rs = await sb('/rest/v1/setores', {
+            const rs = await sbApi('/setores', {
               method:'POST', headers:{'Prefer':'return=representation'},
               body: JSON.stringify({projeto_id: proj.id, admin_id: adminLogado.id, nome: setorNome, ativo: true})
             });
@@ -7749,7 +7780,7 @@ async function handleUploadHospitaisSetoresTipos(input) {
           horas = mins/60;
         }
 
-        const rt = await sb('/rest/v1/tipos_plantao', {
+        const rt = await sbApi('/tipos_plantao', {
           method:'POST', headers:{'Prefer':'return=minimal'},
           body: JSON.stringify({
             projeto_id: proj.id,
@@ -7788,7 +7819,7 @@ async function importarProjetosSupabase(novos) {
   const dup = novos.length - filtrados.length;
   let ok = 0;
   for (const p of filtrados) {
-    const res = await sb('/rest/v1/projetos', {method:'POST', headers:{'Prefer':'return=representation'}, body:JSON.stringify({nome:p.nome, codigo_cc:p.codigo_cc||'', contratante:p.contratante||'', status:p.status||'Ativo'})});
+    const res = await sbApi('/projetos', {method:'POST', headers:{'Prefer':'return=representation'}, body:JSON.stringify({nome:p.nome, codigo_cc:p.codigo_cc||'', contratante:p.contratante||'', status:p.status||'Ativo'})});
     if (res) ok++;
   }
   toast(`${ok} projeto(s) importado(s)${dup>0?' · '+dup+' duplicado(s) ignorado(s)':''}`);
@@ -8124,10 +8155,10 @@ async function renderGrafHoras(d1, d2) {
 // ── Gráfico 3: Pontualidade (doughnut) ────────────────────
 async function renderGrafPontual(d1, d2) {
   // Buscar checkins do período
-  let path = '/rest/v1/checkins?aprovado=eq.true&select=medico_id,projeto_id,feito_em,aprovado';
+  let path = '/checkins?aprovado=eq.true&select=medico_id,projeto_id,feito_em,aprovado';
   if (d1) path += `&feito_em=gte.${d1}T00:00:00`;
   if (d2) path += `&feito_em=lte.${d2}T23:59:59`;
-  const checkins = await sb(path) || [];
+  const checkins = await sbApi(path) || [];
 
   // Plantões passados no período
   let plantsPassados = lancamentos.filter(l => {
@@ -8345,7 +8376,7 @@ function expandNavGroup(tabId) {
 
 
 async function carregarTiposPlantao() {
-  const data = await sb('/rest/v1/tipos_plantao?ativo=eq.true&order=nome&select=*');
+  const data = await sbApi('/tipos_plantao?ativo=eq.true&order=nome&select=*');
   tiposPlantao = data || [];
 }
 
@@ -8383,10 +8414,10 @@ async function carregarTiposLista() {
   const el = document.getElementById('tipos-lista');
   if (!el) return;
 
-  let url = '/rest/v1/tipos_plantao?ativo=eq.true&order=nome&select=*,projetos(nome)';
+  let url = '/tipos_plantao?ativo=eq.true&order=nome&select=*,projetos(nome)';
   if (projId) url += `&projeto_id=eq.${projId}`;
 
-  const data = await sb(url) || [];
+  const data = await sbApi(url) || [];
   if (!data.length) {
     el.innerHTML = '<div class="empty">Nenhum tipo cadastrado para este projeto. Adicione acima!</div>';
     return;
@@ -8426,7 +8457,7 @@ async function salvarTipoPlantao() {
   if (diff < 0) diff += 1440;
   const horas = Math.round(diff/60*100)/100;
 
-  const res = await sb('/rest/v1/tipos_plantao', {
+  const res = await sbApi('/tipos_plantao', {
     method: 'POST',
     body: JSON.stringify({ projeto_id: projId, nome, hora_ini: ini, hora_fim: fim, horas, valor, setor: setor||null, ativo: true })
   });
@@ -8442,11 +8473,7 @@ async function salvarTipoPlantao() {
 
 async function deletarTipoPlantao(id) {
   if (!confirm('Remover este tipo de plantão?')) return;
-  await fetch(SUPABASE_URL+'/rest/v1/tipos_plantao?id=eq.'+id, {
-    method: 'PATCH',
-    headers: {'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},
-    body: JSON.stringify({ ativo: false })
-  });
+  await sbApi('/tipos_plantao?id=eq.'+id, { method:'PATCH', headers:{'Prefer':'return=minimal'}, body: JSON.stringify({ ativo: false }) });
   carregarTiposLista();
   await carregarTiposPlantao();
   toast('Tipo removido!');
@@ -8686,7 +8713,7 @@ async function salvarPerfil() {
       cargo:        document.getElementById('mp-cargo')?.value.trim()||null,
     };
     if (senha) payload.senha_hash = senha;
-    const res = await sb('/rest/v1/admins?id=eq.'+adminLogado.id, {
+    const res = await sbApi('/admins?id=eq.'+adminLogado.id, {
       method:'PATCH', headers:{'Prefer':'return=minimal'}, body:JSON.stringify(payload)
     });
     if (res !== null) {
@@ -8699,7 +8726,7 @@ async function salvarPerfil() {
     // Salvar na tabela usuarios
     const payload = { nome, email: email||u.email, telefone: tel };
     if (senha) payload.senha_hash = senha;
-    const res = await sb('/rest/v1/usuarios?id=eq.'+u.id, {
+    const res = await sbApi('/usuarios?id=eq.'+u.id, {
       method:'PATCH', headers:{'Prefer':'return=minimal'}, body:JSON.stringify(payload)
     });
     if (res !== null) {
@@ -8981,7 +9008,7 @@ async function salvarAlteracoesPlano() {
   if (planoNovo&&planoNovo!==_assinaturaAtiva.plano&&p) {
     payload.plano=planoNovo; payload.limite_medicos=p.limite; payload.valor=p.valor;
   }
-  await fetch(SUPABASE_URL+'/rest/v1/assinaturas?id=eq.'+_assinaturaAtiva.id,{method:'PATCH',headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify(payload)});
+  await sbApi('/assinaturas?id=eq.'+_assinaturaAtiva.id,{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify(payload)});
   Object.assign(_assinaturaAtiva,payload);
   if (p&&planoNovo!==_assinaturaAtiva.plano) { _planoConfig=PLANOS_CONFIG[planoNovo]||PLANOS_CONFIG['starter']; aplicarRestricoesDePlano(); }
   toast('Configurações salvas!');
@@ -9014,14 +9041,14 @@ async function enviarEsqueciSenhaAdmin() {
   if (!email) { erroEl.textContent = 'Digite seu e-mail.'; erroEl.style.display = 'block'; return; }
   btn.disabled = true; btn.textContent = 'Verificando...';
   try {
-    const res = await sb('/rest/v1/admins?email=eq.' + encodeURIComponent(email) + '&select=id,nome');
+    const res = await sbApi('/admins?email=eq.' + encodeURIComponent(email) + '&select=id,nome');
     if (!res || !res.length) {
       erroEl.textContent = 'E-mail não encontrado. Verifique se digitou corretamente.';
       erroEl.style.display = 'block';
       btn.disabled = false; btn.textContent = 'Enviar solicitação';
       return;
     }
-    await sb('/rest/v1/solicitacoes_senha', {
+    await sbApi('/solicitacoes_senha', {
       method: 'POST',
       headers: {'Prefer': 'return=minimal'},
       body: JSON.stringify({ email, admin_id: res[0].id, criado_em: new Date().toISOString(), status: 'pendente' })
@@ -9043,7 +9070,7 @@ document.getElementById('modal-esqueci-admin').addEventListener('click', functio
 async function carregarHistoricoPagamentos() {
   if (!adminLogado) return;
   const el=document.getElementById('mp-historico-pag');
-  const data=await sb(`/rest/v1/pagamentos_log?admin_id=eq.${adminLogado.id}&order=pago_em.desc&limit=6`);
+  const data=await sbApi(`/pagamentos_log?admin_id=eq.${adminLogado.id}&order=pago_em.desc&limit=6`);
   if (!data?.length) { el.innerHTML='<div style="color:var(--text3);font-size:12px;">Nenhum pagamento registrado ainda.</div>'; return; }
   const formaMap={PIX:'PIX',BOLETO:'Boleto',CREDIT_CARD:'Cartão'};
   el.innerHTML='<table style="width:100%;border-collapse:collapse;font-size:12px;"><thead><tr><th style="text-align:left;padding:4px 8px;color:var(--text3);font-size:11px;">Data</th><th style="padding:4px 8px;color:var(--text3);font-size:11px;">Forma</th><th style="text-align:right;padding:4px 8px;color:var(--text3);font-size:11px;">Valor</th><th style="text-align:right;padding:4px 8px;color:var(--text3);font-size:11px;">Status</th></tr></thead><tbody>'+
@@ -9268,7 +9295,7 @@ var _setoresCache = {};
 async function carregarSetoresProjeto(projetoId) {
   if (!projetoId) return [];
   if (_setoresCache[projetoId]) return _setoresCache[projetoId];
-  var res = await sb('/rest/v1/setores?projeto_id=eq.' + projetoId + '&ativo=eq.true&select=id,nome&order=nome');
+  var res = await sbApi('/setores?projeto_id=eq.' + projetoId + '&ativo=eq.true&select=id,nome&order=nome');
   _setoresCache[projetoId] = res || [];
   return _setoresCache[projetoId];
 }
@@ -9391,7 +9418,7 @@ async function tentarPreencherValorAuto() {
   var setor  = document.getElementById('mr-setor') ? document.getElementById('mr-setor').value : '';
   var tipoNm = document.getElementById('mr-tipo')  ? document.getElementById('mr-tipo').value  : '';
   if (!projId || !setor || !tipoNm || tipoNm === 'Personalizado') return;
-  var tipos = await sb('/rest/v1/tipos_plantao?projeto_id=eq.' + projId + '&ativo=eq.true&select=*');
+  var tipos = await sbApi('/tipos_plantao?projeto_id=eq.' + projId + '&ativo=eq.true&select=*');
   if (!tipos || !tipos.length) return;
   var match = tipos.find(function(t){ return t.setor === setor && t.nome === tipoNm; });
   if (!match) match = tipos.find(function(t){ return t.setor === setor; });
@@ -9458,7 +9485,7 @@ async function renderSetoresList() {
   var el = document.getElementById('setores-lista');
   if (!el) return;
   el.innerHTML = '<div class="empty">Carregando...</div>';
-  var res = await sb('/rest/v1/setores?projeto_id=eq.' + _setorProjId + '&order=nome&select=*') || [];
+  var res = await sbApi('/setores?projeto_id=eq.' + _setorProjId + '&order=nome&select=*') || [];
   if (!res.length) { el.innerHTML = '<div class="empty">Nenhum setor ainda.</div>'; return; }
   el.innerHTML = res.map(function(s) {
     var ativoBtn = s.ativo ? 'Desativar' : 'Ativar';
@@ -9477,7 +9504,7 @@ async function adicionarSetor() {
   var inp = document.getElementById('novo-setor-nome');
   var nome = inp ? inp.value.trim() : '';
   if (!nome) { toast('Digite o nome do setor', true); return; }
-  await sb('/rest/v1/setores', {method:'POST', headers:{'Prefer':'return=minimal'}, body:JSON.stringify({projeto_id:_setorProjId, admin_id:adminLogado.id, nome:nome, ativo:true})});
+  await sbApi('/setores', {method:'POST', headers:{'Prefer':'return=minimal'}, body:JSON.stringify({projeto_id:_setorProjId, admin_id:adminLogado.id, nome:nome, ativo:true})});
   if (inp) inp.value = '';
   _setoresCache = {};
   await renderSetoresList();
@@ -9485,14 +9512,14 @@ async function adicionarSetor() {
 }
 
 async function toggleSetor(id, ativo) {
-  await sb('/rest/v1/setores?id=eq.' + id, {method:'PATCH', headers:{'Prefer':'return=minimal'}, body:JSON.stringify({ativo:ativo})});
+  await sbApi('/setores?id=eq.' + id, {method:'PATCH', headers:{'Prefer':'return=minimal'}, body:JSON.stringify({ativo:ativo})});
   _setoresCache = {};
   await renderSetoresList();
 }
 
 async function deletarSetor(id) {
   if (!confirm('Excluir este setor?')) return;
-  await sb('/rest/v1/setores?id=eq.' + id, {method:'DELETE'});
+  await sbApi('/setores?id=eq.' + id, {method:'DELETE'});
   _setoresCache = {};
   await renderSetoresList();
   toast('Setor exclu\u00eddo');
@@ -9526,7 +9553,7 @@ async function importarTiposPlanilha(input) {
         var partsI=ini.split(':'); var partsF=fim.split(':');
         var mins=(parseInt(partsF[0])*60+parseInt(partsF[1]||0))-(parseInt(partsI[0])*60+parseInt(partsI[1]||0));
         if (mins<0) mins+=24*60;
-        var res = await sb('/rest/v1/tipos_plantao', {method:'POST', headers:{'Prefer':'return=minimal'},
+        var res = await sbApi('/tipos_plantao', {method:'POST', headers:{'Prefer':'return=minimal'},
           body:JSON.stringify({projeto_id:proj.id,nome:nome,setor:setor||null,hora_ini:ini,hora_fim:fim,horas:mins/60,valor:valor||null,ativo:true})});
         if (res!==null) ok++; else erros.push('Erro: '+nome);
       }
@@ -9783,7 +9810,7 @@ async function registrarLog(acao, tabela, registroId, descricao, dadosAntes) {
       descricao,
       dados_antes:   dadosAntes || null,
     };
-    await sb('/rest/v1/log_atividades', {
+    await sbApi('/log_atividades', {
       method: 'POST',
       headers: {'Prefer': 'return=minimal'},
       body: JSON.stringify(payload)
@@ -9802,7 +9829,7 @@ async function carregarLog() {
   const filtroAcao    = document.getElementById('log-filtro-acao')?.value || '';
   const filtroPeriodo = parseInt(document.getElementById('log-filtro-periodo')?.value || '7');
 
-  let url = '/rest/v1/log_atividades?order=criado_em.desc&limit=200';
+  let url = '/log_atividades?order=criado_em.desc&limit=200';
   if (filtroUser)   url += `&usuario_id=eq.${filtroUser}`;
   if (filtroAcao)   url += `&acao=eq.${filtroAcao}`;
   if (filtroPeriodo > 0) {
@@ -9810,7 +9837,7 @@ async function carregarLog() {
     url += `&criado_em=gte.${desde}`;
   }
 
-  const logs = await sb(url) || [];
+  const logs = await sbApi(url) || [];
 
   if (!logs.length) {
     el.innerHTML = '<div class="empty">Nenhuma atividade encontrada para os filtros selecionados.</div>';
@@ -9845,7 +9872,7 @@ async function carregarLog() {
 let _usuarios = [];
 
 async function carregarUsuarios() {
-  _usuarios = await sb(`/rest/v1/usuarios?admin_id=eq.${adminLogado.id}&order=nome&select=*`) || [];
+  _usuarios = await sbApi(`/usuarios?admin_id=eq.${adminLogado.id}&order=nome&select=*`) || [];
   renderUsuarios();
   // Popular filtro do log
   const sel = document.getElementById('log-filtro-usuario');
@@ -9924,7 +9951,7 @@ async function salvarNovoUsuario() {
     criado_por: usuarioLogado?.id || null
   };
 
-  const res = await sb('/rest/v1/usuarios', {
+  const res = await sbApi('/usuarios', {
     method:'POST', headers:{'Prefer':'return=representation'},
     body: JSON.stringify(payload)
   });
@@ -9935,7 +9962,7 @@ async function salvarNovoUsuario() {
   // Vincular projetos (só para operador)
   if (perfil === 'operador' && projsSel.length) {
     for (const projId of projsSel) {
-      await sb('/rest/v1/usuario_projetos', {
+      await sbApi('/usuario_projetos', {
         method:'POST', headers:{'Prefer':'return=minimal'},
         body: JSON.stringify({usuario_id: novoUser.id, projeto_id: projId})
       });
@@ -9953,7 +9980,7 @@ async function salvarNovoUsuario() {
 }
 
 async function toggleUsuario(id, ativo) {
-  await sb(`/rest/v1/usuarios?id=eq.${id}`, {
+  await sbApi(`/usuarios?id=eq.${id}`, {
     method:'PATCH', headers:{'Prefer':'return=minimal'},
     body: JSON.stringify({ativo})
   });
@@ -9966,7 +9993,7 @@ async function toggleUsuario(id, ativo) {
 async function excluirUsuario(id, nome) {
   if (!confirm(`Excluir o usuário "${nome}"? Esta ação não pode ser desfeita.`)) return;
   await registrarLog('excluir','usuarios', id, `Excluiu usuário ${nome}`);
-  await sb(`/rest/v1/usuarios?id=eq.${id}`, {method:'DELETE'});
+  await sbApi(`/usuarios?id=eq.${id}`, {method:'DELETE'});
   await carregarUsuarios();
   toast('Usuário excluído');
 }
@@ -10052,12 +10079,12 @@ function gerarRelHoras(el){
 async function gerarRelFaltas(el){
   el.innerHTML='<div class="card"><div class="empty">Carregando...</div></div>';
   const d1=document.getElementById('rd1').value,d2=document.getElementById('rd2').value;
-  let pathCI='/rest/v1/checkins?aprovado=eq.true&select=medico_id,projeto_id,feito_em';
+  let pathCI='/checkins?aprovado=eq.true&select=medico_id,projeto_id,feito_em';
   if(d1)pathCI+=`&feito_em=gte.${d1}T00:00:00`;
   if(d2)pathCI+=`&feito_em=lte.${d2}T23:59:59`;
-  const checkins=await sb(pathCI)||[];
+  const checkins=await sbApi(pathCI)||[];
   const ciKeys=new Set(checkins.map(c=>`${c.medico_id}_${c.projeto_id}_${(c.feito_em||'').slice(0,10)}`));
-  const ausencias=await sb('/rest/v1/ausencias?select=lancamento_id,status,motivo')||[];
+  const ausencias=await sbApi('/ausencias?select=lancamento_id,status,motivo')||[];
   const ausByLanc={}; ausencias.forEach(a=>{ if(a.lancamento_id) ausByLanc[a.lancamento_id]=a; });
   const agora=new Date();
   const dados=filtrarDadosRel().filter(l=>l.medico_id && new Date(`${l.data}T${l.hora_ini||'00:00'}`)<agora);
@@ -10208,10 +10235,10 @@ async function gerarRelEntradaSaida(el){
   const d1=document.getElementById('rd1').value,d2=document.getElementById('rd2').value;
   const dados=filtrarDadosRel();
   if(!dados.length){el.innerHTML='<div class="card"><div class="empty">Nenhum plantão no período.</div></div>';return;}
-  let pathCI='/rest/v1/checkins?select=medico_id,projeto_id,feito_em,distancia_metros,aprovado&order=feito_em';
+  let pathCI='/checkins?select=medico_id,projeto_id,feito_em,distancia_metros,aprovado&order=feito_em';
   if(d1)pathCI+=`&feito_em=gte.${d1}T00:00:00`;
   if(d2)pathCI+=`&feito_em=lte.${d2}T23:59:59`;
-  const checkins=await sb(pathCI)||[];
+  const checkins=await sbApi(pathCI)||[];
   const byKey={}; checkins.forEach(c=>{const k=`${c.medico_id}_${c.projeto_id}_${(c.feito_em||'').slice(0,10)}`;(byKey[k]=byKey[k]||[]).push(c);});
   const fmtH=v=>v?new Date(v.feito_em).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'';
   const dist=v=>(v&&v.distancia_metros!=null)?`<span style="color:${v.distancia_metros>100?'var(--red)':'var(--green)'};">${v.distancia_metros}m</span>`:'';
@@ -10372,12 +10399,12 @@ function gerarRelFinTipo(el){
 async function gerarRelFaltas(el){
   el.innerHTML='<div class="card"><div class="empty">Carregando...</div></div>';
   const d1=document.getElementById('rd1').value,d2=document.getElementById('rd2').value;
-  let pathCI='/rest/v1/checkins?aprovado=eq.true&select=medico_id,projeto_id,feito_em';
+  let pathCI='/checkins?aprovado=eq.true&select=medico_id,projeto_id,feito_em';
   if(d1)pathCI+=`&feito_em=gte.${d1}T00:00:00`;
   if(d2)pathCI+=`&feito_em=lte.${d2}T23:59:59`;
-  const checkins=await sb(pathCI)||[];
+  const checkins=await sbApi(pathCI)||[];
   const ciKeys=new Set(checkins.map(c=>`${c.medico_id}_${c.projeto_id}_${(c.feito_em||'').slice(0,10)}`));
-  const ausencias=await sb('/rest/v1/ausencias?select=lancamento_id,status,motivo')||[];
+  const ausencias=await sbApi('/ausencias?select=lancamento_id,status,motivo')||[];
   const ausByLanc={}; ausencias.forEach(a=>{ if(a.lancamento_id) ausByLanc[a.lancamento_id]=a; });
   const agora=new Date();
   const dados=filtrarDadosRel().filter(l=>l.medico_id && new Date(`${l.data}T${l.hora_ini||'00:00'}`)<agora);
@@ -10406,10 +10433,10 @@ async function carregarAusenciasCI(){
   if(eD2&&!eD2.value)eD2.value=new Date().toISOString().slice(0,10);
   el.innerHTML='<div class="empty">Carregando...</div>';
   const pid=selP?.value||'',d1=eD1?.value||'',d2=eD2?.value||'';
-  let pathCI='/rest/v1/checkins?aprovado=eq.true&select=medico_id,projeto_id,feito_em';
+  let pathCI='/checkins?aprovado=eq.true&select=medico_id,projeto_id,feito_em';
   if(d1)pathCI+=`&feito_em=gte.${d1}T00:00:00`;
   if(d2)pathCI+=`&feito_em=lte.${d2}T23:59:59`;
-  const checkins=await sb(pathCI)||[];
+  const checkins=await sbApi(pathCI)||[];
   const ciKeys=new Set(checkins.map(c=>`${c.medico_id}_${c.projeto_id}_${(c.feito_em||'').slice(0,10)}`));
   let path='/lancamentos?select=*,medicos(nome,crm),projetos(nome)&order=data.desc&limit=500';
   if(pid)path+=`&projeto_id=eq.${pid}`;
@@ -10465,7 +10492,7 @@ async function gerarResumoCI(){
   if(pid) path += '&projeto_id=eq.'+pid;
   const lancs = await sbApi(path) || [];
 
-  const cks = await sb('/rest/v1/checkins?feito_em=gte.'+ini.toISOString()+'&feito_em=lte.'+new Date(fim.getTime()+6*3600000).toISOString()+'&select=lancamento_id,medico_id,projeto_id,tipo,feito_em,aprovado') || [];
+  const cks = await sbApi('/checkins?feito_em=gte.'+ini.toISOString()+'&feito_em=lte.'+new Date(fim.getTime()+6*3600000).toISOString()+'&select=lancamento_id,medico_id,projeto_id,tipo,feito_em,aprovado') || [];
 
   // Indexa check-ins por lançamento e por (médico+projeto+dia), pois nem todo check-in tem lancamento_id
   const porLanc = {};
@@ -10695,10 +10722,10 @@ async function gerarRelEntradaSaida(el){
   const d1=document.getElementById('rd1').value,d2=document.getElementById('rd2').value;
   const dados=filtrarDadosRel();
   if(!dados.length){el.innerHTML='<div class="card"><div class="empty">Nenhum plantão no período.</div></div>';return;}
-  let pathCI='/rest/v1/checkins?select=medico_id,projeto_id,feito_em,distancia_metros,aprovado&order=feito_em';
+  let pathCI='/checkins?select=medico_id,projeto_id,feito_em,distancia_metros,aprovado&order=feito_em';
   if(d1)pathCI+=`&feito_em=gte.${d1}T00:00:00`;
   if(d2)pathCI+=`&feito_em=lte.${d2}T23:59:59`;
-  const checkins=await sb(pathCI)||[];
+  const checkins=await sbApi(pathCI)||[];
   const byKey={}; checkins.forEach(c=>{const k=`${c.medico_id}_${c.projeto_id}_${(c.feito_em||'').slice(0,10)}`;(byKey[k]=byKey[k]||[]).push(c);});
   const fmtH=v=>v?new Date(v.feito_em).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'';
   const dist=v=>(v&&v.distancia_metros!=null)?`<span style="color:${v.distancia_metros>100?'var(--red)':'var(--green)'};">${v.distancia_metros}m</span>`:'';
@@ -10748,10 +10775,10 @@ async function carregarAusenciasCI(view){
     el.innerHTML=toggle+`<div class="card"><div style="margin-bottom:10px;font-size:13px;color:var(--text2);font-weight:600;">${hist.length} plantão(ões) resolvido(s)</div><table><thead><tr><th>Data</th><th>Médico</th><th>Projeto / Setor</th><th>Decisão</th><th>Obs.</th><th>Quando</th><th>Ação</th></tr></thead><tbody>${rows}</tbody></table></div>`;
     return;
   }
-  let pathCI='/rest/v1/checkins?aprovado=eq.true&select=medico_id,projeto_id,feito_em';
+  let pathCI='/checkins?aprovado=eq.true&select=medico_id,projeto_id,feito_em';
   if(d1)pathCI+=`&feito_em=gte.${d1}T00:00:00`;
   if(d2)pathCI+=`&feito_em=lte.${d2}T23:59:59`;
-  const checkins=await sb(pathCI)||[];
+  const checkins=await sbApi(pathCI)||[];
   const ciKeys=new Set(checkins.map(c=>`${c.medico_id}_${c.projeto_id}_${(c.feito_em||'').slice(0,10)}`));
   const agora=new Date();
   const pend=lancs.filter(l=>{
