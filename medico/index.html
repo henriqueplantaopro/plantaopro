@@ -351,10 +351,8 @@ html,body{height:100%;background:#f0f4f8;font-family:-apple-system,BlinkMacSyste
   <div id="page-plantoes" class="page">
     <div style="display:flex;gap:6px;margin-bottom:12px;">
       <button class="btn-filtro-plantao active" id="fp-prox" onclick="filtrarPlantoes('proximos',this)">Proximos</button>
-      <button class="btn-filtro-plantao" id="fp-pend" onclick="filtrarPlantoes('pendentes',this)">Pendentes</button>
-      <button class="btn-filtro-plantao" id="fp-conf" onclick="filtrarPlantoes('confirmados',this)">Confirmados</button>
     </div>
-    <div class="refresh-hint" id="plantoes-hint">Toque em um plantao confirmado para gerencia-lo</div>
+    <div class="refresh-hint" id="plantoes-hint">Toque em um plantao para transferir ou avisar ausencia</div>
     <div id="plantoes-lista"><div class="empty">Carregando...</div></div>
   </div>
 
@@ -1247,9 +1245,8 @@ async function carregarPlantoes() {
   _transfersPend=new Set((tr||[]).map(t=>t.lancamento_id));
   const au=await sb('/rest/v1/ausencias?medico_id=eq.'+medico.id+'&select=lancamento_id');
   _ausenciasInf=new Set((au||[]).map(a=>a.lancamento_id));
-  const pend=_plantoesCache.filter(l=>!l.confirmado).length;
   const b=document.getElementById('badge-confirmacao');
-  if(b){b.textContent=pend;b.style.display=pend>0?'inline':'none';}
+  if(b){b.style.display='none';}
   renderPlantoes();
 }
 
@@ -1267,10 +1264,8 @@ function renderPlantoes() {
   const el=document.getElementById('plantoes-lista');
   const hint=document.getElementById('plantoes-hint');
   let lista=[..._plantoesCache];
-  if(_filtroAtivo==='pendentes')lista=lista.filter(l=>!l.confirmado);
-  if(_filtroAtivo==='confirmados')lista=lista.filter(l=>l.confirmado);
   if(hint)hint.textContent='Toque em um plantao para transferir ou avisar ausencia';
-  if(!lista.length){el.innerHTML='<div class="empty">'+(_filtroAtivo==='pendentes'?'Nenhum plantao pendente':_filtroAtivo==='confirmados'?'Nenhum plantao confirmado':'Nenhum plantao escalado')+'</div>';return;}
+  if(!lista.length){el.innerHTML='<div class="empty">Nenhum plantao escalado</div>';return;}
   el.innerHTML=lista.map(l=>{
     const turno=l.tipo?.includes('Noturno')?'Noturno':l.tipo?.includes('24')?'24h':'Diurno';
     const bc=turno==='Noturno'?'badge-purple':turno==='24h'?'badge-amber':'badge-green';
