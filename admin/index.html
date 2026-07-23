@@ -1213,6 +1213,9 @@ tr:hover td{background:var(--bg3);}
             <span><span class="cal-legend-dot" style="background:#eafaf2;"></span>Diurno</span>
             <span><span class="cal-legend-dot" style="background:#f0eeff;"></span>Noturno</span>
             <span><span class="cal-legend-dot" style="background:#fff8ec;"></span>24h</span>
+            <span style="margin-left:8px;"><span class="cal-legend-dot" style="background:#c0392b;"></span>Furo sem cobertura</span>
+            <span><span class="cal-legend-dot" style="background:#d98324;"></span>Futuro sem médico</span>
+            <span><span class="cal-legend-dot" style="background:#7c3aed;"></span>Repasse em aberto</span>
           </div>
         </div>
         <div id="cal-filtro-badge" style="font-size:12px;color:var(--blue);margin-bottom:8px;display:none;"></div>
@@ -1229,6 +1232,25 @@ tr:hover td{background:var(--bg3);}
     </div>
 
     <!-- VIEW SEMANAL -->
+    <!-- VIEW MÊS EM LISTA -->
+    <div id="cal-lista" style="display:none;">
+      <div class="card">
+        <div class="cal-header" style="margin-bottom:12px;">
+          <div style="display:flex;align-items:center;gap:12px;">
+            <button class="btn btn-ghost btn-sm" onclick="navCalLista(-1)">‹ Anterior</button>
+            <div class="cal-title" id="cal-lista-label"></div>
+            <button class="btn btn-ghost btn-sm" onclick="navCalLista(1)">Próximo ›</button>
+          </div>
+          <div class="cal-legend" style="flex-wrap:wrap;gap:10px;">
+            <span><span class="cal-legend-dot" style="background:#c0392b;"></span>Furo sem cobertura (passado)</span>
+            <span><span class="cal-legend-dot" style="background:#d98324;"></span>Futuro sem médico</span>
+            <span><span class="cal-legend-dot" style="background:#7c3aed;"></span>Repasse em aberto</span>
+          </div>
+        </div>
+        <div id="cal-lista-grid"></div>
+      </div>
+    </div>
+
     <div id="cal-semanal" style="display:none;">
       <div class="card">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
@@ -1428,24 +1450,6 @@ tr:hover td{background:var(--bg3);}
       <div id="escala-grid"></div>
     </div>
 
-    <!-- VIEW MÊS EM LISTA -->
-    <div id="cal-lista" style="display:none;">
-      <div class="card">
-        <div class="cal-header" style="margin-bottom:12px;">
-          <div style="display:flex;align-items:center;gap:12px;">
-            <button class="btn btn-ghost btn-sm" onclick="navCalLista(-1)">‹ Anterior</button>
-            <div class="cal-title" id="cal-lista-label"></div>
-            <button class="btn btn-ghost btn-sm" onclick="navCalLista(1)">Próximo ›</button>
-          </div>
-          <div class="cal-legend" style="flex-wrap:wrap;gap:10px;">
-            <span><span class="cal-legend-dot" style="background:#c0392b;"></span>Furo sem cobertura (passado)</span>
-            <span><span class="cal-legend-dot" style="background:#d98324;"></span>Futuro sem médico</span>
-            <span><span class="cal-legend-dot" style="background:#7c3aed;"></span>Repasse em aberto</span>
-          </div>
-        </div>
-        <div id="cal-lista-grid"></div>
-      </div>
-    </div>
   </div>
 
   <!-- Tooltip global -->
@@ -4114,9 +4118,12 @@ function renderCal() {
       return `<div class="cal-event ${cls}" title="${l.medico||''} · ${l.projeto||''}">${(l.medico||'').split(' ')[0]}</div>`;
     }).join('');
     if (evts.length > 3) ev += `<div style="font-size:10px;color:var(--text3);">+${evts.length - 3} mais</div>`;
+    var _bols = bolinhasDoDia(evts, ds).map(function(b){
+      return '<span title="'+b.txt+'" style="display:inline-block;width:8px;height:8px;border-radius:50%;background:'+b.cor+';margin-left:3px;"></span>';
+    }).join('');
     html += `<div class="cal-day${isToday?' today':''}${evts.length?' has-events':''}" onclick="showDayDetailCal('${ds}')">
         <div style="display:flex;justify-content:space-between;align-items:center;">
-          <div class="cal-day-num">${d}</div>
+          <div class="cal-day-num">${d}${_bols}</div>
           <button onclick="event.stopPropagation();abrirLancamentoRapido('${ds}','')" title="Adicionar plantão"
             style="background:none;border:none;cursor:pointer;color:var(--text3);font-size:16px;line-height:1;padding:0 2px;border-radius:4px;opacity:0.6;"
             onmouseenter="this.style.opacity='1';this.style.color='var(--blue)'"
@@ -4342,14 +4349,14 @@ function renderSemanaGrid(dias, dows, hj, pid, mid) {
         for (let vi = 0; vi < vagasLivres; vi++) {
           html += `<div class="sem-card ${cat.cls} aberto">
             <button class="sem-card-opts" onclick="event.stopPropagation();abrirCtxChip(event,'${l.id}','${ds}','${pid||l.projeto_id}')" title="Opções">⋮</button>
-            <div class="sem-card-nome">Vaga ${preenchidas + vi + 1}/${totalVagas}</div>
+            <div class="sem-card-nome">Vaga ${preenchidas + vi + 1}/${totalVagas}${l.transferido_de?`<span title="Repassado por ${l.transferido_de_nome||'colega'}" style="font-size:9px;background:#f3e8ff;color:#7c3aed;padding:1px 4px;border-radius:99px;margin-left:3px;">↪ ${(l.transferido_de_nome||'colega').split(' ')[0]}</span>`:''}${l.cobertura?'<span style="font-size:9px;background:#eef0f8;color:#566099;padding:1px 4px;border-radius:99px;margin-left:3px;">Cob.</span>':''}</div>
             <div class="sem-card-hora">${(l.hora_ini||'').slice(0,5)}–${(l.hora_fim||'').slice(0,5)}</div> ${l.setor?`<div class="sem-card-setor">${l.setor}</div>`:''}
           </div>`;
         }
       } else {
         html += `<div class="sem-card ${cat.cls}">
           <button class="sem-card-opts" onclick="event.stopPropagation();abrirCtxChip(event,'${l.id}','${ds}','${pid||l.projeto_id}')" title="Opções">⋮</button>
-          <div class="sem-card-nome" onclick="verDetalhesSemana('${l.id}')">${(l.medico||'').split(' ').slice(0,2).join(' ')}</div>
+          <div class="sem-card-nome" onclick="verDetalhesSemana('${l.id}')">${(l.medico||'').split(' ').slice(0,2).join(' ')}${l.cobertura?'<span style="font-size:9px;background:#eef0f8;color:#566099;padding:1px 4px;border-radius:99px;margin-left:3px;">Cob.</span>':''}</div>
           <div class="sem-card-hora">${(l.hora_ini||'').slice(0,5)}–${(l.hora_fim||'').slice(0,5)}</div> ${l.setor?`<div class="sem-card-setor">${l.setor}</div>`:''}
         </div>`;
       }
