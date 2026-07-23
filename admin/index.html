@@ -967,7 +967,7 @@ tr:hover td{background:var(--bg3);}
     <div class="card" style="padding:12px 16px;margin-bottom:12px;">
       <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;">
         <div class="form-group" style="margin:0;flex:1;min-width:160px;"><label>Médico</label><select id="lf-med" onchange="filtrarLancamentos()"><option value="">Todos</option></select></div>
-        <div class="form-group" style="margin:0;flex:1;min-width:160px;"><label>Projeto</label><select id="lf-proj" onchange="filtrarLancamentos()"><option value="">Todos</option></select></div>
+        <div class="form-group" style="margin:0;flex:1;min-width:200px;"><label>Projeto / Setor</label><div id="lan-projsetor"></div></div>
         <div class="form-group" style="margin:0;"><label>De</label><input id="lf-d1" type="date" onchange="filtrarLancamentos()"></div>
         <div class="form-group" style="margin:0;"><label>Até</label><input id="lf-d2" type="date" onchange="filtrarLancamentos()"></div>
         <button class="btn btn-ghost btn-sm" onclick="limparFiltrosLanc()">Limpar</button>
@@ -1181,7 +1181,7 @@ tr:hover td{background:var(--bg3);}
             <option value="trocas">Trocas e passagens de plantões</option>
           </select>
         </div>
-        <div class="form-group"><label>Projeto</label><select id="rp"><option value="">Todos</option></select></div>
+        <div class="form-group"><label>Projeto / Setor</label><div id="rel-projsetor"></div></div>
         <div class="form-group"><label>Médico</label><select id="rm"><option value="">Todos</option></select></div>
       </div>
       <div class="form-row">
@@ -3554,9 +3554,9 @@ function popLancSelects() {
   if(sm) popLancMedicos();
   if(sp) sp.innerHTML = '<option value="">Selecione...</option>' + sortedProjetos().map(p=>`<option value="${p.id}">${p.nome}</option>`).join('');
   // filtros da nova aba
-  const fm = document.getElementById('lf-med'), fp = document.getElementById('lf-proj');
+  const fm = document.getElementById('lf-med');
   if(fm) fm.innerHTML = '<option value="">Todos os médicos</option>' + sortedMedicos().map(m=>`<option value="${m.id}">${m.nome}</option>`).join('');
-  if(fp) fp.innerHTML = '<option value="">Todos os projetos</option>' + sortedProjetos().map(p=>`<option value="${p.id}">${p.nome}</option>`).join('');
+  try { montarFiltroProjSetor('lan','lan-projsetor'); } catch(e){}
 }
 function popLancMedicos(){
   const sm = document.getElementById('lm');
@@ -3586,8 +3586,8 @@ function popCiProjPresenca() {
 function popRelSelects() {
   ['rp','ex-rp'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML='<option value="">Todos</option>'+projetos.map(p=>`<option value="${p.id}">${p.nome}</option>`).join('');});
   ['rm','ex-rm'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML='<option value="">Todos</option>'+[...medicos].sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR')).map(m=>`<option value="${m.id}">${m.nome}</option>`).join('');});
-  const rp=document.getElementById('rp'),rm=document.getElementById('rm');
-  if(rp)rp.innerHTML='<option value="">Todos</option>'+projetos.map(p=>`<option value="${p.id}">${p.nome}</option>`).join('');
+  const rm=document.getElementById('rm');
+  try { montarFiltroProjSetor('rel','rel-projsetor'); } catch(e){}
   if(rm)rm.innerHTML='<option value="">Todos</option>'+[...medicos].sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR')).map(m=>`<option value="${m.id}">${m.nome}</option>`).join('');
 }
 
@@ -3808,10 +3808,10 @@ async function carregarCheckins() {
 
 // ── RELATÓRIOS ────────────────────────────────────────
 function getDadosRel() {
-  const pid=document.getElementById('rp').value, mid=document.getElementById('rm').value;
+  const mid=document.getElementById('rm').value;
   const d1=document.getElementById('rd1').value, d2=document.getElementById('rd2').value;
   let dados=[...lancamentos];
-  if(pid) dados=dados.filter(l=>l.projeto_id===pid);
+  dados=dados.filter(function(l){ return passaFiltroProjSetor('rel', l); });
   if(mid) dados=dados.filter(l=>l.medico_id===mid);
   if(d1) dados=dados.filter(l=>l.data>=d1);
   if(d2) dados=dados.filter(l=>l.data<=d2);
@@ -6533,7 +6533,7 @@ function toggleProjetoTudo(pref, pid){
   var sel = _selProj[pref] || (_selProj[pref] = {});
   if (sel[pid] === '__todos__' || (Array.isArray(sel[pid]) && sel[pid].length)) delete sel[pid];
   else sel[pid] = '__todos__';
-  renderDropLista(pref); renderResumoProj(pref);
+  renderDropLista(pref); renderResumoProj(pref); atualizarRotuloFiltro(pref); _aoMudarFiltro(pref);
 }
 
 // Clicar num setor específico
@@ -6547,7 +6547,7 @@ function toggleSetorProj(pref, pid, setor){
   if (!lista.length) delete sel[pid];
   else if (todos.length && lista.length === todos.length) sel[pid] = '__todos__';
   else sel[pid] = lista;
-  renderDropLista(pref); renderResumoProj(pref);
+  renderDropLista(pref); renderResumoProj(pref); atualizarRotuloFiltro(pref); _aoMudarFiltro(pref);
 }
 
 function marcarTodosProjetos(pref){
@@ -6555,7 +6555,7 @@ function marcarTodosProjetos(pref){
   var todosMarcados = sortedProjetos().every(function(p){ return sel[p.id] === '__todos__'; });
   _selProj[pref] = {};
   if (!todosMarcados) sortedProjetos().forEach(function(p){ _selProj[pref][p.id] = '__todos__'; });
-  renderDropLista(pref); renderResumoProj(pref);
+  renderDropLista(pref); renderResumoProj(pref); atualizarRotuloFiltro(pref); _aoMudarFiltro(pref);
 }
 
 // Resumo do que foi escolhido, abaixo do campo
@@ -6564,7 +6564,7 @@ function renderResumoProj(pref){
   var lbl = document.getElementById(pref+'-dd-label');
   var sel = _selProj[pref] || {};
   var pids = Object.keys(sel);
-  if (lbl) lbl.textContent = pids.length ? pids.length + ' projeto(s) selecionado(s)' : 'Selecione os projetos e setores…';
+  if (lbl && alvo) lbl.textContent = pids.length ? pids.length + ' projeto(s) selecionado(s)' : 'Selecione os projetos e setores…';
   if (!alvo) return;
   if (!pids.length){ alvo.innerHTML = '<div style="font-size:12px;color:var(--text3);">Nenhum projeto vinculado ainda.</div>'; return; }
   alvo.innerHTML = pids.map(function(pid){
@@ -6590,15 +6590,88 @@ function coletarSetoresPorProjeto(pref){
   return out;
 }
 
-// Fecha o dropdown ao clicar fora
+// ── FILTRO REUTILIZÁVEL DE PROJETO + SETOR (relatórios, lançamentos) ──
+// Usa o mesmo seletor hierárquico do cadastro de médico.
+// Nada selecionado = todos os projetos e setores.
+async function montarFiltroProjSetor(pref, elId){
+  var el = document.getElementById(elId);
+  if(!el) return;
+  if(!_selProj[pref]) _selProj[pref] = {};
+  el.style.display = 'block';
+  el.innerHTML =
+    '<div style="position:relative;width:100%;">' +
+      '<button type="button" id="'+pref+'-dd-btn" onclick="toggleDropProjetos(\''+pref+'\')" ' +
+        'style="width:100%;text-align:left;padding:8px 11px;border:1px solid var(--border);border-radius:var(--radius);background:#fff;cursor:pointer;font-size:13px;display:flex;justify-content:space-between;align-items:center;gap:8px;">' +
+        '<span id="'+pref+'-dd-label">Todos os projetos</span><span style="color:var(--text3);">&#9662;</span>' +
+      '</button>' +
+      '<div id="'+pref+'-dd-panel" style="display:none;position:absolute;z-index:60;left:0;min-width:100%;width:max-content;max-width:640px;top:100%;margin-top:4px;background:#fff;border:1px solid var(--border2);border-radius:var(--radius);box-shadow:0 8px 24px rgba(0,0,0,0.14);max-height:420px;overflow:auto;">' +
+        '<div style="position:sticky;top:0;background:#fff;padding:8px;border-bottom:1px solid var(--border);z-index:2;">' +
+          '<input type="text" id="'+pref+'-dd-busca" placeholder="Buscar projeto ou setor…" oninput="renderDropLista(\''+pref+'\')" ' +
+            'style="width:100%;padding:7px 9px;border:1px solid var(--border);border-radius:8px;font-size:13px;">' +
+        '</div>' +
+        '<div id="'+pref+'-dd-lista"></div>' +
+      '</div>' +
+    '</div>';
+  await _carregarTodosSetores();
+  renderDropLista(pref);
+  atualizarRotuloFiltro(pref);
+}
+
+function _aoMudarFiltro(pref){
+  try {
+    if (pref === 'lan' && typeof renderLancamentos === 'function') renderLancamentos();
+    if (pref === 'rel' && typeof filtrarDadosRel === 'function') { /* aplica ao gerar o relatório */ }
+  } catch(e){}
+}
+
+function atualizarRotuloFiltro(pref){
+  var lbl = document.getElementById(pref+'-dd-label');
+  if(!lbl) return;
+  var sel = _selProj[pref] || {};
+  var n = Object.keys(sel).length;
+  if(!n){ lbl.textContent = 'Todos os projetos'; return; }
+  if(n === 1){
+    var pid = Object.keys(sel)[0];
+    var p = (projetos||[]).find(function(x){ return x.id === pid; });
+    var v = sel[pid];
+    var det = (v === '__todos__') ? '' : ' · ' + (Array.isArray(v) ? v.length : 0) + ' setor(es)';
+    lbl.textContent = (p ? p.nome : 'Projeto') + det;
+    return;
+  }
+  lbl.textContent = n + ' projetos selecionados';
+}
+
+// Um lançamento passa no filtro?
+function passaFiltroProjSetor(pref, l){
+  var sel = _selProj[pref] || {};
+  var pids = Object.keys(sel);
+  if(!pids.length) return true;                 // nada marcado = tudo
+  if(pids.indexOf(l.projeto_id) === -1) return false;
+  var v = sel[l.projeto_id];
+  if(v === '__todos__') return true;
+  var st = String(l.setor||'').trim();
+  return Array.isArray(v) && v.indexOf(st) !== -1;
+}
+
+function limparFiltroProjSetor(pref){
+  _selProj[pref] = {};
+  renderDropLista(pref);
+  atualizarRotuloFiltro(pref);
+}
+
+// Fecha o dropdown ao clicar fora.
+// Em CAPTURA: o clique numa linha re-renderiza a lista (innerHTML) e o elemento
+// clicado deixa de existir — se checássemos depois, closest() falharia e o
+// painel fecharia sozinho a cada seleção.
 document.addEventListener('click', function(e){
-  ['med','em'].forEach(function(pref){
+  ['med','em','rel','lan'].forEach(function(pref){
     var painel = document.getElementById(pref+'-dd-panel');
     if(!painel || painel.style.display === 'none') return;
-    if(e.target.closest && (e.target.closest('#'+pref+'-dd-panel') || e.target.closest('#'+pref+'-dd-btn'))) return;
+    var dentro = e.target.closest && (e.target.closest('#'+pref+'-dd-panel') || e.target.closest('#'+pref+'-dd-btn'));
+    if(dentro) return;
     painel.style.display = 'none';
   });
-});
+}, true);
 
 // Renderizar checkboxes de projetos no formulário de médico
 function renderMedProjetosCheck() {
@@ -7589,7 +7662,7 @@ function calcularFurosDash(){
 // ─── RELATÓRIOS ───────────────────────────────────────
 let _relTipoAtivo='detalhado';
 function selecionarRelTipo(tipo,btn){_relTipoAtivo=tipo;document.querySelectorAll('.rel-tipo-btn').forEach(b=>{b.classList.remove('active');b.style.cssText='';});btn.classList.add('active');document.getElementById('rel-resultado').innerHTML='';}
-function filtrarDadosRel(){const pid=document.getElementById('rp').value,mid=document.getElementById('rm').value,d1=document.getElementById('rd1').value,d2=document.getElementById('rd2').value;let dados=[...lancamentos];if(pid)dados=dados.filter(l=>l.projeto_id===pid);if(mid)dados=dados.filter(l=>l.medico_id===mid);if(d1)dados=dados.filter(l=>l.data>=d1);if(d2)dados=dados.filter(l=>l.data<=d2);return dados;}
+function filtrarDadosRel(){const mid=document.getElementById('rm').value,d1=document.getElementById('rd1').value,d2=document.getElementById('rd2').value;let dados=[...lancamentos];dados=dados.filter(function(l){return passaFiltroProjSetor('rel', l);});if(mid)dados=dados.filter(l=>l.medico_id===mid);if(d1)dados=dados.filter(l=>l.data>=d1);if(d2)dados=dados.filter(l=>l.data<=d2);return dados;}
 function gerarRelatorio(){const el=document.getElementById('rel-resultado');switch(_relTipoAtivo){case'detalhado':gerarRelDetalhado(el);break;case'resumo':gerarRelResumo(el);break;case'horas':gerarRelHoras(el);break;case'faltas':gerarRelFaltas(el);break;case'atrasos':gerarRelAtrasos(el);break;case'checkins':gerarRelCheckinsForaTol(el);break;case'medicos':gerarRelMedicos(el);break;}}
 
 function gerarRelDetalhado(el){const dados=filtrarDadosRel();if(!dados.length){el.innerHTML='<div class="card"><div class="empty">Nenhum dado.</div></div>';return;}const tH=dados.reduce((s,l)=>s+(l.horas||0),0),tR=dados.reduce((s,l)=>s+(l.honorario||0),0),nMeds=new Set(dados.map(l=>l.medico_id)).size;let html=`<div class="metrics"><div class="metric"><div class="metric-label">Plantões</div><div class="metric-val">${dados.length}</div></div><div class="metric"><div class="metric-label">Horas totais</div><div class="metric-val">${Math.round(tH*10)/10}h</div></div><div class="metric"><div class="metric-label">Total honorários</div><div class="metric-val">${fBRL(tR)}</div></div><div class="metric"><div class="metric-label">Médicos</div><div class="metric-val">${nMeds}</div></div></div>`;const porProjeto={};dados.forEach(l=>{const p=l.projeto||'Sem projeto';if(!porProjeto[p])porProjeto[p]=[];porProjeto[p].push(l);});Object.entries(porProjeto).sort((a,b)=>a[0].localeCompare(b[0],'pt-BR')).forEach(([proj,lans])=>{const projH=lans.reduce((s,l)=>s+(l.horas||0),0),projR=lans.reduce((s,l)=>s+(l.honorario||0),0);const grupos={};lans.forEach(l=>{const turno=l.tipo?.includes('Noturno')?'Noturno':l.tipo?.includes('24')?'24h':'Diurno';const chave=`${l.medico}||${l.horas}||${turno}||${l.setor||''}`;if(!grupos[chave])grupos[chave]={medico:l.medico,crm:l.crm,horas:l.horas,turno,setor:l.setor||'',qtd:0,total:0};grupos[chave].qtd++;grupos[chave].total+=l.honorario||0;});const linhas=Object.values(grupos).sort((a,b)=>a.medico.localeCompare(b.medico,'pt-BR')).map(g=>{const badge=g.turno==='Noturno'?'badge-purple':g.turno==='24h'?'badge-amber':'badge-green';return `<tr><td>${g.medico}<br><span class="mono" style="font-size:11px;color:var(--text3);">${g.crm||''}</span></td><td class="mono">${g.horas}h</td><td><span class="badge ${badge}">${g.turno}</span></td><td>${g.setor||'—'}</td><td style="text-align:center;">${g.qtd}</td><td class="mono" style="color:var(--green);font-weight:600;">${fBRL(Math.round(g.total*100)/100)}</td></tr>`;}).join('');html+=`<div class="card" style="margin-bottom:12px;"><div style="display:flex;justify-content:space-between;margin-bottom:10px;"><div class="card-title" style="margin-bottom:0;">${proj}</div><div style="font-size:12px;color:var(--text2);">${lans.length} plantão(ões) · ${Math.round(projH*10)/10}h · <span style="color:var(--green);font-weight:600;">${fBRL(projR)}</span></div></div><table><thead><tr><th>Médico/CRM</th><th>Hrs/plantão</th><th>Turno</th><th>Setor</th><th style="text-align:center;">Qtd</th><th>Total</th></tr></thead><tbody>${linhas}</tbody><tfoot><tr style="border-top:1.5px solid var(--border2);"><td colspan="4" style="font-weight:600;padding:8px;font-size:12px;">Total</td><td style="text-align:center;font-weight:600;">${lans.length}</td><td class="mono" style="color:var(--green);font-weight:600;">${fBRL(projR)}</td></tr></tfoot></table></div>`;});el.innerHTML=html;}
@@ -8826,9 +8899,9 @@ async function renderGrafStatus() {
 function initLancamentos() {
   // Popular selects de filtro
   const sm = document.getElementById('lf-med');
-  const sp = document.getElementById('lf-proj');
   if (sm) sm.innerHTML = '<option value="">Todos os médicos</option>' +
     sortedMedicos().map(m=>`<option value="${m.id}">${m.nome}</option>`).join('');
+  try { montarFiltroProjSetor('lan','lan-projsetor'); } catch(e){}
   if (sp) sp.innerHTML = '<option value="">Todos os projetos</option>' +
     sortedProjetos().map(p=>`<option value="${p.id}">${p.nome}</option>`).join('');
   renderLancamentos();
@@ -8839,7 +8912,8 @@ function filtrarLancamentos() {
 }
 
 function limparFiltrosLanc() {
-  ['lf-med','lf-proj','lf-d1','lf-d2'].forEach(id => {
+  limparFiltroProjSetor('lan');
+  ['lf-med','lf-d1','lf-d2'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.value = '';
   });
@@ -8850,12 +8924,12 @@ function renderLancamentos() {
   const el = document.getElementById('lanc-lista');
   if (!el) return;
   const mid  = document.getElementById('lf-med')?.value  || '';
-  const pid  = document.getElementById('lf-proj')?.value || '';
+
   const d1   = document.getElementById('lf-d1')?.value   || '';
   const d2   = document.getElementById('lf-d2')?.value   || '';
   let lista = [...lancamentos];
   if (mid) lista = lista.filter(l => l.medico_id === mid);
-  if (pid) lista = lista.filter(l => l.projeto_id === pid);
+  lista = lista.filter(function(l){ return passaFiltroProjSetor('lan', l); });
   if (d1)  lista = lista.filter(l => l.data >= d1);
   if (d2)  lista = lista.filter(l => l.data <= d2);
   lista = lista.sort((a,b) => b.data.localeCompare(a.data));
