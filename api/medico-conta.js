@@ -210,6 +210,111 @@ export default async function handler(req, res) {
       }
     }
 
+    // ── CANDIDATURAS E TRANSFERÊNCIAS DO MÉDICO ─────────────────────────
+    if (['cand-minhas','cand-criar','tr-enviadas','tr-recebidas','tr-criar','tr-responder'].includes(req.query.action)) {
+      if (!rateLimit(ip, 60, 60_000)) return json(res, 429, { erro: 'Muitas tentativas. Aguarde 1 minuto.' });
+      const { token_acesso, dados } = req.body || {};
+      const medico = await medicoPorToken(token_acesso);
+      if (!medico) return json(res, 401, { erro: 'Sessão inválida. Faça login novamente.' });
+
+      // Minhas candidaturas
+      if (req.query.action === 'cand-minhas') {
+        const r = await sbAdmin(`/rest/v1/candidaturas?medico_id=eq.${medico.id}&select=*&limit=500`);
+        return json(res, 200, { ok: true, candidaturas: r || [] });
+      }
+
+      // Candidatar-se: o servidor decide o medico_id e confere se a vaga aceita este médico
+      if (req.query.action === 'cand-criar') {
+        const lid = dados?.lancamento_id;
+        if (!lid) return json(res, 400, { erro: 'lancamento_id obrigatório' });
+        const ll = await sbAdmin(
+          `/rest/v1/lancamentos?id=eq.${lid}&select=id,aberto,vagas,vagas_preenchidas,especialidades_alvo,exige_rqe&limit=1`
+        );
+        const l = ll?.[0];
+        if (!l || !l.aberto) return json(res, 409, { erro: 'Esta vaga não está mais aberta.' });
+        if ((l.vagas || 1) <= (l.vagas_preenchidas || 0)) {
+          return json(res, 409, { erro: 'As vagas deste plantão já foram preenchidas.' });
+        }
+        // Trava de especialidade: vaga de especialista só aceita quem tem a especialidade
+        const alvo = l.especialidades_alvo || [];
+        if (alvo.length) {
+          const minhas = []
+            .concat(medico.especialidades || [])
+            .concat(medico.especialidade ? [medico.especialidade] : []);
+          const ok = alvo.some((e) => minhas.includes(e));
+          if (!ok) return json(res, 403, { erro: 'Esta vaga exige uma especialidade que não consta no seu cadastro.' });
+        }
+        if (l.exige_rqe && !medico.rqe && !(medico.rqes || []).length) {
+          return json(res, 403, { erro: 'Esta vaga exige RQE registrado no seu cadastro.' });
+        }
+        // Evita candidatura duplicada
+        const ja = await sbAdmin(
+          `/rest/v1/candidaturas?lancamento_id=eq.${lid}&medico_id=eq.${medico.id}&select=id&limit=1`
+        );
+        if (ja?.length) return json(res, 409, { erro: 'Você já se candidatou a esta vaga.' });
+        const criado = await sbAdmin('/rest/v1/candidaturas', {
+          method: 'POST', headers: { Prefer: 'return=representation' },
+          body: JSON.stringify({
+            lancamento_id: lid, medico_id: medico.id,
+            status: 'pendente', obs: dados?.obs || null,
+          }),
+        });
+        return json(res, 200, { ok: true, candidatura: criado?.[0] || null });
+      }
+
+      // Transferências que eu enviei (para marcar "aguardando resposta")
+      if (req.query.action === 'tr-enviadas') {
+        const r = await sbAdmin(
+          `/rest/v1/transferencias?medico_origem_id=eq.${medico.id}&status=eq.pendente&select=lancamento_id`
+        );
+        return json(res, 200, { ok: true, transferencias: r || [] });
+      }
+
+      // Transferências que recebi
+      if (req.query.action === 'tr-recebidas') {
+        const r = await sbAdmin(
+          `/rest/v1/transferencias?medico_destino_id=eq.${medico.id}` +
+          `&select=*,medicos!transferencias_medico_origem_id_fkey(nome,crm),lancamentos(data,hora_ini,hora_fim,setor,projetos(nome))` +
+          `&order=criado_em.desc&limit=100`
+        );
+        return json(res, 200, { ok: true, transferencias: r || [] });
+      }
+
+      // Criar transferência: origem é sempre quem está autenticado, e o plantão precisa ser dele
+      if (req.query.action === 'tr-criar') {
+        const lid = dados?.lancamento_id, destino = dados?.medico_destino_id;
+        if (!lid || !destino) return json(res, 400, { erro: 'Dados incompletos' });
+        const ll = await sbAdmin(`/rest/v1/lancamentos?id=eq.${lid}&select=id,medico_id&limit=1`);
+        if (ll?.[0]?.medico_id !== medico.id) return json(res, 403, { erro: 'Este plantão não é seu.' });
+        const criado = await sbAdmin('/rest/v1/transferencias', {
+          method: 'POST', headers: { Prefer: 'return=representation' },
+          body: JSON.stringify({
+            lancamento_id: lid, medico_origem_id: medico.id,
+            medico_destino_id: destino, mensagem: dados?.mensagem || null,
+            status: 'pendente',
+          }),
+        });
+        return json(res, 200, { ok: true, transferencia: criado?.[0] || null });
+      }
+
+      // Responder transferência: só o destinatário pode
+      if (req.query.action === 'tr-responder') {
+        const tid = dados?.transferencia_id, status = dados?.status;
+        if (!tid || !['aceito','recusado'].includes(status)) {
+          return json(res, 400, { erro: 'Dados inválidos' });
+        }
+        const tt = await sbAdmin(`/rest/v1/transferencias?id=eq.${tid}&select=id,medico_destino_id&limit=1`);
+        if (tt?.[0]?.medico_destino_id !== medico.id) {
+          return json(res, 403, { erro: 'Esta transferência não é sua.' });
+        }
+        await sbAdmin(`/rest/v1/transferencias?id=eq.${tid}`, {
+          method: 'PATCH', headers: { Prefer: 'return=minimal' },
+          body: JSON.stringify({ status, respondido_em: new Date().toISOString() }),
+        });
+        return json(res, 200, { ok: true });
+      }
+    }
+
     // ── NOTIFICAR TRANSFERÊNCIA ─────────────────────────────────────────
     // Chamado pelo app do médico após criar a solicitação. Trava anti-spam:
     // só dispara se a transferência existir e estiver pendente.
