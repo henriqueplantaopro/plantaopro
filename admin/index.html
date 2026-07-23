@@ -725,9 +725,17 @@ tr:hover td{background:var(--bg3);}
       </div>
       <div class="form-row four">
         <div class="form-group"><label>CRM <span style="color:var(--red)">*</span></label><input id="mc" type="text" placeholder="CRM/RJ 000001"></div>
-        <div class="form-group"><label>RQE</label><input id="mrqe" type="text" placeholder="RQE 00000"></div>
+        <div class="form-group"><label>Data de admissão</label><input id="mn-admissao" type="date"></div>
         <input type="hidden" id="me" value="">
         <input type="hidden" id="mv" value="0">
+      </div>
+      <div class="form-row four">
+        <div class="form-group"><label>Tipo de vínculo</label><select id="mn-vinculo"><option value="">—</option><option value="SCP">SCP</option><option value="PJ">PJ</option></select></div>
+        <div class="form-group"><label>Status do contrato</label><select id="mn-contrato"><option value="sem_contrato">Sem contrato</option><option value="enviado">Enviado</option><option value="assinado">Assinado</option></select></div>
+      </div>
+      <div class="form-group" style="margin-top:4px;">
+        <label>RQE <span style="font-weight:400;font-size:11px;color:var(--text3);">(um por linha ou separados por vírgula — para médicos com mais de uma especialidade)</span></label>
+        <textarea id="mrqe" rows="2" placeholder="RQE 12345&#10;RQE 67890" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:var(--radius);font-size:13px;resize:vertical;"></textarea>
       </div>
       <div class="form-group" style="margin-top:4px;">
         <label>Especialidades <span style="font-weight:400;font-size:11px;color:var(--text3);">(vazio = Clínico Geral / Plantonista generalista)</span></label>
@@ -837,42 +845,6 @@ tr:hover td{background:var(--bg3);}
         </div>
       </div>
 
-      <!-- DOCUMENTAÇÃO (ANEXOS) -->
-      <div style="border-top:1px solid var(--border);margin:12px 0;padding-top:12px;">
-        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--text2);margin-bottom:10px;">Documentação <span style="font-weight:400;font-size:10px;color:var(--text3);">(PDF, JPG ou PNG — máx. 5MB cada)</span></div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-          <div class="form-group">
-            <label>Documento de identidade (RG / CNH)</label>
-            <div class="upload-doc-slot" onclick="triggerDocUpload('mn-doc-id')">
-              <span id="mn-doc-id-label">Clique para anexar</span>
-              <input type="file" id="mn-doc-id" accept=".pdf,.jpg,.jpeg,.png" style="display:none;" onchange="previewDocLabel('mn-doc-id')">
-            </div>
-          </div>
-          <div class="form-group">
-            <label>CRM (carteira / certidão)</label>
-            <div class="upload-doc-slot" onclick="triggerDocUpload('mn-doc-crm')">
-              <span id="mn-doc-crm-label">Clique para anexar</span>
-              <input type="file" id="mn-doc-crm" accept=".pdf,.jpg,.jpeg,.png" style="display:none;" onchange="previewDocLabel('mn-doc-crm')">
-            </div>
-          </div>
-          <div class="form-group">
-            <label>RQE (se aplicável)</label>
-            <div class="upload-doc-slot" onclick="triggerDocUpload('mn-doc-rqe')">
-              <span id="mn-doc-rqe-label">Clique para anexar</span>
-              <input type="file" id="mn-doc-rqe" accept=".pdf,.jpg,.jpeg,.png" style="display:none;" onchange="previewDocLabel('mn-doc-rqe')">
-            </div>
-          </div>
-          <div class="form-group">
-            <label>Título de especialista</label>
-            <div class="upload-doc-slot" onclick="triggerDocUpload('mn-doc-titulo')">
-              <span id="mn-doc-titulo-label">Clique para anexar</span>
-              <input type="file" id="mn-doc-titulo" accept=".pdf,.jpg,.jpeg,.png" style="display:none;" onchange="previewDocLabel('mn-doc-titulo')">
-            </div>
-          </div>
-        </div>
-        <div style="font-size:11px;color:var(--text3);margin-top:6px;">Os documentos ficam armazenados no Supabase Storage. Certifique-se de que o bucket <code>medico-docs</code> existe com política de acesso privado.</div>
-      </div>
-
       <!-- PROJETOS VINCULADOS -->
       <div class="form-group" style="margin-top:8px;">
         <label>Projetos vinculados <span style="font-weight:400;font-size:11px;color:var(--text3);">(médico verá plantões abertos destes projetos)</span></label>
@@ -893,6 +865,22 @@ tr:hover td{background:var(--bg3);}
         </div>
       </div>
       <div id="med-busca-count" style="font-size:12px;color:var(--text3);margin-bottom:8px;display:none;"></div>
+      <div id="lote-cadastro-bar" style="display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-bottom:10px;padding:10px;background:var(--bg3);border-radius:var(--radius);">
+        <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;font-weight:600;">
+          <input type="checkbox" id="lote-cad-toggle" onchange="toggleLoteCadastro(this.checked)"> Edição em lote
+        </label>
+        <span id="lote-cad-count" style="font-size:12px;color:var(--text3);">0 selecionado(s)</span>
+        <div id="lote-cad-acoes" style="display:none;flex-wrap:wrap;align-items:center;gap:8px;margin-left:auto;">
+          <select id="lote-cad-vinculo" style="padding:6px;border:1px solid var(--border);border-radius:6px;font-size:12px;">
+            <option value="">Tipo de vínculo…</option><option value="SCP">SCP</option><option value="PJ">PJ</option>
+          </select>
+          <button class="btn btn-ghost" style="font-size:12px;" onclick="aplicarLoteCadastro('tipo_vinculo')">Aplicar vínculo</button>
+          <select id="lote-cad-contrato" style="padding:6px;border:1px solid var(--border);border-radius:6px;font-size:12px;">
+            <option value="">Status contrato…</option><option value="sem_contrato">Sem contrato</option><option value="enviado">Enviado</option><option value="assinado">Assinado</option>
+          </select>
+          <button class="btn btn-ghost" style="font-size:12px;" onclick="aplicarLoteCadastro('status_contrato')">Aplicar contrato</button>
+        </div>
+      </div>
       <div id="medicos-lista"><div class="empty">Carregando...</div></div>
     </div>
   </div>
@@ -1904,6 +1892,13 @@ tr:hover td{background:var(--bg3);}
     </div>
     <!-- Vagas e plantão aberto — sempre visíveis -->
     
+      <!-- Cobertura -->
+      <div style="border-top:1px solid var(--border);padding-top:10px;margin-top:4px;">
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;">
+          <input type="checkbox" id="mr-cobertura" style="width:16px;height:16px;accent-color:var(--purple);">
+          <span>Plantão de cobertura</span>
+        </label>
+      </div>
       <!-- Plantão aberto -->
       <div style="border-top:1px solid var(--border);padding-top:10px;margin-top:4px;">
         <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;">
@@ -1985,7 +1980,15 @@ tr:hover td{background:var(--bg3);}
     </div>
     <div class="form-row four">
       <div class="form-group"><label>CRM</label><input id="em-crm" type="text"></div>
-      <div class="form-group"><label>RQE</label><input id="em-rqe" type="text"></div>
+      <div class="form-group"><label>Data de admissão</label><input id="em-admissao" type="date"></div>
+      <div class="form-group"><label>Tipo de vínculo</label><select id="em-vinculo"><option value="">—</option><option value="SCP">SCP</option><option value="PJ">PJ</option></select></div>
+      <div class="form-group"><label>Status do contrato</label><select id="em-contrato"><option value="sem_contrato">Sem contrato</option><option value="enviado">Enviado</option><option value="assinado">Assinado</option></select></div>
+    </div>
+    <div class="form-group">
+      <label>RQE <span style="font-weight:400;font-size:11px;color:var(--text3);">(um por linha ou separados por vírgula)</span></label>
+      <textarea id="em-rqe" rows="2" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:var(--radius);font-size:13px;resize:vertical;"></textarea>
+    </div>
+    <div class="form-row">
       <div class="form-group"><label>Especialidade(s)</label>
         <div id="em-esp-check" style="display:flex;flex-wrap:wrap;gap:5px;max-height:120px;overflow-y:auto;border:1px solid var(--border);border-radius:var(--radius);padding:8px;">
                   <label style="display:flex;align-items:center;gap:4px;font-size:11px;cursor:pointer;white-space:nowrap;">
@@ -2773,6 +2776,46 @@ function limparBuscaMedicos() {
   el?.focus();
 }
 
+// ── EDIÇÃO EM LOTE DE CADASTRO ──────────────────────────────────────
+function toggleLoteCadastro(on) {
+  document.querySelectorAll('.lote-cad-col').forEach(function(c){ c.style.display = on ? 'table-cell' : 'none'; });
+  var ac = document.getElementById('lote-cad-acoes');
+  if (ac) ac.style.display = on ? 'flex' : 'none';
+  if (!on) {
+    document.querySelectorAll('.lote-cad-chk').forEach(function(c){ c.checked = false; });
+  }
+  atualizarLoteCadCount();
+}
+function atualizarLoteCadCount() {
+  var n = document.querySelectorAll('.lote-cad-chk:checked').length;
+  var el = document.getElementById('lote-cad-count');
+  if (el) el.textContent = n + ' selecionado(s)';
+}
+async function aplicarLoteCadastro(campo) {
+  var ids = [...document.querySelectorAll('.lote-cad-chk:checked')].map(function(c){ return c.value; });
+  if (!ids.length) { toast('Selecione ao menos um médico', true); return; }
+  var selId = campo === 'tipo_vinculo' ? 'lote-cad-vinculo' : 'lote-cad-contrato';
+  var valor = document.getElementById(selId).value;
+  if (!valor) { toast('Escolha o valor a aplicar', true); return; }
+  var rotulo = campo === 'tipo_vinculo' ? 'tipo de vínculo' : 'status de contrato';
+  if (!confirm('Aplicar ' + rotulo + ' = "' + valor + '" a ' + ids.length + ' médico(s)?')) return;
+  var ok = 0, erro = 0;
+  for (var i = 0; i < ids.length; i++) {
+    var body = {}; body[campo] = valor;
+    try {
+      var r = await fetch('/api/medicos?id=' + ids[i], {
+        method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+      if (r.ok) ok++; else erro++;
+    } catch (e) { erro++; }
+  }
+  toast(ok + ' atualizado(s)' + (erro ? ', ' + erro + ' com erro' : ''));
+  await carregarMedicos();
+  var tg = document.getElementById('lote-cad-toggle');
+  if (tg && tg.checked) toggleLoteCadastro(true); // remantém modo lote e re-exibe colunas
+}
+
 function renderMedicos(filtro='') {
   const el = document.getElementById('medicos-lista');
   const count = document.getElementById('med-busca-count');
@@ -2799,7 +2842,7 @@ function renderMedicos(filtro='') {
     el.innerHTML = `<div class="empty">Nenhum médico encontrado para "${filtro}".</div>`;
     return;
   }
-  el.innerHTML = '<table><thead><tr><th>Nome</th><th>CRM</th><th>Especialidade</th><th>Tipo</th><th>Valor/h</th><th>Dispositivo</th><th>App</th><th></th></tr></thead><tbody>' +
+  el.innerHTML = '<table><thead><tr><th class="lote-cad-col" style="display:none;width:28px;"></th><th>Nome</th><th>CRM</th><th>Especialidade</th><th>Tipo</th><th>Valor/h</th><th>Dispositivo</th><th>App</th><th></th></tr></thead><tbody>' +
     lista.map(m => {
       const devStatus = m.device_id
         ? `<span class="badge badge-green">✓ Vinculado</span>`
@@ -2809,6 +2852,7 @@ function renderMedicos(filtro='') {
         : '';
       const nasc = m.data_nascimento ? new Date(m.data_nascimento+'T12:00:00').toLocaleDateString('pt-BR') : '—';
       return `<tr>
+        <td class="lote-cad-col" style="display:none;"><input type="checkbox" class="lote-cad-chk" value="${m.id}" onchange="atualizarLoteCadCount()"></td>
         <td>
           <strong>${m.nome}</strong><br>
           <span style="font-size:11px;color:var(--text3);">${m.email||''}</span><br>
@@ -2827,6 +2871,10 @@ function renderMedicos(filtro='') {
         </td>
       </tr>`;
     }).join('') + '</tbody></table>';
+  var _lt = document.getElementById('lote-cad-toggle');
+  if (_lt && _lt.checked) {
+    document.querySelectorAll('.lote-cad-col').forEach(function(c){ c.style.display = 'table-cell'; });
+  }
 }
 
 
@@ -3070,7 +3118,10 @@ function abrirEditarMedico(id) {
   document.getElementById('em-cpf').value   = m.cpf || '';
   document.getElementById('em-tipo').value  = m.tipo || 'Plantonista';
   document.getElementById('em-crm').value   = m.crm || '';
-  document.getElementById('em-rqe').value   = m.rqe || '';
+  document.getElementById('em-rqe').value   = (m.rqes && m.rqes.length) ? m.rqes.join('\n') : (m.rqe || '');
+  var _ea=document.getElementById('em-admissao'); if(_ea) _ea.value = m.data_admissao || '';
+  var _ev=document.getElementById('em-vinculo'); if(_ev) _ev.value = m.tipo_vinculo || '';
+  var _ec=document.getElementById('em-contrato'); if(_ec) _ec.value = m.status_contrato || 'sem_contrato';
   // Especialidades
   const espsAtivas = m.especialidades || (m.especialidade ? m.especialidade.split(', ') : []);
   document.querySelectorAll('.em-esp-chk').forEach(c => { c.checked = espsAtivas.includes(c.value); });
@@ -3145,7 +3196,11 @@ async function salvarEdicaoMedico() {
     cpf:            document.getElementById('em-cpf').value.trim(),
     tipo:           document.getElementById('em-tipo').value,
     crm:            document.getElementById('em-crm').value.trim(),
-    rqe:            document.getElementById('em-rqe').value.trim(),
+    rqe:            (document.getElementById('em-rqe').value||'').split(/[\n,;]+/).map(s=>s.trim()).filter(Boolean).join(', '),
+    rqes:           (document.getElementById('em-rqe').value||'').split(/[\n,;]+/).map(s=>s.trim()).filter(Boolean),
+    data_admissao:  document.getElementById('em-admissao')?.value || null,
+    tipo_vinculo:   document.getElementById('em-vinculo')?.value || null,
+    status_contrato:document.getElementById('em-contrato')?.value || 'sem_contrato',
     especialidades: [...document.querySelectorAll('.em-esp-chk:checked')].map(c=>c.value),
     especialidade:  [...document.querySelectorAll('.em-esp-chk:checked')].map(c=>c.value).join(', '),
     valor_hora:     parseFloat(document.getElementById('em-valor').value) || 0,
@@ -4577,6 +4632,7 @@ try {
         exige_rqe: document.getElementById('mr-exige-rqe')?.checked||false,
         publico_alvo: _pub,
         ufs_alvo: _ufsAlvo,
+        cobertura: !!(document.getElementById('mr-cobertura') && document.getElementById('mr-cobertura').checked),
         especialidades_alvo: (_exigeEsp && _espAlvo) ? [_espAlvo] : []
       };
       const res = await sbApi('/lancamentos', { method:'POST', body: JSON.stringify(_corpo) });
@@ -4671,7 +4727,7 @@ try {
       const vhAtual  = horas>0 ? Math.round(honAtual/horas*100)/100 : (medAtual.valor_hora||0);
       const res = await sbApi('/lancamentos',{
         method:'POST',
-        body:JSON.stringify({medico_id:medAtual.id,projeto_id:projId,data:ds,hora_ini:ini,hora_fim:fim,horas,tipo,setor:setor||null,honorario:honAtual,valor_hora:vhAtual,obs:obs||null,codigo_totvs:null})
+        body:JSON.stringify({medico_id:medAtual.id,projeto_id:projId,data:ds,hora_ini:ini,hora_fim:fim,horas,tipo,setor:setor||null,honorario:honAtual,valor_hora:vhAtual,obs:obs||null,codigo_totvs:null,confirmado:true})
       });
       try { if(res && medAtual?.id) notificarMedicoPush(medAtual.id, `Você foi escalado para um plantão.`, 'escala'); } catch(e){}
       if (res) {
@@ -4858,6 +4914,8 @@ function renderEscala() {
         const conf = l.confirmado ? ' confirmado' : '';
         const ini = (l.hora_ini||'').slice(0,5);
         const fim = (l.hora_fim||'').slice(0,5);
+        var _tagCob = l.cobertura ? '<span style="font-size:9px;background:#eef0f8;color:#566099;padding:1px 4px;border-radius:99px;margin-left:3px;">Cobertura</span>' : '';
+        var _tagTransf = (l.aberto && l.transferido_de) ? '<span style="font-size:9px;background:#f3e8ff;color:#7c3aed;padding:1px 4px;border-radius:99px;margin-left:3px;" title="Repassado por '+(l.transferido_de_nome||'colega')+'">↪ '+((l.transferido_de_nome||'colega').split(' ')[0])+'</span>' : '';
         // Dados para tooltip em data-attributes
         html += `<div class="escala-chip ${cls}${conf}" style="position:relative;"
           onmouseenter="showTooltip(event,this)"
@@ -4870,7 +4928,7 @@ function renderEscala() {
           data-hon="${fBRL(l.honorario||0)}"
           data-conf="${l.confirmado?'Sim':'Não'}">
           <button class="sem-card-opts" style="position:absolute;top:1px;right:2px;" onclick="event.stopPropagation();abrirCtxChip(event,'${l.id}','${ds}','${l.projeto_id}')" title="Opções">⋮</button>
-          <div onclick="abrirLancamentoRapido('${ds}','${l.projeto_id}')">${ini}–${fim}</div>
+          <div onclick="abrirLancamentoRapido('${ds}','${l.projeto_id}')">${ini}–${fim}${_tagCob}${_tagTransf}</div>
           <div style="font-size:10px;opacity:0.8;" onclick="abrirLancamentoRapido('${ds}','${l.projeto_id}')">${proj?.nome||tipo}</div>
         </div>`;
       });
@@ -5055,7 +5113,7 @@ async function colarNoDia(ds, projId) {
   try {
     const res = await sbApi('/lancamentos', {
       method: 'POST',
-      body: JSON.stringify({medico_id:l.medico_id,projeto_id:projId||l.projeto_id,data:ds,hora_ini:l.hora_ini,hora_fim:l.hora_fim,horas:l.horas,tipo:l.tipo,setor:l.setor||null,honorario:l.honorario,valor_hora:l.valor_hora||0,obs:l.obs||null,codigo_totvs:null})
+      body: JSON.stringify({medico_id:l.medico_id,projeto_id:projId||l.projeto_id,data:ds,hora_ini:l.hora_ini,hora_fim:l.hora_fim,horas:l.horas,tipo:l.tipo,setor:l.setor||null,honorario:l.honorario,valor_hora:l.valor_hora||0,obs:l.obs||null,codigo_totvs:null,confirmado:true})
     });
       try { if(l.medico_id){ window._copiaNotif=window._copiaNotif||{}; window._copiaNotif[l.medico_id]=(window._copiaNotif[l.medico_id]||0)+1; } } catch(e){}
     if (res) {
@@ -5162,7 +5220,7 @@ async function ctxColar() {
   try {
     const res = await sbApi('/lancamentos', {
       method: 'POST',
-      body: JSON.stringify({medico_id:l.medico_id,projeto_id:l.projeto_id,data:ds,hora_ini:l.hora_ini,hora_fim:l.hora_fim,horas:l.horas,tipo:l.tipo,setor:l.setor||null,honorario:l.honorario,valor_hora:l.valor_hora||0,obs:l.obs||null,codigo_totvs:null})
+      body: JSON.stringify({medico_id:l.medico_id,projeto_id:l.projeto_id,data:ds,hora_ini:l.hora_ini,hora_fim:l.hora_fim,horas:l.horas,tipo:l.tipo,setor:l.setor||null,honorario:l.honorario,valor_hora:l.valor_hora||0,obs:l.obs||null,codigo_totvs:null,confirmado:true})
     });
       try { if(l.medico_id){ window._copiaNotif=window._copiaNotif||{}; window._copiaNotif[l.medico_id]=(window._copiaNotif[l.medico_id]||0)+1; } } catch(e){}
     if (res) {
@@ -5193,20 +5251,25 @@ function abrirModalEditarLanc(l) {
   g('el-valor').value = l.honorario ? l.honorario.toLocaleString('pt-BR',{minimumFractionDigits:2}) : '';
   g('el-obs').value   = l.obs || '';
   g('el-vagas').value = l.vagas || 1;
-  // Médico
+  // Médico — só os vinculados ao projeto deste plantão
   var medSel = g('el-medico');
   if (medSel) {
+    var _doProj = sortedMedicos().filter(function(m){ return (m.projetos_vinculados||[]).indexOf(l.projeto_id)!==-1; });
     medSel.innerHTML = '<option value="">Sem médico (plantão aberto)</option>' +
-      sortedMedicos().map(function(m) {
+      _doProj.map(function(m) {
         return '<option value="' + m.id + '"' + (m.id === l.medico_id ? ' selected' : '') + '>' + m.nome + ' — ' + m.crm + '</option>';
       }).join('');
   }
+  _elMedicoOriginal = l.medico_id || null;
+  var _elc = g('el-cobertura'); if (_elc) _elc.checked = !!l.cobertura;
   g('modal-editar-lanc').classList.add('open');
 }
 
 function fecharModalEditarLanc() {
   document.getElementById('modal-editar-lanc').classList.remove('open');
 }
+
+var _elMedicoOriginal = null;
 
 async function salvarEdicaoLanc() {
   var g = function(id) { return document.getElementById(id); };
@@ -5236,7 +5299,8 @@ async function salvarEdicaoLanc() {
     valor_hora: horas>0&&valor>0 ? Math.round(valor/horas*100)/100 : 0,
     obs: obs||null, vagas: vagas,
     medico_id: medId||null,
-    aberto: !medId
+    aberto: !medId,
+    cobertura: !!(g('el-cobertura') && g('el-cobertura').checked)
   };
 
   var btn = document.querySelector('#modal-editar-lanc .btn-primary');
@@ -5251,6 +5315,14 @@ async function salvarEdicaoLanc() {
   if (btn) { btn.disabled=false; btn.textContent='Salvar alterações'; }
 
   if (res !== null) {
+    // Notificar troca de médico feita pelo gestor
+    try {
+      var _antigo = _elMedicoOriginal || null;
+      if (_antigo !== (medId||null)) {
+        if (_antigo) notificarMedicoPush(_antigo, 'Um plantão que era seu foi remanejado pelo gestor.', 'escala');
+        if (medId)   notificarMedicoPush(medId,   'Você foi escalado para um plantão pelo gestor.', 'escala');
+      }
+    } catch(e) { console.error('notif troca', e); }
     toast('Plantão atualizado!');
     fecharModalEditarLanc();
     await carregarLancamentos(true);
@@ -5311,6 +5383,8 @@ function onExigeEspChange() {
 }
 // Devolve TODO o bloco de "plantão aberto" ao estado inicial
 function resetOpcoesAberto() {
+  var cob = document.getElementById('mr-cobertura');
+  if (cob) cob.checked = false;
   var ab = document.getElementById('mr-aberto');
   if (ab) ab.checked = false;
   var opts = document.getElementById('mr-aberto-opts');
@@ -5383,14 +5457,22 @@ async function addMedico() {
 
   const g = id => (document.getElementById(id)?.value||'').trim();
 
+  // RQE: aceita várias linhas / vírgulas -> array; mantém rqe (texto) p/ compatibilidade
+  const _rqesArr = (document.getElementById('mrqe')?.value||'')
+    .split(/[\n,;]+/).map(s=>s.trim()).filter(Boolean);
+
   const payload = {
     nome, crm,
     cpf,
     telefone: tel,
     data_nascimento: nasc||null,
+    data_admissao: g('mn-admissao')||null,
+    tipo_vinculo: g('mn-vinculo')||null,
+    status_contrato: g('mn-contrato')||'sem_contrato',
     email: g('memail'),
     tipo: g('mt') || 'Plantonista',
-    rqe:  g('mrqe'),
+    rqe:  _rqesArr.join(', '),
+    rqes: _rqesArr,
     especialidade: espsVinc.join(', ') || '',
     especialidades: espsVinc,
     valor_hora: 0,
@@ -5421,26 +5503,20 @@ async function addMedico() {
   const _r = await fetch('/api/medicos', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
   const res = _r.ok ? await _r.json().catch(()=>({})) : null;
   if (res) {
-    // Upload de documentos (se selecionados)
-    const medId = res[0]?.id;
-    if (medId) await uploadDocsMedico(medId, 'novo');
     toast('Médico cadastrado!');
     // Limpar formulário
-    ['mn','mc','mcpf','mrqe','memail','mtel','mnascimento',
+    ['mn','mc','mcpf','mrqe','memail','mtel','mnascimento','mn-admissao',
      'mn-rua','mn-numero','mn-comp','mn-bairro','mn-cidade','mn-cep',
      'mn-razao','mn-cnpj','mn-pix-chave','mn-banco','mn-ag','mn-cc']
       .forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
+    var _vc=document.getElementById('mn-vinculo'); if(_vc) _vc.value='';
+    var _ct=document.getElementById('mn-contrato'); if(_ct) _ct.value='sem_contrato';
     document.querySelectorAll('.med-proj-chk').forEach(c=>c.checked=false);
     document.querySelectorAll('.med-esp-chk').forEach(c=>c.checked=false);
     atualizarTagsEsp('novo');
     const pt = document.getElementById('mn-pix-tipo'); if(pt) pt.value='';
     const pj = document.getElementById('mn-pj-row'); if(pj) pj.style.display='none';
     document.querySelectorAll('input[name="mn-pessoa"]').forEach((r,i) => r.checked = i===0);
-    ['mn-doc-id','mn-doc-crm','mn-doc-rqe','mn-doc-titulo'].forEach(id => {
-      const inp = document.getElementById(id); if(inp) inp.value='';
-      const lbl = document.getElementById(id+'-label'); if(lbl) lbl.textContent='Clique para anexar';
-      const slot = lbl?.closest('.upload-doc-slot'); if(slot) slot.classList.remove('ok');
-    });
     await carregarMedicos();
   } else toast('Erro ao cadastrar médico. Verifique se o CPF ou CRM já está cadastrado.', true);
   if (btn) { btn.disabled=false; btn.textContent='+ Adicionar médico'; }
@@ -8991,6 +9067,9 @@ async function importarTiposPlanilha(input) {
       <div class="form-group">
         <label>Observações</label>
         <input id="el-obs" type="text" placeholder="Opcional">
+      </div>
+      <div class="form-group">
+        <label style="cursor:pointer;display:flex;align-items:center;gap:6px;font-weight:normal;"><input type="checkbox" id="el-cobertura"> Plantão de cobertura</label>
       </div>
     </div>
     <div class="modal-footer" style="display:flex;gap:8px;justify-content:flex-end;">
