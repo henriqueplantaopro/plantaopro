@@ -1530,7 +1530,7 @@ function renderCalEscala(){
     if(tem) cls += ' tem';
     if(iso === hojeISO) cls += ' hoje';
     if(iso === _calEscDiaSel) cls += ' sel';
-    html += '<div class="'+cls+'"' + (tem ? ' onclick="abrirDiaEscala(\''+iso+'\')"' : '') + '>' +
+    html += '<div class="'+cls+'" style="cursor:pointer;" onclick="abrirDiaEscala(\''+iso+'\')">' +
       dia + (tem ? '<span class="cal-esc-dot"></span>' : '') + '</div>';
   }
   html += '</div>';
@@ -1543,7 +1543,11 @@ function abrirDiaEscala(iso){
   var det = document.getElementById('cal-esc-detalhe');
   if(!det) return;
   var plantoes = (_plantoesPorDia()[iso] || []);
-  if(!plantoes.length){ det.innerHTML=''; return; }
+  if(!plantoes.length){
+    det.innerHTML = '<div class="card" style="margin-top:12px;text-align:center;color:var(--text3);font-size:13px;padding:18px;">' +
+      'Nenhum plantao escalado em ' + fmtData(iso) + '.</div>';
+    return;
+  }
   det.innerHTML = '<div class="card" style="margin-top:12px;">' +
     '<div style="font-size:12px;color:var(--text3);text-transform:uppercase;letter-spacing:0.4px;margin-bottom:8px;">' +
       fmtData(iso) + '</div>' +
