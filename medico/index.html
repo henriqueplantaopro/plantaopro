@@ -203,6 +203,20 @@ html,body{height:100%;background:#f0f4f8;font-family:-apple-system,BlinkMacSyste
 .sino-switch span::before{content:"";position:absolute;height:20px;width:20px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.2s;box-shadow:0 1px 3px rgba(0,0,0,.2);}
 .sino-switch input:checked+span{background:var(--blue);}
 .sino-switch input:checked+span::before{transform:translateX(18px);}
+
+.esc-toggle{flex:1;padding:10px;border:1.5px solid var(--border);background:#fff;border-radius:var(--radius-sm);font-size:14px;font-weight:600;color:var(--text3);cursor:pointer;}
+.esc-toggle.active{background:var(--teal,#0e5a63);color:#fff;border-color:var(--teal,#0e5a63);}
+.cal-nav-btn{width:34px;height:34px;border:1.5px solid var(--border);background:#fff;border-radius:8px;font-size:18px;line-height:1;cursor:pointer;color:var(--text2);}
+.cal-esc-dow{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:4px;}
+.cal-esc-dow span{text-align:center;font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;padding:2px 0;}
+.cal-esc-cells{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;}
+.cal-esc-cell{aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:8px;font-size:13px;color:var(--text);position:relative;cursor:default;}
+.cal-esc-cell.vazio{visibility:hidden;}
+.cal-esc-cell.hoje{outline:1.5px solid var(--teal,#0e5a63);}
+.cal-esc-cell.tem{background:#fff3e6;cursor:pointer;font-weight:700;}
+.cal-esc-cell.sel{background:#e8890c;color:#fff;}
+.cal-esc-dot{width:6px;height:6px;border-radius:50%;background:#e8890c;position:absolute;bottom:5px;}
+.cal-esc-cell.sel .cal-esc-dot{background:#fff;}
 </style>
 </head>
 <body>
@@ -325,11 +339,11 @@ html,body{height:100%;background:#f0f4f8;font-family:-apple-system,BlinkMacSyste
   </div>
 
   <div id="page-checkin" class="page">
-    <div class="card">
-      <div class="card-title">Selecionar local</div>
-      <select class="proj-select" id="sel-projeto">
-        <option value="">Carregando projetos...</option>
-      </select>
+    <div class="card" id="card-checkin-plantao" style="display:none;">
+      <div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:0.4px;margin-bottom:4px;" id="ci-fase">Plantao em andamento</div>
+      <div style="font-size:17px;font-weight:700;" id="ci-hospital">—</div>
+      <div style="font-size:13px;color:var(--text2);margin-top:1px;" id="ci-setor"></div>
+      <div style="font-size:13px;color:var(--text2);margin-top:4px;" id="ci-horario"></div>
     </div>
     <div class="card">
       <div class="checkin-status">
@@ -338,7 +352,7 @@ html,body{height:100%;background:#f0f4f8;font-family:-apple-system,BlinkMacSyste
         <div class="checkin-sub" id="ci-sub">Aguarde enquanto obtemos sua posicao</div>
         <div class="checkin-dist dist-loading" id="ci-dist" style="display:none;"></div>
       </div>
-      <button class="btn-checkin loading" id="btn-ci" disabled onclick="fazerCheckin()">
+      <button class="btn-checkin loading" id="btn-ci" disabled onclick="acaoCheckinAuto()">
         <span class="spinner"></span> Verificando...
       </button>
     </div>
@@ -349,11 +363,30 @@ html,body{height:100%;background:#f0f4f8;font-family:-apple-system,BlinkMacSyste
   </div>
 
   <div id="page-plantoes" class="page">
-    <div style="display:flex;gap:6px;margin-bottom:12px;">
-      <button class="btn-filtro-plantao active" id="fp-prox" onclick="filtrarPlantoes('proximos',this)">Proximos</button>
+    <div style="display:flex;gap:8px;margin-bottom:14px;">
+      <button class="esc-toggle active" id="esc-tg-cal" onclick="setEscalaView('cal')">Calendario</button>
+      <button class="esc-toggle" id="esc-tg-lista" onclick="setEscalaView('lista')">Lista</button>
     </div>
-    <div class="refresh-hint" id="plantoes-hint">Toque em um plantao para transferir ou avisar ausencia</div>
-    <div id="plantoes-lista"><div class="empty">Carregando...</div></div>
+
+    <div id="esc-view-cal">
+      <div class="card" style="padding:12px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+          <button class="cal-nav-btn" onclick="mesEscala(-1)">&#8249;</button>
+          <div id="cal-esc-titulo" style="font-size:15px;font-weight:700;text-transform:capitalize;"></div>
+          <button class="cal-nav-btn" onclick="mesEscala(1)">&#8250;</button>
+        </div>
+        <div id="cal-esc-grid"></div>
+        <div style="display:flex;align-items:center;gap:6px;margin-top:10px;font-size:11px;color:var(--text3);">
+          <span style="width:9px;height:9px;border-radius:50%;background:#e8890c;display:inline-block;"></span> Voce esta escalado neste dia
+        </div>
+      </div>
+      <div id="cal-esc-detalhe"></div>
+    </div>
+
+    <div id="esc-view-lista" style="display:none;">
+      <div class="refresh-hint" id="plantoes-hint">Toque em um plantao para transferir ou avisar ausencia</div>
+      <div id="plantoes-lista"><div class="empty">Carregando...</div></div>
+    </div>
   </div>
 
   
@@ -709,6 +742,7 @@ function _tokenURL(){
   try{ return new URLSearchParams(location.search).get('token') || localStorage.getItem('pp_token') || ''; }
   catch(e){ return ''; }
 }
+var _ctxColegas = null, _ctxVinculos = null;
 async function apiLanc(action, dados){
   const r = await apiPerfil(action, dados);
   return r;
@@ -716,7 +750,7 @@ async function apiLanc(action, dados){
 async function apiPerfil(action, dados){
   try{
     const tk = (typeof medico!=='undefined' && medico && medico.token_acesso) ? medico.token_acesso : _tokenURL();
-    const _act = (action === 'get') ? 'perfil' : (/^(lanc-|cand-|tr-)/.test(action) ? action : ('perfil-' + action));
+    const _act = (action === 'get') ? 'perfil' : (/^(lanc-|cand-|tr-|ck-|aus-|ctx-|push-)/.test(action) ? action : ('perfil-' + action));
     const r = await fetch('/api/medico-conta?action=' + _act, {
       method:'POST', headers:{'Content-Type':'application/json'},
       body: JSON.stringify({ token_acesso: tk, dados: dados||{} })
@@ -1186,17 +1220,28 @@ async function cadastrarMedico(){
 }
 
 async function carregarProjetos() {
-  const d=await sb('/rest/v1/projetos?status=eq.Ativo&select=*&order=nome');
+  const _rx=await apiLanc('ctx-inicial',{});
+  const d=_rx.ok?(_rx.dados?.projetos||[]):[];
   projetos=d||[];
+  try{ _ctxColegas=_rx.ok?(_rx.dados?.colegas||[]):[]; _ctxVinculos=_rx.ok?(_rx.dados?.vinculos||[]):null; }catch(e){}
   const sel=document.getElementById('sel-projeto');
-  sel.innerHTML='<option value="">Selecione o local do plantao...</option>'+projetos.map(p=>'<option value="'+p.id+'">'+p.nome+'</option>').join('');
-  sel.addEventListener('change',atualizarStatusCheckin);
+  if(sel){ sel.innerHTML='<option value="">Selecione o local do plantao...</option>'+projetos.map(p=>'<option value="'+p.id+'">'+p.nome+'</option>').join(''); }
 }
 
 async function carregarMedicos() {
-  const d=await sb('/rest/v1/medicos?ativo=eq.true&select=id,nome,crm,projetos_vinculados&order=nome');
+  if(typeof _ctxColegas!=='undefined' && _ctxColegas && _ctxColegas.length){ todosMedicos=_ctxColegas; return; }
+  const _rc2=await apiLanc('ctx-inicial',{});
+  const d=_rc2.ok?(_rc2.dados?.colegas||[]):[];
   todosMedicos=(d||[]).filter(m=>m.id!==medico.id);
 }
+
+var _timerCheckin = null;
+function iniciarTimerCheckin(){
+  pararTimerCheckin();
+  // a janela de tempo muda sozinha; reavalia a cada 30s enquanto a aba está aberta
+  _timerCheckin = setInterval(function(){ atualizarStatusCheckin(); }, 30000);
+}
+function pararTimerCheckin(){ if(_timerCheckin){ clearInterval(_timerCheckin); _timerCheckin=null; } }
 
 function iniciarGPS() {
   if(!navigator.geolocation){setCheckinUI('erro','X','GPS nao disponivel','Seu navegador nao suporta geolocalizacao.');return;}
@@ -1205,43 +1250,144 @@ function iniciarGPS() {
 
 function calcDist(a,b,c,d){const R=6371000,dL=(c-a)*Math.PI/180,dO=(d-b)*Math.PI/180,x=Math.sin(dL/2)**2+Math.cos(a*Math.PI/180)*Math.cos(c*Math.PI/180)*Math.sin(dO/2)**2;return Math.round(R*2*Math.atan2(Math.sqrt(x),Math.sqrt(1-x)));}
 
-function atualizarStatusCheckin() {
-  const pid=document.getElementById('sel-projeto').value,proj=projetos.find(p=>p.id===pid);
-  if(!proj){setCheckinUI('idle','P','Selecione o local','Escolha o hospital ou unidade onde esta.');return;}
-  if(!posAtual){setCheckinUI('loading','~','Obtendo localizacao...','Aguarde...');return;}
-  if(!proj.latitude||!proj.longitude){setCheckinUI('ok','OK','Local sem GPS','O administrador precisa configurar as coordenadas.');return;}
-  const dist=calcDist(posAtual.latitude,posAtual.longitude,proj.latitude,proj.longitude),raio=proj.raio_checkin||RAIO_CHECKIN;
-  if(dist<=raio)setCheckinUI('ok','OK','Voce esta no local!','Check-in disponivel para '+proj.nome,dist,true);
-  else setCheckinUI('far','!','Voce esta fora do raio','Aproxime-se do hospital',dist,false);
+// Monta um Date a partir de 'YYYY-MM-DD' + 'HH:MM' (hora local)
+function _dataHora(dataISO, hhmm){
+  if(!dataISO || !hhmm) return null;
+  var d = new Date(dataISO + 'T00:00:00');
+  var partes = String(hhmm).split(':');
+  d.setHours(parseInt(partes[0]||0,10), parseInt(partes[1]||0,10), 0, 0);
+  return d;
 }
 
-function setCheckinUI(estado,icon,title,sub,dist,pode) {
+// Encontra o plantão relevante para AGORA, dentro das janelas pedidas.
+// Check-in: de 30 min ANTES do início até 60 min DEPOIS do início.
+// Check-out: de 15 min ANTES do fim até 30 min DEPOIS do fim.
+// Check-out tem prioridade e é oferecido mesmo sem check-in prévio.
+function _plantaoDaJanela(){
+  var agora = new Date();
+  var lista = _plantoesCache || [];
+  var candCheckin = null, candCheckout = null;
+  for(var i=0;i<lista.length;i++){
+    var l = lista[i];
+    if(!l.data || !l.hora_ini) continue;
+    var ini = _dataHora(l.data, l.hora_ini);
+    var fim = l.hora_fim ? _dataHora(l.data, l.hora_fim) : null;
+    if(fim && fim <= ini) fim = new Date(fim.getTime() + 24*3600000); // vira a noite
+
+    var abreCk = new Date(ini.getTime() - 30*60000);
+    var fechaCk = new Date(ini.getTime() + 60*60000);
+    if(agora >= abreCk && agora <= fechaCk && !candCheckin){
+      candCheckin = { l: l, tipo: 'entrada', ini: ini, fim: fim };
+    }
+    if(fim){
+      var abreCo = new Date(fim.getTime() - 15*60000);
+      var fechaCo = new Date(fim.getTime() + 30*60000);
+      if(agora >= abreCo && agora <= fechaCo && !candCheckout){
+        candCheckout = { l: l, tipo: 'saida', ini: ini, fim: fim };
+      }
+    }
+  }
+  return candCheckout || candCheckin || null;   // check-out tem prioridade
+}
+
+var _ckAtual = null;   // { l, tipo, ini, fim }
+
+function atualizarStatusCheckin() {
+  var card = document.getElementById('card-checkin-plantao');
+  var alvo = _plantaoDaJanela();
+  _ckAtual = alvo;
+
+  if(!alvo){
+    if(card) card.style.display = 'none';
+    setCheckinUI('idle','P','Nenhum plantao agora','O check-in abre 30 min antes do inicio; o check-out, 15 min antes do fim.');
+    return;
+  }
+
+  var l = alvo.l;
+  var proj = projetos.find(function(p){ return p.id === l.projeto_id; });
+  var ehSaida = (alvo.tipo === 'saida');
+
+  if(card){
+    card.style.display = 'block';
+    document.getElementById('ci-fase').textContent = ehSaida ? 'Check-out do plantao' : 'Check-in do plantao';
+    document.getElementById('ci-hospital').textContent = (proj && proj.nome) || (l.projetos && l.projetos.nome) || 'Hospital';
+    document.getElementById('ci-setor').textContent = l.setor || '';
+    document.getElementById('ci-horario').textContent =
+      String(l.hora_ini||'').slice(0,5) + ' - ' + String(l.hora_fim||'').slice(0,5);
+  }
+
+  var rotulo = ehSaida ? 'Check-out' : 'Check-in';
+
+  if(!proj || !proj.latitude || !proj.longitude){
+    // Sem coordenadas cadastradas: libera o registro sem exigir GPS
+    setCheckinUI('ok','OK', rotulo+' disponivel', (proj?proj.nome:'')+' — local sem GPS configurado', undefined, true, rotulo);
+    return;
+  }
+  if(!posAtual){
+    setCheckinUI('loading','~','Obtendo localizacao...','Aguarde...');
+    return;
+  }
+
+  var dist = calcDist(posAtual.latitude, posAtual.longitude, proj.latitude, proj.longitude);
+  var raio = proj.raio_checkin || RAIO_CHECKIN;
+
+  if(ehSaida){
+    // Check-out não bloqueia por distância — o médico pode já ter saído do prédio
+    setCheckinUI('ok','OK', rotulo+' disponivel', proj.nome, dist, true, rotulo);
+  } else if(dist <= raio){
+    setCheckinUI('ok','OK','Voce esta no local!', rotulo+' disponivel para '+proj.nome, dist, true, rotulo);
+  } else {
+    setCheckinUI('far','!','Voce esta fora do raio','Aproxime-se do hospital para o check-in', dist, false, rotulo);
+  }
+}
+
+function setCheckinUI(estado,icon,title,sub,dist,pode,rotulo) {
+  rotulo = rotulo || 'Check-in';
   document.getElementById('ci-icon').textContent=icon;
   document.getElementById('ci-title').textContent=title;
   document.getElementById('ci-sub').textContent=sub;
   const de=document.getElementById('ci-dist'),btn=document.getElementById('btn-ci');
-  if(dist!==undefined){const raio=projetos.find(p=>p.id===document.getElementById('sel-projeto').value)?.raio_checkin||100;de.style.display='inline-block';de.textContent=dist+'m (raio: '+raio+'m)';de.className='checkin-dist '+(pode?'dist-ok':'dist-far');}else de.style.display='none';
-  if(estado==='ok'){btn.className='btn-checkin ok';btn.disabled=false;btn.innerHTML='Check-in';}
+  if(dist!==undefined){const raio=(_ckAtual&&projetos.find(p=>p.id===_ckAtual.l.projeto_id)?.raio_checkin)||100;de.style.display='inline-block';de.textContent=dist+'m (raio: '+raio+'m)';de.className='checkin-dist '+(pode?'dist-ok':'dist-far');}else de.style.display='none';
+  if(estado==='ok'){btn.className='btn-checkin ok';btn.disabled=false;btn.innerHTML=rotulo;}
   else if(estado==='far'){btn.className='btn-checkin far';btn.disabled=true;btn.innerHTML='Fora do raio';}
   else if(estado==='loading'){btn.className='btn-checkin loading';btn.disabled=true;btn.innerHTML='<span class="spinner"></span> Verificando...';}
   else{btn.className='btn-checkin far';btn.disabled=true;btn.innerHTML='Selecione o local';}
 }
 
-async function fazerCheckin() {
-  const pid=document.getElementById('sel-projeto').value,proj=projetos.find(p=>p.id===pid);
-  if(!proj||!posAtual||!medico)return;
-  const btn=document.getElementById('btn-ci');btn.disabled=true;btn.innerHTML='<span class="spinner"></span> Registrando...';
-  const dist=proj.latitude?calcDist(posAtual.latitude,posAtual.longitude,proj.latitude,proj.longitude):0;
-  const aprovado=!proj.latitude||dist<=(proj.raio_checkin||RAIO_CHECKIN);
-  const r=await sb('/rest/v1/checkins',{method:'POST',body:JSON.stringify({medico_id:medico.id,projeto_id:pid,latitude:posAtual.latitude,longitude:posAtual.longitude,distancia_metros:dist,aprovado,tipo:'entrada'})});
-  if(r)toastMed('Check-in registrado!');else toastMed('Erro ao registrar.',false);
-  setTimeout(()=>atualizarStatusCheckin(),3000);
+async function acaoCheckinAuto() {
+  if(!_ckAtual || !medico){ return; }
+  var l = _ckAtual.l;
+  var tipo = _ckAtual.tipo;                 // 'entrada' | 'saida'
+  var proj = projetos.find(function(p){ return p.id === l.projeto_id; });
+  var btn = document.getElementById('btn-ci');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Registrando...';
+
+  var temGPS = !!(proj && proj.latitude && proj.longitude);
+  var dist = (temGPS && posAtual) ? calcDist(posAtual.latitude, posAtual.longitude, proj.latitude, proj.longitude) : 0;
+  // entrada exige estar dentro do raio; saída não bloqueia por distância
+  var aprovado = (tipo === 'saida') ? true : (!temGPS || !posAtual ? !temGPS : dist <= (proj.raio_checkin || RAIO_CHECKIN));
+
+  var _r = await apiLanc('ck-registrar', {
+    medico_id: medico.id,
+    projeto_id: l.projeto_id,
+    lancamento_id: l.id,
+    latitude: posAtual ? posAtual.latitude : null,
+    longitude: posAtual ? posAtual.longitude : null,
+    distancia_metros: dist,
+    aprovado: aprovado,
+    tipo: tipo
+  });
+  if(_r.ok) toastMed((tipo==='saida'?'Check-out':'Check-in')+' registrado!');
+  else toastMed('Erro ao registrar.', false);
+  setTimeout(function(){ atualizarStatusCheckin(); }, 2500);
   carregarCheckinsHoje();
 }
 
 async function carregarCheckinsHoje() {
   const hoje=new Date().toISOString().slice(0,10);
-  const d=await sb('/rest/v1/checkins?medico_id=eq.'+medico.id+'&feito_em=gte.'+hoje+'T00:00:00&select=*,projetos(nome)&order=feito_em.desc');
+  const _rk=await apiLanc('ck-meus',{dia:hoje});
+  const d=_rk.ok?(_rk.dados?.checkins||[]):[];
   const el=document.getElementById('checkins-hoje-lista');
   if(!d?.length){el.innerHTML='<div class="empty"><div class="empty-icon">OK</div>Nenhum check-in hoje</div>';return;}
   el.innerHTML=d.map(c=>{const hora=new Date(c.feito_em).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});return '<div class="checkin-item"><div class="checkin-dot '+(c.aprovado?'dot-ok':'dot-fail')+'"></div><div class="checkin-info"><div class="checkin-info-proj">'+(c.projetos?.nome||'')+'</div><div class="checkin-info-meta">'+hora+' - '+(c.aprovado?'Aprovado':'Fora do raio')+'</div><span class="checkin-info-dist '+(c.aprovado?'dist-ok':'dist-far')+'">'+c.distancia_metros+'m</span></div></div>';}).join('');
@@ -1255,11 +1401,12 @@ async function carregarPlantoes() {
   const _rt=await apiLanc('tr-enviadas',{});
   const tr=_rt.ok?(_rt.dados?.transferencias||[]):[];
   _transfersPend=new Set((tr||[]).map(t=>t.lancamento_id));
-  const au=await sb('/rest/v1/ausencias?medico_id=eq.'+medico.id+'&select=lancamento_id');
+  const _rau=await apiLanc('aus-minhas',{});
+  const au=_rau.ok?(_rau.dados?.ausencias||[]):[];
   _ausenciasInf=new Set((au||[]).map(a=>a.lancamento_id));
   const b=document.getElementById('badge-confirmacao');
   if(b){b.style.display='none';}
-  renderPlantoes();
+  if(_escView==='cal') renderCalEscala(); else renderPlantoes();
 }
 
 function filtrarPlantoes(tipo,btn) {
@@ -1275,19 +1422,126 @@ function fBRL(v){return 'R$ '+Number(v||0).toLocaleString('pt-BR',{minimumFracti
 function renderPlantoes() {
   const el=document.getElementById('plantoes-lista');
   const hint=document.getElementById('plantoes-hint');
-  let lista=[..._plantoesCache];
-  if(hint)hint.textContent='Toque em um plantao para transferir ou avisar ausencia';
+  if(!el) return;
+  const hoje=new Date().toISOString().slice(0,10);
+  let lista=[..._plantoesCache].filter(l=>l.data>=hoje).sort((a,b)=>{
+    if(a.data!==b.data) return a.data<b.data?-1:1;
+    return String(a.hora_ini||'').localeCompare(String(b.hora_ini||''));
+  });
+  if(hint)hint.textContent='Seus proximos plantoes escalados';
   if(!lista.length){el.innerHTML='<div class="empty">Nenhum plantao escalado</div>';return;}
-  el.innerHTML=lista.map(l=>{
-    const turno=l.tipo?.includes('Noturno')?'Noturno':l.tipo?.includes('24')?'24h':'Diurno';
-    const bc=turno==='Noturno'?'badge-purple':turno==='24h'?'badge-amber':'badge-green';
-    const proj=l.projetos?.nome||'';
-    const temTP=_transfersPend.has(l.id),temAU=_ausenciasInf.has(l.id);
-    // Escala direta já vale como presença; médico só transfere ou avisa ausência.
-    // (O aceite de transferência DIRETA acontece na aba de notificações.)
-    const acoes='<div class="plantao-acoes"><button class="btn-acao btn-acao-transferir" onclick="abrirTransferir(\''+l.id+'\')">Transferir plantao</button><button class="btn-acao btn-acao-ausencia" onclick="abrirAusencia(\''+l.id+'\')">Nao vou comparecer</button></div>';
-    return '<div class="plantao-card"><div class="plantao-header"><div><div class="plantao-data">'+fmtData(l.data)+'</div><div class="plantao-proj">'+proj+(l.setor?' - '+l.setor:'')+'</div>'+(temTP?'<span class="transf-badge">Transferencia aguardando resposta</span>':'')+(temAU?'<span class="ausencia-badge">Ausencia informada a empresa</span>':'')+'</div><span class="badge '+bc+'">'+turno+'</span></div><div class="plantao-body"><div><div class="plantao-info-label">Horario</div><div class="plantao-info-val">'+(l.hora_ini||'').slice(0,5)+'-'+(l.hora_fim||'').slice(0,5)+'</div></div><div><div class="plantao-info-label">Horas</div><div class="plantao-info-val">'+l.horas+'h</div></div><div class="plantao-valor"><div class="plantao-info-label">Honorarios</div><div class="plantao-valor-val">'+fBRL(l.honorario)+'</div></div></div>'+acoes+'</div>';
-  }).join('');
+  let out='', ultData='';
+  lista.forEach(function(l){
+    if(l.data!==ultData){
+      out += '<div style="font-size:12px;color:var(--text3);text-transform:uppercase;letter-spacing:0.4px;margin:14px 2px 6px;">'+fmtData(l.data)+'</div>';
+      ultData=l.data;
+    }
+    out += _cardPlantaoDetalhe(l);
+  });
+  el.innerHTML=out;
+}
+
+// ── ESCALA: alternar Calendário / Lista ─────────────────────────────
+var _escView = 'cal';
+var _calEscRef = new Date();
+var _calEscDiaSel = null;
+
+function setEscalaView(v){
+  _escView = v;
+  var cal = document.getElementById('esc-view-cal');
+  var lst = document.getElementById('esc-view-lista');
+  var bc = document.getElementById('esc-tg-cal');
+  var bl = document.getElementById('esc-tg-lista');
+  if(cal) cal.style.display = (v==='cal') ? 'block' : 'none';
+  if(lst) lst.style.display = (v==='lista') ? 'block' : 'none';
+  if(bc) bc.classList.toggle('active', v==='cal');
+  if(bl) bl.classList.toggle('active', v==='lista');
+  if(v==='cal') renderCalEscala(); else renderPlantoes();
+}
+
+function mesEscala(delta){
+  _calEscRef.setDate(1);
+  _calEscRef.setMonth(_calEscRef.getMonth() + delta);
+  _calEscDiaSel = null;
+  var det = document.getElementById('cal-esc-detalhe');
+  if(det) det.innerHTML = '';
+  renderCalEscala();
+}
+
+// dias em que o médico está escalado, no mês visível
+function _plantoesPorDia(){
+  var mapa = {};
+  (_plantoesCache||[]).forEach(function(l){
+    if(!l.data) return;
+    (mapa[l.data] = mapa[l.data] || []).push(l);
+  });
+  return mapa;
+}
+
+function renderCalEscala(){
+  var grid = document.getElementById('cal-esc-grid');
+  var tit = document.getElementById('cal-esc-titulo');
+  if(!grid) return;
+  var ref = _calEscRef;
+  var ano = ref.getFullYear(), mes = ref.getMonth();
+  if(tit) tit.textContent = ref.toLocaleDateString('pt-BR',{month:'long',year:'numeric'});
+
+  var mapa = _plantoesPorDia();
+  var primeiro = new Date(ano, mes, 1).getDay();
+  var diasNoMes = new Date(ano, mes+1, 0).getDate();
+  var hojeISO = new Date().toISOString().slice(0,10);
+
+  var dows = ['D','S','T','Q','Q','S','S'];
+  var html = '<div class="cal-esc-dow">' + dows.map(function(d){ return '<span>'+d+'</span>'; }).join('') + '</div>';
+  html += '<div class="cal-esc-cells">';
+  for(var i=0;i<primeiro;i++) html += '<div class="cal-esc-cell vazio"></div>';
+  for(var dia=1; dia<=diasNoMes; dia++){
+    var iso = ano + '-' + String(mes+1).padStart(2,'0') + '-' + String(dia).padStart(2,'0');
+    var tem = !!mapa[iso];
+    var cls = 'cal-esc-cell';
+    if(tem) cls += ' tem';
+    if(iso === hojeISO) cls += ' hoje';
+    if(iso === _calEscDiaSel) cls += ' sel';
+    html += '<div class="'+cls+'"' + (tem ? ' onclick="abrirDiaEscala(\''+iso+'\')"' : '') + '>' +
+      dia + (tem ? '<span class="cal-esc-dot"></span>' : '') + '</div>';
+  }
+  html += '</div>';
+  grid.innerHTML = html;
+}
+
+function abrirDiaEscala(iso){
+  _calEscDiaSel = iso;
+  renderCalEscala();
+  var det = document.getElementById('cal-esc-detalhe');
+  if(!det) return;
+  var plantoes = (_plantoesPorDia()[iso] || []);
+  if(!plantoes.length){ det.innerHTML=''; return; }
+  det.innerHTML = '<div class="card" style="margin-top:12px;">' +
+    '<div style="font-size:12px;color:var(--text3);text-transform:uppercase;letter-spacing:0.4px;margin-bottom:8px;">' +
+      fmtData(iso) + '</div>' +
+    plantoes.map(function(l){ return _cardPlantaoDetalhe(l); }).join('') +
+    '</div>';
+}
+
+// Cartão de um plantão: Hospital, setor, horário e valor + ações
+function _cardPlantaoDetalhe(l){
+  var proj = (l.projetos && l.projetos.nome) || '';
+  var hora = (String(l.hora_ini||'').slice(0,5)) + ' - ' + (String(l.hora_fim||'').slice(0,5));
+  var valor = fmtBRL(l.honorario || 0);
+  var temTP = _transfersPend.has(l.id), temAU = _ausenciasInf.has(l.id);
+  var acoes = '<div class="plantao-acoes" style="margin-top:10px;">' +
+    (temTP ? '<button class="btn-acao" disabled>Transferencia enviada</button>'
+           : '<button class="btn-acao btn-acao-transferir" onclick="abrirTransferir(\''+l.id+'\')">Transferir / deixar em aberto</button>') +
+    (temAU ? '<button class="btn-acao" disabled>Ausencia avisada</button>'
+           : '<button class="btn-acao btn-acao-ausencia" onclick="abrirAusencia(\''+l.id+'\')">Avisar ausencia</button>') +
+    '</div>';
+  return '<div style="border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px;margin-bottom:8px;">' +
+    '<div style="font-size:15px;font-weight:700;">'+proj+'</div>' +
+    (l.setor ? '<div style="font-size:13px;color:var(--text2);margin-top:1px;">'+l.setor+'</div>' : '') +
+    '<div style="display:flex;justify-content:space-between;align-items:baseline;margin-top:8px;">' +
+      '<span style="font-size:13px;color:var(--text2);">'+hora+'</span>' +
+      '<span style="font-size:16px;font-weight:700;color:var(--green);">'+valor+'</span>' +
+    '</div>' + acoes + '</div>';
 }
 
 async function confirmarPresenca(lancId,btn) {
@@ -1393,7 +1647,8 @@ async function confirmarAusencia() {
   const btn=document.getElementById('btn-confirmar-ausencia');
   btn.disabled=true;btn.textContent='Registrando...';
   const obs=document.getElementById('ausencia-obs').value.trim();
-  const r=await sb('/rest/v1/ausencias',{method:'POST',headers:{'Prefer':'return=minimal'},body:JSON.stringify({lancamento_id:_lancAtivo.id,medico_id:medico.id,motivo,obs:obs||null,criado_em:new Date().toISOString(),status:'pendente_substituto'})});
+  const _ra2=await apiLanc('aus-criar',{lancamento_id:_lancAtivo.id,motivo:motivo,obs:obs||null});
+  const r=_ra2.ok?true:null;
   if(r!==null){
     await apiLanc('lanc-ausencia',{lancamento_id:_lancAtivo.id});
     toastMed('Ausencia informada! A empresa sera notificada.');fecharModal('modal-ausencia');await carregarPlantoes();
@@ -1449,7 +1704,8 @@ async function carregarDisponiveis() {
   // Empresas às quais este médico está vinculado (isolamento entre empresas)
   let meusAdmins = null; // null = consulta falhou -> não restringe (evita esvaziar a lista)
   try {
-    const _v = await sb('/rest/v1/vinculos?medico_id=eq.'+medico.id+'&status=eq.ativo&select=admin_id');
+    let _v = _ctxVinculos;
+    if(_v===null){ const _rv=await apiLanc('ctx-inicial',{}); _v=_rv.ok?(_rv.dados?.vinculos||[]):null; _ctxVinculos=_v; }
     if (Array.isArray(_v)) meusAdmins = _v.map(v => v.admin_id).filter(Boolean);
   } catch(e) {}
 
@@ -1552,7 +1808,8 @@ function showPage(id,el) {
   if(id==='inicio')carregarInicio();
   if(id==='anuncios'){carregarDisponiveis();carregarNotificacoes();carregarConvites();}
   if(id==='plantoes')carregarPlantoes();
-  if(id==='checkin')carregarCheckinsHoje();
+  if(id==='checkin'){ (async function(){ if(!(_plantoesCache&&_plantoesCache.length)) await carregarPlantoes(); atualizarStatusCheckin(); })(); carregarCheckinsHoje(); iniciarTimerCheckin(); }
+  else { pararTimerCheckin(); }
   if(id==='perfil')preencherPerfil();
 }
 
@@ -1750,11 +2007,7 @@ async function salvarInscricaoPush(){
   try {
     var sub = await _swRegSino.pushManager.subscribe({userVisibleOnly:true, applicationServerKey:urlB64ToUint8(VAPID_PUBLIC)});
     var j = sub.toJSON();
-    await sb("/rest/v1/push_subs", {
-      method:"POST",
-      headers:{"Prefer":"resolution=merge-duplicates,return=minimal"},
-      body: JSON.stringify({endpoint:j.endpoint, medico_id:medico.id, p256dh:j.keys.p256dh, auth:j.keys.auth})
-    });
+    await apiLanc('push-sub', {endpoint: sub.endpoint, p256dh: j.keys && j.keys.p256dh, auth: j.keys && j.keys.auth});
   } catch(e){ console.error("subscribe", e); }
 }
 async function initSino(){
