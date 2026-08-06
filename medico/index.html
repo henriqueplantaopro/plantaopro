@@ -311,6 +311,14 @@ html,body{height:100%;background:#f0f4f8;font-family:-apple-system,BlinkMacSyste
 <div class="content" id="main-content" style="display:none;">
 
   <div id="page-inicio" class="page active">
+    <div class="card" style="background:linear-gradient(160deg,#0e5a63 0%,#0a444b 100%);color:#fff;">
+      <div style="font-size:11px;color:rgba(255,255,255,0.75);text-transform:uppercase;letter-spacing:0.4px;">A receber (plantoes agendados)</div>
+      <div style="display:flex;justify-content:space-between;align-items:baseline;">
+        <div style="font-size:26px;font-weight:700;margin-top:2px;" id="ini-previsto">R$ 0,00</div>
+        <div style="font-size:12px;color:rgba(255,255,255,0.75);"><span id="ini-previsto-qtd">0</span> plantao(oes)</div>
+      </div>
+      <div style="font-size:11px;color:rgba(255,255,255,0.7);margin-top:6px;">Soma dos seus plantoes de hoje em diante, ainda a realizar.</div>
+    </div>
     <div class="card">
       <div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:0.4px;">Recebido no periodo</div>
       <div style="display:flex;justify-content:space-between;align-items:baseline;">
@@ -739,17 +747,21 @@ let _transfersPend = new Set(), _ausenciasInf = new Set();
 
 // Fala com o servidor em vez de tocar a tabela `medicos` com a chave pública
 function _tokenURL(){
-  try{ return new URLSearchParams(location.search).get('token') || localStorage.getItem('pp_token') || ''; }
-  catch(e){ return ''; }
+  try{
+    return new URLSearchParams(location.search).get('token')
+      || localStorage.getItem('pp_token')
+      || localStorage.getItem('plantaopro_token')
+      || '';
+  } catch(e){ return ''; }
 }
 var _ctxColegas = null, _ctxVinculos = null;
 async function apiLanc(action, dados){
   const r = await apiPerfil(action, dados);
   return r;
 }
-async function apiPerfil(action, dados){
+async function apiPerfil(action, dados, tokenOverride){
   try{
-    const tk = (typeof medico!=='undefined' && medico && medico.token_acesso) ? medico.token_acesso : _tokenURL();
+    const tk = tokenOverride || ((typeof medico!=='undefined' && medico && medico.token_acesso) ? medico.token_acesso : _tokenURL());
     const _act = (action === 'get') ? 'perfil' : (/^(lanc-|cand-|tr-|ck-|aus-|ctx-|push-)/.test(action) ? action : ('perfil-' + action));
     const r = await fetch('/api/medico-conta?action=' + _act, {
       method:'POST', headers:{'Content-Type':'application/json'},
@@ -802,6 +814,16 @@ async function vincularDispositivo() {
   } catch(e){alert('Erro: '+e.message);if(btn){btn.disabled=false;btn.textContent='Vincular este celular';}}
 }
 
+function _salvarToken(t){
+  if(!t) return;
+  try{ localStorage.setItem('pp_token', t); }catch(e){}
+  try{ localStorage.setItem('plantaopro_token', t); }catch(e){}
+}
+function _limparToken(){
+  try{ localStorage.removeItem('pp_token'); }catch(e){}
+  try{ localStorage.removeItem('plantaopro_token'); }catch(e){}
+}
+
 async function init() {
   setTimeout(()=>{const s=document.getElementById('splash');if(s&&!s.classList.contains('hide')){s.classList.add('hide');mostrarErro();}},8000);
 
@@ -809,16 +831,22 @@ async function init() {
   let token=params.get('token');
 
   if(token){
-    try{localStorage.setItem('plantaopro_token',token);}catch(e){}
+    _salvarToken(token);
   } else {
-    try{token=localStorage.getItem('plantaopro_token');}catch(e){}
+    try{ token = localStorage.getItem('pp_token') || localStorage.getItem('plantaopro_token'); }catch(e){}
   }
 
   if(!token){ mostrarErro(); return; }
 
-  const _rp = await apiPerfil('get', {});
-  if(!_rp.ok || !_rp.dados?.medico){ mostrarErro(); return; }
-  try{ localStorage.setItem('pp_token', token); }catch(e){}
+  const _rp = await apiPerfil('get', {}, token);   // valida com o token em mãos
+  if(!_rp.ok || !_rp.dados?.medico){
+    // Só desloga se o servidor REJEITOU o token (401/403).
+    // Falha de rede (status 0) mantém a sessão para tentar de novo.
+    if(_rp.status === 401 || _rp.status === 403){ _limparToken(); mostrarErro(); }
+    else { mostrarErro(); }
+    return;
+  }
+  _salvarToken(token);
 
   medico=_rp.dados.medico;
   const did=getDeviceId();
@@ -1112,7 +1140,7 @@ async function salvarSenhaObrigatoria() {
 
 function fazerLogout() {
   if (!confirm('Deseja sair do aplicativo?')) return;
-  try { localStorage.removeItem('plantaopro_token'); } catch(e) {}
+  _limparToken();
   try { localStorage.removeItem('plantaopro_device_id'); } catch(e) {}
   medico = null;
   // Esconder app e mostrar login
@@ -1156,7 +1184,7 @@ async function fazerLoginMedico(){
   const med = out.medico;
 
   // Salvar token
-  try{localStorage.setItem('plantaopro_token', med.token_acesso);}catch(e){}
+  _salvarToken(med.token_acesso);
   medico = med;
 
   // Verificação de dispositivo:
@@ -1214,7 +1242,7 @@ async function cadastrarMedico(){
   const out = await r.json().catch(()=>({}));
   if(!r.ok || !out.medico){erroEl.textContent=out.erro||'Erro ao criar conta. Tente novamente.';erroEl.style.display='block';btn.disabled=false;btn.textContent='Criar conta';return;}
   medico=out.medico;
-  try{localStorage.setItem('plantaopro_token',medico.token_acesso);}catch(e){}
+  _salvarToken(medico.token_acesso);
   document.getElementById('tela-cadastro-med').style.display='none';
   document.getElementById('tela-primeiro-acesso').style.display='block';
 }
@@ -1527,7 +1555,7 @@ function abrirDiaEscala(iso){
 function _cardPlantaoDetalhe(l){
   var proj = (l.projetos && l.projetos.nome) || '';
   var hora = (String(l.hora_ini||'').slice(0,5)) + ' - ' + (String(l.hora_fim||'').slice(0,5));
-  var valor = fmtBRL(l.honorario || 0);
+  var valor = fBRL(l.honorario || 0);
   var temTP = _transfersPend.has(l.id), temAU = _ausenciasInf.has(l.id);
   var acoes = '<div class="plantao-acoes" style="margin-top:10px;">' +
     (temTP ? '<button class="btn-acao" disabled>Transferencia enviada</button>'
@@ -1912,6 +1940,26 @@ function atualizarBadgeNotif() {
   if (b) { b.textContent = n; b.style.display = n > 0 ? 'inline' : 'none'; }
 }
 
+// Previsão: soma dos plantões escalados de hoje em diante (ainda a realizar)
+async function atualizarPrevisto(){
+  var elV = document.getElementById('ini-previsto');
+  var elQ = document.getElementById('ini-previsto-qtd');
+  if(!elV) return;
+  var hoje = new Date().toISOString().slice(0,10);
+  var futuros = (_plantoesCache||[]).filter(function(l){ return l.data >= hoje; });
+  if(!futuros.length){
+    // _plantoesCache pode não ter carregado ainda; busca uma vez
+    try{
+      var _r = await apiLanc('lanc-meus', {d1: hoje});
+      futuros = _r.ok ? (_r.dados?.lancamentos||[]) : [];
+      if(futuros.length) _plantoesCache = futuros;
+    }catch(e){}
+  }
+  var total = futuros.reduce(function(s,l){ return s + (l.honorario||0); }, 0);
+  elV.textContent = fBRL(total);
+  if(elQ) elQ.textContent = futuros.length;
+}
+
 async function carregarInicio() {
   const el = document.getElementById('ini-lista');
   if (!el || !medico) return;
@@ -1923,6 +1971,7 @@ async function carregarInicio() {
   const lista = _re.ok ? (_re.dados?.lancamentos||[]) : [];
   document.getElementById('ini-total').textContent = fBRL(lista.reduce((s,l)=>s+(l.honorario||0),0));
   document.getElementById('ini-qtd').textContent = lista.length;
+  atualizarPrevisto();
   if (!lista.length) { el.innerHTML = '<div class="empty">Nenhum plantao no periodo</div>'; return; }
   el.innerHTML = lista.map(l => {
     const dd = new Date(l.data + 'T12:00:00');
