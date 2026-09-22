@@ -736,6 +736,8 @@ function abrirWhatsAppSenha(){
 <div id="toast-med"></div>
 
 <script>
+// Escapa HTML de dados vindos do usuário antes de interpolar em innerHTML
+function esc(s){ return String(s??'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 const SUPABASE_URL = 'https://hqtnnadzwtfyfkunwfcy.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhxdG5uYWR6d3RmeWZrdW53ZmN5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYzMTM1MzcsImV4cCI6MjA5MTg4OTUzN30.j2qpn6JJZQ5QcB5j0eWtNV1EfqEz7DfTE-tQbW_WEGw';
 const RAIO_CHECKIN = 100;
@@ -933,12 +935,12 @@ function _renderSeletorLista(busca) {
   const filtradas = _seletorCtx.opcoes.filter(o => o.toLowerCase().includes(q));
   el.innerHTML = filtradas.map(op => {
     const sel = _seletorCtx.selecionadas.includes(op);
-    return `<div onclick="_toggleSeletorItem('${op.replace(/'/g,"\\'")}')"
+    return `<div onclick="_toggleSeletorItem('${esc(op.replace(/'/g,"\\'"))}')"
       style="display:flex;align-items:center;gap:12px;padding:13px 8px;border-bottom:1px solid var(--border);cursor:pointer;">
       <div style="width:22px;height:22px;border-radius:6px;border:2px solid ${sel?'var(--blue)':'var(--border)'};background:${sel?'var(--blue)':'#fff'};display:flex;align-items:center;justify-content:center;flex-shrink:0;">
         ${sel?'<span style="color:#fff;font-size:13px;line-height:1;">&#10003;</span>':''}
       </div>
-      <span style="font-size:14px;color:var(--text);">${op}</span>
+      <span style="font-size:14px;color:var(--text);">${esc(op)}</span>
     </div>`;
   }).join('');
 }
@@ -974,7 +976,7 @@ function _setSelecionadas(chave, lista) {
   if (labelEl) labelEl.textContent = lista.length > 0 ? lista.length + ' selecionado(s)' : 'Selecionar...';
   if (tagsEl) {
     tagsEl.innerHTML = lista.map(v =>
-      `<span style="background:var(--blue-light);color:var(--blue);border:1px solid #b7d2d6;padding:3px 10px;border-radius:99px;font-size:12px;font-weight:500;">${v}</span>`
+      `<span style="background:var(--blue-light);color:var(--blue);border:1px solid #b7d2d6;padding:3px 10px;border-radius:99px;font-size:12px;font-weight:500;">${esc(v)}</span>`
     ).join('');
   }
 }
@@ -1253,7 +1255,7 @@ async function carregarProjetos() {
   projetos=d||[];
   try{ _ctxColegas=_rx.ok?(_rx.dados?.colegas||[]):[]; _ctxVinculos=_rx.ok?(_rx.dados?.vinculos||[]):null; }catch(e){}
   const sel=document.getElementById('sel-projeto');
-  if(sel){ sel.innerHTML='<option value="">Selecione o local do plantao...</option>'+projetos.map(p=>'<option value="'+p.id+'">'+p.nome+'</option>').join(''); }
+  if(sel){ sel.innerHTML='<option value="">Selecione o local do plantao...</option>'+projetos.map(p=>'<option value="'+p.id+'">'+esc(p.nome)+'</option>').join(''); }
 }
 
 async function carregarMedicos() {
@@ -1418,7 +1420,7 @@ async function carregarCheckinsHoje() {
   const d=_rk.ok?(_rk.dados?.checkins||[]):[];
   const el=document.getElementById('checkins-hoje-lista');
   if(!d?.length){el.innerHTML='<div class="empty"><div class="empty-icon">OK</div>Nenhum check-in hoje</div>';return;}
-  el.innerHTML=d.map(c=>{const hora=new Date(c.feito_em).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});return '<div class="checkin-item"><div class="checkin-dot '+(c.aprovado?'dot-ok':'dot-fail')+'"></div><div class="checkin-info"><div class="checkin-info-proj">'+(c.projetos?.nome||'')+'</div><div class="checkin-info-meta">'+hora+' - '+(c.aprovado?'Aprovado':'Fora do raio')+'</div><span class="checkin-info-dist '+(c.aprovado?'dist-ok':'dist-far')+'">'+c.distancia_metros+'m</span></div></div>';}).join('');
+  el.innerHTML=d.map(c=>{const hora=new Date(c.feito_em).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});return '<div class="checkin-item"><div class="checkin-dot '+(c.aprovado?'dot-ok':'dot-fail')+'"></div><div class="checkin-info"><div class="checkin-info-proj">'+(esc(c.projetos?.nome||''))+'</div><div class="checkin-info-meta">'+hora+' - '+(c.aprovado?'Aprovado':'Fora do raio')+'</div><span class="checkin-info-dist '+(c.aprovado?'dist-ok':'dist-far')+'">'+c.distancia_metros+'m</span></div></div>';}).join('');
 }
 
 async function carregarPlantoes() {
@@ -1568,8 +1570,8 @@ function _cardPlantaoDetalhe(l){
            : '<button class="btn-acao btn-acao-ausencia" onclick="abrirAusencia(\''+l.id+'\')">Avisar ausencia</button>') +
     '</div>';
   return '<div style="border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px;margin-bottom:8px;">' +
-    '<div style="font-size:15px;font-weight:700;">'+proj+'</div>' +
-    (l.setor ? '<div style="font-size:13px;color:var(--text2);margin-top:1px;">'+l.setor+'</div>' : '') +
+    '<div style="font-size:15px;font-weight:700;">'+esc(proj)+'</div>' +
+    (l.setor ? '<div style="font-size:13px;color:var(--text2);margin-top:1px;">'+esc(l.setor)+'</div>' : '') +
     '<div style="display:flex;justify-content:space-between;align-items:baseline;margin-top:8px;">' +
       '<span style="font-size:13px;color:var(--text2);">'+hora+'</span>' +
       '<span style="font-size:16px;font-weight:700;color:var(--green);">'+valor+'</span>' +
@@ -1610,7 +1612,7 @@ function filtrarMedTransf() {
 function renderMedLista(lista) {
   const el=document.getElementById('med-lista-transf');
   if(!lista.length){el.innerHTML='<div style="padding:16px;text-align:center;color:var(--text3);font-size:13px;">Nenhum medico encontrado</div>';return;}
-  el.innerHTML=lista.map(m=>'<div class="med-item'+(_medSel?.id===m.id?' selecionado':'')+'" onclick="selecionarMed(\''+m.id+'\')" ><div class="med-avatar-mini">'+m.nome.split(' ').slice(0,2).map(n=>n[0]).join('')+'</div><div><div class="med-item-nome">'+m.nome+'</div><div class="med-item-crm">'+(m.crm||'')+'</div></div></div>').join('');
+  el.innerHTML=lista.map(m=>'<div class="med-item'+(_medSel?.id===m.id?' selecionado':'')+'" onclick="selecionarMed(\''+m.id+'\')" ><div class="med-avatar-mini">'+esc(m.nome.split(' ').slice(0,2).map(n=>n[0]).join(''))+'</div><div><div class="med-item-nome">'+esc(m.nome)+'</div><div class="med-item-crm">'+(esc(m.crm||''))+'</div></div></div>').join('');
 }
 
 function selecionarMed(id) {
@@ -1706,7 +1708,7 @@ async function carregarNotificacoes() {
     const stT=t.status==='pendente'?'Aguardando sua resposta':t.status==='aceito'?'Voce aceitou':'Voce recusou';
     const stColor=t.status==='pendente'?'var(--amber)':t.status==='aceito'?'var(--green)':'var(--red)';
     const acoes=t.status==='pendente'?'<div class="notif-acoes"><button class="btn-notif btn-notif-aceitar" onclick="responderTransf(\''+t.id+'\',\''+t.lancamento_id+'\',\'aceito\')">Aceitar plantao</button><button class="btn-notif btn-notif-recusar" onclick="responderTransf(\''+t.id+'\',\''+t.lancamento_id+'\',\'recusado\')">Recusar</button></div>':'';
-    return '<div class="notif-card '+stC+'"><div class="notif-header"><div class="notif-tipo">Solicitacao de transferencia</div><div class="notif-desc">'+origem+' quer te transferir um plantao</div><div class="notif-meta">'+proj+' - '+dt+' - '+hr+(val?' - '+val:'')+'</div>'+(t.mensagem?'<div class="notif-msg">"'+t.mensagem+'"</div>':'')+'<div class="notif-status" style="color:'+stColor+';">'+stT+'</div></div>'+acoes+'</div>';
+    return '<div class="notif-card '+stC+'"><div class="notif-header"><div class="notif-tipo">Solicitacao de transferencia</div><div class="notif-desc">'+esc(origem)+' quer te transferir um plantao</div><div class="notif-meta">'+esc(proj)+' - '+dt+' - '+hr+(val?' - '+val:'')+'</div>'+(t.mensagem?'<div class="notif-msg">"'+esc(t.mensagem)+'"</div>':'')+'<div class="notif-status" style="color:'+stColor+';">'+stT+'</div></div>'+acoes+'</div>';
   }).join('');
 }
 
@@ -1809,7 +1811,7 @@ async function carregarDisponiveis() {
     else if(conf&&!conf.bloqueio){const ak='alerta_'+l.id;window[ak]=conf.msg;btnH='<div class="conflito-aviso" style="background:#fff3e0;border-color:#ffb74d;color:#e65100;">'+conf.msg+'</div><button class="btn-candidatar disponivel" onclick="candidatar(\''+l.id+'\',this,window[\''+ak+'\'])">Estou ciente — me candidatar</button>';}
     else btnH='<button class="btn-candidatar disponivel" onclick="candidatar(\''+l.id+'\',this,null)">Me candidatar para este plantão</button>';
     const turno=l.tipo?.includes('Noturno')?'badge-purple':l.tipo?.includes('24')?'badge-amber':'badge-green';
-    return '<div class="plantao-aberto-card"><div class="plantao-aberto-header"><div class="plantao-aberto-proj">'+proj+pubTag+rqeTag+'</div><div class="plantao-aberto-data" style="text-transform:capitalize;">'+dataFmt+'</div></div><div class="plantao-body"><div><div class="plantao-info-label">Horário</div><div class="plantao-info-val">'+(l.hora_ini||'').slice(0,5)+'-'+(l.hora_fim||'').slice(0,5)+'</div></div><div><div class="plantao-info-label">Horas</div><div class="plantao-info-val">'+l.horas+'h</div></div><div><div class="plantao-info-label">Vagas</div><div class="plantao-info-val" style="color:'+(cheia?'var(--green)':'var(--amber)')+';">'+(cheia?'Preenchido':vagas+' disponível')+'</div></div></div>'+(l.setor?'<div style="padding:0 16px 8px;font-size:12px;color:var(--text2);">'+l.setor+'</div>':'')+(l.honorario?'<div style="padding:0 16px 8px;font-size:13px;font-weight:700;color:var(--green);">'+fBRL(l.honorario)+'</div>':'')+'<span class="badge '+turno+'" style="margin:0 16px 10px;display:inline-block;">'+(l.tipo||'')+'</span>'+btnH+'</div>';
+    return '<div class="plantao-aberto-card"><div class="plantao-aberto-header"><div class="plantao-aberto-proj">'+esc(proj)+pubTag+rqeTag+'</div><div class="plantao-aberto-data" style="text-transform:capitalize;">'+dataFmt+'</div></div><div class="plantao-body"><div><div class="plantao-info-label">Horário</div><div class="plantao-info-val">'+(l.hora_ini||'').slice(0,5)+'-'+(l.hora_fim||'').slice(0,5)+'</div></div><div><div class="plantao-info-label">Horas</div><div class="plantao-info-val">'+l.horas+'h</div></div><div><div class="plantao-info-label">Vagas</div><div class="plantao-info-val" style="color:'+(cheia?'var(--green)':'var(--amber)')+';">'+(cheia?'Preenchido':vagas+' disponível')+'</div></div></div>'+(l.setor?'<div style="padding:0 16px 8px;font-size:12px;color:var(--text2);">'+esc(l.setor)+'</div>':'')+(l.honorario?'<div style="padding:0 16px 8px;font-size:13px;font-weight:700;color:var(--green);">'+fBRL(l.honorario)+'</div>':'')+'<span class="badge '+turno+'" style="margin:0 16px 10px;display:inline-block;">'+(esc(l.tipo||''))+'</span>'+btnH+'</div>';
   }).join('');
 }
 
@@ -1912,7 +1914,7 @@ async function carregarConvites() {
     const empresa = c.empresa || 'Uma empresa';
     return '<div class="notif-card pendente"><div class="notif-header">'
       + '<div class="notif-tipo">Convite de vínculo</div>'
-      + '<div class="notif-desc">' + empresa + ' quer te adicionar à equipe</div>'
+      + '<div class="notif-desc">' + esc(empresa) + ' quer te adicionar à equipe</div>'
       + '<div class="notif-meta">Ao aceitar, você passa a receber os plantões dessa empresa.</div>'
       + '</div><div class="notif-acoes">'
       + '<button class="btn-notif btn-notif-aceitar" onclick="responderConvite(\'' + c.id + '\',true,this)">Aceitar</button>'
@@ -1981,7 +1983,7 @@ async function carregarInicio() {
     const dd = new Date(l.data + 'T12:00:00');
     return '<div style="display:flex;align-items:center;padding:12px 16px;border-bottom:1px solid var(--border);">'
       + '<div style="width:64px;font-size:13px;font-weight:600;color:var(--blue);">' + dd.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'}) + '</div>'
-      + '<div style="flex:1;font-size:13px;color:var(--text);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + (l.projetos?.nome || '-') + '</div>'
+      + '<div style="flex:1;font-size:13px;color:var(--text);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + (esc(l.projetos?.nome || '-')) + '</div>'
       + '<div style="width:90px;text-align:right;font-size:13px;font-weight:700;color:var(--green);">' + fBRL(l.honorario) + '</div>'
       + '</div>';
   }).join('');
