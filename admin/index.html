@@ -8029,7 +8029,7 @@ function gerarPreviewLote() {
   const prev = document.getElementById('lote-preview-tabela');
   if (!prev) return;
   document.getElementById('lote-preview-card').style.display = 'block';
-  prev.innerHTML = 
+    prev.innerHTML = `
     <div class="card" style="margin-top:16px;">
       <div class="card-title">Pré-visualização — ${selecionados.length} plantão(ões)</div>
       <table><thead><tr><th>Médico</th><th>Projeto</th><th>Data</th><th>Horário</th><th>Horas</th><th>Valor</th></tr></thead><tbody> ${selecionados.map(m => `<tr>
