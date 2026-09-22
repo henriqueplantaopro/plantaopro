@@ -2334,6 +2334,8 @@ tr:hover td{background:var(--bg3);}
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script>
+// Escapa HTML de dados vindos do usuário antes de interpolar em innerHTML
+function esc(s){ return String(s??'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 // ── HELPERS ──────────────────────────────────────────
 function sortedMedicos()  { return [...medicos].sort((a,b)  => a.nome.localeCompare(b.nome,  'pt-BR')); }
 function sortedProjetos() { return [...projetos].sort((a,b) => a.nome.localeCompare(b.nome, 'pt-BR')); }
@@ -2680,15 +2682,15 @@ async function carregarDashboard() {
   // Últimos lançamentos
   const dt = document.getElementById('d-lanc-tab');
   dt.innerHTML = lancamentos.length ? '<table><thead><tr><th>Data</th><th>Médico</th><th>Projeto</th><th>Honorários</th></tr></thead><tbody>' +
-    lancamentos.slice(0,6).map(l=>`<tr><td>${fDate(l.data)}</td><td>${l.medico}</td><td>${l.projeto}</td><td style="color:var(--green);font-weight:600;">${fBRL(l.honorario)}</td></tr>`).join('') +
+    lancamentos.slice(0,6).map(l=>`<tr><td>${fDate(l.data)}</td><td>${esc(l.medico)}</td><td>${esc(l.projeto)}</td><td style="color:var(--green);font-weight:600;">${fBRL(l.honorario)}</td></tr>`).join('') +
     '</tbody></table>' : '<div class="empty">Nenhum lançamento</div>';
 
   // Check-ins recentes
   const dc = document.getElementById('d-ci-tab');
   dc.innerHTML = (cis||[]).length ? '<table><thead><tr><th>Médico</th><th>Local</th><th>Hora</th><th>Status</th></tr></thead><tbody>' +
     (cis||[]).map(c=>`<tr>
-      <td>${c.medicos?.nome||''}</td>
-      <td>${c.projetos?.nome||''}</td>
+      <td>${esc(c.medicos?.nome||'')}</td>
+      <td>${esc(c.projetos?.nome||'')}</td>
       <td>${new Date(c.feito_em).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}</td>
       <td>${c.aprovado?'<span class="checkin-ok">Aprovado</span>':'<span class="checkin-fail">Fora do raio</span>'}</td>
     </tr>`).join('') + '</tbody></table>' : '<div class="empty">Nenhum check-in hoje</div>';
@@ -2722,7 +2724,7 @@ function inicializarPainelCustos() {
   const sel = document.getElementById('pc-projeto');
   if (sel && sel.options.length <= 1) {
     sel.innerHTML = '<option value="">Todos os projetos</option>' +
-      projetos.map(p => `<option value="${p.id}">${p.nome}</option>`).join('');
+      projetos.map(p => `<option value="${p.id}">${esc(p.nome)}</option>`).join('');
   }
 
   // Garantir mês atual selecionado por padrão e carregar dados toda vez
@@ -2903,7 +2905,7 @@ async function carregarPainelCustos() {
   } else {
     tbody.innerHTML = linhasProj.map(p => `
       <tr style="border-bottom:1px solid var(--bg3);">
-        <td style="padding:11px 18px;font-weight:600;color:var(--text);">${p.nome}</td>
+        <td style="padding:11px 18px;font-weight:600;color:var(--text);">${esc(p.nome)}</td>
         <td style="padding:11px 18px;text-align:right;font-variant-numeric:tabular-nums;color:var(--text);">${fBRL(p.realizado + p.previsto)}</td>
         <td style="padding:11px 18px;text-align:right;font-variant-numeric:tabular-nums;color:var(--green);">${fBRL(p.realizado)}</td>
         <td style="padding:11px 18px;text-align:right;font-variant-numeric:tabular-nums;color:var(--amber);">${fBRL(p.previsto)}</td>
@@ -3002,7 +3004,7 @@ function renderMedicos(filtro='') {
   }
 
   if (!lista.length) {
-    el.innerHTML = `<div class="empty">Nenhum médico encontrado para "${filtro}".</div>`;
+    el.innerHTML = `<div class="empty">Nenhum médico encontrado para "${esc(filtro)}".</div>`;
     return;
   }
   el.innerHTML = '<table><thead><tr><th class="lote-cad-col" style="display:none;width:28px;"></th><th>Nome</th><th>CRM</th><th>Especialidade</th><th>Tipo</th><th>Valor/h</th><th>Dispositivo</th><th>App</th><th></th></tr></thead><tbody>' +
@@ -3011,22 +3013,22 @@ function renderMedicos(filtro='') {
         ? `<span class="badge badge-green">✓ Vinculado</span>`
         : `<span class="badge badge-amber">Sem vínculo</span>`;
       const devReset = m.device_id
-        ? `<button class="btn btn-danger" style="margin-top:4px;font-size:11px;" onclick="resetarDispositivo('${m.id}','${m.nome}')">↺ Redefinir</button>`
+        ? `<button class="btn btn-danger" style="margin-top:4px;font-size:11px;" onclick="resetarDispositivo('${m.id}','${esc(m.nome)}')">↺ Redefinir</button>`
         : '';
       const nasc = m.data_nascimento ? new Date(m.data_nascimento+'T12:00:00').toLocaleDateString('pt-BR') : '—';
       return `<tr>
         <td class="lote-cad-col" style="display:none;"><input type="checkbox" class="lote-cad-chk" value="${m.id}" onchange="atualizarLoteCadCount()"></td>
         <td>
-          <strong>${m.nome}</strong><br>
-          <span style="font-size:11px;color:var(--text3);">${m.email||''}</span><br>
-          <span style="font-size:11px;color:var(--text3);">${m.telefone||''}</span>
+          <strong>${esc(m.nome)}</strong><br>
+          <span style="font-size:11px;color:var(--text3);">${esc(m.email||'')}</span><br>
+          <span style="font-size:11px;color:var(--text3);">${esc(m.telefone||'')}</span>
         </td>
-        <td style="font-family:monospace;font-size:12px;">${m.crm}<br><span style="color:var(--text3);">${m.rqe||''}</span></td>
-        <td style="font-size:12px;">${m.especialidade||'—'}<br><span style="color:var(--text3);">Nasc: ${nasc}</span></td>
-        <td><span class="badge badge-blue">${m.tipo}</span></td>
+        <td style="font-family:monospace;font-size:12px;">${esc(m.crm)}<br><span style="color:var(--text3);">${esc(m.rqe||'')}</span></td>
+        <td style="font-size:12px;">${esc(m.especialidade||'—')}<br><span style="color:var(--text3);">Nasc: ${nasc}</span></td>
+        <td><span class="badge badge-blue">${esc(m.tipo)}</span></td>
         <td style="font-family:monospace;">${fBRL(m.valor_hora||0)}</td>
         <td style="font-size:12px;">${devStatus}${devReset?'<br>'+devReset:''}</td>
-        <td><button class="btn btn-link" onclick="verLinkMedico('${m.token_acesso}','${m.nome}','${m.telefone||''}')">Link</button></td>
+        <td><button class="btn btn-link" onclick="verLinkMedico('${m.token_acesso}','${esc(m.nome)}','${esc(m.telefone||'')}')">Link</button></td>
         <td style="white-space:nowrap;">
           <button class="btn btn-ghost btn-sm" onclick="abrirEditarMedico('${m.id}')">Editar</button>
           <button class="btn btn-ghost btn-sm" onclick="resetSenhaMedico('${m.id}')">Redefinir senha</button>
@@ -3442,15 +3444,15 @@ function renderProjetos() {
       if(p.valor_padrao_24h) rem.push(`24h: ${fBRL(p.valor_padrao_24h)}`);
       if(p.valor_padrao_sobreaviso) rem.push(`Sob.: ${fBRL(p.valor_padrao_sobreaviso)}`);
       return `<tr>
-        <td><strong>${p.nome}</strong></td>
-        <td style="font-family:monospace;">${p.codigo_cc||'—'}</td>
-        <td>${p.contratante||'—'}</td>
+        <td><strong>${esc(p.nome)}</strong></td>
+        <td style="font-family:monospace;">${esc(p.codigo_cc||'—')}</td>
+        <td>${esc(p.contratante||'—')}</td>
         <td style="font-size:12px;color:var(--green);">${rem.length?rem.join('<br>'):'<span style="color:var(--text3);">Não configurada</span>'}</td>
         <td style="font-size:11px;font-family:monospace;">${p.latitude&&p.longitude?'OK':'<span style="color:var(--amber);">Sem GPS</span>'}</td>
-        <td><span class="badge badge-${p.status==='Ativo'?'green':p.status==='Encerrado'?'red':'amber'}">${p.status}</span></td>
+        <td><span class="badge badge-${p.status==='Ativo'?'green':p.status==='Encerrado'?'red':'amber'}">${esc(p.status)}</span></td>
         <td style="white-space:nowrap;text-align:right;">
           <button class="btn btn-ghost btn-sm" onclick="abrirEditarProjeto('${p.id}')">Editar</button>
-          <button class="btn btn-ghost btn-sm" onclick="abrirModalSetores('${p.id}', '${p.nome}')">&#9881; Setores</button>
+          <button class="btn btn-ghost btn-sm" onclick="abrirModalSetores('${p.id}', '${esc(p.nome)}')">&#9881; Setores</button>
           <button class="btn btn-danger btn-sm" onclick="delProjeto('${p.id}')">Remover</button>
         </td>
       </tr>`;
@@ -3552,10 +3554,10 @@ function popLancSelects() {
   // selects antigos (mantidos por compatibilidade)
   const sm = document.getElementById('lm'), sp = document.getElementById('lp');
   if(sm) popLancMedicos();
-  if(sp) sp.innerHTML = '<option value="">Selecione...</option>' + sortedProjetos().map(p=>`<option value="${p.id}">${p.nome}</option>`).join('');
+  if(sp) sp.innerHTML = '<option value="">Selecione...</option>' + sortedProjetos().map(p=>`<option value="${p.id}">${esc(p.nome)}</option>`).join('');
   // filtros da nova aba
   const fm = document.getElementById('lf-med');
-  if(fm) fm.innerHTML = '<option value="">Todos os médicos</option>' + sortedMedicos().map(m=>`<option value="${m.id}">${m.nome}</option>`).join('');
+  if(fm) fm.innerHTML = '<option value="">Todos os médicos</option>' + sortedMedicos().map(m=>`<option value="${m.id}">${esc(m.nome)}</option>`).join('');
   try { montarFiltroProjSetor('lan','lan-projsetor'); } catch(e){}
 }
 function popLancMedicos(){
@@ -3567,28 +3569,28 @@ function popLancMedicos(){
     : sortedMedicos();
   const anterior = sm.value;
   sm.innerHTML = '<option value="">Selecione...</option>' +
-    lista.map(m=>`<option value="${m.id}">${m.nome}</option>`).join('');
+    lista.map(m=>`<option value="${m.id}">${esc(m.nome)}</option>`).join('');
   if(anterior && lista.some(m=>m.id===anterior)) sm.value = anterior;
 }
 function popCiSelects() {
   const sp = document.getElementById('ci-proj'), sm = document.getElementById('ci-med');
   if(!sp||!sm) return;
-  sp.innerHTML = '<option value="">Todos</option>' + projetos.map(p=>`<option value="${p.id}">${p.nome}</option>`).join('');
-  sm.innerHTML = '<option value="">Todos</option>' + [...medicos].sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR')).map(m=>`<option value="${m.id}">${m.nome}</option>`).join('');
+  sp.innerHTML = '<option value="">Todos</option>' + projetos.map(p=>`<option value="${p.id}">${esc(p.nome)}</option>`).join('');
+  sm.innerHTML = '<option value="">Todos</option>' + [...medicos].sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR')).map(m=>`<option value="${m.id}">${esc(m.nome)}</option>`).join('');
 }
 function popCiProjPresenca() {
   const sp = document.getElementById('ci-proj-p');
   if(!sp) return;
   const v = sp.value;
-  sp.innerHTML = '<option value="">Todos os projetos</option>' + projetos.map(p=>`<option value="${p.id}">${p.nome}</option>`).join('');
+  sp.innerHTML = '<option value="">Todos os projetos</option>' + projetos.map(p=>`<option value="${p.id}">${esc(p.nome)}</option>`).join('');
   sp.value = v;
 }
 function popRelSelects() {
-  ['rp','ex-rp'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML='<option value="">Todos</option>'+projetos.map(p=>`<option value="${p.id}">${p.nome}</option>`).join('');});
-  ['rm','ex-rm'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML='<option value="">Todos</option>'+[...medicos].sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR')).map(m=>`<option value="${m.id}">${m.nome}</option>`).join('');});
+  ['rp','ex-rp'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML='<option value="">Todos</option>'+projetos.map(p=>`<option value="${p.id}">${esc(p.nome)}</option>`).join('');});
+  ['rm','ex-rm'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML='<option value="">Todos</option>'+[...medicos].sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR')).map(m=>`<option value="${m.id}">${esc(m.nome)}</option>`).join('');});
   const rm=document.getElementById('rm');
   try { montarFiltroProjSetor('rel','rel-projsetor'); } catch(e){}
-  if(rm)rm.innerHTML='<option value="">Todos</option>'+[...medicos].sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR')).map(m=>`<option value="${m.id}">${m.nome}</option>`).join('');
+  if(rm)rm.innerHTML='<option value="">Todos</option>'+[...medicos].sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR')).map(m=>`<option value="${m.id}">${esc(m.nome)}</option>`).join('');
 }
 
 // ── LANÇAMENTOS ───────────────────────────────────────
@@ -3746,10 +3748,10 @@ async function carregarPresenca() {
 
     return `<tr style="${bgRow}">
       <td>
-        <strong>${nomeMed}</strong><br>
-        <span style="font-size:11px;color:var(--text3);font-family:monospace;">${crmMed}</span>
+        <strong>${esc(nomeMed)}</strong><br>
+        <span style="font-size:11px;color:var(--text3);font-family:monospace;">${esc(crmMed)}</span>
       </td>
-      <td>${nomePrj}${l.setor ? '<br><span style="font-size:11px;color:var(--text3);">'+l.setor+'</span>' : ''}</td>
+      <td>${esc(nomePrj)}${l.setor ? '<br><span style="font-size:11px;color:var(--text3);">'+esc(l.setor)+'</span>' : ''}</td>
       <td style="font-family:monospace;">${(l.hora_ini||'').slice(0,5)} – ${(l.hora_fim||'').slice(0,5)}</td>
       <td><span class="badge ${badge}">${turno}</span></td>
       <td style="font-family:monospace;">${l.horas}h</td>
@@ -3800,7 +3802,7 @@ async function carregarCheckins() {
   el.innerHTML='<table><thead><tr><th>Data/Hora</th><th>Médico</th><th>Projeto</th><th>Distância</th><th>Status</th></tr></thead><tbody>'+
     data.map(c=>`<tr>
       <td style="font-family:monospace;">${new Date(c.feito_em).toLocaleString('pt-BR')}</td>
-      <td>${c.medicos?.nome||'—'}</td><td>${c.projetos?.nome||'—'}</td>
+      <td>${esc(c.medicos?.nome||'—')}</td><td>${esc(c.projetos?.nome||'—')}</td>
       <td style="font-family:monospace;">${c.distancia_metros}m</td>
       <td>${c.aprovado?'<span class="checkin-ok">Aprovado</span>':'<span class="checkin-fail">Fora do raio</span>'}</td>
     </tr>`).join('')+'</tbody></table>';
@@ -3873,9 +3875,9 @@ function exportarPDF() {
     const grupos=Object.values(pd.grupos).sort((a,b)=>a.medico.localeCompare(b.medico,'pt-BR'));
     const projTotal=grupos.reduce((s,g)=>s+g.total,0), projQtd=grupos.reduce((s,g)=>s+g.qtd,0);
     return `<div class="proj-block">
-      <div class="proj-header"><span class="proj-nome">${proj.toUpperCase()}</span><span class="proj-meta">${projQtd} plantão(ões) · <strong>${fBRL(projTotal)}</strong></span></div>
+      <div class="proj-header"><span class="proj-nome">${esc(proj.toUpperCase())}</span><span class="proj-meta">${projQtd} plantão(ões) · <strong>${fBRL(projTotal)}</strong></span></div>
       <table><thead><tr><th>Médico / CRM</th><th>Horas/plantão</th><th>Turno</th><th>Setor</th><th>Qtd</th><th>Total</th></tr></thead>
-      <tbody>${grupos.map(g=>`<tr><td><strong>${g.medico}</strong><br><span style="font-size:9px;color:#8aa0a6;">${g.crm}</span></td><td>${g.horas}h</td><td><span class="badge badge-${g.turno==='Noturno'?'p':g.turno==='24h'?'a':'g'}">${g.turno}</span></td><td>${g.setor||'—'}</td><td style="text-align:center;">${g.qtd}</td><td style="text-align:right;color:#0a8f5b;font-weight:700;">${fBRL(Math.round(g.total*100)/100)}</td></tr>`).join('')}</tbody>
+      <tbody>${grupos.map(g=>`<tr><td><strong>${esc(g.medico)}</strong><br><span style="font-size:9px;color:#8aa0a6;">${esc(g.crm)}</span></td><td>${g.horas}h</td><td><span class="badge badge-${g.turno==='Noturno'?'p':g.turno==='24h'?'a':'g'}">${g.turno}</span></td><td>${esc(g.setor||'—')}</td><td style="text-align:center;">${g.qtd}</td><td style="text-align:right;color:#0a8f5b;font-weight:700;">${fBRL(Math.round(g.total*100)/100)}</td></tr>`).join('')}</tbody>
       <tfoot><tr><td colspan="4"><strong>Total do projeto</strong></td><td style="text-align:center;"><strong>${projQtd}</strong></td><td style="text-align:right;color:#0a8f5b;font-weight:700;"><strong>${fBRL(projTotal)}</strong></td></tr></tfoot>
       </table></div>`;
   }).join('');
@@ -3952,9 +3954,9 @@ function initAgenda() {
   // Popular selects
   const sm = document.getElementById('agd-med');
   const sp = document.getElementById('agd-proj');
-  if (sm) sm.innerHTML = '<option value="">Selecione...</option>' + sortedMedicos().map(m=>`<option value="${m.id}">${m.nome}</option>`).join('');
+  if (sm) sm.innerHTML = '<option value="">Selecione...</option>' + sortedMedicos().map(m=>`<option value="${m.id}">${esc(m.nome)}</option>`).join('');
   if (sp) {
-    sp.innerHTML = '<option value="">Selecione...</option>' + sortedProjetos().map(p=>`<option value="${p.id}">${p.nome}</option>`).join('');
+    sp.innerHTML = '<option value="">Selecione...</option>' + sortedProjetos().map(p=>`<option value="${p.id}">${esc(p.nome)}</option>`).join('');
     sp.addEventListener('change', preencherValorPadraoAgenda);
   }
   if (sm) sm.addEventListener('change', preencherValorPadraoAgenda);
@@ -4098,9 +4100,9 @@ function gerarPreviewAgenda() {
   const tabela = document.getElementById('agd-preview-tabela');
   tabela.innerHTML = `
     <div style="display:flex;gap:16px;font-size:13px;margin-bottom:14px;flex-wrap:wrap;">
-      <span><strong>${med?.nome||''}</strong></span>
-      <span><strong>${proj?.nome||''}</strong></span>
-      <span><strong>${ini}–${fim} (${horas}h)</strong></span> ${setor?`<span><strong>${setor}</strong></span>`:''}
+      <span><strong>${esc(med?.nome||'')}</strong></span>
+      <span><strong>${esc(proj?.nome||'')}</strong></span>
+      <span><strong>${ini}–${fim} (${horas}h)</strong></span> ${setor?`<span><strong>${esc(setor)}</strong></span>`:''}
     </div>
     <table><thead><tr><th>Data</th><th>Dia da semana</th><th>Tipo</th><th>Horas</th><th>Honorários</th></tr></thead>
     <tbody>${dias.map(d => {
@@ -4109,7 +4111,7 @@ function gerarPreviewAgenda() {
       return `<tr>
         <td class="mono">${fDate(d)}</td>
         <td style="text-transform:capitalize;">${dw}</td>
-        <td><span class="badge badge-${turno}">${tipo}</span></td>
+        <td><span class="badge badge-${turno}">${esc(tipo)}</span></td>
         <td class="mono">${horas}h</td>
         <td class="mono" style="color:var(--green);font-weight:600;">${fBRL(hon)}</td>
       </tr>`;
@@ -4193,9 +4195,9 @@ function popCalSelects() {
   const sp = document.getElementById('cal-proj');
   const sm = document.getElementById('cal-med');
   if (sp) sp.innerHTML = '<option value="">Todos os projetos</option>' +
-    sortedProjetos().map(p=>`<option value="${p.id}">${p.nome}</option>`).join('');
+    sortedProjetos().map(p=>`<option value="${p.id}">${esc(p.nome)}</option>`).join('');
   if (sm) sm.innerHTML = '<option value="">Todos os médicos</option>' +
-    sortedMedicos().map(m=>`<option value="${m.id}">${m.nome}</option>`).join('');
+    sortedMedicos().map(m=>`<option value="${m.id}">${esc(m.nome)}</option>`).join('');
 }
 
 function switchCalTab(tab) {
@@ -4231,7 +4233,7 @@ async function onCalProjChange() {
       try {
         var sets = await carregarSetoresProjeto(pid);
         sel.innerHTML = '<option value="">Todos os setores</option>' +
-          (sets||[]).map(function(s){ return '<option value="'+s.nome+'">'+s.nome+'</option>'; }).join('');
+          (sets||[]).map(function(s){ return '<option value="'+esc(s.nome)+'">'+esc(s.nome)+'</option>'; }).join('');
       } catch(e) {}
     }
   }
@@ -4387,7 +4389,7 @@ function renderCalLista() {
       const cls = l.tipo && l.tipo.includes('Noturno') ? 'noturno' : (l.tipo && l.tipo.includes('24') ? 'h24' : 'diurno');
       const nome = l.medico_id ? String(l.medico||'').split(' ')[0] : 'Sem médico';
       const tag = l.cobertura ? ' ·C' : '';
-      return '<div class="cal-event '+cls+'" title="'+(l.medico||'Sem médico')+' · '+(l.hora_ini||'').slice(0,5)+'">'+nome+tag+'</div>';
+      return '<div class="cal-event '+cls+'" title="'+(esc(l.medico||'Sem médico'))+' · '+(l.hora_ini||'').slice(0,5)+'">'+esc(nome)+tag+'</div>';
     }).join('');
     if (evts.length > 3) ev += '<div style="font-size:10px;color:var(--text3);">+'+(evts.length-3)+' mais</div>';
     html += '<div class="cal-day'+(isToday?' today':'')+(evts.length?' has-events':'')+'" onclick="showDayDetailCal(\''+ds+'\')">' +
@@ -4440,16 +4442,16 @@ function showDayDetailCal(ds) {
       const semMed = !l.medico_id;
       const nome = semMed
         ? '<span style="color:var(--amber);font-weight:600;">Sem médico</span>'
-        : (l.medico || '—');
+        : esc(l.medico || '—');
       const tagCob = l.cobertura
         ? '<span style="font-size:10px;background:#eef0f8;color:#566099;padding:1px 5px;border-radius:99px;margin-left:5px;">Cobertura</span>' : '';
       const tagTr = (l.aberto && l.transferido_de)
-        ? '<span style="font-size:10px;background:#f3e8ff;color:#7c3aed;padding:1px 5px;border-radius:99px;margin-left:5px;" title="Repassado por ' + (l.transferido_de_nome||'colega') + '">↪ ' + String(l.transferido_de_nome||'colega').split(' ')[0] + '</span>' : '';
+        ? '<span style="font-size:10px;background:#f3e8ff;color:#7c3aed;padding:1px 5px;border-radius:99px;margin-left:5px;" title="Repassado por ' + (esc(l.transferido_de_nome||'colega')) + '">↪ ' + esc(String(l.transferido_de_nome||'colega').split(' ')[0]) + '</span>' : '';
       return '<tr>' +
         '<td>' + nome + tagCob + tagTr + '</td>' +
-        '<td>' + (l.projeto||'—') + '</td>' +
-        '<td>' + (l.setor||'—') + '</td>' +
-        '<td>' + (l.tipo||'') + '</td>' +
+        '<td>' + (esc(l.projeto||'—')) + '</td>' +
+        '<td>' + (esc(l.setor||'—')) + '</td>' +
+        '<td>' + (esc(l.tipo||'')) + '</td>' +
         '<td class="mono">' + (l.hora_ini||'').slice(0,5) + '–' + (l.hora_fim||'').slice(0,5) + '</td>' +
         '<td class="mono">' + (l.horas||0) + 'h</td>' +
         '<td class="mono">' + fBRL(l.honorario||0) + '</td>' +
@@ -4514,7 +4516,7 @@ function renderSemana() {
     const todosProjs = sortedProjetos();
     const grid = document.getElementById('sem-grid');
     grid.innerHTML = todosProjs.map(p => `<div style="margin-bottom:24px;">
-        <div style="font-size:13px;font-weight:700;color:var(--blue);padding:6px 0 6px;border-bottom:2px solid var(--blue);margin-bottom:6px;display:flex;align-items:center;gap:8px;"> ${p.nome}
+        <div style="font-size:13px;font-weight:700;color:var(--blue);padding:6px 0 6px;border-bottom:2px solid var(--blue);margin-bottom:6px;display:flex;align-items:center;gap:8px;"> ${esc(p.nome)}
           <button class="btn btn-ghost btn-sm" style="margin-left:auto;" onclick="document.getElementById('cal-proj').value='${p.id}';renderCalAtual()">Ver só este ›</button>
         </div>
         <div id="sem-proj-${p.id}" style="overflow-x:auto;"></div>
@@ -4553,7 +4555,7 @@ function renderSemana() {
   grid.innerHTML = lista.map((st, idx) => {
     const nome = (st === '__SEM__') ? 'Sem setor definido' : st;
     return `<div style="margin-bottom:22px;">
-      <div style="font-size:13px;font-weight:700;color:var(--blue);padding:6px 0;border-bottom:2px solid var(--blue);margin-bottom:6px;display:flex;align-items:center;gap:8px;">${nome}
+      <div style="font-size:13px;font-weight:700;color:var(--blue);padding:6px 0;border-bottom:2px solid var(--blue);margin-bottom:6px;display:flex;align-items:center;gap:8px;">${esc(nome)}
         <button class="btn btn-ghost btn-sm" style="margin-left:auto;" onclick="filtrarSetorSemana('${String(st).replace(/'/g,"\\'")}')">Ver só este ›</button>
       </div>
       <div id="sem-setor-${idx}" style="overflow-x:auto;"></div>
@@ -4637,23 +4639,23 @@ function renderSemanaGrid(dias, dows, hj, pid, mid, setorOverride) {
           const nomeAprov = candsAprov[vi] ? candsAprov[vi].split(' ').slice(0,2).join(' ') : `Médico ${vi+1}`;
           html += `<div class="sem-card ${cat.cls}" style="border-left-color:var(--green);">
             <button class="sem-card-opts" onclick="event.stopPropagation();abrirCtxChip(event,'${l.id}','${ds}','${pid||l.projeto_id}')" title="Opções">⋮</button>
-            <div class="sem-card-nome" style="color:var(--green);">${nomeAprov}</div>
-            <div class="sem-card-hora">${(l.hora_ini||'').slice(0,5)}–${(l.hora_fim||'').slice(0,5)}</div> ${l.setor?`<div class="sem-card-setor">${l.setor}</div>`:''}
+            <div class="sem-card-nome" style="color:var(--green);">${esc(nomeAprov)}</div>
+            <div class="sem-card-hora">${(l.hora_ini||'').slice(0,5)}–${(l.hora_fim||'').slice(0,5)}</div> ${l.setor?`<div class="sem-card-setor">${esc(l.setor)}</div>`:''}
           </div>`;
         }
         // Cards das vagas abertas restantes
         for (let vi = 0; vi < vagasLivres; vi++) {
           html += `<div class="sem-card ${cat.cls} aberto" data-lid="${l.id}" draggable="true">
             <button class="sem-card-opts" onclick="event.stopPropagation();abrirCtxChip(event,'${l.id}','${ds}','${pid||l.projeto_id}')" title="Opções">⋮</button>
-            <div class="sem-card-nome">Vaga ${preenchidas + vi + 1}/${totalVagas}${l.transferido_de?`<span title="Repassado por ${l.transferido_de_nome||'colega'}" style="font-size:9px;background:#f3e8ff;color:#7c3aed;padding:1px 4px;border-radius:99px;margin-left:3px;">↪ ${(l.transferido_de_nome||'colega').split(' ')[0]}</span>`:''}${l.cobertura?'<span style="font-size:9px;background:#eef0f8;color:#566099;padding:1px 4px;border-radius:99px;margin-left:3px;">Cob.</span>':''}</div>
-            <div class="sem-card-hora">${(l.hora_ini||'').slice(0,5)}–${(l.hora_fim||'').slice(0,5)}</div> ${l.setor?`<div class="sem-card-setor">${l.setor}</div>`:''}
+            <div class="sem-card-nome">Vaga ${preenchidas + vi + 1}/${totalVagas}${l.transferido_de?`<span title="Repassado por ${esc(l.transferido_de_nome||'colega')}" style="font-size:9px;background:#f3e8ff;color:#7c3aed;padding:1px 4px;border-radius:99px;margin-left:3px;">↪ ${esc((l.transferido_de_nome||'colega').split(' ')[0])}</span>`:''}${l.cobertura?'<span style="font-size:9px;background:#eef0f8;color:#566099;padding:1px 4px;border-radius:99px;margin-left:3px;">Cob.</span>':''}</div>
+            <div class="sem-card-hora">${(l.hora_ini||'').slice(0,5)}–${(l.hora_fim||'').slice(0,5)}</div> ${l.setor?`<div class="sem-card-setor">${esc(l.setor)}</div>`:''}
           </div>`;
         }
       } else {
         html += `<div class="sem-card ${cat.cls}" data-lid="${l.id}" draggable="true">
           <button class="sem-card-opts" onclick="event.stopPropagation();abrirCtxChip(event,'${l.id}','${ds}','${pid||l.projeto_id}')" title="Opções">⋮</button>
-          <div class="sem-card-nome" onclick="verDetalhesSemana('${l.id}')">${(l.medico||'').split(' ').slice(0,2).join(' ')}${l.cobertura?'<span style="font-size:9px;background:#eef0f8;color:#566099;padding:1px 4px;border-radius:99px;margin-left:3px;">Cob.</span>':''}</div>
-          <div class="sem-card-hora">${(l.hora_ini||'').slice(0,5)}–${(l.hora_fim||'').slice(0,5)}</div> ${l.setor?`<div class="sem-card-setor">${l.setor}</div>`:''}
+          <div class="sem-card-nome" onclick="verDetalhesSemana('${l.id}')">${esc((l.medico||'').split(' ').slice(0,2).join(' '))}${l.cobertura?'<span style="font-size:9px;background:#eef0f8;color:#566099;padding:1px 4px;border-radius:99px;margin-left:3px;">Cob.</span>':''}</div>
+          <div class="sem-card-hora">${(l.hora_ini||'').slice(0,5)}–${(l.hora_fim||'').slice(0,5)}</div> ${l.setor?`<div class="sem-card-setor">${esc(l.setor)}</div>`:''}
         </div>`;
       }
       });
@@ -4710,8 +4712,8 @@ function renderMedListaMR(filtro='', espFiltro='') {
     <div class="mr-med-item" id="mrmi-${m.id}" onclick="toggleMedMR('${m.id}')">
       <input type="checkbox" id="mrchk-${m.id}" value="${m.id}" onclick="event.stopPropagation()" onchange="toggleMedMR('${m.id}', this.checked)">
       <div>
-        <div style="font-weight:500;">${m.nome}</div>
-        <div style="font-size:11px;color:var(--text3);font-family:monospace;">${m.crm||''}</div>
+        <div style="font-weight:500;">${esc(m.nome)}</div>
+        <div style="font-size:11px;color:var(--text3);font-family:monospace;">${esc(m.crm||'')}</div>
       </div>
     </div>`).join('');
   atualizarCountMR();
@@ -4751,7 +4753,7 @@ function abrirLancamentoRapido(ds, projId) {
   renderMedListaMR();
   document.getElementById('mr-med-busca').value = '';
   document.getElementById('mr-proj').innerHTML = '<option value="">Selecione...</option>' +
-    sortedProjetos().map(p=>`<option value="${p.id}">${p.nome}</option>`).join('');
+    sortedProjetos().map(p=>`<option value="${p.id}">${esc(p.nome)}</option>`).join('');
 
   // Pré-selecionar o projeto do hospital clicado (quando veio pelo "+" de um hospital)
   if (projId) {
@@ -5281,7 +5283,7 @@ function initEscala() {
   const sp = document.getElementById('esc-proj');
   if (sp) {
     sp.innerHTML = '<option value="">Todos os projetos</option>' +
-      sortedProjetos().map(p=>`<option value="${p.id}">${p.nome}</option>`).join('');
+      sortedProjetos().map(p=>`<option value="${p.id}">${esc(p.nome)}</option>`).join('');
   }
   escOffset = 0;
   renderEscala();
@@ -5341,8 +5343,8 @@ function renderEscala() {
 
     html += `<tr>
       <td class="escala-td-med">
-        <div class="escala-med-nome">${m.nome}</div>
-        <div class="escala-med-horas">${Math.round(totalHoras*10)/10}h na semana · ${m.crm||''}</div>
+        <div class="escala-med-nome">${esc(m.nome)}</div>
+        <div class="escala-med-horas">${Math.round(totalHoras*10)/10}h na semana · ${esc(m.crm||'')}</div>
       </td>`;
 
     dias.forEach(d => {
@@ -5364,21 +5366,21 @@ function renderEscala() {
         const ini = (l.hora_ini||'').slice(0,5);
         const fim = (l.hora_fim||'').slice(0,5);
         var _tagCob = l.cobertura ? '<span style="font-size:9px;background:#eef0f8;color:#566099;padding:1px 4px;border-radius:99px;margin-left:3px;">Cobertura</span>' : '';
-        var _tagTransf = (l.aberto && l.transferido_de) ? '<span style="font-size:9px;background:#f3e8ff;color:#7c3aed;padding:1px 4px;border-radius:99px;margin-left:3px;" title="Repassado por '+(l.transferido_de_nome||'colega')+'">↪ '+((l.transferido_de_nome||'colega').split(' ')[0])+'</span>' : '';
+        var _tagTransf = (l.aberto && l.transferido_de) ? '<span style="font-size:9px;background:#f3e8ff;color:#7c3aed;padding:1px 4px;border-radius:99px;margin-left:3px;" title="Repassado por '+(esc(l.transferido_de_nome||'colega'))+'">↪ '+esc((l.transferido_de_nome||'colega').split(' ')[0])+'</span>' : '';
         // Dados para tooltip em data-attributes
         html += `<div class="escala-chip ${cls}${conf}" style="position:relative;"
           onmouseenter="showTooltip(event,this)"
           onmouseleave="hideTooltip()"
-          data-proj="${proj?.nome||''}"
-          data-setor="${l.setor||''}"
-          data-tipo="${tipo}"
+          data-proj="${esc(proj?.nome||'')}"
+          data-setor="${esc(l.setor||'')}"
+          data-tipo="${esc(tipo)}"
           data-hora="${ini}–${fim}"
           data-horas="${l.horas}h"
           data-hon="${fBRL(l.honorario||0)}"
           data-conf="${l.confirmado?'Sim':'Não'}">
           <button class="sem-card-opts" style="position:absolute;top:1px;right:2px;" onclick="event.stopPropagation();abrirCtxChip(event,'${l.id}','${ds}','${l.projeto_id}')" title="Opções">⋮</button>
           <div onclick="abrirLancamentoRapido('${ds}','${l.projeto_id}')">${ini}–${fim}${_tagCob}${_tagTransf}</div>
-          <div style="font-size:10px;opacity:0.8;" onclick="abrirLancamentoRapido('${ds}','${l.projeto_id}')">${proj?.nome||tipo}</div>
+          <div style="font-size:10px;opacity:0.8;" onclick="abrirLancamentoRapido('${ds}','${l.projeto_id}')">${esc(proj?.nome||tipo)}</div>
         </div>`;
       });
 
@@ -5397,11 +5399,11 @@ function showTooltip(e, el) {
   const t = document.getElementById('tooltip-escala');
   if (!t) return;
   t.innerHTML = `
-    <div class="tooltip-row"><span class="tooltip-label">Projeto</span><span class="tooltip-val">${el.dataset.proj||'—'}</span></div> ${el.dataset.setor?`<div class="tooltip-row"><span class="tooltip-label">Setor</span><span class="tooltip-val">${el.dataset.setor}</span></div>`:''}
-    <div class="tooltip-row"><span class="tooltip-label">Tipo</span><span class="tooltip-val">${el.dataset.tipo||'—'}</span></div>
-    <div class="tooltip-row"><span class="tooltip-label">Horário</span><span class="tooltip-val">${el.dataset.hora}</span></div>
-    <div class="tooltip-row"><span class="tooltip-label">Horas</span><span class="tooltip-val">${el.dataset.horas}</span></div>
-    <div class="tooltip-row"><span class="tooltip-label">Honorários</span><span class="tooltip-val">${el.dataset.hon}</span></div>
+    <div class="tooltip-row"><span class="tooltip-label">Projeto</span><span class="tooltip-val">${esc(el.dataset.proj||'—')}</span></div> ${el.dataset.setor?`<div class="tooltip-row"><span class="tooltip-label">Setor</span><span class="tooltip-val">${esc(el.dataset.setor)}</span></div>`:''}
+    <div class="tooltip-row"><span class="tooltip-label">Tipo</span><span class="tooltip-val">${esc(el.dataset.tipo||'—')}</span></div>
+    <div class="tooltip-row"><span class="tooltip-label">Horário</span><span class="tooltip-val">${esc(el.dataset.hora)}</span></div>
+    <div class="tooltip-row"><span class="tooltip-label">Horas</span><span class="tooltip-val">${esc(el.dataset.horas)}</span></div>
+    <div class="tooltip-row"><span class="tooltip-label">Honorários</span><span class="tooltip-val">${esc(el.dataset.hon)}</span></div>
     <div class="tooltip-row"><span class="tooltip-label">Confirmado</span><span class="tooltip-val">${el.dataset.conf==='Sim'?'Sim':'Não'}</span></div>`;
   t.style.display = 'block';
   posTooltip(e);
@@ -5496,8 +5498,8 @@ function renderPvLista() {
     return '<div onclick="pvSelecionar(\'' + m.id + '\')" ' +
       'onmouseover="this.style.background=\'var(--blue-light)\'" onmouseout="this.style.background=\'#fff\'" ' +
       'style="padding:9px 12px;border-bottom:1px solid var(--border);cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:8px;background:#fff;">' +
-      '<div><div style="font-size:13px;font-weight:600;color:var(--text);">' + (m.nome || '') + '</div>' +
-      '<div style="font-size:11px;color:var(--text3);">' + sub + '</div></div>' +
+      '<div><div style="font-size:13px;font-weight:600;color:var(--text);">' + (esc(m.nome || '')) + '</div>' +
+      '<div style="font-size:11px;color:var(--text3);">' + esc(sub) + '</div></div>' +
       '<span style="font-size:11px;color:var(--blue);font-weight:600;">Vincular</span></div>';
   }).join('');
 }
@@ -5542,7 +5544,7 @@ async function initVagas(){
   var sp = document.getElementById('vg-proj');
   if (sp && sp.options.length <= 1) {
     sp.innerHTML = '<option value="">Todos os projetos</option>' +
-      sortedProjetos().map(function(p){ return '<option value="'+p.id+'">'+p.nome+'</option>'; }).join('');
+      sortedProjetos().map(function(p){ return '<option value="'+p.id+'">'+esc(p.nome)+'</option>'; }).join('');
   }
   vgRenderCidades();
   var se = document.getElementById('vg-esp');
@@ -5551,7 +5553,7 @@ async function initVagas(){
     // completa com as especialidades já exigidas em vagas
     (lancamentos||[]).forEach(function(l){ (l.especialidades_alvo||[]).forEach(function(e){ if(esps.indexOf(e)===-1) esps.push(e); }); });
     se.innerHTML = '<option value="">Todas</option><option value="__sem__">Sem exigência (generalista)</option>' +
-      esps.sort(function(a,b){ return a.localeCompare(b,'pt-BR'); }).map(function(e){ return '<option value="'+e+'">'+e+'</option>'; }).join('');
+      esps.sort(function(a,b){ return a.localeCompare(b,'pt-BR'); }).map(function(e){ return '<option value="'+esc(e)+'">'+esc(e)+'</option>'; }).join('');
   }
   if (!_vgIniciado) {
     vgPeriodoRapido('7');   // padrão: próximos 7 dias, todos os setores
@@ -5598,7 +5600,7 @@ function vgRenderCidades(){
   var cidades = [...new Set((projetos||[]).map(_vgCidadeDoProjeto).filter(Boolean))]
     .sort(function(a,b){ return a.localeCompare(b,'pt-BR'); });
   sel.innerHTML = '<option value="">Todas as cidades</option>' +
-    cidades.map(function(c){ return '<option value="'+c+'">'+c+'</option>'; }).join('');
+    cidades.map(function(c){ return '<option value="'+esc(c)+'">'+esc(c)+'</option>'; }).join('');
   if (cidades.indexOf(atual) !== -1) sel.value = atual;
 }
 
@@ -5615,7 +5617,7 @@ function vgCidadeChange(){
   if (sp) {
     var lista = sortedProjetos().filter(function(p){ return !cid || _vgCidadeDoProjeto(p) === cid; });
     sp.innerHTML = '<option value="">Todos os projetos</option>' +
-      lista.map(function(p){ return '<option value="'+p.id+'">'+p.nome+'</option>'; }).join('');
+      lista.map(function(p){ return '<option value="'+p.id+'">'+esc(p.nome)+'</option>'; }).join('');
   }
   vgProjChange();
 }
@@ -5661,7 +5663,7 @@ function vgRenderSetores(){
       var on = _vgSetoresSel.indexOf(st) !== -1;
       return '<button type="button" onclick="vgToggleSetor(\''+String(st).replace(/'/g,"\\'")+'\')" ' +
         'style="font-size:12px;padding:5px 11px;border-radius:99px;cursor:pointer;border:1.5px solid ' +
-        (on?'var(--blue);background:var(--blue);color:#fff;':'var(--border);background:#fff;color:var(--text2);') + '">' + st + '</button>';
+        (on?'var(--blue);background:var(--blue);color:#fff;':'var(--border);background:#fff;color:var(--text2);') + '">' + esc(st) + '</button>';
     }).join('');
   }
   el.innerHTML = chipTodos + detalhe;
@@ -5763,18 +5765,18 @@ async function renderVagas(){
       ? '<span class="badge badge-blue">'+nCand+' candidato(s)</span>'
       : '<span style="font-size:11px;color:var(--text3);">—</span>';
     var tagTr = (l.transferido_de)
-      ? '<div style="font-size:10px;color:#7c3aed;margin-top:2px;">↪ repassado por '+(l.transferido_de_nome||'colega')+'</div>' : '';
+      ? '<div style="font-size:10px;color:#7c3aed;margin-top:2px;">↪ repassado por '+(esc(l.transferido_de_nome||'colega'))+'</div>' : '';
     var tagCob = l.cobertura ? ' <span class="badge badge-purple">Cobertura</span>' : '';
     return '<tr>' +
       '<td style="white-space:nowrap;"><strong>'+new Date(l.data+'T12:00:00').toLocaleDateString('pt-BR')+'</strong>' +
         '<div style="font-size:11px;color:var(--text3);">'+semanaN[new Date(l.data+'T12:00:00').getDay()]+'</div></td>' +
       '<td style="white-space:nowrap;color:'+corPrazo+';font-weight:600;font-size:12px;">'+prazo+'</td>' +
       '<td class="mono">'+String(l.hora_ini||'').slice(0,5)+'–'+String(l.hora_fim||'').slice(0,5)+'</td>' +
-      '<td>'+(l.projeto||'—')+tagCob+
+      '<td>'+(esc(l.projeto||'—'))+tagCob+
         (function(){ var _pp=(projetos||[]).find(function(x){return x.id===l.projeto_id;}); var _c=_vgCidadeDoProjeto(_pp); return _c?'<div style="font-size:11px;color:var(--text3);">'+_c+'</div>':''; })()+
         tagTr+'</td>' +
-      '<td><strong>'+(l.setor||'—')+'</strong></td>' +
-      '<td>'+(l.tipo||'—')+'</td>' +
+      '<td><strong>'+(esc(l.setor||'—'))+'</strong></td>' +
+      '<td>'+(esc(l.tipo||'—'))+'</td>' +
       '<td>'+espTxt+'</td>' +
       '<td style="text-align:center;"><span class="badge badge-red">'+_vgSlots(l)+'</span></td>' +
       '<td class="mono">'+fBRL(l.honorario_bruto||l.honorario||0)+'</td>' +
@@ -5891,7 +5893,7 @@ function abrirMoverEmMassa(){
     document.body.appendChild(m);
   }
   const sel = document.getElementById('mm-proj');
-  if(sel) sel.innerHTML = sortedProjetos().map(function(p){ return '<option value="'+p.id+'">'+p.nome+'</option>'; }).join('');
+  if(sel) sel.innerHTML = sortedProjetos().map(function(p){ return '<option value="'+p.id+'">'+esc(p.nome)+'</option>'; }).join('');
   carregarSetoresMassa();
   const info = document.getElementById('mm-info');
   if(info) info.textContent = _selMulti.length + ' plantão(ões) selecionado(s).';
@@ -5913,7 +5915,7 @@ async function carregarSetoresMassa(){
     '<option value="__limpar__">Sem setor</option>' +
     sets.map(function(x){
       const nm = String(x.nome||'').replace(/"/g,'&quot;');
-      return '<option value="'+nm+'">'+x.nome+'</option>';
+      return '<option value="'+nm+'">'+esc(x.nome)+'</option>';
     }).join('');
   selS.disabled = false;
   if(!sets.length){
@@ -6226,7 +6228,7 @@ function abrirModalEditarLanc(l) {
     var _doProj = sortedMedicos().filter(function(m){ return (m.projetos_vinculados||[]).indexOf(l.projeto_id)!==-1; });
     medSel.innerHTML = '<option value="">Sem médico (plantão aberto)</option>' +
       _doProj.map(function(m) {
-        return '<option value="' + m.id + '"' + (m.id === l.medico_id ? ' selected' : '') + '>' + m.nome + ' — ' + m.crm + '</option>';
+        return '<option value="' + m.id + '"' + (m.id === l.medico_id ? ' selected' : '') + '>' + esc(m.nome) + ' — ' + esc(m.crm) + '</option>';
       }).join('');
   }
   _elMedicoOriginal = l.medico_id || null;
@@ -6518,7 +6520,7 @@ function renderDropLista(pref){
       'style="padding:8px 12px;font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:8px;' +
       (algum ? 'background:var(--blue);color:#fff;' : 'background:var(--bg3);color:var(--text);') + '">' +
       '<span style="width:14px;display:inline-block;">' + (todos ? '&#10003;' : (algum ? '&#9679;' : '')) + '</span>' +
-      p.nome + '</div>';
+      esc(p.nome) + '</div>';
 
     if (!setores.length) {
       html += '<div style="padding:6px 12px 6px 34px;font-size:11px;color:var(--text3);">Sem setores cadastrados</div>';
@@ -6528,7 +6530,7 @@ function renderDropLista(pref){
         html += '<div onclick="event.stopPropagation();toggleSetorProj(\''+pref+'\',\''+p.id+'\',\''+String(st).replace(/'/g,"\\'")+'\')" ' +
           'style="padding:6px 12px 6px 34px;font-size:12px;cursor:pointer;display:flex;align-items:center;gap:8px;' +
           (marcado ? 'background:#2f7fe0;color:#fff;' : 'background:#fff;color:var(--text2);') + '">' +
-          '<span style="width:14px;display:inline-block;">' + (marcado ? '&#10003;' : '') + '</span>' + st + '</div>';
+          '<span style="width:14px;display:inline-block;">' + (marcado ? '&#10003;' : '') + '</span>' + esc(st) + '</div>';
       });
     }
   });
@@ -6580,8 +6582,8 @@ function renderResumoProj(pref){
     var txt = (v === '__todos__') ? 'todos os setores' : (Array.isArray(v) ? v.join(', ') : '');
     return '<div style="display:flex;align-items:center;gap:8px;border:1px solid var(--blue);border-radius:var(--radius);padding:6px 10px;margin-bottom:5px;background:var(--bg2);">' +
       '<div style="flex:1;min-width:0;">' +
-        '<div style="font-size:12px;font-weight:600;">'+(p?p.nome:'Projeto')+'</div>' +
-        '<div style="font-size:11px;color:var(--text3);">'+txt+'</div>' +
+        '<div style="font-size:12px;font-weight:600;">'+esc(p?p.nome:'Projeto')+'</div>' +
+        '<div style="font-size:11px;color:var(--text3);">'+esc(txt)+'</div>' +
       '</div>' +
       '<button type="button" title="Remover" onclick="toggleProjetoTudo(\''+pref+'\',\''+pid+'\')" ' +
         'style="border:none;background:none;cursor:pointer;color:var(--text3);font-size:15px;line-height:1;">&#10005;</button>' +
@@ -6815,8 +6817,8 @@ async function carregarCandidaturas() {
     html += `<div class="card" style="margin-bottom:12px;">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;">
         <div>
-          <div style="font-size:14px;font-weight:700;">${l.projetos?.nome||'—'} · ${fDate(l.data)}</div>
-          <div style="font-size:12px;color:var(--text2);margin-top:2px;">${(l.hora_ini||'').slice(0,5)}–${(l.hora_fim||'').slice(0,5)} · ${l.horas}h · ${l.tipo||''} ${l.setor?'· '+l.setor:''}</div>
+          <div style="font-size:14px;font-weight:700;">${esc(l.projetos?.nome||'—')} · ${fDate(l.data)}</div>
+          <div style="font-size:12px;color:var(--text2);margin-top:2px;">${(l.hora_ini||'').slice(0,5)}–${(l.hora_fim||'').slice(0,5)} · ${l.horas}h · ${esc(l.tipo||'')} ${l.setor?'· '+esc(l.setor):''}</div>
         </div>
         <div style="text-align:right;">
           <div style="font-size:12px;color:var(--text2);">${l.vagas_preenchidas||0}/${l.vagas||1} vagas preenchidas</div>
@@ -6834,9 +6836,9 @@ async function carregarCandidaturas() {
         const temAlerta = c.obs && c.obs.includes('ALERTA');
         html += `<div class="cand-row" style="${temAlerta?'background:#fdf6e8;':''}">
           <div style="flex:1;">
-            <strong>${c.medicos?.nome||'—'}</strong>
-            <span style="color:var(--text3);margin-left:6px;font-family:monospace;font-size:11px;">${c.medicos?.crm||''}</span>
-            <div style="font-size:11px;color:var(--text3);">Candidatou-se em ${new Date(c.criado_em).toLocaleString('pt-BR',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})}</div> ${temAlerta ? `<div style="font-size:11px;color:var(--amber);font-weight:600;margin-top:3px;">${c.obs}</div>` : ''}
+            <strong>${esc(c.medicos?.nome||'—')}</strong>
+            <span style="color:var(--text3);margin-left:6px;font-family:monospace;font-size:11px;">${esc(c.medicos?.crm||'')}</span>
+            <div style="font-size:11px;color:var(--text3);">Candidatou-se em ${new Date(c.criado_em).toLocaleString('pt-BR',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})}</div> ${temAlerta ? `<div style="font-size:11px;color:var(--amber);font-weight:600;margin-top:3px;">${esc(c.obs)}</div>` : ''}
           </div>
           <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
             <span class="cand-status ${statusCls}">${statusTxt}</span> ${c.status==='pendente' ? `
@@ -6911,7 +6913,7 @@ async function responderCandidatura(candId, lancId, status, vagas) {
 // Inicializar aba candidaturas
 function initCandidaturas() {
   const sp = document.getElementById('cand-proj');
-  if (sp) sp.innerHTML = '<option value="">Todos</option>' + sortedProjetos().map(p=>`<option value="${p.id}">${p.nome}</option>`).join('');
+  if (sp) sp.innerHTML = '<option value="">Todos</option>' + sortedProjetos().map(p=>`<option value="${p.id}">${esc(p.nome)}</option>`).join('');
   const hj = new Date().toISOString().slice(0,10);
   const d1 = document.getElementById('cand-d1'); if(d1&&!d1.value) d1.value=hj;
   const em30 = new Date(Date.now()+30*86400000).toISOString().slice(0,10);
@@ -6942,7 +6944,7 @@ function finShowTab(id, btn) {
 async function initFinanceiro() {
   const sp = document.getElementById('fin-proj');
   if (sp) sp.innerHTML = '<option value="">Todos os projetos</option>' +
-    sortedProjetos().map(p=>`<option value="${p.id}">${p.nome}</option>`).join('');
+    sortedProjetos().map(p=>`<option value="${p.id}">${esc(p.nome)}</option>`).join('');
   // Datas padrão: mês atual
   const hoje = new Date();
   const d1 = new Date(hoje.getFullYear(), hoje.getMonth(), 1).toISOString().slice(0,10);
@@ -6968,8 +6970,8 @@ async function carregarFechamentos() {
     const statusTxt = f.status==='pago'?'Pago integralmente':f.status==='parcial'?`Pago parcialmente (${pct}%)`:'Sem pagamento';
     return `<div class="fech-card" onclick="abrirFechamento('${f.id}')">
       <div>
-        <div style="font-size:14px;font-weight:700;">${f.nome}</div>
-        <div style="font-size:12px;color:var(--text2);margin-top:2px;">${fDate(f.data_inicio)} → ${fDate(f.data_fim)} · ${f.projetos?.nome||'Todos os projetos'}</div>
+        <div style="font-size:14px;font-weight:700;">${esc(f.nome)}</div>
+        <div style="font-size:12px;color:var(--text2);margin-top:2px;">${fDate(f.data_inicio)} → ${fDate(f.data_fim)} · ${esc(f.projetos?.nome||'Todos os projetos')}</div>
       </div>
       <div style="display:flex;align-items:center;gap:16px;flex-shrink:0;">
         <div style="text-align:right;">
@@ -7094,11 +7096,11 @@ async function carregarItensFechamento() {
   </tr></thead><tbody>` +
   itens.map(i => {
     const m = i.medicos || {};
-    const pix = m.pix_tipo && m.pix_chave ? `<span style="font-size:10px;background:var(--green-bg);color:var(--green);padding:1px 6px;border-radius:99px;">PIX ${m.pix_tipo}</span> ${m.pix_chave}` : '<span style="color:var(--red);font-size:11px;">Sem PIX</span>';
+    const pix = m.pix_tipo && m.pix_chave ? `<span style="font-size:10px;background:var(--green-bg);color:var(--green);padding:1px 6px;border-radius:99px;">PIX ${esc(m.pix_tipo)}</span> ${esc(m.pix_chave)}` : '<span style="color:var(--red);font-size:11px;">Sem PIX</span>';
     const stCls = i.status==='pago'?'color:var(--green);font-weight:600;':'color:var(--text2);';
     return `<tr>
-      <td><strong>${m.nome||'—'}</strong>${m.razao_social?`<br><span style="font-size:10px;color:var(--text3);">${m.razao_social}</span>`:''}</td>
-      <td class="mono">${m.crm||'—'}</td>
+      <td><strong>${esc(m.nome||'—')}</strong>${m.razao_social?`<br><span style="font-size:10px;color:var(--text3);">${esc(m.razao_social)}</span>`:''}</td>
+      <td class="mono">${esc(m.crm||'—')}</td>
       <td style="font-size:12px;">${pix}</td>
       <td style="text-align:center;">${i.plantoes}</td>
       <td style="text-align:center;">${Math.round(i.horas*10)/10}h</td>
@@ -7364,7 +7366,7 @@ async function carregarRemessas() {
   el.innerHTML = data.map(r => `
     <div class="card" style="margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;">
       <div>
-        <div style="font-size:13px;font-weight:600;">${r.nome_arquivo}</div>
+        <div style="font-size:13px;font-weight:600;">${esc(r.nome_arquivo)}</div>
         <div style="font-size:11px;color:var(--text2);">Gerado em ${new Date(r.criado_em).toLocaleString('pt-BR',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})} · ${fBRL(r.total)}</div> ${r.retorno_em?`<div style="font-size:11px;color:var(--green);">Retorno processado em ${new Date(r.retorno_em).toLocaleString('pt-BR',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})}</div>`:''}
       </div>
       <button class="btn btn-ghost btn-sm" onclick="downloadRemessa('${r.id}')">Download</button>
@@ -7530,10 +7532,10 @@ async function processarRetorno(event) {
           <th>Status</th>
         </tr></thead>
         <tbody> ${resultados.map(r => `<tr>
-            <td><strong>${r.favorecido||'—'}</strong></td>
+            <td><strong>${esc(r.favorecido||'—')}</strong></td>
             <td class="mono">${fBRL(r.valor)}</td>
-            <td class="mono" style="font-size:11px;">${r.ocorrPrincipal||'—'}</td>
-            <td style="color:${r.oc.ok?'var(--green)':'var(--red)'};font-weight:600;font-size:12px;"> ${r.oc.ok?'':''} ${r.oc.txt}
+            <td class="mono" style="font-size:11px;">${esc(r.ocorrPrincipal||'—')}</td>
+            <td style="color:${r.oc.ok?'var(--green)':'var(--red)'};font-weight:600;font-size:12px;"> ${r.oc.ok?'':''} ${esc(r.oc.txt)}
             </td>
           </tr>`).join('')}
         </tbody>
@@ -7652,7 +7654,7 @@ function atualizarTagsEsp(ctx){
   const sel=[...document.querySelectorAll(chkClass+':checked')].map(c=>c.value);
   const label=document.getElementById('esp-label-'+ctx),tags=document.getElementById('esp-tags-'+ctx);
   if(label){label.textContent=sel.length?sel.length+' especialidade(s) selecionada(s)':'Clique para selecionar...';label.style.color=sel.length?'var(--text)':'var(--text3)';}
-  if(tags)tags.innerHTML=sel.map(e=>`<span class="esp-tag">${e}<button onclick="desmarcarEsp('${ctx}','${e.replace(/'/g,"\'")}')">×</button></span>`).join('');
+  if(tags)tags.innerHTML=sel.map(e=>`<span class="esp-tag">${esc(e)}<button onclick="desmarcarEsp('${ctx}','${esc(e.replace(/'/g,"\'"))}')">×</button></span>`).join('');
 }
 function desmarcarEsp(ctx,val){const chkClass=ctx==='novo'?'.med-esp-chk':'.em-esp-chk';const chk=[...document.querySelectorAll(chkClass)].find(c=>c.value===val);if(chk){chk.checked=false;atualizarTagsEsp(ctx);}}
 
@@ -7662,7 +7664,7 @@ function calcularFurosDash(){
   const furos=lancamentos.filter(l=>{if(!l.data||!l.hora_ini)return false;const ini=new Date(l.data+'T'+l.hora_ini);return ini>agora&&ini<=em48h&&!l.medico_id;});
   const card=document.getElementById('dash-furos-card'),count=document.getElementById('dash-furos-count'),lista=document.getElementById('dash-furos-lista');
   if(!card)return;
-  if(furos.length>0){card.style.display='block';count.textContent=furos.reduce((s,l)=>s+qtdPlantao(l),0);;lista.innerHTML=furos.slice(0,5).map(l=>{const ini=new Date(l.data+'T'+l.hora_ini);const faltaH=Math.round((ini-agora)/3600000);return '<div style="font-size:12px;padding:4px 0;border-top:1px solid #f5c0c0;display:flex;justify-content:space-between;"><span><strong>'+(l.medico||'—')+'</strong> · '+(l.projeto||'—')+' · '+fDate(l.data)+' '+(l.hora_ini||'').slice(0,5)+'</span><span style="color:var(--red);font-weight:600;">em '+faltaH+'h</span></div>';}).join('')+(furos.length>5?'<div style="font-size:11px;color:var(--text3);margin-top:4px;">... e mais '+(furos.length-5)+' plantões</div>':'');}
+  if(furos.length>0){card.style.display='block';count.textContent=furos.reduce((s,l)=>s+qtdPlantao(l),0);;lista.innerHTML=furos.slice(0,5).map(l=>{const ini=new Date(l.data+'T'+l.hora_ini);const faltaH=Math.round((ini-agora)/3600000);return '<div style="font-size:12px;padding:4px 0;border-top:1px solid #f5c0c0;display:flex;justify-content:space-between;"><span><strong>'+(esc(l.medico||'—'))+'</strong> · '+(esc(l.projeto||'—'))+' · '+fDate(l.data)+' '+(l.hora_ini||'').slice(0,5)+'</span><span style="color:var(--red);font-weight:600;">em '+faltaH+'h</span></div>';}).join('')+(furos.length>5?'<div style="font-size:11px;color:var(--text3);margin-top:4px;">... e mais '+(furos.length-5)+' plantões</div>':'');}
   else{card.style.display='none';}
 }
 
@@ -7672,19 +7674,19 @@ function selecionarRelTipo(tipo,btn){_relTipoAtivo=tipo;document.querySelectorAl
 function filtrarDadosRel(){const mid=document.getElementById('rm').value,d1=document.getElementById('rd1').value,d2=document.getElementById('rd2').value;let dados=[...lancamentos];dados=dados.filter(function(l){return passaFiltroProjSetor('rel', l);});if(mid)dados=dados.filter(l=>l.medico_id===mid);if(d1)dados=dados.filter(l=>l.data>=d1);if(d2)dados=dados.filter(l=>l.data<=d2);return dados;}
 function gerarRelatorio(){const el=document.getElementById('rel-resultado');switch(_relTipoAtivo){case'detalhado':gerarRelDetalhado(el);break;case'resumo':gerarRelResumo(el);break;case'horas':gerarRelHoras(el);break;case'faltas':gerarRelFaltas(el);break;case'atrasos':gerarRelAtrasos(el);break;case'checkins':gerarRelCheckinsForaTol(el);break;case'medicos':gerarRelMedicos(el);break;}}
 
-function gerarRelDetalhado(el){const dados=filtrarDadosRel();if(!dados.length){el.innerHTML='<div class="card"><div class="empty">Nenhum dado.</div></div>';return;}const tH=dados.reduce((s,l)=>s+(l.horas||0),0),tR=dados.reduce((s,l)=>s+(l.honorario||0),0),nMeds=new Set(dados.map(l=>l.medico_id)).size;let html=`<div class="metrics"><div class="metric"><div class="metric-label">Plantões</div><div class="metric-val">${dados.length}</div></div><div class="metric"><div class="metric-label">Horas totais</div><div class="metric-val">${Math.round(tH*10)/10}h</div></div><div class="metric"><div class="metric-label">Total honorários</div><div class="metric-val">${fBRL(tR)}</div></div><div class="metric"><div class="metric-label">Médicos</div><div class="metric-val">${nMeds}</div></div></div>`;const porProjeto={};dados.forEach(l=>{const p=l.projeto||'Sem projeto';if(!porProjeto[p])porProjeto[p]=[];porProjeto[p].push(l);});Object.entries(porProjeto).sort((a,b)=>a[0].localeCompare(b[0],'pt-BR')).forEach(([proj,lans])=>{const projH=lans.reduce((s,l)=>s+(l.horas||0),0),projR=lans.reduce((s,l)=>s+(l.honorario||0),0);const grupos={};lans.forEach(l=>{const turno=l.tipo?.includes('Noturno')?'Noturno':l.tipo?.includes('24')?'24h':'Diurno';const chave=`${l.medico}||${l.horas}||${turno}||${l.setor||''}`;if(!grupos[chave])grupos[chave]={medico:l.medico,crm:l.crm,horas:l.horas,turno,setor:l.setor||'',qtd:0,total:0};grupos[chave].qtd++;grupos[chave].total+=l.honorario||0;});const linhas=Object.values(grupos).sort((a,b)=>a.medico.localeCompare(b.medico,'pt-BR')).map(g=>{const badge=g.turno==='Noturno'?'badge-purple':g.turno==='24h'?'badge-amber':'badge-green';return `<tr><td>${g.medico}<br><span class="mono" style="font-size:11px;color:var(--text3);">${g.crm||''}</span></td><td class="mono">${g.horas}h</td><td><span class="badge ${badge}">${g.turno}</span></td><td>${g.setor||'—'}</td><td style="text-align:center;">${g.qtd}</td><td class="mono" style="color:var(--green);font-weight:600;">${fBRL(Math.round(g.total*100)/100)}</td></tr>`;}).join('');html+=`<div class="card" style="margin-bottom:12px;"><div style="display:flex;justify-content:space-between;margin-bottom:10px;"><div class="card-title" style="margin-bottom:0;">${proj}</div><div style="font-size:12px;color:var(--text2);">${lans.length} plantão(ões) · ${Math.round(projH*10)/10}h · <span style="color:var(--green);font-weight:600;">${fBRL(projR)}</span></div></div><table><thead><tr><th>Médico/CRM</th><th>Hrs/plantão</th><th>Turno</th><th>Setor</th><th style="text-align:center;">Qtd</th><th>Total</th></tr></thead><tbody>${linhas}</tbody><tfoot><tr style="border-top:1.5px solid var(--border2);"><td colspan="4" style="font-weight:600;padding:8px;font-size:12px;">Total</td><td style="text-align:center;font-weight:600;">${lans.length}</td><td class="mono" style="color:var(--green);font-weight:600;">${fBRL(projR)}</td></tr></tfoot></table></div>`;});el.innerHTML=html;}
+function gerarRelDetalhado(el){const dados=filtrarDadosRel();if(!dados.length){el.innerHTML='<div class="card"><div class="empty">Nenhum dado.</div></div>';return;}const tH=dados.reduce((s,l)=>s+(l.horas||0),0),tR=dados.reduce((s,l)=>s+(l.honorario||0),0),nMeds=new Set(dados.map(l=>l.medico_id)).size;let html=`<div class="metrics"><div class="metric"><div class="metric-label">Plantões</div><div class="metric-val">${dados.length}</div></div><div class="metric"><div class="metric-label">Horas totais</div><div class="metric-val">${Math.round(tH*10)/10}h</div></div><div class="metric"><div class="metric-label">Total honorários</div><div class="metric-val">${fBRL(tR)}</div></div><div class="metric"><div class="metric-label">Médicos</div><div class="metric-val">${nMeds}</div></div></div>`;const porProjeto={};dados.forEach(l=>{const p=l.projeto||'Sem projeto';if(!porProjeto[p])porProjeto[p]=[];porProjeto[p].push(l);});Object.entries(porProjeto).sort((a,b)=>a[0].localeCompare(b[0],'pt-BR')).forEach(([proj,lans])=>{const projH=lans.reduce((s,l)=>s+(l.horas||0),0),projR=lans.reduce((s,l)=>s+(l.honorario||0),0);const grupos={};lans.forEach(l=>{const turno=l.tipo?.includes('Noturno')?'Noturno':l.tipo?.includes('24')?'24h':'Diurno';const chave=`${l.medico}||${l.horas}||${turno}||${l.setor||''}`;if(!grupos[chave])grupos[chave]={medico:l.medico,crm:l.crm,horas:l.horas,turno,setor:l.setor||'',qtd:0,total:0};grupos[chave].qtd++;grupos[chave].total+=l.honorario||0;});const linhas=Object.values(grupos).sort((a,b)=>a.medico.localeCompare(b.medico,'pt-BR')).map(g=>{const badge=g.turno==='Noturno'?'badge-purple':g.turno==='24h'?'badge-amber':'badge-green';return `<tr><td>${esc(g.medico)}<br><span class="mono" style="font-size:11px;color:var(--text3);">${esc(g.crm||'')}</span></td><td class="mono">${g.horas}h</td><td><span class="badge ${badge}">${g.turno}</span></td><td>${esc(g.setor||'—')}</td><td style="text-align:center;">${g.qtd}</td><td class="mono" style="color:var(--green);font-weight:600;">${fBRL(Math.round(g.total*100)/100)}</td></tr>`;}).join('');html+=`<div class="card" style="margin-bottom:12px;"><div style="display:flex;justify-content:space-between;margin-bottom:10px;"><div class="card-title" style="margin-bottom:0;">${esc(proj)}</div><div style="font-size:12px;color:var(--text2);">${lans.length} plantão(ões) · ${Math.round(projH*10)/10}h · <span style="color:var(--green);font-weight:600;">${fBRL(projR)}</span></div></div><table><thead><tr><th>Médico/CRM</th><th>Hrs/plantão</th><th>Turno</th><th>Setor</th><th style="text-align:center;">Qtd</th><th>Total</th></tr></thead><tbody>${linhas}</tbody><tfoot><tr style="border-top:1.5px solid var(--border2);"><td colspan="4" style="font-weight:600;padding:8px;font-size:12px;">Total</td><td style="text-align:center;font-weight:600;">${lans.length}</td><td class="mono" style="color:var(--green);font-weight:600;">${fBRL(projR)}</td></tr></tfoot></table></div>`;});el.innerHTML=html;}
 
-function gerarRelResumo(el){const dados=filtrarDadosRel();if(!dados.length){el.innerHTML='<div class="card"><div class="empty">Nenhum dado.</div></div>';return;}const porProjeto={};dados.forEach(l=>{const proj=l.projeto||'Sem projeto';if(!porProjeto[proj])porProjeto[proj]={};const chave=(l.tipo||'Diurno 12h')+'|||'+(l.setor||'(sem setor)');if(!porProjeto[proj][chave])porProjeto[proj][chave]={tipo:l.tipo||'Diurno 12h',setor:l.setor||'(sem setor)',qtd:0,horas:0,total:0};porProjeto[proj][chave].qtd++;porProjeto[proj][chave].horas+=l.horas||0;porProjeto[proj][chave].total+=l.honorario||0;});let html='';Object.entries(porProjeto).sort((a,b)=>a[0].localeCompare(b[0],'pt-BR')).forEach(([proj,grupos])=>{const itens=Object.values(grupos).sort((a,b)=>b.qtd-a.qtd);const totPlant=itens.reduce((s,g)=>s+g.qtd,0),totHoras=itens.reduce((s,g)=>s+g.horas,0),totVal=itens.reduce((s,g)=>s+g.total,0);const linhas=itens.map(g=>{const badge=g.tipo.includes('Noturno')?'badge-purple':g.tipo.includes('24')?'badge-amber':'badge-green';return `<tr><td><span class="badge ${badge}">${g.tipo}</span></td><td>${g.setor}</td><td style="text-align:center;font-size:18px;font-weight:700;color:var(--blue);">${g.qtd}</td><td class="mono">${Math.round(g.horas*10)/10}h</td><td class="mono" style="color:var(--green);font-weight:600;">${fBRL(g.total)}</td></tr>`;}).join('');html+=`<div class="card" style="margin-bottom:12px;"><div style="display:flex;justify-content:space-between;margin-bottom:10px;"><div class="card-title" style="margin-bottom:0;">${proj}</div><div style="font-size:12px;color:var(--text2);">${totPlant} plantões · ${Math.round(totHoras*10)/10}h · <span style="color:var(--green);font-weight:600;">${fBRL(totVal)}</span></div></div><table><thead><tr><th>Tipo</th><th>Setor</th><th style="text-align:center;">Qtd</th><th>Horas</th><th>Total</th></tr></thead><tbody>${linhas}</tbody></table></div>`;});el.innerHTML=html;}
+function gerarRelResumo(el){const dados=filtrarDadosRel();if(!dados.length){el.innerHTML='<div class="card"><div class="empty">Nenhum dado.</div></div>';return;}const porProjeto={};dados.forEach(l=>{const proj=l.projeto||'Sem projeto';if(!porProjeto[proj])porProjeto[proj]={};const chave=(l.tipo||'Diurno 12h')+'|||'+(l.setor||'(sem setor)');if(!porProjeto[proj][chave])porProjeto[proj][chave]={tipo:l.tipo||'Diurno 12h',setor:l.setor||'(sem setor)',qtd:0,horas:0,total:0};porProjeto[proj][chave].qtd++;porProjeto[proj][chave].horas+=l.horas||0;porProjeto[proj][chave].total+=l.honorario||0;});let html='';Object.entries(porProjeto).sort((a,b)=>a[0].localeCompare(b[0],'pt-BR')).forEach(([proj,grupos])=>{const itens=Object.values(grupos).sort((a,b)=>b.qtd-a.qtd);const totPlant=itens.reduce((s,g)=>s+g.qtd,0),totHoras=itens.reduce((s,g)=>s+g.horas,0),totVal=itens.reduce((s,g)=>s+g.total,0);const linhas=itens.map(g=>{const badge=g.tipo.includes('Noturno')?'badge-purple':g.tipo.includes('24')?'badge-amber':'badge-green';return `<tr><td><span class="badge ${badge}">${esc(g.tipo)}</span></td><td>${esc(g.setor)}</td><td style="text-align:center;font-size:18px;font-weight:700;color:var(--blue);">${g.qtd}</td><td class="mono">${Math.round(g.horas*10)/10}h</td><td class="mono" style="color:var(--green);font-weight:600;">${fBRL(g.total)}</td></tr>`;}).join('');html+=`<div class="card" style="margin-bottom:12px;"><div style="display:flex;justify-content:space-between;margin-bottom:10px;"><div class="card-title" style="margin-bottom:0;">${esc(proj)}</div><div style="font-size:12px;color:var(--text2);">${totPlant} plantões · ${Math.round(totHoras*10)/10}h · <span style="color:var(--green);font-weight:600;">${fBRL(totVal)}</span></div></div><table><thead><tr><th>Tipo</th><th>Setor</th><th style="text-align:center;">Qtd</th><th>Horas</th><th>Total</th></tr></thead><tbody>${linhas}</tbody></table></div>`;});el.innerHTML=html;}
 
-function gerarRelHoras(el){const dados=filtrarDadosRel();if(!dados.length){el.innerHTML='<div class="card"><div class="empty">Nenhum dado.</div></div>';return;}const porMed={};dados.forEach(l=>{const k=l.medico_id;if(!porMed[k])porMed[k]={nome:l.medico,crm:l.crm||'',h12:0,h24:0,hCustom:0,hTotal:0,plantoes:0,total:0};const h=l.horas||0,tipo=l.tipo||'';if(tipo.includes('24'))porMed[k].h24+=h;else if(tipo==='Personalizado')porMed[k].hCustom+=h;else porMed[k].h12+=h;porMed[k].hTotal+=h;porMed[k].plantoes++;porMed[k].total+=l.honorario||0;});const tTotal=Object.values(porMed).reduce((s,m)=>s+m.hTotal,0),tHon=Object.values(porMed).reduce((s,m)=>s+m.total,0);let html=`<div class="metrics"><div class="metric"><div class="metric-label">Profissionais</div><div class="metric-val">${Object.keys(porMed).length}</div></div><div class="metric"><div class="metric-label">Total horas</div><div class="metric-val">${Math.round(tTotal*10)/10}h</div></div><div class="metric"><div class="metric-label">Total honorários</div><div class="metric-val">${fBRL(tHon)}</div></div></div><div class="card"><table><thead><tr><th>Profissional</th><th>CRM</th><th style="text-align:center;">Plantões</th><th style="text-align:center;">Horas 12h</th><th style="text-align:center;">Horas 24h</th><th style="text-align:center;">Outros</th><th style="text-align:center;font-weight:700;">Total</th><th>Honorários</th></tr></thead><tbody>`;Object.values(porMed).sort((a,b)=>b.hTotal-a.hTotal).forEach(m=>{html+=`<tr><td><strong>${m.nome}</strong></td><td class="mono">${m.crm}</td><td style="text-align:center;">${m.plantoes}</td><td style="text-align:center;color:var(--green);">${Math.round(m.h12*10)/10}h</td><td style="text-align:center;color:var(--amber);">${Math.round(m.h24*10)/10}h</td><td style="text-align:center;color:var(--text3);">${Math.round(m.hCustom*10)/10}h</td><td style="text-align:center;font-weight:700;font-size:14px;">${Math.round(m.hTotal*10)/10}h</td><td class="mono" style="color:var(--green);font-weight:600;">${fBRL(m.total)}</td></tr>`;});html+='</tbody></table></div>';el.innerHTML=html;}
+function gerarRelHoras(el){const dados=filtrarDadosRel();if(!dados.length){el.innerHTML='<div class="card"><div class="empty">Nenhum dado.</div></div>';return;}const porMed={};dados.forEach(l=>{const k=l.medico_id;if(!porMed[k])porMed[k]={nome:l.medico,crm:l.crm||'',h12:0,h24:0,hCustom:0,hTotal:0,plantoes:0,total:0};const h=l.horas||0,tipo=l.tipo||'';if(tipo.includes('24'))porMed[k].h24+=h;else if(tipo==='Personalizado')porMed[k].hCustom+=h;else porMed[k].h12+=h;porMed[k].hTotal+=h;porMed[k].plantoes++;porMed[k].total+=l.honorario||0;});const tTotal=Object.values(porMed).reduce((s,m)=>s+m.hTotal,0),tHon=Object.values(porMed).reduce((s,m)=>s+m.total,0);let html=`<div class="metrics"><div class="metric"><div class="metric-label">Profissionais</div><div class="metric-val">${Object.keys(porMed).length}</div></div><div class="metric"><div class="metric-label">Total horas</div><div class="metric-val">${Math.round(tTotal*10)/10}h</div></div><div class="metric"><div class="metric-label">Total honorários</div><div class="metric-val">${fBRL(tHon)}</div></div></div><div class="card"><table><thead><tr><th>Profissional</th><th>CRM</th><th style="text-align:center;">Plantões</th><th style="text-align:center;">Horas 12h</th><th style="text-align:center;">Horas 24h</th><th style="text-align:center;">Outros</th><th style="text-align:center;font-weight:700;">Total</th><th>Honorários</th></tr></thead><tbody>`;Object.values(porMed).sort((a,b)=>b.hTotal-a.hTotal).forEach(m=>{html+=`<tr><td><strong>${esc(m.nome)}</strong></td><td class="mono">${esc(m.crm)}</td><td style="text-align:center;">${m.plantoes}</td><td style="text-align:center;color:var(--green);">${Math.round(m.h12*10)/10}h</td><td style="text-align:center;color:var(--amber);">${Math.round(m.h24*10)/10}h</td><td style="text-align:center;color:var(--text3);">${Math.round(m.hCustom*10)/10}h</td><td style="text-align:center;font-weight:700;font-size:14px;">${Math.round(m.hTotal*10)/10}h</td><td class="mono" style="color:var(--green);font-weight:600;">${fBRL(m.total)}</td></tr>`;});html+='</tbody></table></div>';el.innerHTML=html;}
 
-async function gerarRelFaltas(el){el.innerHTML='<div class="card"><div class="empty">Carregando...</div></div>';const d1=document.getElementById('rd1').value,d2=document.getElementById('rd2').value;let pathCI='/checkins?aprovado=eq.true&select=medico_id,projeto_id,feito_em';if(d1)pathCI+=`&feito_em=gte.${d1}T00:00:00`;if(d2)pathCI+=`&feito_em=lte.${d2}T23:59:59`;const checkins=await sbApi(pathCI)||[];const ciKeys=new Set(checkins.map(c=>`${c.medico_id}_${c.projeto_id}_${c.feito_em?.slice(0,10)}`));let dados=filtrarDadosRel().filter(l=>{const ini=new Date(`${l.data}T${l.hora_ini||'00:00'}`);return ini<new Date();});const faltas=dados.filter(l=>!ciKeys.has(`${l.medico_id}_${l.projeto_id}_${l.data}`));if(!faltas.length){el.innerHTML='<div class="card"><div style="text-align:center;padding:24px;"><div style="font-size:40px;"></div><div style="font-size:14px;color:var(--green);font-weight:600;margin-top:8px;">Nenhuma falta!</div></div></div>';return;}let html=`<div class="card"><div style="margin-bottom:10px;font-size:13px;color:var(--red);font-weight:600;">${faltas.length} falta(s)</div><table><thead><tr><th>Médico</th><th>CRM</th><th>Projeto</th><th>Data</th><th>Horário</th><th>Tipo</th><th>Honorários perdidos</th></tr></thead><tbody>`;faltas.sort((a,b)=>b.data.localeCompare(a.data)).forEach(l=>{html+=`<tr><td><strong>${l.medico||'—'}</strong></td><td class="mono">${l.crm||''}</td><td>${l.projeto||'—'}</td><td class="mono">${fDate(l.data)}</td><td class="mono">${(l.hora_ini||'').slice(0,5)}–${(l.hora_fim||'').slice(0,5)}</td><td>${l.tipo||''}</td><td class="mono" style="color:var(--red);">${fBRL(l.honorario_bruto||l.honorario||0)}</td></tr>`;});const totFalta=faltas.reduce((s,l)=>s+(l.honorario_bruto||l.honorario||0),0);html+=`</tbody><tfoot><tr><td colspan="6" style="font-weight:600;padding:8px;">Total</td><td class="mono" style="color:var(--red);font-weight:600;">${fBRL(totFalta)}</td></tr></tfoot></table></div>`;el.innerHTML=html;}
+async function gerarRelFaltas(el){el.innerHTML='<div class="card"><div class="empty">Carregando...</div></div>';const d1=document.getElementById('rd1').value,d2=document.getElementById('rd2').value;let pathCI='/checkins?aprovado=eq.true&select=medico_id,projeto_id,feito_em';if(d1)pathCI+=`&feito_em=gte.${d1}T00:00:00`;if(d2)pathCI+=`&feito_em=lte.${d2}T23:59:59`;const checkins=await sbApi(pathCI)||[];const ciKeys=new Set(checkins.map(c=>`${c.medico_id}_${c.projeto_id}_${c.feito_em?.slice(0,10)}`));let dados=filtrarDadosRel().filter(l=>{const ini=new Date(`${l.data}T${l.hora_ini||'00:00'}`);return ini<new Date();});const faltas=dados.filter(l=>!ciKeys.has(`${l.medico_id}_${l.projeto_id}_${l.data}`));if(!faltas.length){el.innerHTML='<div class="card"><div style="text-align:center;padding:24px;"><div style="font-size:40px;"></div><div style="font-size:14px;color:var(--green);font-weight:600;margin-top:8px;">Nenhuma falta!</div></div></div>';return;}let html=`<div class="card"><div style="margin-bottom:10px;font-size:13px;color:var(--red);font-weight:600;">${faltas.length} falta(s)</div><table><thead><tr><th>Médico</th><th>CRM</th><th>Projeto</th><th>Data</th><th>Horário</th><th>Tipo</th><th>Honorários perdidos</th></tr></thead><tbody>`;faltas.sort((a,b)=>b.data.localeCompare(a.data)).forEach(l=>{html+=`<tr><td><strong>${esc(l.medico||'—')}</strong></td><td class="mono">${esc(l.crm||'')}</td><td>${esc(l.projeto||'—')}</td><td class="mono">${fDate(l.data)}</td><td class="mono">${(l.hora_ini||'').slice(0,5)}–${(l.hora_fim||'').slice(0,5)}</td><td>${esc(l.tipo||'')}</td><td class="mono" style="color:var(--red);">${fBRL(l.honorario_bruto||l.honorario||0)}</td></tr>`;});const totFalta=faltas.reduce((s,l)=>s+(l.honorario_bruto||l.honorario||0),0);html+=`</tbody><tfoot><tr><td colspan="6" style="font-weight:600;padding:8px;">Total</td><td class="mono" style="color:var(--red);font-weight:600;">${fBRL(totFalta)}</td></tr></tfoot></table></div>`;el.innerHTML=html;}
 
-async function gerarRelAtrasos(el){el.innerHTML='<div class="card"><div class="empty">Carregando...</div></div>';const d1=document.getElementById('rd1').value,d2=document.getElementById('rd2').value;let pathCI='/checkins?aprovado=eq.true&select=*,medicos(nome,crm),projetos(nome)';if(d1)pathCI+=`&feito_em=gte.${d1}T00:00:00`;if(d2)pathCI+=`&feito_em=lte.${d2}T23:59:59`;const checkins=await sbApi(pathCI)||[];const atrasos=[];checkins.forEach(ci=>{const lanc=lancamentos.find(l=>l.medico_id===ci.medico_id&&l.projeto_id===ci.projeto_id&&l.data===ci.feito_em?.slice(0,10));if(!lanc)return;const diffMin=Math.round((new Date(ci.feito_em)-new Date(`${lanc.data}T${lanc.hora_ini||'00:00'}`))/60000);if(diffMin>15)atrasos.push({...ci,diffMin,lanc});});if(!atrasos.length){el.innerHTML='<div class="card"><div style="text-align:center;padding:24px;"><div style="font-size:40px;"></div><div style="font-size:14px;color:var(--green);font-weight:600;margin-top:8px;">Nenhum atraso acima de 15 minutos!</div></div></div>';return;}let html=`<div class="card"><table><thead><tr><th>Médico</th><th>Projeto</th><th>Data</th><th>Previsto</th><th>Check-in</th><th>Atraso</th></tr></thead><tbody>`;atrasos.sort((a,b)=>b.diffMin-a.diffMin).forEach(a=>{const horaReal=new Date(a.feito_em).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});html+=`<tr><td><strong>${a.medicos?.nome||'—'}</strong></td><td>${a.projetos?.nome||'—'}</td><td class="mono">${fDate(a.lanc?.data||'')}</td><td class="mono">${(a.lanc?.hora_ini||'').slice(0,5)}</td><td class="mono">${horaReal}</td><td style="color:var(--amber);font-weight:700;">+${a.diffMin}min</td></tr>`;});html+='</tbody></table></div>';el.innerHTML=html;}
+async function gerarRelAtrasos(el){el.innerHTML='<div class="card"><div class="empty">Carregando...</div></div>';const d1=document.getElementById('rd1').value,d2=document.getElementById('rd2').value;let pathCI='/checkins?aprovado=eq.true&select=*,medicos(nome,crm),projetos(nome)';if(d1)pathCI+=`&feito_em=gte.${d1}T00:00:00`;if(d2)pathCI+=`&feito_em=lte.${d2}T23:59:59`;const checkins=await sbApi(pathCI)||[];const atrasos=[];checkins.forEach(ci=>{const lanc=lancamentos.find(l=>l.medico_id===ci.medico_id&&l.projeto_id===ci.projeto_id&&l.data===ci.feito_em?.slice(0,10));if(!lanc)return;const diffMin=Math.round((new Date(ci.feito_em)-new Date(`${lanc.data}T${lanc.hora_ini||'00:00'}`))/60000);if(diffMin>15)atrasos.push({...ci,diffMin,lanc});});if(!atrasos.length){el.innerHTML='<div class="card"><div style="text-align:center;padding:24px;"><div style="font-size:40px;"></div><div style="font-size:14px;color:var(--green);font-weight:600;margin-top:8px;">Nenhum atraso acima de 15 minutos!</div></div></div>';return;}let html=`<div class="card"><table><thead><tr><th>Médico</th><th>Projeto</th><th>Data</th><th>Previsto</th><th>Check-in</th><th>Atraso</th></tr></thead><tbody>`;atrasos.sort((a,b)=>b.diffMin-a.diffMin).forEach(a=>{const horaReal=new Date(a.feito_em).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});html+=`<tr><td><strong>${esc(a.medicos?.nome||'—')}</strong></td><td>${esc(a.projetos?.nome||'—')}</td><td class="mono">${fDate(a.lanc?.data||'')}</td><td class="mono">${(a.lanc?.hora_ini||'').slice(0,5)}</td><td class="mono">${horaReal}</td><td style="color:var(--amber);font-weight:700;">+${a.diffMin}min</td></tr>`;});html+='</tbody></table></div>';el.innerHTML=html;}
 
-async function gerarRelCheckinsForaTol(el){el.innerHTML='<div class="card"><div class="empty">Carregando...</div></div>';const d1=document.getElementById('rd1').value,d2=document.getElementById('rd2').value;let pathCI='/checkins?select=*,medicos(nome,crm),projetos(nome)';if(d1)pathCI+=`&feito_em=gte.${d1}T00:00:00`;if(d2)pathCI+=`&feito_em=lte.${d2}T23:59:59`;const checkins=await sbApi(pathCI)||[];const fora=[];checkins.forEach(ci=>{const lanc=lancamentos.find(l=>l.medico_id===ci.medico_id&&l.projeto_id===ci.projeto_id&&l.data===ci.feito_em?.slice(0,10));if(!lanc)return;const diffMin=Math.round((new Date(ci.feito_em)-new Date(`${lanc.data}T${lanc.hora_ini||'00:00'}`))/60000);if(diffMin>15||!ci.aprovado)fora.push({...ci,diffMin,foraRaio:!ci.aprovado,lanc});});if(!fora.length){el.innerHTML='<div class="card"><div style="text-align:center;padding:24px;"><div style="font-size:40px;"></div><div style="font-size:14px;color:var(--green);font-weight:600;margin-top:8px;">Todos dentro da tolerância!</div></div></div>';return;}let html=`<div class="card"><table><thead><tr><th>Médico</th><th>Projeto</th><th>Data</th><th>Previsto</th><th>Check-in</th><th>Atraso</th><th>GPS</th></tr></thead><tbody>`;fora.forEach(c=>{const horaReal=new Date(c.feito_em).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});html+=`<tr><td><strong>${c.medicos?.nome||'—'}</strong></td><td>${c.projetos?.nome||'—'}</td><td class="mono">${fDate(c.lanc?.data||'')}</td><td class="mono">${(c.lanc?.hora_ini||'').slice(0,5)}</td><td class="mono">${horaReal}</td><td style="color:${c.diffMin>15?'var(--amber)':'var(--green)'};font-weight:600;">${c.diffMin>0?'+'+c.diffMin+'min':'no prazo'}</td><td>${c.foraRaio?'Fora':'Ok'}</td></tr>`;});html+='</tbody></table></div>';el.innerHTML=html;}
+async function gerarRelCheckinsForaTol(el){el.innerHTML='<div class="card"><div class="empty">Carregando...</div></div>';const d1=document.getElementById('rd1').value,d2=document.getElementById('rd2').value;let pathCI='/checkins?select=*,medicos(nome,crm),projetos(nome)';if(d1)pathCI+=`&feito_em=gte.${d1}T00:00:00`;if(d2)pathCI+=`&feito_em=lte.${d2}T23:59:59`;const checkins=await sbApi(pathCI)||[];const fora=[];checkins.forEach(ci=>{const lanc=lancamentos.find(l=>l.medico_id===ci.medico_id&&l.projeto_id===ci.projeto_id&&l.data===ci.feito_em?.slice(0,10));if(!lanc)return;const diffMin=Math.round((new Date(ci.feito_em)-new Date(`${lanc.data}T${lanc.hora_ini||'00:00'}`))/60000);if(diffMin>15||!ci.aprovado)fora.push({...ci,diffMin,foraRaio:!ci.aprovado,lanc});});if(!fora.length){el.innerHTML='<div class="card"><div style="text-align:center;padding:24px;"><div style="font-size:40px;"></div><div style="font-size:14px;color:var(--green);font-weight:600;margin-top:8px;">Todos dentro da tolerância!</div></div></div>';return;}let html=`<div class="card"><table><thead><tr><th>Médico</th><th>Projeto</th><th>Data</th><th>Previsto</th><th>Check-in</th><th>Atraso</th><th>GPS</th></tr></thead><tbody>`;fora.forEach(c=>{const horaReal=new Date(c.feito_em).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});html+=`<tr><td><strong>${esc(c.medicos?.nome||'—')}</strong></td><td>${esc(c.projetos?.nome||'—')}</td><td class="mono">${fDate(c.lanc?.data||'')}</td><td class="mono">${(c.lanc?.hora_ini||'').slice(0,5)}</td><td class="mono">${horaReal}</td><td style="color:${c.diffMin>15?'var(--amber)':'var(--green)'};font-weight:600;">${c.diffMin>0?'+'+c.diffMin+'min':'no prazo'}</td><td>${c.foraRaio?'Fora':'Ok'}</td></tr>`;});html+='</tbody></table></div>';el.innerHTML=html;}
 
-function gerarRelMedicos(el){let lista=[...medicos];const mid=document.getElementById('rm').value;if(mid)lista=lista.filter(m=>m.id===mid);if(!lista.length){el.innerHTML='<div class="card"><div class="empty">Nenhum médico.</div></div>';return;}let html=`<div class="card"><table><thead><tr><th>Nome</th><th>CRM</th><th>Especialidade</th><th>Tipo</th><th>Telefone</th><th>E-mail</th><th>PIX</th><th>Dispositivo</th></tr></thead><tbody>`;lista.sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR')).forEach(m=>{const pix=m.pix_tipo&&m.pix_chave?`${m.pix_tipo}: ${m.pix_chave}`:'—';html+=`<tr><td><strong>${m.nome}</strong></td><td class="mono">${m.crm||'—'}</td><td>${m.especialidade||'—'}</td><td><span class="badge badge-blue">${m.tipo||''}</span></td><td>${m.telefone||'—'}</td><td>${m.email||'—'}</td><td style="font-size:11px;">${pix}</td><td>${m.device_id?'<span class="badge badge-green">✓ Vinculado</span>':'<span class="badge badge-amber">Sem vínculo</span>'}</td></tr>`;});html+='</tbody></table></div>';el.innerHTML=html;}
+function gerarRelMedicos(el){let lista=[...medicos];const mid=document.getElementById('rm').value;if(mid)lista=lista.filter(m=>m.id===mid);if(!lista.length){el.innerHTML='<div class="card"><div class="empty">Nenhum médico.</div></div>';return;}let html=`<div class="card"><table><thead><tr><th>Nome</th><th>CRM</th><th>Especialidade</th><th>Tipo</th><th>Telefone</th><th>E-mail</th><th>PIX</th><th>Dispositivo</th></tr></thead><tbody>`;lista.sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR')).forEach(m=>{const pix=m.pix_tipo&&m.pix_chave?`${esc(m.pix_tipo)}: ${esc(m.pix_chave)}`:'—';html+=`<tr><td><strong>${esc(m.nome)}</strong></td><td class="mono">${esc(m.crm||'—')}</td><td>${esc(m.especialidade||'—')}</td><td><span class="badge badge-blue">${esc(m.tipo||'')}</span></td><td>${esc(m.telefone||'—')}</td><td>${esc(m.email||'—')}</td><td style="font-size:11px;">${pix}</td><td>${m.device_id?'<span class="badge badge-green">✓ Vinculado</span>':'<span class="badge badge-amber">Sem vínculo</span>'}</td></tr>`;});html+='</tbody></table></div>';el.innerHTML=html;}
 
 function exportarRelXLSX(){const tipo=_relTipoAtivo,dados=filtrarDadosRel();if(!dados.length&&tipo!=='medicos'){toast('Nenhum dado',true);return;}const wb=XLSX.utils.book_new();if(tipo==='medicos'){const rows=[['Nome','CRM','Especialidade','Tipo','Telefone','E-mail']];medicos.sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR')).forEach(m=>rows.push([m.nome,m.crm||'',m.especialidade||'',m.tipo||'',m.telefone||'',m.email||'']));XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(rows),'Médicos');}else{const rows=[['Data','Médico','Projeto','Tipo','Horas','Honorários']];dados.sort((a,b)=>b.data.localeCompare(a.data)).forEach(l=>rows.push([fDate(l.data),l.medico,l.projeto,l.tipo||'',l.horas,l.honorario]));XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(rows),'Relatório');}XLSX.writeFile(wb,'relatorio_'+tipo+'_'+new Date().toISOString().slice(0,10)+'.xlsx');toast('XLSX exportado!');}
 
@@ -7857,8 +7859,8 @@ async function gerarRelRisco(el) {
     html += `<tr style="border-bottom:1px solid var(--border);">
       <td style="padding:10px;font-size:16px;font-weight:700;color:var(--text2);">${medalha}</td>
       <td style="padding:10px;">
-        <strong style="font-size:13px;">${m.nome}</strong><br>
-        <span style="font-size:11px;color:var(--text3);font-family:monospace;">${m.crm}</span> ${ultimaFalta ? `<br><span style="font-size:10px;color:var(--red);">Última falta: ${ultimaFalta}</span>` : ''}
+        <strong style="font-size:13px;">${esc(m.nome)}</strong><br>
+        <span style="font-size:11px;color:var(--text3);font-family:monospace;">${esc(m.crm)}</span> ${ultimaFalta ? `<br><span style="font-size:10px;color:var(--red);">Última falta: ${ultimaFalta}</span>` : ''}
         ${ultimaAus   ? `<br><span style="font-size:10px;color:var(--amber);">Última ausência: ${ultimaAus}</span>` : ''}
       </td>
       <td style="padding:10px;text-align:center;">
@@ -7897,9 +7899,9 @@ async function gerarRelRisco(el) {
           <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:0.4px;margin-bottom:6px;">Histórico de ocorrências</div>
           <div style="display:flex;flex-wrap:wrap;gap:6px;"> ${todasOcorr.map(o => `
               <div style="background:#fff;border:1px solid ${o.cor};border-radius:6px;padding:4px 10px;font-size:11px;">
-                <span style="color:${o.cor};font-weight:600;">${o.tipo}</span> ${o.data ? ` · <span style="color:var(--text2);">${fDate(o.data)}</span>` : ''}
-                ${o.projeto ? ` · <span style="color:var(--text3);">${o.projeto}</span>` : ''}
-                ${o.detalhe ? ` · <span style="color:var(--text3);">${o.detalhe}</span>` : ''}
+                <span style="color:${o.cor};font-weight:600;">${esc(o.tipo)}</span> ${o.data ? ` · <span style="color:var(--text2);">${fDate(o.data)}</span>` : ''}
+                ${o.projeto ? ` · <span style="color:var(--text3);">${esc(o.projeto)}</span>` : ''}
+                ${o.detalhe ? ` · <span style="color:var(--text3);">${esc(o.detalhe)}</span>` : ''}
               </div>`).join('')}
           </div>
         </td>
@@ -7921,7 +7923,7 @@ async function gerarRelRisco(el) {
 function initLote() {
   const sp = document.getElementById('lote-proj');
   if (sp) sp.innerHTML = '<option value="">Selecione...</option>' +
-    sortedProjetos().map(p=>`<option value="${p.id}">${p.nome}</option>`).join('');
+    sortedProjetos().map(p=>`<option value="${p.id}">${esc(p.nome)}</option>`).join('');
   const dl = document.getElementById('lote-data');
   if (dl && !dl.value) dl.value = new Date().toISOString().slice(0,10);
   renderMedicosLote();
@@ -7941,7 +7943,7 @@ function renderMedicosLote(filtro='') {
     <div class="medico-row" id="row-${m.id}">
       <label style="display:flex;align-items:center;gap:8px;cursor:pointer;flex:1;">
         <input type="checkbox" class="medico-check" id="chk-${m.id}" onchange="onCheckMedico('${m.id}')">
-        <span><strong>${m.nome}</strong> <span style="color:var(--text3);font-size:12px;">${m.crm||''}</span></span>
+        <span><strong>${esc(m.nome)}</strong> <span style="color:var(--text3);font-size:12px;">${esc(m.crm||'')}</span></span>
       </label>
     </div>`).join('');
 }
@@ -8030,7 +8032,7 @@ function gerarPreviewLote() {
     <div class="card" style="margin-top:16px;">
       <div class="card-title">Pré-visualização — ${selecionados.length} plantão(ões)</div>
       <table><thead><tr><th>Médico</th><th>Projeto</th><th>Data</th><th>Horário</th><th>Horas</th><th>Valor</th></tr></thead><tbody> ${selecionados.map(m => `<tr>
-        <td>${m.nome}</td><td>${proj?.nome||''}</td>
+        <td>${esc(m.nome)}</td><td>${esc(proj?.nome||'')}</td>
         <td class="mono">${fDate(data)}</td>
         <td class="mono">${ini}–${fim}</td>
         <td class="mono">${horas}h</td>
@@ -8092,8 +8094,8 @@ async function carregarDisponiveis() {
     const proj = l.projetos?.nome || '';
     return `<div class="card" style="margin-bottom:8px;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;">
       <div>
-        <div style="font-weight:600;">${proj} — ${fDate(l.data)}</div>
-        <div style="font-size:12px;color:var(--text3);">${(l.hora_ini||'').slice(0,5)}–${(l.hora_fim||'').slice(0,5)} · ${l.tipo||''} · Vagas: ${(l.vagas||1) - (l.vagas_preenchidas||0)} restante(s)</div>
+        <div style="font-weight:600;">${esc(proj)} — ${fDate(l.data)}</div>
+        <div style="font-size:12px;color:var(--text3);">${(l.hora_ini||'').slice(0,5)}–${(l.hora_fim||'').slice(0,5)} · ${esc(l.tipo||'')} · Vagas: ${(l.vagas||1) - (l.vagas_preenchidas||0)} restante(s)</div>
       </div>
     </div>`;
   }).join('');
@@ -8155,7 +8157,7 @@ async function handleUploadTipos(input) {
   const prev = document.getElementById('import-preview-tipos');
   prev.innerHTML = `<div class="card" style="margin-top:12px;">
     <div class="card-title">Pré-visualização — ${novos.length} tipo(s)</div> ${semProjeto.length>0 ? `<div style="color:var(--amber);font-size:12px;margin-bottom:8px;">${semProjeto.length} tipo(s) com projeto não encontrado serão ignorados: ${[...new Set(semProjeto.map(n=>n.proj_nome))].join(', ')}</div>` : ''}
-    <table><thead><tr><th>Projeto</th><th>Nome</th><th>Horário</th><th>Horas</th><th>Valor</th><th>Setor</th></tr></thead><tbody> ${novos.slice(0,8).map(n=>`<tr><td style="font-size:12px;">${n.proj_nome||'—'}</td><td><strong>${n.nome}</strong></td><td class="mono">${n.hora_ini}–${n.hora_fim}</td><td class="mono">${n.horas}h</td><td class="mono">${n.valor?fBRL(n.valor):'Padrão'}</td><td>${n.setor||'—'}</td></tr>`).join('')}
+    <table><thead><tr><th>Projeto</th><th>Nome</th><th>Horário</th><th>Horas</th><th>Valor</th><th>Setor</th></tr></thead><tbody> ${novos.slice(0,8).map(n=>`<tr><td style="font-size:12px;">${esc(n.proj_nome||'—')}</td><td><strong>${esc(n.nome)}</strong></td><td class="mono">${n.hora_ini}–${n.hora_fim}</td><td class="mono">${n.horas}h</td><td class="mono">${n.valor?fBRL(n.valor):'Padrão'}</td><td>${esc(n.setor||'—')}</td></tr>`).join('')}
     </tbody></table>
     <div style="margin-top:12px;display:flex;gap:8px;">
       <button class="btn btn-primary" id="imp-tipos-btn">Importar ${novos.filter(n=>n.proj_id).length} tipo(s) válido(s)</button>
@@ -8239,7 +8241,7 @@ function handleUploadMed(input) {
     }
     const prev = document.getElementById('import-preview-med');
     prev.innerHTML = `<div class="card"><div class="card-title">Pré-visualização — ${novos.length} médico(s)</div>
-      <table><thead><tr><th>Nome</th><th>CRM</th><th>Especialidade</th><th>Tipo</th></tr></thead><tbody> ${novos.slice(0,6).map(m=>`<tr><td>${m.nome}</td><td class="mono">${m.crm}</td><td>${m.especialidade||'—'}</td><td>${m.tipo}</td></tr>`).join('')}
+      <table><thead><tr><th>Nome</th><th>CRM</th><th>Especialidade</th><th>Tipo</th></tr></thead><tbody> ${novos.slice(0,6).map(m=>`<tr><td>${esc(m.nome)}</td><td class="mono">${esc(m.crm)}</td><td>${esc(m.especialidade||'—')}</td><td>${esc(m.tipo)}</td></tr>`).join('')}
       ${novos.length>6?`<tr><td colspan="4" style="color:var(--text3);font-size:12px;">... e mais ${novos.length-6}</td></tr>`:''}
       </tbody></table>
       <div style="margin-top:12px;display:flex;gap:8px;">
@@ -8546,11 +8548,11 @@ function renderLayoutPreview() {
 function popExportSelects() {
   ['ex-rp'].forEach(id => {
     const el = document.getElementById(id);
-    if (el) el.innerHTML = '<option value="">Todos os projetos</option>' + sortedProjetos().map(p=>`<option value="${p.id}">${p.nome}</option>`).join('');
+    if (el) el.innerHTML = '<option value="">Todos os projetos</option>' + sortedProjetos().map(p=>`<option value="${p.id}">${esc(p.nome)}</option>`).join('');
   });
   ['ex-rm'].forEach(id => {
     const el = document.getElementById(id);
-    if (el) el.innerHTML = '<option value="">Todos os médicos</option>' + sortedMedicos().map(m=>`<option value="${m.id}">${m.nome}</option>`).join('');
+    if (el) el.innerHTML = '<option value="">Todos os médicos</option>' + sortedMedicos().map(m=>`<option value="${m.id}">${esc(m.nome)}</option>`).join('');
   });
   renderLayoutPreview();
 }
@@ -8607,10 +8609,10 @@ function previewExport() {
     const projTotal = grupos.reduce((s,g)=>s+g.total,0), projQtd = grupos.reduce((s,g)=>s+g.qtd,0);
     html += `<div class="card" style="margin-bottom:12px;">
       <div style="display:flex;justify-content:space-between;margin-bottom:10px;">
-        <div class="card-title" style="margin-bottom:0;">${proj}</div>
+        <div class="card-title" style="margin-bottom:0;">${esc(proj)}</div>
         <div style="font-size:12px;color:var(--text2);">${projQtd} plantão(ões) · <span class="mono" style="color:var(--green);font-weight:600;">${fBRL(projTotal)}</span></div>
       </div>
-      <table><thead><tr><th>Médico / CRM</th><th>Horas</th><th>Turno</th><th>Setor</th><th>Qtd</th><th>Total</th></tr></thead><tbody> ${grupos.map(g=>`<tr><td>${g.medico}<br><span class="mono" style="font-size:11px;color:var(--text3);">${g.crm}</span></td><td class="mono">${g.horas}h</td><td>${g.turno}</td><td>${g.setor||'—'}</td><td style="text-align:center;">${g.qtd}</td><td class="mono" style="color:var(--green);font-weight:600;">${fBRL(Math.round(g.total*100)/100)}</td></tr>`).join('')}
+      <table><thead><tr><th>Médico / CRM</th><th>Horas</th><th>Turno</th><th>Setor</th><th>Qtd</th><th>Total</th></tr></thead><tbody> ${grupos.map(g=>`<tr><td>${esc(g.medico)}<br><span class="mono" style="font-size:11px;color:var(--text3);">${esc(g.crm)}</span></td><td class="mono">${g.horas}h</td><td>${g.turno}</td><td>${esc(g.setor||'—')}</td><td style="text-align:center;">${g.qtd}</td><td class="mono" style="color:var(--green);font-weight:600;">${fBRL(Math.round(g.total*100)/100)}</td></tr>`).join('')}
       </tbody></table></div>`;
   });
   el.innerHTML = html;
@@ -8907,10 +8909,10 @@ function initLancamentos() {
   // Popular selects de filtro
   const sm = document.getElementById('lf-med');
   if (sm) sm.innerHTML = '<option value="">Todos os médicos</option>' +
-    sortedMedicos().map(m=>`<option value="${m.id}">${m.nome}</option>`).join('');
+    sortedMedicos().map(m=>`<option value="${m.id}">${esc(m.nome)}</option>`).join('');
   try { montarFiltroProjSetor('lan','lan-projsetor'); } catch(e){}
   if (sp) sp.innerHTML = '<option value="">Todos os projetos</option>' +
-    sortedProjetos().map(p=>`<option value="${p.id}">${p.nome}</option>`).join('');
+    sortedProjetos().map(p=>`<option value="${p.id}">${esc(p.nome)}</option>`).join('');
   renderLancamentos();
 }
 
@@ -8946,13 +8948,13 @@ function renderLancamentos() {
   </tr></thead><tbody>` +
   lista.map(l => `<tr>
     <td class="mono">${fDate(l.data)}</td>
-    <td><strong>${l.medico||'—'}</strong><br><span style="font-size:11px;color:var(--text3);">${l.crm||''}</span></td>
-    <td>${l.projeto||'—'}</td>
-    <td><span class="badge ${l.tipo?.includes('Noturno')?'badge-purple':l.tipo?.includes('24')?'badge-amber':'badge-green'}">${l.tipo||'—'}</span></td>
+    <td><strong>${esc(l.medico||'—')}</strong><br><span style="font-size:11px;color:var(--text3);">${esc(l.crm||'')}</span></td>
+    <td>${esc(l.projeto||'—')}</td>
+    <td><span class="badge ${l.tipo?.includes('Noturno')?'badge-purple':l.tipo?.includes('24')?'badge-amber':'badge-green'}">${esc(l.tipo||'—')}</span></td>
     <td class="mono">${(l.hora_ini||'').slice(0,5)}–${(l.hora_fim||'').slice(0,5)}</td>
     <td class="mono">${l.horas}h</td>
     <td class="mono" style="color:var(--green);font-weight:600;">${fBRL(l.honorario||0)}</td>
-    <td style="font-size:12px;">${l.setor||'—'}</td>
+    <td style="font-size:12px;">${esc(l.setor||'—')}</td>
     <td><button class="btn btn-danger btn-sm" onclick="delLanc('${l.id}')">✕</button></td>
   </tr>`).join('') + '</tbody></table>';
 }
@@ -9003,7 +9005,7 @@ function popTpProj() {
   ['tp-proj'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.innerHTML = '<option value="">Selecione...</option>' +
-      sortedProjetos().map(p => `<option value="${p.id}">${p.nome}</option>`).join('');
+      sortedProjetos().map(p => `<option value="${p.id}">${esc(p.nome)}</option>`).join('');
   });
   popTpProjFiltro();
 }
@@ -9022,7 +9024,7 @@ function popTpProjFiltro() {
   const el = document.getElementById('tp-proj-filtro');
   if (!el) return;
   el.innerHTML = '<option value="">Todos os projetos</option>' +
-    sortedProjetos().map(p => `<option value="${p.id}">${p.nome}</option>`).join('');
+    sortedProjetos().map(p => `<option value="${p.id}">${esc(p.nome)}</option>`).join('');
 }
 
 async function carregarTiposLista() {
@@ -9045,12 +9047,12 @@ async function carregarTiposLista() {
   el.innerHTML = `<table><thead><tr> ${mostraProjeto ? '<th>Projeto</th>' : ''}
     <th>Nome</th><th>Horário</th><th>Horas</th><th>Valor</th><th>Setor</th><th></th>
   </tr></thead><tbody>` +
-  data.map(t => `<tr> ${mostraProjeto ? `<td style="font-size:12px;color:var(--text3);">${t.projetos?.nome||'—'}</td>` : ''}
-    <td><strong>${t.nome}</strong></td>
+  data.map(t => `<tr> ${mostraProjeto ? `<td style="font-size:12px;color:var(--text3);">${esc(t.projetos?.nome||'—')}</td>` : ''}
+    <td><strong>${esc(t.nome)}</strong></td>
     <td class="mono">${(t.hora_ini||'').slice(0,5)} – ${(t.hora_fim||'').slice(0,5)}</td>
     <td class="mono">${t.horas}h</td>
     <td class="mono">${t.valor ? fBRL(t.valor) : '<span style="color:var(--text3)">Padrão do projeto</span>'}</td>
-    <td>${t.setor || '—'}</td>
+    <td>${esc(t.setor || '—')}</td>
     <td><button class="btn btn-danger btn-sm" onclick="deletarTipoPlantao('${t.id}')">✕</button></td>
   </tr>`).join('') + '</tbody></table>';
 
@@ -9117,7 +9119,7 @@ function atualizarTiposNoModal() {
       tiposDoProjeto.map(t => {
         const horario = (t.hora_ini||'').slice(0,5) + '–' + (t.hora_fim||'').slice(0,5);
         const valor = t.valor ? ' · ' + fBRL(t.valor) : '';
-        return `<option value="${t.id}" data-ini="${t.hora_ini}" data-fim="${t.hora_fim}" data-horas="${t.horas}" data-valor="${t.valor||''}" data-setor="${t.setor||''}" data-nome="${t.nome}">${t.nome} (${horario}${valor})</option>`;
+        return `<option value="${t.id}" data-ini="${t.hora_ini}" data-fim="${t.hora_fim}" data-horas="${t.horas}" data-valor="${t.valor||''}" data-setor="${esc(t.setor||'')}" data-nome="${esc(t.nome)}">${esc(t.nome)} (${horario}${valor})</option>`;
       }).join('');
   } else {
     // Esconder select, mostrar botões padrão
@@ -9552,12 +9554,12 @@ function renderModalPlanos() {
 
     return `
       <div style="background:${bgColor};border:2px solid ${borderColor};border-radius:10px;padding:14px 12px;box-shadow:${shadow};transition:all 0.2s;display:flex;flex-direction:column;height:100%;"> ${badge}
-        <div style="font-size:15px;font-weight:700;color:var(--text);line-height:1.1;margin-bottom:2px;">${p.nome}</div>
+        <div style="font-size:15px;font-weight:700;color:var(--text);line-height:1.1;margin-bottom:2px;">${esc(p.nome)}</div>
         <div style="margin-bottom:8px;">
           <span style="font-size:18px;font-weight:800;color:var(--text);">R$ ${p.valor.toLocaleString('pt-BR')}</span>
           <span style="font-size:10px;color:var(--text3);">/mês</span>
         </div>
-        <div style="font-size:10px;color:var(--text2);line-height:1.35;margin-bottom:10px;min-height:28px;">${p.descricao || ''}</div>
+        <div style="font-size:10px;color:var(--text2);line-height:1.35;margin-bottom:10px;min-height:28px;">${esc(p.descricao || '')}</div>
 
         <div style="border-top:1px solid var(--border);padding-top:10px;margin-bottom:10px;flex:1;"> ${features}
         </div> ${avisoAbaixo}
@@ -9693,7 +9695,7 @@ async function carregarHistoricoPagamentos() {
   if (!data?.length) { el.innerHTML='<div style="color:var(--text3);font-size:12px;">Nenhum pagamento registrado ainda.</div>'; return; }
   const formaMap={PIX:'PIX',BOLETO:'Boleto',CREDIT_CARD:'Cartão'};
   el.innerHTML='<table style="width:100%;border-collapse:collapse;font-size:12px;"><thead><tr><th style="text-align:left;padding:4px 8px;color:var(--text3);font-size:11px;">Data</th><th style="padding:4px 8px;color:var(--text3);font-size:11px;">Forma</th><th style="text-align:right;padding:4px 8px;color:var(--text3);font-size:11px;">Valor</th><th style="text-align:right;padding:4px 8px;color:var(--text3);font-size:11px;">Status</th></tr></thead><tbody>'+
-    data.map(p=>`<tr style="border-top:1px solid var(--border);"><td style="padding:7px 8px;">${p.pago_em?new Date(p.pago_em).toLocaleDateString('pt-BR'):'—'}</td><td style="padding:7px 8px;">${formaMap[p.forma]||p.forma||'—'}</td><td style="padding:7px 8px;text-align:right;color:var(--green);font-weight:600;">${fBRL(p.valor)}</td><td style="padding:7px 8px;text-align:right;"><span style="font-size:10px;background:var(--green-bg,#eafaf2);color:var(--green);padding:2px 6px;border-radius:99px;">${p.status==='pago'?'Pago':p.status}</span></td></tr>`).join('')+'</tbody></table>';
+    data.map(p=>`<tr style="border-top:1px solid var(--border);"><td style="padding:7px 8px;">${p.pago_em?new Date(p.pago_em).toLocaleDateString('pt-BR'):'—'}</td><td style="padding:7px 8px;">${formaMap[p.forma]||p.forma||'—'}</td><td style="padding:7px 8px;text-align:right;color:var(--green);font-weight:600;">${fBRL(p.valor)}</td><td style="padding:7px 8px;text-align:right;"><span style="font-size:10px;background:var(--green-bg,#eafaf2);color:var(--green);padding:2px 6px;border-radius:99px;">${esc(p.status==='pago'?'Pago':p.status)}</span></td></tr>`).join('')+'</tbody></table>';
 }
 
 
@@ -10046,8 +10048,8 @@ async function onMrSetorChange() {
         var horario = (t.hora_ini||'').slice(0,5) + '–' + (t.hora_fim||'').slice(0,5);
         var valorStr = t.valor ? ' · ' + fBRL(t.valor) : '';
         return '<option value="' + t.id + '" data-ini="' + (t.hora_ini||'') + '" data-fim="' + (t.hora_fim||'') +
-          '" data-horas="' + (t.horas||12) + '" data-valor="' + (t.valor||'') + '" data-setor="' + (t.setor||'') +
-          '" data-nome="' + t.nome + '">' + t.nome + (horario !== '–' ? ' (' + horario + valorStr + ')' : '') + '</option>';
+          '" data-horas="' + (t.horas||12) + '" data-valor="' + (t.valor||'') + '" data-setor="' + (esc(t.setor||'')) +
+          '" data-nome="' + esc(t.nome) + '">' + esc(t.nome) + (horario !== '–' ? ' (' + horario + valorStr + ')' : '') + '</option>';
       }).join('');
     if (selectWrap) selectWrap.style.display = 'block';
     if (btnsWrap)   btnsWrap.style.display   = 'none';
@@ -10149,7 +10151,7 @@ async function renderSetoresList() {
     var remHtml = _rem.length
       ? '<div style="font-size:11px;color:var(--text3);margin-top:2px;">' + _rem.join(' · ') + '</div>'
       : '<div style="font-size:11px;color:var(--amber);margin-top:2px;">Sem remuneração definida</div>';
-    var nomeHtml = s.nome + (s.ativo ? '' : ' <span style="font-size:11px;color:var(--text3);">(inativo)</span>') + remHtml;
+    var nomeHtml = esc(s.nome) + (s.ativo ? '' : ' <span style="font-size:11px;color:var(--text3);">(inativo)</span>') + remHtml;
     return '<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:var(--bg3);border-radius:var(--radius);border:1px solid var(--border);">' +
       '<span style="font-size:14px;font-weight:500;">' + nomeHtml + '</span>' +
       '<div style="display:flex;gap:6px;">' +
@@ -10555,13 +10557,13 @@ async function carregarLog() {
     const icone = icones[l.acao] || '';
     const cor   = cores[l.acao]  || 'var(--text3)';
     const nome  = l.usuario_nome || 'Sistema';
-    const perfil = l.usuario_perfil ? `(${l.usuario_perfil})` : '';
+    const perfil = l.usuario_perfil ? `(${esc(l.usuario_perfil)})` : '';
     return `<div style="display:flex;gap:12px;align-items:flex-start;padding:10px 14px;background:var(--bg3);border-radius:var(--radius);border-left:3px solid ${cor};">
       <span style="font-size:16px;flex-shrink:0;">${icone}</span>
       <div style="flex:1;min-width:0;">
-        <div style="font-size:13px;font-weight:500;">${l.descricao || l.acao}</div>
-        <div style="font-size:11px;color:var(--text3);margin-top:2px;"> ${nome} ${perfil} · ${dt}
-          ${l.tabela ? `· tabela: ${l.tabela}` : ''}
+        <div style="font-size:13px;font-weight:500;">${esc(l.descricao || l.acao)}</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:2px;"> ${esc(nome)} ${perfil} · ${dt}
+          ${l.tabela ? `· tabela: ${esc(l.tabela)}` : ''}
         </div>
       </div>
     </div>`;
@@ -10581,7 +10583,7 @@ async function carregarUsuarios() {
   const sel = document.getElementById('log-filtro-usuario');
   if (sel) {
     sel.innerHTML = '<option value="">Todos</option>' +
-      _usuarios.map(u => `<option value="${u.id}">${u.nome} (${u.perfil})</option>`).join('');
+      _usuarios.map(u => `<option value="${u.id}">${esc(u.nome)} (${esc(u.perfil)})</option>`).join('');
   }
 }
 
@@ -10602,15 +10604,15 @@ function renderUsuarios() {
     <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:var(--bg3);border-radius:var(--radius);border:1px solid var(--border);">
       <div>
         <div style="display:flex;align-items:center;gap:8px;">
-          <span style="font-size:14px;font-weight:600;">${u.nome}</span>
-          <span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:99px;${badgePerfil[u.perfil]||''}">${u.perfil}</span> ${!u.ativo ? '<span style="font-size:10px;color:var(--text3);">(inativo)</span>' : ''}
+          <span style="font-size:14px;font-weight:600;">${esc(u.nome)}</span>
+          <span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:99px;${badgePerfil[u.perfil]||''}">${esc(u.perfil)}</span> ${!u.ativo ? '<span style="font-size:10px;color:var(--text3);">(inativo)</span>' : ''}
         </div>
-        <div style="font-size:12px;color:var(--text3);margin-top:2px;">${u.email}</div> ${u.perfil==='operador'&&u.pode_criar_projeto ? '<div style="font-size:11px;color:var(--blue);">✓ Pode criar projetos</div>' : ''}
+        <div style="font-size:12px;color:var(--text3);margin-top:2px;">${esc(u.email)}</div> ${u.perfil==='operador'&&u.pode_criar_projeto ? '<div style="font-size:11px;color:var(--blue);">✓ Pode criar projetos</div>' : ''}
       </div>
       <div style="display:flex;gap:6px;">
         <button class="btn btn-sm btn-ghost" onclick="editarUsuario('${u.id}')">Editar</button>
         <button class="btn btn-sm btn-ghost" onclick="toggleUsuario('${u.id}',${!u.ativo})">${u.ativo?'Desativar':'Ativar'}</button>
-        <button class="btn btn-sm btn-danger" onclick="excluirUsuario('${u.id}','${u.nome}')"></button>
+        <button class="btn btn-sm btn-danger" onclick="excluirUsuario('${u.id}','${esc(u.nome)}')"></button>
       </div>
     </div>`).join('');
 }
@@ -10628,7 +10630,7 @@ function renderNuProjetosList(selecionados) {
   selecionados = selecionados || [];
   el.innerHTML = projetos.map(p => `
     <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;padding:6px 8px;background:var(--bg2);border-radius:6px;">
-      <input type="checkbox" class="nu-proj-chk" value="${p.id}" ${selecionados.includes(p.id)?'checked':''}> ${p.nome}
+      <input type="checkbox" class="nu-proj-chk" value="${p.id}" ${selecionados.includes(p.id)?'checked':''}> ${esc(p.nome)}
     </label>`).join('');
 }
 
@@ -10772,8 +10774,8 @@ function gerarRelHoras(el){
     lst.forEach(l=>{const k=l.medico_id||l.medico;if(!porMed[k])porMed[k]={nome:l.medico||'—',crm:l.crm||'',h12:0,h24:0,hOutros:0,hTotal:0,plantoes:0,total:0};const h=l.horas||0,t=l.tipo||'';if(t.includes('24'))porMed[k].h24+=h;else if(t.includes('12')||t.includes('Diurno')||t.includes('Noturno'))porMed[k].h12+=h;else porMed[k].hOutros+=h;porMed[k].hTotal+=h;porMed[k].plantoes++;porMed[k].total+=l.honorario||0;});
     const arr=Object.values(porMed).sort((a,b)=>b.hTotal-a.hTotal);
     const subH=arr.reduce((s,m)=>s+m.hTotal,0);
-    const linhas=arr.map(m=>`<tr><td><strong>${m.nome}</strong></td><td class="mono">${m.crm}</td><td style="text-align:center;">${m.plantoes}</td><td style="text-align:center;">${Math.round(m.h12*10)/10}h</td><td style="text-align:center;">${Math.round(m.h24*10)/10}h</td><td style="text-align:center;">${Math.round(m.hOutros*10)/10}h</td><td style="text-align:center;font-weight:700;">${Math.round(m.hTotal*10)/10}h</td><td class="mono" style="color:var(--green);font-weight:600;">${fBRL(m.total)}</td></tr>`).join('');
-    html+=`<div class="card" style="margin-bottom:12px;"><div style="display:flex;justify-content:space-between;margin-bottom:8px;"><div class="card-title" style="margin-bottom:0;">${proj}</div><div style="font-size:12px;color:var(--text2);">${arr.length} profissional(is) · ${Math.round(subH*10)/10}h</div></div><table><thead><tr><th>Profissional</th><th>CRM</th><th style="text-align:center;">Plantões</th><th style="text-align:center;">12h</th><th style="text-align:center;">24h</th><th style="text-align:center;">Outros</th><th style="text-align:center;">Total</th><th>Honorários</th></tr></thead><tbody>${linhas}</tbody></table></div>`;
+    const linhas=arr.map(m=>`<tr><td><strong>${esc(m.nome)}</strong></td><td class="mono">${esc(m.crm)}</td><td style="text-align:center;">${m.plantoes}</td><td style="text-align:center;">${Math.round(m.h12*10)/10}h</td><td style="text-align:center;">${Math.round(m.h24*10)/10}h</td><td style="text-align:center;">${Math.round(m.hOutros*10)/10}h</td><td style="text-align:center;font-weight:700;">${Math.round(m.hTotal*10)/10}h</td><td class="mono" style="color:var(--green);font-weight:600;">${fBRL(m.total)}</td></tr>`).join('');
+    html+=`<div class="card" style="margin-bottom:12px;"><div style="display:flex;justify-content:space-between;margin-bottom:8px;"><div class="card-title" style="margin-bottom:0;">${esc(proj)}</div><div style="font-size:12px;color:var(--text2);">${arr.length} profissional(is) · ${Math.round(subH*10)/10}h</div></div><table><thead><tr><th>Profissional</th><th>CRM</th><th style="text-align:center;">Plantões</th><th style="text-align:center;">12h</th><th style="text-align:center;">24h</th><th style="text-align:center;">Outros</th><th style="text-align:center;">Total</th><th>Honorários</th></tr></thead><tbody>${linhas}</tbody></table></div>`;
   });
   el.innerHTML=html;
 }
@@ -10802,9 +10804,9 @@ async function gerarRelFaltas(el){
   };
   let html='';
   _porHospital(faltas).forEach(([proj,lst])=>{
-    const linhas=lst.slice().sort((a,b)=>b.data.localeCompare(a.data)).map(l=>{const c=classifica(l);return `<tr><td><strong>${l.medico||'—'}</strong></td><td class="mono">${l.crm||''}</td><td>${l.setor||'—'}</td><td class="mono">${fDate(l.data)}</td><td class="mono">${(l.hora_ini||'').slice(0,5)}–${(l.hora_fim||'').slice(0,5)}</td><td style="color:${c.cor};font-weight:600;">${c.txt}</td><td class="mono">${fBRL(l.honorario||0)}</td></tr>`;}).join('');
+    const linhas=lst.slice().sort((a,b)=>b.data.localeCompare(a.data)).map(l=>{const c=classifica(l);return `<tr><td><strong>${esc(l.medico||'—')}</strong></td><td class="mono">${esc(l.crm||'')}</td><td>${esc(l.setor||'—')}</td><td class="mono">${fDate(l.data)}</td><td class="mono">${(l.hora_ini||'').slice(0,5)}–${(l.hora_fim||'').slice(0,5)}</td><td style="color:${c.cor};font-weight:600;">${esc(c.txt)}</td><td class="mono">${fBRL(l.honorario||0)}</td></tr>`;}).join('');
     const sub=lst.reduce((s,l)=>s+(l.honorario||0),0);
-    html+=`<div class="card" style="margin-bottom:12px;"><div style="display:flex;justify-content:space-between;margin-bottom:8px;"><div class="card-title" style="margin-bottom:0;">${proj}</div><div style="font-size:12px;color:var(--red);font-weight:600;">${lst.length} falta(s)</div></div><table><thead><tr><th>Médico</th><th>CRM</th><th>Setor</th><th>Data</th><th>Horário</th><th>Situação</th><th>Valor</th></tr></thead><tbody>${linhas}</tbody><tfoot><tr style="border-top:1.5px solid var(--border2);"><td colspan="6" style="font-weight:600;padding:8px;">Total ${proj}</td><td class="mono" style="color:var(--red);font-weight:700;">${fBRL(sub)}</td></tr></tfoot></table></div>`;
+    html+=`<div class="card" style="margin-bottom:12px;"><div style="display:flex;justify-content:space-between;margin-bottom:8px;"><div class="card-title" style="margin-bottom:0;">${esc(proj)}</div><div style="font-size:12px;color:var(--red);font-weight:600;">${lst.length} falta(s)</div></div><table><thead><tr><th>Médico</th><th>CRM</th><th>Setor</th><th>Data</th><th>Horário</th><th>Situação</th><th>Valor</th></tr></thead><tbody>${linhas}</tbody><tfoot><tr style="border-top:1.5px solid var(--border2);"><td colspan="6" style="font-weight:600;padding:8px;">Total ${esc(proj)}</td><td class="mono" style="color:var(--red);font-weight:700;">${fBRL(sub)}</td></tr></tfoot></table></div>`;
   });
   el.innerHTML=html;
 }
@@ -10816,8 +10818,8 @@ function gerarRelFinAnalitico(el){
   let html='',geral=0;
   _porHospital(dados).forEach(([proj,lst])=>{
     const sub=lst.reduce((s,l)=>s+(l.honorario||0),0);geral+=sub;
-    const linhas=lst.slice().sort((a,b)=>(a.setor||'').localeCompare(b.setor||'','pt-BR')||a.data.localeCompare(b.data)).map(l=>`<tr><td class="mono">${fDate(l.data)}</td><td><strong>${l.medico||'—'}</strong><br><span class="mono" style="font-size:11px;color:var(--text3);">${l.crm||''}</span></td><td>${l.setor||'—'}</td><td>${l.tipo||'—'}</td><td class="mono">${l.horas}h</td><td class="mono" style="color:var(--green);font-weight:600;">${fBRL(l.honorario||0)}</td></tr>`).join('');
-    html+=`<div class="card" style="margin-bottom:12px;"><div style="display:flex;justify-content:space-between;margin-bottom:8px;"><div class="card-title" style="margin-bottom:0;">${proj}</div><div style="font-size:12px;color:var(--text2);">${lst.length} plantão(ões) · <span style="color:var(--green);font-weight:600;">${fBRL(sub)}</span></div></div><table><thead><tr><th>Data</th><th>Médico / CRM</th><th>Setor</th><th>Tipo</th><th>Horas</th><th>Valor</th></tr></thead><tbody>${linhas}</tbody><tfoot><tr style="border-top:1.5px solid var(--border2);"><td colspan="5" style="font-weight:600;padding:8px;">Total ${proj}</td><td class="mono" style="color:var(--green);font-weight:700;">${fBRL(sub)}</td></tr></tfoot></table></div>`;
+    const linhas=lst.slice().sort((a,b)=>(a.setor||'').localeCompare(b.setor||'','pt-BR')||a.data.localeCompare(b.data)).map(l=>`<tr><td class="mono">${fDate(l.data)}</td><td><strong>${esc(l.medico||'—')}</strong><br><span class="mono" style="font-size:11px;color:var(--text3);">${esc(l.crm||'')}</span></td><td>${esc(l.setor||'—')}</td><td>${esc(l.tipo||'—')}</td><td class="mono">${l.horas}h</td><td class="mono" style="color:var(--green);font-weight:600;">${fBRL(l.honorario||0)}</td></tr>`).join('');
+    html+=`<div class="card" style="margin-bottom:12px;"><div style="display:flex;justify-content:space-between;margin-bottom:8px;"><div class="card-title" style="margin-bottom:0;">${esc(proj)}</div><div style="font-size:12px;color:var(--text2);">${lst.length} plantão(ões) · <span style="color:var(--green);font-weight:600;">${fBRL(sub)}</span></div></div><table><thead><tr><th>Data</th><th>Médico / CRM</th><th>Setor</th><th>Tipo</th><th>Horas</th><th>Valor</th></tr></thead><tbody>${linhas}</tbody><tfoot><tr style="border-top:1.5px solid var(--border2);"><td colspan="5" style="font-weight:600;padding:8px;">Total ${esc(proj)}</td><td class="mono" style="color:var(--green);font-weight:700;">${fBRL(sub)}</td></tr></tfoot></table></div>`;
   });
   el.innerHTML=_totalGeralCard('Total geral — '+dados.length+' plantão(ões)',geral)+html;
 }
@@ -10832,8 +10834,8 @@ function gerarRelFinConsolidado(el){
     lst.forEach(l=>{const k=l.medico_id||l.medico;if(!porMed[k])porMed[k]={nome:l.medico||'—',crm:l.crm||'',qtd:0,horas:0,total:0};porMed[k].qtd++;porMed[k].horas+=l.horas||0;porMed[k].total+=l.honorario||0;});
     const arr=Object.values(porMed).sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR'));
     const sub=arr.reduce((s,m)=>s+m.total,0);geral+=sub;
-    const linhas=arr.map(m=>`<tr><td><strong>${m.nome}</strong></td><td class="mono">${m.crm}</td><td style="text-align:center;">${m.qtd}</td><td class="mono">${Math.round(m.horas*10)/10}h</td><td class="mono" style="color:var(--green);font-weight:600;">${fBRL(m.total)}</td></tr>`).join('');
-    html+=`<div class="card" style="margin-bottom:12px;"><div style="display:flex;justify-content:space-between;margin-bottom:8px;"><div class="card-title" style="margin-bottom:0;">${proj}</div><div style="font-size:12px;color:var(--text2);">${arr.length} profissional(is) · <span style="color:var(--green);font-weight:600;">${fBRL(sub)}</span></div></div><table><thead><tr><th>Médico</th><th>CRM</th><th style="text-align:center;">Plantões</th><th>Horas</th><th>Total</th></tr></thead><tbody>${linhas}</tbody><tfoot><tr style="border-top:1.5px solid var(--border2);"><td colspan="4" style="font-weight:600;padding:8px;">Total ${proj}</td><td class="mono" style="color:var(--green);font-weight:700;">${fBRL(sub)}</td></tr></tfoot></table></div>`;
+    const linhas=arr.map(m=>`<tr><td><strong>${esc(m.nome)}</strong></td><td class="mono">${esc(m.crm)}</td><td style="text-align:center;">${m.qtd}</td><td class="mono">${Math.round(m.horas*10)/10}h</td><td class="mono" style="color:var(--green);font-weight:600;">${fBRL(m.total)}</td></tr>`).join('');
+    html+=`<div class="card" style="margin-bottom:12px;"><div style="display:flex;justify-content:space-between;margin-bottom:8px;"><div class="card-title" style="margin-bottom:0;">${esc(proj)}</div><div style="font-size:12px;color:var(--text2);">${arr.length} profissional(is) · <span style="color:var(--green);font-weight:600;">${fBRL(sub)}</span></div></div><table><thead><tr><th>Médico</th><th>CRM</th><th style="text-align:center;">Plantões</th><th>Horas</th><th>Total</th></tr></thead><tbody>${linhas}</tbody><tfoot><tr style="border-top:1.5px solid var(--border2);"><td colspan="4" style="font-weight:600;padding:8px;">Total ${esc(proj)}</td><td class="mono" style="color:var(--green);font-weight:700;">${fBRL(sub)}</td></tr></tfoot></table></div>`;
   });
   el.innerHTML=_totalGeralCard('Total geral',geral)+html;
 }
@@ -10852,10 +10854,10 @@ function gerarRelFinProfissional(el){
     meds.forEach(m=>{
       const sub=m.itens.reduce((s,l)=>s+(l.honorario||0),0);
       const subH=m.itens.reduce((s,l)=>s+(l.horas||0),0);
-      const linhas=m.itens.slice().sort((a,b)=>a.data.localeCompare(b.data)).map(l=>`<tr><td class="mono">${fDate(l.data)}</td><td>${l.setor||'—'}</td><td>${l.tipo||'—'}</td><td class="mono">${l.horas}h</td><td class="mono" style="color:var(--green);">${fBRL(l.honorario||0)}</td></tr>`).join('');
-      inner+=`<div style="margin-bottom:10px;"><div style="font-size:13px;font-weight:700;margin-bottom:6px;">${m.nome} <span class="mono" style="font-size:11px;color:var(--text3);font-weight:400;">${m.crm}</span></div><table><thead><tr><th>Data</th><th>Setor</th><th>Tipo</th><th>Duração</th><th>Valor</th></tr></thead><tbody>${linhas}</tbody><tfoot><tr style="border-top:1px solid var(--border);"><td style="font-weight:600;padding:6px;">Total</td><td>${m.itens.length} plantão(ões)</td><td></td><td class="mono" style="font-weight:600;">${Math.round(subH*10)/10}h</td><td class="mono" style="color:var(--green);font-weight:700;">${fBRL(sub)}</td></tr></tfoot></table></div>`;
+      const linhas=m.itens.slice().sort((a,b)=>a.data.localeCompare(b.data)).map(l=>`<tr><td class="mono">${fDate(l.data)}</td><td>${esc(l.setor||'—')}</td><td>${esc(l.tipo||'—')}</td><td class="mono">${l.horas}h</td><td class="mono" style="color:var(--green);">${fBRL(l.honorario||0)}</td></tr>`).join('');
+      inner+=`<div style="margin-bottom:10px;"><div style="font-size:13px;font-weight:700;margin-bottom:6px;">${esc(m.nome)} <span class="mono" style="font-size:11px;color:var(--text3);font-weight:400;">${esc(m.crm)}</span></div><table><thead><tr><th>Data</th><th>Setor</th><th>Tipo</th><th>Duração</th><th>Valor</th></tr></thead><tbody>${linhas}</tbody><tfoot><tr style="border-top:1px solid var(--border);"><td style="font-weight:600;padding:6px;">Total</td><td>${m.itens.length} plantão(ões)</td><td></td><td class="mono" style="font-weight:600;">${Math.round(subH*10)/10}h</td><td class="mono" style="color:var(--green);font-weight:700;">${fBRL(sub)}</td></tr></tfoot></table></div>`;
     });
-    html+=`<div class="card" style="margin-bottom:12px;"><div style="display:flex;justify-content:space-between;margin-bottom:10px;border-bottom:1px solid var(--border);padding-bottom:8px;"><div class="card-title" style="margin-bottom:0;">${proj}</div><div style="font-size:12px;color:var(--text2);">${meds.length} profissional(is) · <span style="color:var(--green);font-weight:600;">${fBRL(subProj)}</span></div></div>${inner}</div>`;
+    html+=`<div class="card" style="margin-bottom:12px;"><div style="display:flex;justify-content:space-between;margin-bottom:10px;border-bottom:1px solid var(--border);padding-bottom:8px;"><div class="card-title" style="margin-bottom:0;">${esc(proj)}</div><div style="font-size:12px;color:var(--text2);">${meds.length} profissional(is) · <span style="color:var(--green);font-weight:600;">${fBRL(subProj)}</span></div></div>${inner}</div>`;
   });
   el.innerHTML=html;
 }
@@ -10870,8 +10872,8 @@ function gerarRelFinBanco(el){
     lst.forEach(l=>{const k=l.medico_id||l.medico;if(!porMed[k])porMed[k]={id:l.medico_id,nome:l.medico||'—',crm:l.crm||'',qtd:0,total:0};porMed[k].qtd++;porMed[k].total+=l.honorario||0;});
     const arr=Object.values(porMed).sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR'));
     const sub=arr.reduce((s,m)=>s+m.total,0);geral+=sub;
-    const linhas=arr.map(m=>{const med=medicos.find(x=>x.id===m.id)||{};let banco='<span style="color:var(--red);">Sem dados bancários</span>';if(med.pix_tipo&&med.pix_chave)banco='PIX '+med.pix_tipo+': '+med.pix_chave;else if(med.banco)banco=med.banco+' · Ag '+(med.agencia||'—')+' · CC '+(med.conta_corrente||'—');return `<tr><td><strong>${m.nome}</strong></td><td class="mono">${m.crm}</td><td style="font-size:12px;">${banco}</td><td style="text-align:center;">${m.qtd}</td><td class="mono" style="color:var(--green);font-weight:600;">${fBRL(m.total)}</td></tr>`;}).join('');
-    html+=`<div class="card" style="margin-bottom:12px;"><div style="display:flex;justify-content:space-between;margin-bottom:8px;"><div class="card-title" style="margin-bottom:0;">${proj}</div><div style="font-size:12px;color:var(--text2);">${arr.length} profissional(is) · <span style="color:var(--green);font-weight:600;">${fBRL(sub)}</span></div></div><table><thead><tr><th>Médico</th><th>CRM</th><th>Dados bancários</th><th style="text-align:center;">Plantões</th><th>Total</th></tr></thead><tbody>${linhas}</tbody><tfoot><tr style="border-top:1.5px solid var(--border2);"><td colspan="4" style="font-weight:600;padding:8px;">Total ${proj}</td><td class="mono" style="color:var(--green);font-weight:700;">${fBRL(sub)}</td></tr></tfoot></table></div>`;
+    const linhas=arr.map(m=>{const med=medicos.find(x=>x.id===m.id)||{};let banco='<span style="color:var(--red);">Sem dados bancários</span>';if(med.pix_tipo&&med.pix_chave)banco='PIX '+esc(med.pix_tipo)+': '+esc(med.pix_chave);else if(med.banco)banco=esc(med.banco)+' · Ag '+esc(med.agencia||'—')+' · CC '+esc(med.conta_corrente||'—');return `<tr><td><strong>${esc(m.nome)}</strong></td><td class="mono">${esc(m.crm)}</td><td style="font-size:12px;">${banco}</td><td style="text-align:center;">${m.qtd}</td><td class="mono" style="color:var(--green);font-weight:600;">${fBRL(m.total)}</td></tr>`;}).join('');
+    html+=`<div class="card" style="margin-bottom:12px;"><div style="display:flex;justify-content:space-between;margin-bottom:8px;"><div class="card-title" style="margin-bottom:0;">${esc(proj)}</div><div style="font-size:12px;color:var(--text2);">${arr.length} profissional(is) · <span style="color:var(--green);font-weight:600;">${fBRL(sub)}</span></div></div><table><thead><tr><th>Médico</th><th>CRM</th><th>Dados bancários</th><th style="text-align:center;">Plantões</th><th>Total</th></tr></thead><tbody>${linhas}</tbody><tfoot><tr style="border-top:1.5px solid var(--border2);"><td colspan="4" style="font-weight:600;padding:8px;">Total ${esc(proj)}</td><td class="mono" style="color:var(--green);font-weight:700;">${fBRL(sub)}</td></tr></tfoot></table></div>`;
   });
   el.innerHTML=_totalGeralCard('Total geral',geral)+html;
 }
@@ -10886,8 +10888,8 @@ function gerarRelFinSetor(el){
     lst.forEach(l=>{const s=l.setor||'(sem setor)';setores[s]=(setores[s]||0)+(l.honorario||0);});
     const arr=Object.entries(setores).sort((a,b)=>a[0].localeCompare(b[0],'pt-BR'));
     const totProj=arr.reduce((s,[,v])=>s+v,0);geral+=totProj;
-    const linhas=arr.map(([s,v])=>`<tr><td>${s}</td><td class="mono" style="text-align:right;">${fBRL(v)}</td></tr>`).join('');
-    html+=`<div class="card" style="margin-bottom:12px;"><div class="card-title">${proj}</div><table><thead><tr><th>Setor</th><th style="text-align:right;">Custo</th></tr></thead><tbody>${linhas}</tbody><tfoot><tr style="border-top:1.5px solid var(--border2);"><td style="font-weight:700;padding:8px;">Total</td><td class="mono" style="text-align:right;font-weight:700;color:var(--green);">${fBRL(totProj)}</td></tr></tfoot></table></div>`;
+    const linhas=arr.map(([s,v])=>`<tr><td>${esc(s)}</td><td class="mono" style="text-align:right;">${fBRL(v)}</td></tr>`).join('');
+    html+=`<div class="card" style="margin-bottom:12px;"><div class="card-title">${esc(proj)}</div><table><thead><tr><th>Setor</th><th style="text-align:right;">Custo</th></tr></thead><tbody>${linhas}</tbody><tfoot><tr style="border-top:1.5px solid var(--border2);"><td style="font-weight:700;padding:8px;">Total</td><td class="mono" style="text-align:right;font-weight:700;color:var(--green);">${fBRL(totProj)}</td></tr></tfoot></table></div>`;
   });
   el.innerHTML=_totalGeralCard('Total geral',geral)+html;
 }
@@ -10903,8 +10905,8 @@ function gerarRelFinTipo(el){
     const arr=Object.entries(porTipo).sort((a,b)=>a[0].localeCompare(b[0],'pt-BR'));
     const sub=arr.reduce((s,[,v])=>s+v.total,0);geral+=sub;
     const subQ=arr.reduce((s,[,v])=>s+v.qtd,0);
-    const linhas=arr.map(([t,v])=>`<tr><td>${t}</td><td style="text-align:center;">${v.qtd}</td><td class="mono">${Math.round(v.horas*10)/10}h</td><td class="mono" style="text-align:right;color:var(--green);font-weight:600;">${fBRL(v.total)}</td></tr>`).join('');
-    html+=`<div class="card" style="margin-bottom:12px;"><div style="display:flex;justify-content:space-between;margin-bottom:8px;"><div class="card-title" style="margin-bottom:0;">${proj}</div><div style="font-size:12px;color:var(--text2);">${subQ} plantão(ões) · <span style="color:var(--green);font-weight:600;">${fBRL(sub)}</span></div></div><table><thead><tr><th>Tipo de plantão</th><th style="text-align:center;">Qtd</th><th>Horas</th><th style="text-align:right;">Total</th></tr></thead><tbody>${linhas}</tbody><tfoot><tr style="border-top:1.5px solid var(--border2);"><td style="font-weight:700;padding:8px;">Total ${proj}</td><td style="text-align:center;font-weight:700;">${subQ}</td><td></td><td class="mono" style="text-align:right;font-weight:700;color:var(--green);">${fBRL(sub)}</td></tr></tfoot></table></div>`;
+    const linhas=arr.map(([t,v])=>`<tr><td>${esc(t)}</td><td style="text-align:center;">${v.qtd}</td><td class="mono">${Math.round(v.horas*10)/10}h</td><td class="mono" style="text-align:right;color:var(--green);font-weight:600;">${fBRL(v.total)}</td></tr>`).join('');
+    html+=`<div class="card" style="margin-bottom:12px;"><div style="display:flex;justify-content:space-between;margin-bottom:8px;"><div class="card-title" style="margin-bottom:0;">${esc(proj)}</div><div style="font-size:12px;color:var(--text2);">${subQ} plantão(ões) · <span style="color:var(--green);font-weight:600;">${fBRL(sub)}</span></div></div><table><thead><tr><th>Tipo de plantão</th><th style="text-align:center;">Qtd</th><th>Horas</th><th style="text-align:right;">Total</th></tr></thead><tbody>${linhas}</tbody><tfoot><tr style="border-top:1.5px solid var(--border2);"><td style="font-weight:700;padding:8px;">Total ${esc(proj)}</td><td style="text-align:center;font-weight:700;">${subQ}</td><td></td><td class="mono" style="text-align:right;font-weight:700;color:var(--green);">${fBRL(sub)}</td></tr></tfoot></table></div>`;
   });
   el.innerHTML=_totalGeralCard('Total geral',geral)+html;
 }
@@ -10923,8 +10925,8 @@ function gerarRelEscala(el){
     const linhas=lst.map(l=>{
       const ehFuro=l.aberto?((l.vagas||1)-(l.vagas_preenchidas||0))>0:!l.medico_id;
       if(ehFuro) totFuros++;
-      const resp=ehFuro?'<span style="color:var(--red);font-weight:600;">Sem médico escalado</span>':'<strong>'+(l.medico||'—')+'</strong>';
-      return `<tr style="${ehFuro?'background:#fdecea;':''}"><td>${l.projeto||'—'}</td><td>${l.setor||'—'}</td><td class="mono">${(l.hora_ini||'').slice(0,5)}–${(l.hora_fim||'').slice(0,5)}</td><td>${l.tipo||'—'}</td><td>${resp}</td></tr>`;
+      const resp=ehFuro?'<span style="color:var(--red);font-weight:600;">Sem médico escalado</span>':'<strong>'+(esc(l.medico||'—'))+'</strong>';
+      return `<tr style="${ehFuro?'background:#fdecea;':''}"><td>${esc(l.projeto||'—')}</td><td>${esc(l.setor||'—')}</td><td class="mono">${(l.hora_ini||'').slice(0,5)}–${(l.hora_fim||'').slice(0,5)}</td><td>${esc(l.tipo||'—')}</td><td>${resp}</td></tr>`;
     }).join('');
     html+=`<div class="card" style="margin-bottom:12px;"><div class="card-title" style="text-transform:capitalize;">${dow}, ${fDate(data)}</div><table><thead><tr><th>Hospital</th><th>Setor</th><th>Horário</th><th>Tipo</th><th>Profissional</th></tr></thead><tbody>${linhas}</tbody></table></div>`;
   });
@@ -10951,9 +10953,9 @@ async function gerarRelEntradaSaida(el){
       const cs=(byKey[`${l.medico_id}_${l.projeto_id}_${l.data}`]||[]).slice().sort((a,b)=>a.feito_em.localeCompare(b.feito_em));
       const ent=cs[0],sai=cs.length>1?cs[cs.length-1]:null;
       const situ=ent?'Presente':'Sem check-in';
-      return `<tr><td class="mono">${fDate(l.data)} ${(l.hora_ini||'').slice(0,5)}</td><td class="mono">${l.horas}h</td><td class="mono">${fmtH(ent)}</td><td class="mono">${dist(ent)}</td><td class="mono">${fmtH(sai)}</td><td class="mono">${dist(sai)}</td><td>${l.setor||'—'}</td><td>${l.medico||'—'}</td><td>${situ}</td><td>${l.tipo||'—'}</td></tr>`;
+      return `<tr><td class="mono">${fDate(l.data)} ${(l.hora_ini||'').slice(0,5)}</td><td class="mono">${l.horas}h</td><td class="mono">${fmtH(ent)}</td><td class="mono">${dist(ent)}</td><td class="mono">${fmtH(sai)}</td><td class="mono">${dist(sai)}</td><td>${esc(l.setor||'—')}</td><td>${esc(l.medico||'—')}</td><td>${situ}</td><td>${esc(l.tipo||'—')}</td></tr>`;
     }).join('');
-    html+=`<div class="card" style="margin-bottom:12px;"><div class="card-title">${proj}</div><table><thead><tr><th>Data</th><th>Duração</th><th>Entrada</th><th>Dist.</th><th>Saída</th><th>Dist.</th><th>Setor</th><th>Responsável</th><th>Situação</th><th>Tipo</th></tr></thead><tbody>${linhas}</tbody></table></div>`;
+    html+=`<div class="card" style="margin-bottom:12px;"><div class="card-title">${esc(proj)}</div><table><thead><tr><th>Data</th><th>Duração</th><th>Entrada</th><th>Dist.</th><th>Saída</th><th>Dist.</th><th>Setor</th><th>Responsável</th><th>Situação</th><th>Tipo</th></tr></thead><tbody>${linhas}</tbody></table></div>`;
   });
   el.innerHTML=html;
 }
@@ -10970,8 +10972,8 @@ async function gerarRelTrocas(el){
   const nome=id=>{const m=medicos.find(x=>x.id===id);return m?m.nome:'—';};
   const linhas=trs.map(t=>{
     const realizado=t.respondido_em||t.criado_em;
-    const plant=t.lancamentos?`${t.lancamentos.projetos?.nome||''}${t.lancamentos.setor?' - '+t.lancamentos.setor:''} · ${t.lancamentos.data?fDate(t.lancamentos.data):''}`:'—';
-    return `<tr><td class="mono">${realizado?new Date(realizado).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'—'}</td><td>${plant}</td><td>${nome(t.medico_origem_id)}</td><td>${nome(t.medico_destino_id)}</td><td>${t.status||'—'}</td><td>${t.justificativa||t.obs||''}</td></tr>`;
+    const plant=t.lancamentos?`${esc(t.lancamentos.projetos?.nome||'')}${t.lancamentos.setor?' - '+esc(t.lancamentos.setor):''} · ${t.lancamentos.data?fDate(t.lancamentos.data):''}`:'—';
+    return `<tr><td class="mono">${realizado?new Date(realizado).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'—'}</td><td>${plant}</td><td>${esc(nome(t.medico_origem_id))}</td><td>${esc(nome(t.medico_destino_id))}</td><td>${esc(t.status||'—')}</td><td>${esc(t.justificativa||t.obs||'')}</td></tr>`;
   }).join('');
   el.innerHTML=`<div class="card"><div class="card-title">Trocas e passagens de plantões</div><table><thead><tr><th>Realizado em</th><th>Plantão</th><th>Requerente</th><th>Requerido</th><th>Status</th><th>Justificativa</th></tr></thead><tbody>${linhas}</tbody></table></div>`;
 }
@@ -11015,8 +11017,8 @@ function gerarRelFinAnalitico(el){
   let html='',geral=0;
   _porHospital(dados).forEach(([proj,lst])=>{
     const sub=lst.reduce((s,l)=>s+(l.honorario||0),0);geral+=sub;
-    const linhas=lst.slice().sort((a,b)=>(a.setor||'').localeCompare(b.setor||'','pt-BR')||a.data.localeCompare(b.data)).map(l=>`<tr style="${l.honorario===0&&l.medico==='— (falta)'?'background:#fdecea;':''}"><td class="mono">${fDate(l.data)}</td><td><strong>${l.medico||'—'}</strong>${l.crm?'<br><span class="mono" style="font-size:11px;color:var(--text3);">'+l.crm+'</span>':''}</td><td>${l.setor||'—'}</td><td>${l.tipo||'—'}</td><td class="mono">${l.horas}h</td><td class="mono" style="color:${l.honorario?'var(--green)':'var(--text3)'};font-weight:600;">${fBRL(l.honorario||0)}</td></tr>`).join('');
-    html+=`<div class="card" style="margin-bottom:12px;"><div style="display:flex;justify-content:space-between;margin-bottom:8px;"><div class="card-title" style="margin-bottom:0;">${proj}</div><div style="font-size:12px;color:var(--text2);">${lst.length} plantão(ões) · <span style="color:var(--green);font-weight:600;">${fBRL(sub)}</span></div></div><table><thead><tr><th>Data</th><th>Médico / CRM</th><th>Setor</th><th>Tipo</th><th>Horas</th><th>Valor</th></tr></thead><tbody>${linhas}</tbody><tfoot><tr style="border-top:1.5px solid var(--border2);"><td colspan="5" style="font-weight:600;padding:8px;">Total ${proj}</td><td class="mono" style="color:var(--green);font-weight:700;">${fBRL(sub)}</td></tr></tfoot></table></div>`;
+    const linhas=lst.slice().sort((a,b)=>(a.setor||'').localeCompare(b.setor||'','pt-BR')||a.data.localeCompare(b.data)).map(l=>`<tr style="${l.honorario===0&&l.medico==='— (falta)'?'background:#fdecea;':''}"><td class="mono">${fDate(l.data)}</td><td><strong>${esc(l.medico||'—')}</strong>${l.crm?'<br><span class="mono" style="font-size:11px;color:var(--text3);">'+esc(l.crm)+'</span>':''}</td><td>${esc(l.setor||'—')}</td><td>${esc(l.tipo||'—')}</td><td class="mono">${l.horas}h</td><td class="mono" style="color:${l.honorario?'var(--green)':'var(--text3)'};font-weight:600;">${fBRL(l.honorario||0)}</td></tr>`).join('');
+    html+=`<div class="card" style="margin-bottom:12px;"><div style="display:flex;justify-content:space-between;margin-bottom:8px;"><div class="card-title" style="margin-bottom:0;">${esc(proj)}</div><div style="font-size:12px;color:var(--text2);">${lst.length} plantão(ões) · <span style="color:var(--green);font-weight:600;">${fBRL(sub)}</span></div></div><table><thead><tr><th>Data</th><th>Médico / CRM</th><th>Setor</th><th>Tipo</th><th>Horas</th><th>Valor</th></tr></thead><tbody>${linhas}</tbody><tfoot><tr style="border-top:1.5px solid var(--border2);"><td colspan="5" style="font-weight:600;padding:8px;">Total ${esc(proj)}</td><td class="mono" style="color:var(--green);font-weight:700;">${fBRL(sub)}</td></tr></tfoot></table></div>`;
   });
   el.innerHTML=_totalGeralCard('Total geral — '+dados.length+' plantão(ões)',geral)+html;
 }
@@ -11029,8 +11031,8 @@ function gerarRelFinConsolidado(el){
     lst.forEach(l=>{const k=l.medico_id||l.medico;if(!porMed[k])porMed[k]={nome:l.medico||'—',crm:l.crm||'',qtd:0,horas:0,total:0};porMed[k].qtd++;porMed[k].horas+=l.horas||0;porMed[k].total+=l.honorario||0;});
     const arr=Object.values(porMed).sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR'));
     const sub=arr.reduce((s,m)=>s+m.total,0);geral+=sub;
-    const linhas=arr.map(m=>`<tr style="${m.total===0&&m.nome==='— (falta)'?'background:#fdecea;':''}"><td><strong>${m.nome}</strong></td><td class="mono">${m.crm}</td><td style="text-align:center;">${m.qtd}</td><td class="mono">${Math.round(m.horas*10)/10}h</td><td class="mono" style="color:${m.total?'var(--green)':'var(--text3)'};font-weight:600;">${fBRL(m.total)}</td></tr>`).join('');
-    html+=`<div class="card" style="margin-bottom:12px;"><div style="display:flex;justify-content:space-between;margin-bottom:8px;"><div class="card-title" style="margin-bottom:0;">${proj}</div><div style="font-size:12px;color:var(--text2);">${arr.length} linha(s) · <span style="color:var(--green);font-weight:600;">${fBRL(sub)}</span></div></div><table><thead><tr><th>Médico</th><th>CRM</th><th style="text-align:center;">Plantões</th><th>Horas</th><th>Total</th></tr></thead><tbody>${linhas}</tbody><tfoot><tr style="border-top:1.5px solid var(--border2);"><td colspan="4" style="font-weight:600;padding:8px;">Total ${proj}</td><td class="mono" style="color:var(--green);font-weight:700;">${fBRL(sub)}</td></tr></tfoot></table></div>`;
+    const linhas=arr.map(m=>`<tr style="${m.total===0&&m.nome==='— (falta)'?'background:#fdecea;':''}"><td><strong>${esc(m.nome)}</strong></td><td class="mono">${esc(m.crm)}</td><td style="text-align:center;">${m.qtd}</td><td class="mono">${Math.round(m.horas*10)/10}h</td><td class="mono" style="color:${m.total?'var(--green)':'var(--text3)'};font-weight:600;">${fBRL(m.total)}</td></tr>`).join('');
+    html+=`<div class="card" style="margin-bottom:12px;"><div style="display:flex;justify-content:space-between;margin-bottom:8px;"><div class="card-title" style="margin-bottom:0;">${esc(proj)}</div><div style="font-size:12px;color:var(--text2);">${arr.length} linha(s) · <span style="color:var(--green);font-weight:600;">${fBRL(sub)}</span></div></div><table><thead><tr><th>Médico</th><th>CRM</th><th style="text-align:center;">Plantões</th><th>Horas</th><th>Total</th></tr></thead><tbody>${linhas}</tbody><tfoot><tr style="border-top:1.5px solid var(--border2);"><td colspan="4" style="font-weight:600;padding:8px;">Total ${esc(proj)}</td><td class="mono" style="color:var(--green);font-weight:700;">${fBRL(sub)}</td></tr></tfoot></table></div>`;
   });
   el.innerHTML=_totalGeralCard('Total geral',geral)+html;
 }
@@ -11047,10 +11049,10 @@ function gerarRelFinProfissional(el){
     meds.forEach(m=>{
       const sub=m.itens.reduce((s,l)=>s+(l.honorario||0),0);
       const subH=m.itens.reduce((s,l)=>s+(l.horas||0),0);
-      const linhas=m.itens.slice().sort((a,b)=>a.data.localeCompare(b.data)).map(l=>`<tr><td class="mono">${fDate(l.data)}</td><td>${l.setor||'—'}</td><td>${l.tipo||'—'}</td><td class="mono">${l.horas}h</td><td class="mono" style="color:${l.honorario?'var(--green)':'var(--text3)'};">${fBRL(l.honorario||0)}</td></tr>`).join('');
-      inner+=`<div style="margin-bottom:10px;"><div style="font-size:13px;font-weight:700;margin-bottom:6px;">${m.nome} <span class="mono" style="font-size:11px;color:var(--text3);font-weight:400;">${m.crm}</span></div><table><thead><tr><th>Data</th><th>Setor</th><th>Tipo</th><th>Duração</th><th>Valor</th></tr></thead><tbody>${linhas}</tbody><tfoot><tr style="border-top:1px solid var(--border);"><td style="font-weight:600;padding:6px;">Total</td><td>${m.itens.length} plantão(ões)</td><td></td><td class="mono" style="font-weight:600;">${Math.round(subH*10)/10}h</td><td class="mono" style="color:var(--green);font-weight:700;">${fBRL(sub)}</td></tr></tfoot></table></div>`;
+      const linhas=m.itens.slice().sort((a,b)=>a.data.localeCompare(b.data)).map(l=>`<tr><td class="mono">${fDate(l.data)}</td><td>${esc(l.setor||'—')}</td><td>${esc(l.tipo||'—')}</td><td class="mono">${l.horas}h</td><td class="mono" style="color:${l.honorario?'var(--green)':'var(--text3)'};">${fBRL(l.honorario||0)}</td></tr>`).join('');
+      inner+=`<div style="margin-bottom:10px;"><div style="font-size:13px;font-weight:700;margin-bottom:6px;">${esc(m.nome)} <span class="mono" style="font-size:11px;color:var(--text3);font-weight:400;">${esc(m.crm)}</span></div><table><thead><tr><th>Data</th><th>Setor</th><th>Tipo</th><th>Duração</th><th>Valor</th></tr></thead><tbody>${linhas}</tbody><tfoot><tr style="border-top:1px solid var(--border);"><td style="font-weight:600;padding:6px;">Total</td><td>${m.itens.length} plantão(ões)</td><td></td><td class="mono" style="font-weight:600;">${Math.round(subH*10)/10}h</td><td class="mono" style="color:var(--green);font-weight:700;">${fBRL(sub)}</td></tr></tfoot></table></div>`;
     });
-    html+=`<div class="card" style="margin-bottom:12px;"><div style="display:flex;justify-content:space-between;margin-bottom:10px;border-bottom:1px solid var(--border);padding-bottom:8px;"><div class="card-title" style="margin-bottom:0;">${proj}</div><div style="font-size:12px;color:var(--text2);">${meds.length} linha(s) · <span style="color:var(--green);font-weight:600;">${fBRL(subProj)}</span></div></div>${inner}</div>`;
+    html+=`<div class="card" style="margin-bottom:12px;"><div style="display:flex;justify-content:space-between;margin-bottom:10px;border-bottom:1px solid var(--border);padding-bottom:8px;"><div class="card-title" style="margin-bottom:0;">${esc(proj)}</div><div style="font-size:12px;color:var(--text2);">${meds.length} linha(s) · <span style="color:var(--green);font-weight:600;">${fBRL(subProj)}</span></div></div>${inner}</div>`;
   });
   el.innerHTML=html;
 }
@@ -11063,8 +11065,8 @@ function gerarRelFinBanco(el){
     lst.forEach(l=>{const k=l.medico_id||l.medico;if(!porMed[k])porMed[k]={id:l.medico_id,nome:l.medico||'—',crm:l.crm||'',qtd:0,total:0};porMed[k].qtd++;porMed[k].total+=l.honorario||0;});
     const arr=Object.values(porMed).sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR'));
     const sub=arr.reduce((s,m)=>s+m.total,0);geral+=sub;
-    const linhas=arr.map(m=>{let banco='—';if(m.id){const med=medicos.find(x=>x.id===m.id)||{};if(med.pix_tipo&&med.pix_chave)banco='PIX '+med.pix_tipo+': '+med.pix_chave;else if(med.banco)banco=med.banco+' · Ag '+(med.agencia||'—')+' · CC '+(med.conta_corrente||'—');else banco='<span style="color:var(--red);">Sem dados bancários</span>';}return `<tr><td><strong>${m.nome}</strong></td><td class="mono">${m.crm}</td><td style="font-size:12px;">${banco}</td><td style="text-align:center;">${m.qtd}</td><td class="mono" style="color:${m.total?'var(--green)':'var(--text3)'};font-weight:600;">${fBRL(m.total)}</td></tr>`;}).join('');
-    html+=`<div class="card" style="margin-bottom:12px;"><div style="display:flex;justify-content:space-between;margin-bottom:8px;"><div class="card-title" style="margin-bottom:0;">${proj}</div><div style="font-size:12px;color:var(--text2);">${arr.length} linha(s) · <span style="color:var(--green);font-weight:600;">${fBRL(sub)}</span></div></div><table><thead><tr><th>Médico</th><th>CRM</th><th>Dados bancários</th><th style="text-align:center;">Plantões</th><th>Total</th></tr></thead><tbody>${linhas}</tbody><tfoot><tr style="border-top:1.5px solid var(--border2);"><td colspan="4" style="font-weight:600;padding:8px;">Total ${proj}</td><td class="mono" style="color:var(--green);font-weight:700;">${fBRL(sub)}</td></tr></tfoot></table></div>`;
+    const linhas=arr.map(m=>{let banco='—';if(m.id){const med=medicos.find(x=>x.id===m.id)||{};if(med.pix_tipo&&med.pix_chave)banco='PIX '+esc(med.pix_tipo)+': '+esc(med.pix_chave);else if(med.banco)banco=esc(med.banco)+' · Ag '+esc(med.agencia||'—')+' · CC '+esc(med.conta_corrente||'—');else banco='<span style="color:var(--red);">Sem dados bancários</span>';}return `<tr><td><strong>${esc(m.nome)}</strong></td><td class="mono">${esc(m.crm)}</td><td style="font-size:12px;">${banco}</td><td style="text-align:center;">${m.qtd}</td><td class="mono" style="color:${m.total?'var(--green)':'var(--text3)'};font-weight:600;">${fBRL(m.total)}</td></tr>`;}).join('');
+    html+=`<div class="card" style="margin-bottom:12px;"><div style="display:flex;justify-content:space-between;margin-bottom:8px;"><div class="card-title" style="margin-bottom:0;">${esc(proj)}</div><div style="font-size:12px;color:var(--text2);">${arr.length} linha(s) · <span style="color:var(--green);font-weight:600;">${fBRL(sub)}</span></div></div><table><thead><tr><th>Médico</th><th>CRM</th><th>Dados bancários</th><th style="text-align:center;">Plantões</th><th>Total</th></tr></thead><tbody>${linhas}</tbody><tfoot><tr style="border-top:1.5px solid var(--border2);"><td colspan="4" style="font-weight:600;padding:8px;">Total ${esc(proj)}</td><td class="mono" style="color:var(--green);font-weight:700;">${fBRL(sub)}</td></tr></tfoot></table></div>`;
   });
   el.innerHTML=_totalGeralCard('Total geral',geral)+html;
 }
@@ -11077,8 +11079,8 @@ function gerarRelFinSetor(el){
     lst.forEach(l=>{const s=l.setor||'(sem setor)';setores[s]=(setores[s]||0)+(l.honorario||0);});
     const arr=Object.entries(setores).sort((a,b)=>a[0].localeCompare(b[0],'pt-BR'));
     const totProj=arr.reduce((s,[,v])=>s+v,0);geral+=totProj;
-    const linhas=arr.map(([s,v])=>`<tr><td>${s}</td><td class="mono" style="text-align:right;">${fBRL(v)}</td></tr>`).join('');
-    html+=`<div class="card" style="margin-bottom:12px;"><div class="card-title">${proj}</div><table><thead><tr><th>Setor</th><th style="text-align:right;">Custo</th></tr></thead><tbody>${linhas}</tbody><tfoot><tr style="border-top:1.5px solid var(--border2);"><td style="font-weight:700;padding:8px;">Total</td><td class="mono" style="text-align:right;font-weight:700;color:var(--green);">${fBRL(totProj)}</td></tr></tfoot></table></div>`;
+    const linhas=arr.map(([s,v])=>`<tr><td>${esc(s)}</td><td class="mono" style="text-align:right;">${fBRL(v)}</td></tr>`).join('');
+    html+=`<div class="card" style="margin-bottom:12px;"><div class="card-title">${esc(proj)}</div><table><thead><tr><th>Setor</th><th style="text-align:right;">Custo</th></tr></thead><tbody>${linhas}</tbody><tfoot><tr style="border-top:1.5px solid var(--border2);"><td style="font-weight:700;padding:8px;">Total</td><td class="mono" style="text-align:right;font-weight:700;color:var(--green);">${fBRL(totProj)}</td></tr></tfoot></table></div>`;
   });
   el.innerHTML=_totalGeralCard('Total geral',geral)+html;
 }
@@ -11092,8 +11094,8 @@ function gerarRelFinTipo(el){
     const arr=Object.entries(porTipo).sort((a,b)=>a[0].localeCompare(b[0],'pt-BR'));
     const sub=arr.reduce((s,[,v])=>s+v.total,0);geral+=sub;
     const subQ=arr.reduce((s,[,v])=>s+v.qtd,0);
-    const linhas=arr.map(([t,v])=>`<tr><td>${t}</td><td style="text-align:center;">${v.qtd}</td><td class="mono">${Math.round(v.horas*10)/10}h</td><td class="mono" style="text-align:right;color:var(--green);font-weight:600;">${fBRL(v.total)}</td></tr>`).join('');
-    html+=`<div class="card" style="margin-bottom:12px;"><div style="display:flex;justify-content:space-between;margin-bottom:8px;"><div class="card-title" style="margin-bottom:0;">${proj}</div><div style="font-size:12px;color:var(--text2);">${subQ} plantão(ões) · <span style="color:var(--green);font-weight:600;">${fBRL(sub)}</span></div></div><table><thead><tr><th>Tipo de plantão</th><th style="text-align:center;">Qtd</th><th>Horas</th><th style="text-align:right;">Total</th></tr></thead><tbody>${linhas}</tbody><tfoot><tr style="border-top:1.5px solid var(--border2);"><td style="font-weight:700;padding:8px;">Total ${proj}</td><td style="text-align:center;font-weight:700;">${subQ}</td><td></td><td class="mono" style="text-align:right;font-weight:700;color:var(--green);">${fBRL(sub)}</td></tr></tfoot></table></div>`;
+    const linhas=arr.map(([t,v])=>`<tr><td>${esc(t)}</td><td style="text-align:center;">${v.qtd}</td><td class="mono">${Math.round(v.horas*10)/10}h</td><td class="mono" style="text-align:right;color:var(--green);font-weight:600;">${fBRL(v.total)}</td></tr>`).join('');
+    html+=`<div class="card" style="margin-bottom:12px;"><div style="display:flex;justify-content:space-between;margin-bottom:8px;"><div class="card-title" style="margin-bottom:0;">${esc(proj)}</div><div style="font-size:12px;color:var(--text2);">${subQ} plantão(ões) · <span style="color:var(--green);font-weight:600;">${fBRL(sub)}</span></div></div><table><thead><tr><th>Tipo de plantão</th><th style="text-align:center;">Qtd</th><th>Horas</th><th style="text-align:right;">Total</th></tr></thead><tbody>${linhas}</tbody><tfoot><tr style="border-top:1.5px solid var(--border2);"><td style="font-weight:700;padding:8px;">Total ${esc(proj)}</td><td style="text-align:center;font-weight:700;">${subQ}</td><td></td><td class="mono" style="text-align:right;font-weight:700;color:var(--green);">${fBRL(sub)}</td></tr></tfoot></table></div>`;
   });
   el.innerHTML=_totalGeralCard('Total geral',geral)+html;
 }
@@ -11120,8 +11122,8 @@ async function gerarRelFaltas(el){
   const classifica=l=>{const a=ausByLanc[l.id];if(!a)return{txt:'Não justificada (sem aviso)',cor:'var(--red)'};const st=(a.status||'').toLowerCase();const justif=a.motivo||st.includes('justif')||st.includes('aprov');return justif?{txt:'Justificada'+(a.motivo?' — '+a.motivo:''),cor:'var(--amber)'}:{txt:'Não justificada',cor:'var(--red)'};};
   let html='';
   _porHospital(faltas).forEach(([proj,lst])=>{
-    const linhas=lst.slice().sort((a,b)=>b.data.localeCompare(a.data)).map(l=>{const c=classifica(l);return `<tr><td><strong>${l.medico||'—'}</strong></td><td class="mono">${l.crm||''}</td><td>${l.setor||'—'}</td><td class="mono">${fDate(l.data)}</td><td class="mono">${(l.hora_ini||'').slice(0,5)}–${(l.hora_fim||'').slice(0,5)}</td><td style="color:${c.cor};font-weight:600;">${c.txt}</td></tr>`;}).join('');
-    html+=`<div class="card" style="margin-bottom:12px;"><div style="display:flex;justify-content:space-between;margin-bottom:8px;"><div class="card-title" style="margin-bottom:0;">${proj}</div><div style="font-size:12px;color:var(--red);font-weight:600;">${lst.length} falta(s)</div></div><table><thead><tr><th>Médico</th><th>CRM</th><th>Setor</th><th>Data</th><th>Horário</th><th>Situação</th></tr></thead><tbody>${linhas}</tbody></table></div>`;
+    const linhas=lst.slice().sort((a,b)=>b.data.localeCompare(a.data)).map(l=>{const c=classifica(l);return `<tr><td><strong>${esc(l.medico||'—')}</strong></td><td class="mono">${esc(l.crm||'')}</td><td>${esc(l.setor||'—')}</td><td class="mono">${fDate(l.data)}</td><td class="mono">${(l.hora_ini||'').slice(0,5)}–${(l.hora_fim||'').slice(0,5)}</td><td style="color:${c.cor};font-weight:600;">${esc(c.txt)}</td></tr>`;}).join('');
+    html+=`<div class="card" style="margin-bottom:12px;"><div style="display:flex;justify-content:space-between;margin-bottom:8px;"><div class="card-title" style="margin-bottom:0;">${esc(proj)}</div><div style="font-size:12px;color:var(--red);font-weight:600;">${lst.length} falta(s)</div></div><table><thead><tr><th>Médico</th><th>CRM</th><th>Setor</th><th>Data</th><th>Horário</th><th>Situação</th></tr></thead><tbody>${linhas}</tbody></table></div>`;
   });
   el.innerHTML=html;
 }
@@ -11130,7 +11132,7 @@ async function gerarRelFaltas(el){
 async function carregarAusenciasCI(){
   const el=document.getElementById('aci-lista'); if(!el)return;
   const selP=document.getElementById('aci-proj');
-  if(selP&&selP.options.length<=1){selP.innerHTML='<option value="">Todos</option>'+sortedProjetos().map(p=>`<option value="${p.id}">${p.nome}</option>`).join('');}
+  if(selP&&selP.options.length<=1){selP.innerHTML='<option value="">Todos</option>'+sortedProjetos().map(p=>`<option value="${p.id}">${esc(p.nome)}</option>`).join('');}
   const eD1=document.getElementById('aci-d1'),eD2=document.getElementById('aci-d2');
   if(eD1&&!eD1.value)eD1.value=new Date(Date.now()-30*86400000).toISOString().slice(0,10);
   if(eD2&&!eD2.value)eD2.value=new Date().toISOString().slice(0,10);
@@ -11155,7 +11157,7 @@ async function carregarAusenciasCI(){
   });
   if(!pend.length){el.innerHTML='<div class="card"><div style="text-align:center;padding:24px;color:var(--green);font-weight:600;">Nenhuma ausência de check-in pendente.</div></div>';return;}
   el.innerHTML=`<div class="card"><div style="margin-bottom:10px;font-size:13px;color:var(--amber);font-weight:600;">${pend.length} plantão(ões) sem check-in aguardando análise</div><table><thead><tr><th>Data</th><th>Médico</th><th>Projeto / Setor</th><th>Horário</th><th>Valor</th><th>Ação</th></tr></thead><tbody>`+
-  pend.map(l=>`<tr id="aci-row-${l.id}"><td class="mono">${fDate(l.data)}</td><td><strong>${l.medicos?.nome||'—'}</strong><br><span class="mono" style="font-size:11px;color:var(--text3);">${l.medicos?.crm||''}</span></td><td>${l.projetos?.nome||'—'}${l.setor?' — '+l.setor:''}</td><td class="mono">${(l.hora_ini||'').slice(0,5)}–${(l.hora_fim||'').slice(0,5)}</td><td class="mono">${fBRL(l.honorario||0)}</td><td style="white-space:nowrap;"><button class="btn btn-success btn-sm" onclick="aciResolver('${l.id}','presente')">Compareceu</button> <button class="btn btn-danger btn-sm" onclick="aciResolver('${l.id}','falta')">Falta</button> <button class="btn btn-ghost btn-sm" title="Aceitar justificativa e manter o pagamento" onclick="aciJustificar('${l.id}')">Justificar</button> <button class="btn btn-ghost btn-sm" onclick="aciSubstituir('${l.id}')">Substituir</button></td></tr>`).join('')+'</tbody></table></div>';
+  pend.map(l=>`<tr id="aci-row-${l.id}"><td class="mono">${fDate(l.data)}</td><td><strong>${esc(l.medicos?.nome||'—')}</strong><br><span class="mono" style="font-size:11px;color:var(--text3);">${esc(l.medicos?.crm||'')}</span></td><td>${esc(l.projetos?.nome||'—')}${l.setor?' — '+esc(l.setor):''}</td><td class="mono">${(l.hora_ini||'').slice(0,5)}–${(l.hora_fim||'').slice(0,5)}</td><td class="mono">${fBRL(l.honorario||0)}</td><td style="white-space:nowrap;"><button class="btn btn-success btn-sm" onclick="aciResolver('${l.id}','presente')">Compareceu</button> <button class="btn btn-danger btn-sm" onclick="aciResolver('${l.id}','falta')">Falta</button> <button class="btn btn-ghost btn-sm" title="Aceitar justificativa e manter o pagamento" onclick="aciJustificar('${l.id}')">Justificar</button> <button class="btn btn-ghost btn-sm" onclick="aciSubstituir('${l.id}')">Substituir</button></td></tr>`).join('')+'</tbody></table></div>';
 }
 async function aciResolver(id,status){
   const res=await sbApi('/lancamentos?id=eq.'+id,{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify({status_presenca:status})});
@@ -11173,7 +11175,7 @@ async function gerarResumoCI(){
   if(!el) return;
   const selP = document.getElementById('rci-proj');
   if(selP && selP.options.length<=1){
-    selP.innerHTML = '<option value="">Todos</option>' + sortedProjetos().map(p=>`<option value="${p.id}">${p.nome}</option>`).join('');
+    selP.innerHTML = '<option value="">Todos</option>' + sortedProjetos().map(p=>`<option value="${p.id}">${esc(p.nome)}</option>`).join('');
   }
   const eData = document.getElementById('rci-data');
   if(eData && !eData.value) eData.value = new Date().toISOString().slice(0,10);
@@ -11278,9 +11280,9 @@ async function gerarResumoCI(){
       '<table><thead><tr><th>Esperado</th><th>O quê</th><th>Médico</th><th>Projeto / Setor</th><th>Horário</th><th>Valor</th><th>Situação</th></tr></thead><tbody>' +
       ausentes.map(function(r){
         return '<tr><td class="mono">'+_rciFmtDataHora(r.esperado)+'</td>' +
-          '<td><span class="badge badge-red">'+r.tipo+'</span></td>' +
-          '<td><strong>'+r.medico+'</strong><br><span class="mono" style="font-size:11px;color:var(--text3);">'+r.crm+'</span></td>' +
-          '<td>'+r.projeto+(r.setor?' — '+r.setor:'')+'</td>' +
+          '<td><span class="badge badge-red">'+esc(r.tipo)+'</span></td>' +
+          '<td><strong>'+esc(r.medico)+'</strong><br><span class="mono" style="font-size:11px;color:var(--text3);">'+esc(r.crm)+'</span></td>' +
+          '<td>'+esc(r.projeto)+(r.setor?' — '+esc(r.setor):'')+'</td>' +
           '<td class="mono">'+r.hIni+'–'+r.hFim+'</td>' +
           '<td class="mono">'+fBRL(r.honorario)+'</td>' +
           '<td style="font-size:12px;color:'+(r.resolvido?'var(--green)':'var(--text3)')+';">'+(r.resolvido?'Já resolvido':'Aguardando análise')+'</td></tr>';
@@ -11295,11 +11297,11 @@ async function gerarResumoCI(){
         const sinal = r.min > 0 ? '+' : '';
         const cor = r.min > 0 ? 'var(--amber)' : 'var(--text2)';
         return '<tr><td class="mono">'+_rciFmtDataHora(r.esperado)+'</td>' +
-          '<td>'+r.tipo+'</td>' +
+          '<td>'+esc(r.tipo)+'</td>' +
           '<td class="mono">'+_rciFmtHora(r.feito)+'</td>' +
           '<td class="mono" style="color:'+cor+';font-weight:600;">'+sinal+r.min+' min</td>' +
-          '<td><strong>'+r.medico+'</strong></td>' +
-          '<td>'+r.projeto+(r.setor?' — '+r.setor:'')+'</td></tr>';
+          '<td><strong>'+esc(r.medico)+'</strong></td>' +
+          '<td>'+esc(r.projeto)+(r.setor?' — '+esc(r.setor):'')+'</td></tr>';
       }).join('') + '</tbody></table></div>';
   }
 
@@ -11309,7 +11311,7 @@ async function gerarResumoCI(){
 function aciSubstituir(id){
   const row=document.getElementById('aci-row-'+id); if(!row)return;
   const cell=row.querySelector('td:last-child');
-  cell.innerHTML=`<select id="aci-sub-${id}" style="padding:5px 8px;border:1px solid var(--border);border-radius:var(--radius);font-size:12px;max-width:180px;">${sortedMedicos().map(m=>`<option value="${m.id}">${m.nome}${m.crm?' — '+m.crm:''}</option>`).join('')}</select> <button class="btn btn-primary btn-sm" onclick="aciConfirmarSub('${id}')">Confirmar</button> <button class="btn btn-ghost btn-sm" onclick="carregarAusenciasCI()">Cancelar</button>`;
+  cell.innerHTML=`<select id="aci-sub-${id}" style="padding:5px 8px;border:1px solid var(--border);border-radius:var(--radius);font-size:12px;max-width:180px;">${sortedMedicos().map(m=>`<option value="${m.id}">${esc(m.nome)}${m.crm?' — '+esc(m.crm):''}</option>`).join('')}</select> <button class="btn btn-primary btn-sm" onclick="aciConfirmarSub('${id}')">Confirmar</button> <button class="btn btn-ghost btn-sm" onclick="carregarAusenciasCI()">Cancelar</button>`;
 }
 async function aciConfirmarSub(id){
   const novo=document.getElementById('aci-sub-'+id)?.value;
@@ -11393,8 +11395,8 @@ function gerarRelFinAnalitico(el){
   let html='',geral=0;
   _porHospital(dados).forEach(([proj,lst])=>{
     const sub=lst.reduce((s,l)=>s+(l.honorario||0),0);geral+=sub;
-    const linhas=lst.slice().sort((a,b)=>(a.setor||'').localeCompare(b.setor||'','pt-BR')||a.data.localeCompare(b.data)).map(l=>`<tr style="${l.status_presenca==='falta'?'background:#fdecea;':''}"><td class="mono">${fDate(l.data)}</td><td><strong>${l.medico||'—'}</strong>${_tagGestor(l)}${l.crm?'<br><span class="mono" style="font-size:11px;color:var(--text3);">'+l.crm+'</span>':''}</td><td>${l.setor||'—'}</td><td>${l.tipo||'—'}</td><td class="mono">${l.horas}h</td><td class="mono" style="color:${l.honorario?'var(--green)':'var(--text3)'};font-weight:600;">${fBRL(l.honorario||0)}</td></tr>`).join('');
-    html+=`<div class="card" style="margin-bottom:12px;"><div style="display:flex;justify-content:space-between;margin-bottom:8px;"><div class="card-title" style="margin-bottom:0;">${proj}</div><div style="font-size:12px;color:var(--text2);">${lst.length} plantão(ões) · <span style="color:var(--green);font-weight:600;">${fBRL(sub)}</span></div></div><table><thead><tr><th>Data</th><th>Médico / CRM</th><th>Setor</th><th>Tipo</th><th>Horas</th><th>Valor</th></tr></thead><tbody>${linhas}</tbody><tfoot><tr style="border-top:1.5px solid var(--border2);"><td colspan="5" style="font-weight:600;padding:8px;">Total ${proj}</td><td class="mono" style="color:var(--green);font-weight:700;">${fBRL(sub)}</td></tr></tfoot></table></div>`;
+    const linhas=lst.slice().sort((a,b)=>(a.setor||'').localeCompare(b.setor||'','pt-BR')||a.data.localeCompare(b.data)).map(l=>`<tr style="${l.status_presenca==='falta'?'background:#fdecea;':''}"><td class="mono">${fDate(l.data)}</td><td><strong>${esc(l.medico||'—')}</strong>${_tagGestor(l)}${l.crm?'<br><span class="mono" style="font-size:11px;color:var(--text3);">'+esc(l.crm)+'</span>':''}</td><td>${esc(l.setor||'—')}</td><td>${esc(l.tipo||'—')}</td><td class="mono">${l.horas}h</td><td class="mono" style="color:${l.honorario?'var(--green)':'var(--text3)'};font-weight:600;">${fBRL(l.honorario||0)}</td></tr>`).join('');
+    html+=`<div class="card" style="margin-bottom:12px;"><div style="display:flex;justify-content:space-between;margin-bottom:8px;"><div class="card-title" style="margin-bottom:0;">${esc(proj)}</div><div style="font-size:12px;color:var(--text2);">${lst.length} plantão(ões) · <span style="color:var(--green);font-weight:600;">${fBRL(sub)}</span></div></div><table><thead><tr><th>Data</th><th>Médico / CRM</th><th>Setor</th><th>Tipo</th><th>Horas</th><th>Valor</th></tr></thead><tbody>${linhas}</tbody><tfoot><tr style="border-top:1.5px solid var(--border2);"><td colspan="5" style="font-weight:600;padding:8px;">Total ${esc(proj)}</td><td class="mono" style="color:var(--green);font-weight:700;">${fBRL(sub)}</td></tr></tfoot></table></div>`;
   });
   el.innerHTML=_totalGeralCard('Total geral — '+dados.length+' plantão(ões)',geral)+html;
 }
@@ -11412,10 +11414,10 @@ function gerarRelFinProfissional(el){
     meds.forEach(m=>{
       const sub=m.itens.reduce((s,l)=>s+(l.honorario||0),0);
       const subH=m.itens.reduce((s,l)=>s+(l.horas||0),0);
-      const linhas=m.itens.slice().sort((a,b)=>a.data.localeCompare(b.data)).map(l=>`<tr><td class="mono">${fDate(l.data)}</td><td>${l.setor||'—'}${_tagGestor(l)}</td><td>${l.tipo||'—'}</td><td class="mono">${l.horas}h</td><td class="mono" style="color:${l.honorario?'var(--green)':'var(--text3)'};">${fBRL(l.honorario||0)}</td></tr>`).join('');
-      inner+=`<div style="margin-bottom:10px;"><div style="font-size:13px;font-weight:700;margin-bottom:6px;">${m.nome} <span class="mono" style="font-size:11px;color:var(--text3);font-weight:400;">${m.crm}</span></div><table><thead><tr><th>Data</th><th>Setor</th><th>Tipo</th><th>Duração</th><th>Valor</th></tr></thead><tbody>${linhas}</tbody><tfoot><tr style="border-top:1px solid var(--border);"><td style="font-weight:600;padding:6px;">Total</td><td>${m.itens.length} plantão(ões)</td><td></td><td class="mono" style="font-weight:600;">${Math.round(subH*10)/10}h</td><td class="mono" style="color:var(--green);font-weight:700;">${fBRL(sub)}</td></tr></tfoot></table></div>`;
+      const linhas=m.itens.slice().sort((a,b)=>a.data.localeCompare(b.data)).map(l=>`<tr><td class="mono">${fDate(l.data)}</td><td>${esc(l.setor||'—')}${_tagGestor(l)}</td><td>${esc(l.tipo||'—')}</td><td class="mono">${l.horas}h</td><td class="mono" style="color:${l.honorario?'var(--green)':'var(--text3)'};">${fBRL(l.honorario||0)}</td></tr>`).join('');
+      inner+=`<div style="margin-bottom:10px;"><div style="font-size:13px;font-weight:700;margin-bottom:6px;">${esc(m.nome)} <span class="mono" style="font-size:11px;color:var(--text3);font-weight:400;">${esc(m.crm)}</span></div><table><thead><tr><th>Data</th><th>Setor</th><th>Tipo</th><th>Duração</th><th>Valor</th></tr></thead><tbody>${linhas}</tbody><tfoot><tr style="border-top:1px solid var(--border);"><td style="font-weight:600;padding:6px;">Total</td><td>${m.itens.length} plantão(ões)</td><td></td><td class="mono" style="font-weight:600;">${Math.round(subH*10)/10}h</td><td class="mono" style="color:var(--green);font-weight:700;">${fBRL(sub)}</td></tr></tfoot></table></div>`;
     });
-    html+=`<div class="card" style="margin-bottom:12px;"><div style="display:flex;justify-content:space-between;margin-bottom:10px;border-bottom:1px solid var(--border);padding-bottom:8px;"><div class="card-title" style="margin-bottom:0;">${proj}</div><div style="font-size:12px;color:var(--text2);">${meds.length} linha(s) · <span style="color:var(--green);font-weight:600;">${fBRL(subProj)}</span></div></div>${inner}</div>`;
+    html+=`<div class="card" style="margin-bottom:12px;"><div style="display:flex;justify-content:space-between;margin-bottom:10px;border-bottom:1px solid var(--border);padding-bottom:8px;"><div class="card-title" style="margin-bottom:0;">${esc(proj)}</div><div style="font-size:12px;color:var(--text2);">${meds.length} linha(s) · <span style="color:var(--green);font-weight:600;">${fBRL(subProj)}</span></div></div>${inner}</div>`;
   });
   el.innerHTML=html;
 }
@@ -11442,9 +11444,9 @@ async function gerarRelEntradaSaida(el){
       else if(l.status_presenca==='presente') situ='<span style="color:var(--blue);font-weight:600;">Confirmado pelo gestor</span>';
       else if(l.status_presenca==='falta') situ='<span style="color:var(--red);font-weight:600;">Falta confirmada</span>';
       else situ='<span style="color:var(--text3);">Sem check-in</span>';
-      return `<tr><td class="mono">${fDate(l.data)} ${(l.hora_ini||'').slice(0,5)}</td><td class="mono">${l.horas}h</td><td class="mono">${fmtH(ent)}</td><td class="mono">${dist(ent)}</td><td class="mono">${fmtH(sai)}</td><td class="mono">${dist(sai)}</td><td>${l.setor||'—'}</td><td>${l.medico||'—'}</td><td>${situ}</td><td>${l.tipo||'—'}</td></tr>`;
+      return `<tr><td class="mono">${fDate(l.data)} ${(l.hora_ini||'').slice(0,5)}</td><td class="mono">${l.horas}h</td><td class="mono">${fmtH(ent)}</td><td class="mono">${dist(ent)}</td><td class="mono">${fmtH(sai)}</td><td class="mono">${dist(sai)}</td><td>${esc(l.setor||'—')}</td><td>${esc(l.medico||'—')}</td><td>${situ}</td><td>${esc(l.tipo||'—')}</td></tr>`;
     }).join('');
-    html+=`<div class="card" style="margin-bottom:12px;"><div class="card-title">${proj}</div><table><thead><tr><th>Data</th><th>Duração</th><th>Entrada</th><th>Dist.</th><th>Saída</th><th>Dist.</th><th>Setor</th><th>Responsável</th><th>Situação</th><th>Tipo</th></tr></thead><tbody>${linhas}</tbody></table></div>`;
+    html+=`<div class="card" style="margin-bottom:12px;"><div class="card-title">${esc(proj)}</div><table><thead><tr><th>Data</th><th>Duração</th><th>Entrada</th><th>Dist.</th><th>Saída</th><th>Dist.</th><th>Setor</th><th>Responsável</th><th>Situação</th><th>Tipo</th></tr></thead><tbody>${linhas}</tbody></table></div>`;
   });
   el.innerHTML=html;
 }
@@ -11455,7 +11457,7 @@ async function carregarAusenciasCI(view){
   if(view)_aciView=view;
   const el=document.getElementById('aci-lista'); if(!el)return;
   const selP=document.getElementById('aci-proj');
-  if(selP&&selP.options.length<=1){selP.innerHTML='<option value="">Todos</option>'+sortedProjetos().map(p=>`<option value="${p.id}">${p.nome}</option>`).join('');}
+  if(selP&&selP.options.length<=1){selP.innerHTML='<option value="">Todos</option>'+sortedProjetos().map(p=>`<option value="${p.id}">${esc(p.nome)}</option>`).join('');}
   const eD1=document.getElementById('aci-d1'),eD2=document.getElementById('aci-d2');
   if(eD1&&!eD1.value)eD1.value=new Date(Date.now()-30*86400000).toISOString().slice(0,10);
   if(eD2&&!eD2.value)eD2.value=new Date().toISOString().slice(0,10);
@@ -11473,7 +11475,7 @@ async function carregarAusenciasCI(view){
     const rows=hist.map(l=>{
       const st=l.status_presenca==='falta'?'<span style="color:var(--red);font-weight:600;">Falta</span>':'<span style="color:var(--green);font-weight:600;">Compareceu</span>';
       const quando=l.presenca_em?new Date(l.presenca_em).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'—';
-      return `<tr id="aci-row-${l.id}"><td class="mono">${fDate(l.data)}</td><td><strong>${l.medicos?.nome||'—'}</strong><br><span class="mono" style="font-size:11px;color:var(--text3);">${l.medicos?.crm||''}</span></td><td>${l.projetos?.nome||'—'}${l.setor?' — '+l.setor:''}</td><td>${st}</td><td style="font-size:12px;color:var(--text2);">${l.obs_presenca||''}</td><td class="mono">${quando}</td><td><button class="btn btn-ghost btn-sm" onclick="aciAlterar('${l.id}')">Alterar</button></td></tr>`;
+      return `<tr id="aci-row-${l.id}"><td class="mono">${fDate(l.data)}</td><td><strong>${esc(l.medicos?.nome||'—')}</strong><br><span class="mono" style="font-size:11px;color:var(--text3);">${esc(l.medicos?.crm||'')}</span></td><td>${esc(l.projetos?.nome||'—')}${l.setor?' — '+esc(l.setor):''}</td><td>${st}</td><td style="font-size:12px;color:var(--text2);">${esc(l.obs_presenca||'')}</td><td class="mono">${quando}</td><td><button class="btn btn-ghost btn-sm" onclick="aciAlterar('${l.id}')">Alterar</button></td></tr>`;
     }).join('');
     el.innerHTML=toggle+`<div class="card"><div style="margin-bottom:10px;font-size:13px;color:var(--text2);font-weight:600;">${hist.length} plantão(ões) resolvido(s)</div><table><thead><tr><th>Data</th><th>Médico</th><th>Projeto / Setor</th><th>Decisão</th><th>Obs.</th><th>Quando</th><th>Ação</th></tr></thead><tbody>${rows}</tbody></table></div>`;
     return;
@@ -11491,7 +11493,7 @@ async function carregarAusenciasCI(view){
     return !ciKeys.has(`${l.medico_id}_${l.projeto_id}_${l.data}`);
   });
   if(!pend.length){el.innerHTML=toggle+'<div class="card"><div style="text-align:center;padding:24px;color:var(--green);font-weight:600;">Nenhuma ausência de check-in pendente.</div></div>';return;}
-  const rows=pend.map(l=>`<tr id="aci-row-${l.id}"><td class="mono">${fDate(l.data)}</td><td><strong>${l.medicos?.nome||'—'}</strong><br><span class="mono" style="font-size:11px;color:var(--text3);">${l.medicos?.crm||''}</span></td><td>${l.projetos?.nome||'—'}${l.setor?' — '+l.setor:''}</td><td class="mono">${(l.hora_ini||'').slice(0,5)}–${(l.hora_fim||'').slice(0,5)}</td><td class="mono">${fBRL(l.honorario||0)}</td><td style="white-space:nowrap;"><button class="btn btn-success btn-sm" onclick="aciAbrirObs('${l.id}','presente')">Compareceu</button> <button class="btn btn-danger btn-sm" onclick="aciAbrirObs('${l.id}','falta')">Falta</button> <button class="btn btn-ghost btn-sm" title="Faltou, mas a empresa aceitou a justificativa — mantém o pagamento" onclick="aciAbrirObs('${l.id}','justificado')">Justificar</button> <button class="btn btn-ghost btn-sm" onclick="aciSubstituir('${l.id}')">Substituir</button></td></tr>`).join('');
+  const rows=pend.map(l=>`<tr id="aci-row-${l.id}"><td class="mono">${fDate(l.data)}</td><td><strong>${esc(l.medicos?.nome||'—')}</strong><br><span class="mono" style="font-size:11px;color:var(--text3);">${esc(l.medicos?.crm||'')}</span></td><td>${esc(l.projetos?.nome||'—')}${l.setor?' — '+esc(l.setor):''}</td><td class="mono">${(l.hora_ini||'').slice(0,5)}–${(l.hora_fim||'').slice(0,5)}</td><td class="mono">${fBRL(l.honorario||0)}</td><td style="white-space:nowrap;"><button class="btn btn-success btn-sm" onclick="aciAbrirObs('${l.id}','presente')">Compareceu</button> <button class="btn btn-danger btn-sm" onclick="aciAbrirObs('${l.id}','falta')">Falta</button> <button class="btn btn-ghost btn-sm" title="Faltou, mas a empresa aceitou a justificativa — mantém o pagamento" onclick="aciAbrirObs('${l.id}','justificado')">Justificar</button> <button class="btn btn-ghost btn-sm" onclick="aciSubstituir('${l.id}')">Substituir</button></td></tr>`).join('');
   el.innerHTML=toggle+`<div class="card"><div style="margin-bottom:10px;font-size:13px;color:var(--amber);font-weight:600;">${pend.length} plantão(ões) sem check-in aguardando análise</div><table><thead><tr><th>Data</th><th>Médico</th><th>Projeto / Setor</th><th>Horário</th><th>Valor</th><th>Ação</th></tr></thead><tbody>${rows}</tbody></table></div>`;
 }
 
@@ -11525,7 +11527,7 @@ async function aciResolver(id,decisao){
 function aciSubstituir(id){
   const row=document.getElementById('aci-row-'+id); if(!row)return;
   const cell=row.querySelector('td:last-child');
-  cell.innerHTML=`<select id="aci-sub-${id}" style="padding:5px 8px;border:1px solid var(--border);border-radius:var(--radius);font-size:12px;max-width:150px;">${sortedMedicos().map(m=>`<option value="${m.id}">${m.nome}${m.crm?' — '+m.crm:''}</option>`).join('')}</select> <input id="aci-obs-${id}" placeholder="Obs (opcional)" style="padding:5px 8px;border:1px solid var(--border);border-radius:var(--radius);font-size:12px;width:120px;"> <button class="btn btn-primary btn-sm" onclick="aciConfirmarSub('${id}')">Confirmar</button> <button class="btn btn-ghost btn-sm" onclick="carregarAusenciasCI()">Cancelar</button>`;
+  cell.innerHTML=`<select id="aci-sub-${id}" style="padding:5px 8px;border:1px solid var(--border);border-radius:var(--radius);font-size:12px;max-width:150px;">${sortedMedicos().map(m=>`<option value="${m.id}">${esc(m.nome)}${m.crm?' — '+esc(m.crm):''}</option>`).join('')}</select> <input id="aci-obs-${id}" placeholder="Obs (opcional)" style="padding:5px 8px;border:1px solid var(--border);border-radius:var(--radius);font-size:12px;width:120px;"> <button class="btn btn-primary btn-sm" onclick="aciConfirmarSub('${id}')">Confirmar</button> <button class="btn btn-ghost btn-sm" onclick="carregarAusenciasCI()">Cancelar</button>`;
 }
 async function aciConfirmarSub(id){
   const novo=document.getElementById('aci-sub-'+id)?.value;
@@ -11558,7 +11560,7 @@ async function gerarConvite(){
   if(btn){btn.disabled=false;btn.textContent='Gerar convite';}
   if(!r.ok){toast('Erro ao gerar convite',true);return;}
   const c=await r.json(); _ultimoConvite=c;
-  document.getElementById('cv-resultado').innerHTML=`<div class="card" style="background:#e3f0f1;border:1px solid var(--blue);"><div style="font-size:12px;color:var(--text2);margin-bottom:4px;">Código de convite gerado</div><div style="font-size:26px;font-weight:700;letter-spacing:2px;color:var(--blue);font-family:monospace;">${c.codigo}</div><div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;"><button class="btn btn-ghost btn-sm" onclick="copiarCodigoConvite()">Copiar código</button><button class="btn btn-ghost btn-sm" onclick="copiarMsgConvite()">Copiar mensagem p/ WhatsApp</button></div><div style="font-size:11px;color:var(--text3);margin-top:8px;">Válido por 7 dias · uso único</div></div>`;
+  document.getElementById('cv-resultado').innerHTML=`<div class="card" style="background:#e3f0f1;border:1px solid var(--blue);"><div style="font-size:12px;color:var(--text2);margin-bottom:4px;">Código de convite gerado</div><div style="font-size:26px;font-weight:700;letter-spacing:2px;color:var(--blue);font-family:monospace;">${esc(c.codigo)}</div><div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;"><button class="btn btn-ghost btn-sm" onclick="copiarCodigoConvite()">Copiar código</button><button class="btn btn-ghost btn-sm" onclick="copiarMsgConvite()">Copiar mensagem p/ WhatsApp</button></div><div style="font-size:11px;color:var(--text3);margin-top:8px;">Válido por 7 dias · uso único</div></div>`;
   ['cv-nome','cv-crm','cv-email'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
   carregarConvites();
 }
@@ -11575,7 +11577,7 @@ async function carregarConvites(){
     const expirado=c.status==='pendente'&&new Date(c.expira_em)<new Date();
     const st=expirado?'<span style="font-size:11px;font-weight:600;color:#8aa0a6;">Expirado</span>':badge(c.status);
     const acao=(c.status==='pendente'&&!expirado)?`<button class="btn btn-ghost btn-sm" onclick="cancelarConvite('${c.id}')">Cancelar</button>`:'';
-    return `<tr><td class="mono" style="font-weight:700;">${c.codigo}</td><td>${c.nome||'—'}</td><td class="mono">${c.crm||'—'}</td><td>${st}</td><td class="mono">${fDate((c.criado_em||'').slice(0,10))}</td><td>${acao}</td></tr>`;
+    return `<tr><td class="mono" style="font-weight:700;">${esc(c.codigo)}</td><td>${esc(c.nome||'—')}</td><td class="mono">${esc(c.crm||'—')}</td><td>${st}</td><td class="mono">${fDate((c.criado_em||'').slice(0,10))}</td><td>${acao}</td></tr>`;
   }).join('');
   el.innerHTML=`<div class="card"><div class="card-title">Convites enviados</div><table><thead><tr><th>Código</th><th>Nome</th><th>CRM</th><th>Status</th><th>Criado</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>`;
 }
