@@ -1031,7 +1031,7 @@ tr:hover td{background:var(--bg3);}
       <div class="lote-erros" id="lote-erros"></div>
       <div id="lote-preview-tabela"></div>
       <div style="display:flex;gap:8px;margin-top:14px;align-items:center;">
-        <button class="btn btn-primary" id="lote-confirmar-btn" onclick="confirmarLote()">✓ Confirmar e registrar</button>
+        <button class="btn btn-primary" id="lote-confirmar-btn" onclick="salvarLote()">✓ Confirmar e registrar</button>
         <button class="btn btn-ghost" onclick="limparLote()">Cancelar</button>
         <span id="lote-total-label" style="font-size:13px;color:var(--text2);margin-left:auto;"></span>
       </div>
@@ -8026,9 +8026,10 @@ function gerarPreviewLote() {
   const horas = Math.round(diff/60*10)/10;
   const valor = parseFloat(valorStr.replace(/\./g,'').replace(',','.')) || 0;
 
-  const prev = document.getElementById('lote-preview');
+  const prev = document.getElementById('lote-preview-tabela');
   if (!prev) return;
-  prev.innerHTML = `
+  document.getElementById('lote-preview-card').style.display = 'block';
+  prev.innerHTML = 
     <div class="card" style="margin-top:16px;">
       <div class="card-title">Pré-visualização — ${selecionados.length} plantão(ões)</div>
       <table><thead><tr><th>Médico</th><th>Projeto</th><th>Data</th><th>Horário</th><th>Horas</th><th>Valor</th></tr></thead><tbody> ${selecionados.map(m => `<tr>
@@ -8041,12 +8042,13 @@ function gerarPreviewLote() {
       </tbody></table>
       <div style="margin-top:12px;display:flex;gap:8px;">
         <button class="btn btn-primary" onclick="salvarLote()">✓ Confirmar e salvar ${selecionados.length} plantão(ões)</button>
-        <button class="btn btn-ghost" onclick="document.getElementById('lote-preview').innerHTML=''">Cancelar</button>
+        <button class="btn btn-ghost" onclick="limparLote()">Cancelar</button>
       </div>
     </div>`;
 }
 
 async function salvarLote() {
+  let _loteMedNotif = {};
   const projId = document.getElementById('lote-proj')?.value;
   const data   = document.getElementById('lote-data')?.value;
   const ini    = document.getElementById('lote-ini')?.value || '07:00';
@@ -8079,9 +8081,21 @@ async function salvarLote() {
     } catch(e) { erros++; }
   }
 
-  document.getElementById('lote-preview').innerHTML = '';
-  toast(`${ok} plantão(ões) registrado(s)${erros > 0 ? ' · ' + erros + ' erro(s)' : ''}`); try { if(typeof _loteMedNotif!=='undefined' && _loteMedNotif){ for(const _mid in _loteMedNotif){ notificarMedicoPush(_mid, `Você foi escalado para ${_loteMedNotif[_mid]} plantão(ões).`, 'escala'); } _loteMedNotif=null; } } catch(e){};
+  limparLote();
+  toast(`${ok} plantão(ões) registrado(s)${erros > 0 ? ' · ' + erros + ' erro(s)' : ''}`);
+  try {
+    for (const _mid in _loteMedNotif) {
+      notificarMedicoPush(_mid, `Você foi escalado para ${_loteMedNotif[_mid]} plantão(ões).`, 'escala');
+    }
+  } catch(e){}
   if (ok > 0) await carregarLancamentos(true);
+}
+
+function limparLote() {
+  const card = document.getElementById('lote-preview-card');
+  if (card) card.style.display = 'none';
+  const tab = document.getElementById('lote-preview-tabela');
+  if (tab) tab.innerHTML = '';
 }
 
 // ─── CARREGAR DISPONÍVEIS (plantões abertos) ─────────────
