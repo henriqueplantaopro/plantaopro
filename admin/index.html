@@ -2630,7 +2630,14 @@ async function carregarProjetos() {
 }
 
 async function carregarLancamentos(silencioso=false) {
-  const data = await sbApi('/lancamentos?select=*,medicos(nome,crm),projetos(nome)&order=data.desc&limit=200');
+  // Janela de datas em vez de limite fixo: evita que a escala futura
+  // empurre o mês passado para fora dos 200 e ele suma dos relatórios.
+  const _hoje = new Date();
+  const _ini = new Date(_hoje); _ini.setMonth(_ini.getMonth() - 4);   // 4 meses atrás
+  const _fim = new Date(_hoje); _fim.setMonth(_fim.getMonth() + 6);   // 6 meses à frente
+  const _d1 = _ini.toISOString().slice(0,10);
+  const _d2 = _fim.toISOString().slice(0,10);
+  const data = await sbApi('/lancamentos?select=*,medicos(nome,crm),projetos(nome)&data=gte.'+_d1+'&data=lte.'+_d2+'&order=data.desc&limit=5000');
   lancamentos = (data || []).map(l => {
     const _bruto = l.honorario || 0;
     return {
