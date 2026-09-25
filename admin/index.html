@@ -7001,24 +7001,38 @@ async function criarFechamento() {
   const obs   = document.getElementById('fin-obs').value.trim();
   if (!nome||!d1||!d2) { toast('Preencha nome e datas', true); return; }
 
-  // Calcular total com base nos lançamentos
-  let query = `/lancamentos?data=gte.${d1}&data=lte.${d2}&select=medico_id,honorario,horas,medicos(nome,crm,pix_tipo,pix_chave)`;
+  // Só plantões AINDA NÃO fechados (fechamento_id nulo) e COM médico.
+  let query = `/lancamentos?data=gte.${d1}&data=lte.${d2}&fechamento_id=is.null&medico_id=not.is.null`
+            + `&select=id,medico_id,honorario,horas,status_pagamento,medicos(nome,crm,pix_tipo,pix_chave)`;
   if (projId) query += `&projeto_id=eq.${projId}`;
-  const lancs = await sbApi(query) || [];
 
-  // Agrupar por médico
+  // Paginação em blocos de 1000 (evita o teto do PostgREST)
+  let lancs = [], pagina = 0;
+  while (true) {
+    const bloco = await sbApi(query + `&order=id.asc&limit=1000&offset=${pagina*1000}`) || [];
+    lancs = lancs.concat(bloco);
+    if (bloco.length < 1000) break;
+    pagina++;
+    if (pagina > 50) break;
+  }
+
+  if (!lancs.length) { toast('Nenhum plantão em aberto neste período', true); return; }
+
   const porMed = {};
+  const idsIncluidos = [];
   lancs.forEach(l => {
     if (!l.medico_id) return;
+    idsIncluidos.push(l.id);
     if (!porMed[l.medico_id]) porMed[l.medico_id] = { medico_id:l.medico_id, nome:l.medicos?.nome||'', crm:l.medicos?.crm||'', pix_tipo:l.medicos?.pix_tipo||'', pix_chave:l.medicos?.pix_chave||'', plantoes:0, horas:0, valor:0 };
-    porMed[l.medico_id].plantoes++;
-    porMed[l.medico_id].horas += l.horas||0;
+    if (l.status_pagamento !== 'falta') {
+      porMed[l.medico_id].plantoes++;
+      porMed[l.medico_id].horas += l.horas||0;
+    }
     porMed[l.medico_id].valor += l.honorario||0;
   });
   const itens = Object.values(porMed);
   const totalValor = itens.reduce((s,i)=>s+i.valor,0);
 
-  // Criar fechamento
   const res = await sbApi('/fechamentos', {
     method:'POST',
     body: JSON.stringify({ nome, projeto_id:projId||null, data_inicio:d1, data_fim:d2, obs:obs||null, status:'aberto', total_valor:totalValor, total_pago:0 })
@@ -7026,19 +7040,26 @@ async function criarFechamento() {
   if (!res || !res[0]?.id) { toast('Erro ao criar fechamento', true); return; }
   const fechId = res[0].id;
 
-  // Criar itens
-  if (itens.length > 0) {
-    for (const it of itens) {
-      await sbApi('/fechamento_itens', {
-        method:'POST',
-        body: JSON.stringify({ fechamento_id:fechId, medico_id:it.medico_id, plantoes:it.plantoes, horas:it.horas, valor_total:it.valor, valor_pago:0, status:'pendente' })
-      });
-    }
+  let itensOk = 0;
+  for (const it of itens) {
+    const r = await sbApi('/fechamento_itens', {
+      method:'POST',
+      body: JSON.stringify({ fechamento_id:fechId, medico_id:it.medico_id, plantoes:it.plantoes, horas:it.horas, valor_total:it.valor, valor_pago:0, status:'pendente' })
+    });
+    if (r) itensOk++;
   }
 
-  toast(`Fechamento criado com ${itens.length} profissional(is) — ${fBRL(totalValor)}`);
-  document.getElementById('fin-nome').value='';
-  finShowTab('lista', document.getElementById('fin-tab-lista'));
+  for (let i = 0; i < idsIncluidos.length; i += 100) {
+    const lote = idsIncluidos.slice(i, i+100);
+    await sbApi(`/lancamentos?id=in.(${lote.join(',')})`, {
+      method:'PATCH', headers:{'Prefer':'return=minimal'},
+      body: JSON.stringify({ fechamento_id: fechId })
+    });
+  }
+
+  toast(`Fechamento criado: ${itens.length} médico(s), ${idsIncluidos.length} plantão(ões)`);
+  if (typeof carregarFechamentos === 'function') carregarFechamentos();
+  if (typeof carregarLancamentos === 'function') await carregarLancamentos(true);
 }
 
 async function deletarFechamento(id) {
