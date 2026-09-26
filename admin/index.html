@@ -3385,6 +3385,8 @@ async function salvarEdicaoMedico() {
     projetos_vinculados: projsVinc
   };
   if (!payload.nome || !payload.crm) { toast('Nome e CRM são obrigatórios', true); return; }
+  if (limparCpf(payload.cpf) && !cpfValido(payload.cpf)) { toast('CPF inválido — confira os dígitos', true); return; }
+  if (!dataNascValida(payload.data_nascimento)) { toast('Data de nascimento inválida', true); return; }
   const btn = document.querySelector('#modal-editar-med .btn-primary');
   if (btn) { btn.disabled = true; btn.textContent = 'Salvando...'; }
   try {
@@ -3602,7 +3604,7 @@ function popRelSelects() {
 
 // ── LANÇAMENTOS ───────────────────────────────────────
 function parseBRL(str) { return parseFloat((str||'').replace(/\./g,'').replace(',','.'))||0; }
-function calcH(i,f) { const[hi,mi]=i.split(':').map(Number),[hf,mf]=f.split(':').map(Number);let d=(hf*60+mf)-(hi*60+mi);if(d<0)d+=1440;return Math.round(d/60*10)/10; }
+function calcH(i,f) { const[hi,mi]=i.split(':').map(Number),[hf,mf]=f.split(':').map(Number);let d=(hf*60+mf)-(hi*60+mi);if(d<=0)d+=1440;return Math.round(d/60*10)/10; }
 
 document.addEventListener('change', e => { if(['lm','li','lf'].includes(e.target.id)) updatePreviewLanc(); });
 document.addEventListener('change', e => { if(e.target.id==='lp') popLancMedicos(); });
@@ -4922,7 +4924,7 @@ function getHorasRapido() {
       var [hi,mi] = ini.split(':').map(Number);
       var [hf,mf] = fim.split(':').map(Number);
       var mins = (hf*60+mf) - (hi*60+mi);
-      if (mins < 0) mins += 24*60;
+      if (mins <= 0) mins += 24*60;
       return mins/60;
     }
     return 12; // fallback
@@ -6707,6 +6709,8 @@ async function addMedico() {
   if (!tel)  { toast('Telefone é obrigatório', true); return; }
   if (!nasc) { toast('Data de nascimento é obrigatória', true); return; }
   if (!crm)  { toast('CRM é obrigatório', true);  return; }
+  if (limparCpf(cpf) && !cpfValido(cpf)) { toast('CPF inválido — confira os dígitos', true); return; }
+  if (!dataNascValida(nasc)) { toast('Data de nascimento inválida', true); return; }
 
   const pessoa = document.querySelector('input[name="mn-pessoa"]:checked')?.value || 'pf';
   const projsVinc = projetosSelecionados('med');
@@ -6967,6 +6971,8 @@ async function carregarFechamentos() {
   if (!el) return;
   el.innerHTML = '<div class="empty">Carregando...</div>';
   const data = await sbApi('/fechamentos?select=*,projetos(nome)&order=criado_em.desc') || [];
+  // Fechamentos que já tiveram remessa gerada não podem ser excluídos
+  const _remFech = new Set(((await sbApi('/remessas?select=fechamento_id')) || []).map(r => r.fechamento_id));
   if (!data.length) {
     el.innerHTML = '<div class="empty">Nenhum fechamento criado ainda. Clique em "+ Novo fechamento" para começar.</div>';
     return;
@@ -6986,7 +6992,9 @@ async function carregarFechamentos() {
           <div style="font-size:11px;color:var(--text3);">Total a pagar</div>
         </div>
         <span class="${statusCls}">${statusTxt}</span>
-        <button class="btn btn-danger btn-sm" onclick="event.stopPropagation();deletarFechamento('${f.id}')" title="Excluir"></button>
+        ${(f.status==='aberto' && !(f.total_pago>0) && !_remFech.has(f.id))
+          ? `<button class="btn btn-danger btn-sm" onclick="event.stopPropagation();deletarFechamento('${f.id}')" title="Excluir">Excluir</button>`
+          : `<button class="btn btn-danger btn-sm" disabled onclick="event.stopPropagation()" title="Fechamento já processado (remessa gerada ou pagamento registrado) — não pode ser excluído">Excluir</button>`}
       </div>
     </div>`;
   }).join('');
@@ -7063,7 +7071,15 @@ async function criarFechamento() {
 }
 
 async function deletarFechamento(id) {
-  if (!confirm('Excluir fechamento?')) return;
+  // Trava: só exclui fechamento em aberto, sem pagamento e sem remessa gerada
+  const _f = ((await sbApi(`/fechamentos?id=eq.${id}&select=status,total_pago`)) || [])[0];
+  const _r = (await sbApi(`/remessas?fechamento_id=eq.${id}&select=id&limit=1`)) || [];
+  if (!_f || _f.status !== 'aberto' || _f.total_pago > 0 || _r.length) {
+    toast('Fechamento já processado (remessa gerada ou pagamento registrado) — não pode ser excluído', true);
+    carregarFechamentos();
+    return;
+  }
+  if (!confirm('Excluir fechamento? Os plantões dele voltam a ficar em aberto.')) return;
   await sbApi(`/fechamentos?id=eq.${id}`, {method:'DELETE'});
   carregarFechamentos();
 }
@@ -7585,6 +7601,19 @@ document.getElementById('l-email').addEventListener('keydown',e=>{if(e.key==='En
 // ─── VALIDAÇÃO PIX ────────────────────────────────────
 function limparCpf(v) { return (v||'').replace(/\D/g,''); }
 function limparCnpj(v) { return (v||'').replace(/\D/g,''); }
+function cpfValido(cpf){
+  cpf = String(cpf||'').replace(/\D/g,'');
+  if (cpf.length !== 11 || new Set(cpf).size === 1) return false;
+  let s=0; for(let j=0;j<9;j++) s+=parseInt(cpf[j])*(10-j);
+  let d1=(s*10)%11; if(d1===10)d1=0; if(String(d1)!==cpf[9]) return false;
+  s=0; for(let j=0;j<10;j++) s+=parseInt(cpf[j])*(11-j);
+  let d2=(s*10)%11; if(d2===10)d2=0; return String(d2)===cpf[10];
+}
+function dataNascValida(v){
+  if (!v) return true;
+  const dn = new Date(v+'T12:00:00'), hj = new Date();
+  return !isNaN(dn) && dn <= hj && dn.getFullYear() >= 1900;
+}
 
 function autoPreencherPixEdit() {
   const tipo  = document.getElementById('em-pix-tipo')?.value;
