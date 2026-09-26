@@ -1415,7 +1415,7 @@ async function acaoCheckinAuto() {
 }
 
 async function carregarCheckinsHoje() {
-  const hoje=new Date().toISOString().slice(0,10);
+  const hoje=hojeSP();
   const _rk=await apiLanc('ck-meus',{dia:hoje});
   const d=_rk.ok?(_rk.dados?.checkins||[]):[];
   const el=document.getElementById('checkins-hoje-lista');
@@ -1424,8 +1424,10 @@ async function carregarCheckinsHoje() {
 }
 
 async function carregarPlantoes() {
-  const hoje=new Date().toISOString().slice(0,10);
-  const _rl=await apiLanc('lanc-meus',{d1:hoje});
+  // A partir de ONTEM (fuso SP): garante o check-out do plantão noturno (que termina no dia seguinte)
+  // e o check-in depois das 21h (quando a data em UTC já virou)
+  const _desde=ontemSP();
+  const _rl=await apiLanc('lanc-meus',{d1:_desde});
   const d=_rl.ok ? (_rl.dados?.lancamentos||[]) : [];
   _plantoesCache=d||[];
   const _rt=await apiLanc('tr-enviadas',{});
@@ -1446,6 +1448,10 @@ function filtrarPlantoes(tipo,btn) {
   renderPlantoes();
 }
 
+// Datas no fuso de São Paulo (o toISOString() dá a data em UTC, que vira o dia seguinte depois das 21h)
+function hojeSP(){ return new Date().toLocaleDateString('en-CA',{timeZone:'America/Sao_Paulo'}); }
+function dataSP(v){ return v ? new Date(v).toLocaleDateString('en-CA',{timeZone:'America/Sao_Paulo'}) : ''; }
+function ontemSP(){ const d=new Date(hojeSP()+'T12:00:00Z'); d.setUTCDate(d.getUTCDate()-1); return d.toISOString().slice(0,10); }
 function fmtData(ds){const d=new Date(ds+'T12:00:00');return d.toLocaleDateString('pt-BR',{weekday:'short',day:'2-digit',month:'short'});}
 function fBRL(v){return 'R$ '+Number(v||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});}
 
@@ -1453,7 +1459,7 @@ function renderPlantoes() {
   const el=document.getElementById('plantoes-lista');
   const hint=document.getElementById('plantoes-hint');
   if(!el) return;
-  const hoje=new Date().toISOString().slice(0,10);
+  const hoje=hojeSP();
   let lista=[..._plantoesCache].filter(l=>l.data>=hoje).sort((a,b)=>{
     if(a.data!==b.data) return a.data<b.data?-1:1;
     return String(a.hora_ini||'').localeCompare(String(b.hora_ini||''));
@@ -1519,7 +1525,7 @@ function renderCalEscala(){
   var mapa = _plantoesPorDia();
   var primeiro = new Date(ano, mes, 1).getDay();
   var diasNoMes = new Date(ano, mes+1, 0).getDate();
-  var hojeISO = new Date().toISOString().slice(0,10);
+  var hojeISO = hojeSP();
 
   var dows = ['D','S','T','Q','Q','S','S'];
   var html = '<div class="cal-esc-dow">' + dows.map(function(d){ return '<span>'+d+'</span>'; }).join('') + '</div>';
@@ -1951,14 +1957,16 @@ async function atualizarPrevisto(){
   var elV = document.getElementById('ini-previsto');
   var elQ = document.getElementById('ini-previsto-qtd');
   if(!elV) return;
-  var hoje = new Date().toISOString().slice(0,10);
+  var hoje = hojeSP();
   var futuros = (_plantoesCache||[]).filter(function(l){ return l.data >= hoje; });
   if(!futuros.length){
-    // _plantoesCache pode não ter carregado ainda; busca uma vez
+    // _plantoesCache pode não ter carregado ainda; busca uma vez (desde ontem, igual ao carregarPlantoes,
+    // para não deixar o cache sem o plantão noturno de ontem, que o check-out usa)
     try{
-      var _r = await apiLanc('lanc-meus', {d1: hoje});
-      futuros = _r.ok ? (_r.dados?.lancamentos||[]) : [];
-      if(futuros.length) _plantoesCache = futuros;
+      var _r = await apiLanc('lanc-meus', {d1: ontemSP()});
+      var _todos = _r.ok ? (_r.dados?.lancamentos||[]) : [];
+      if(_todos.length) _plantoesCache = _todos;
+      futuros = _todos.filter(function(l){ return l.data >= hoje; });
     }catch(e){}
   }
   var total = futuros.reduce(function(s,l){ return s + (l.honorario||0); }, 0);
