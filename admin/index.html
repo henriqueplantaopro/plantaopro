@@ -2683,7 +2683,7 @@ async function carregarDashboard() {
   document.getElementById('d-plantoes').textContent = lanMes.reduce((s,l)=>s+qtdPlantao(l),0);
   document.getElementById('d-total').textContent = fBRL(lanMes.reduce((s,l)=>s+(l.honorario||0)*qtdPlantao(l),0));
 
-  const cis = await sbApi(`/checkins?feito_em=gte.${hj}T00:00:00&select=*,medicos(nome),projetos(nome)&order=feito_em.desc&limit=10`);
+  const cis = await sbApi(`/checkins?feito_em=gte.${hojeSP()}T00:00:00-03:00&select=*,medicos(nome),projetos(nome)&order=feito_em.desc&limit=10`);
   document.getElementById('d-checkins').textContent = (cis||[]).length;
 
   // Últimos lançamentos
@@ -3662,6 +3662,33 @@ async function delLancamento(id) {
 // ── CHECK-INS ─────────────────────────────────────────
 function hoje_str() { return new Date().toISOString().slice(0,10); }
 
+// ── DATAS NO FUSO DE SÃO PAULO + CASAMENTO CHECK-IN × PLANTÃO ──
+function hojeSP(){ return new Date().toLocaleDateString('en-CA',{timeZone:'America/Sao_Paulo'}); }
+function dataSP(v){ return v ? new Date(v).toLocaleDateString('en-CA',{timeZone:'America/Sao_Paulo'}) : ''; }
+function somaDiasISO(iso, n){ const d=new Date(iso+'T12:00:00Z'); d.setUTCDate(d.getUTCDate()+n); return d.toISOString().slice(0,10); }
+// Indexa check-ins: pelo lancamento_id (jeito certo) e, só para os que não têm, por médico+projeto+data em SP
+function indexarCheckins(cks){
+  const porLanc={}, porMedDia={};
+  (cks||[]).forEach(c=>{
+    if(c.lancamento_id){ (porLanc[c.lancamento_id]=porLanc[c.lancamento_id]||[]).push(c); }
+    else { const k=c.medico_id+'_'+c.projeto_id+'_'+dataSP(c.feito_em); (porMedDia[k]=porMedDia[k]||[]).push(c); }
+  });
+  return {porLanc, porMedDia};
+}
+// Check-ins de um plantão, em ordem cronológica
+function checkinsDoLanc(idx, l){
+  let arr = idx.porLanc[l.id] || [];
+  if(!arr.length) arr = idx.porMedDia[l.medico_id+'_'+l.projeto_id+'_'+l.data] || [];
+  return arr.slice().sort((a,b)=>new Date(a.feito_em)-new Date(b.feito_em));
+}
+// Filtro de check-ins por período (datas em SP), com 1 dia de folga para check-out noturno e check-in antecipado
+function filtroCkPeriodo(d1, d2){
+  let s='';
+  if(d1) s+=`&feito_em=gte.${somaDiasISO(d1,-1)}T00:00:00-03:00`;
+  if(d2) s+=`&feito_em=lte.${somaDiasISO(d2,1)}T23:59:59-03:00`;
+  return s;
+}
+
 function switchCiTab(tab) {
   document.getElementById('ci-presenca').style.display = tab==='presenca' ? 'block' : 'none';
   document.getElementById('ci-historico').style.display = tab==='historico' ? 'block' : 'none';
@@ -3683,8 +3710,9 @@ async function carregarPresenca() {
 
   // Busca check-ins do dia
   const checkinsDia = await sbApi(
-    `/checkins?feito_em=gte.${data}T00:00:00&feito_em=lte.${data}T23:59:59&aprovado=eq.true&select=*&order=feito_em`
+    `/checkins?aprovado=eq.true&select=*&order=feito_em` + filtroCkPeriodo(data, data)
   ) || [];
+  const _idxCk = indexarCheckins(checkinsDia);
 
   const el = document.getElementById('presenca-lista');
   const resumoEl = document.getElementById('presenca-resumo');
@@ -3712,7 +3740,7 @@ async function carregarPresenca() {
     const limite15   = new Date(inicioPlan.getTime() + 15 * 60000);
 
     // Busca check-in do médico neste projeto neste dia
-    const ci = checkinsDia.find(c => c.medico_id === medId && c.projeto_id === projId);
+    const ci = checkinsDoLanc(_idxCk, Object.assign({}, l, {medico_id: medId}))[0];
     const confirmado = l.confirmado;
 
     let statusHtml, statusClass;
@@ -3803,8 +3831,8 @@ async function carregarCheckins() {
   let path='/checkins?select=*,medicos(nome),projetos(nome)&order=feito_em.desc&limit=100';
   if(pid) path+=`&projeto_id=eq.${pid}`;
   if(mid) path+=`&medico_id=eq.${mid}`;
-  if(d1) path+=`&feito_em=gte.${d1}T00:00:00`;
-  if(d2) path+=`&feito_em=lte.${d2}T23:59:59`;
+  if(d1) path+=`&feito_em=gte.${d1}T00:00:00-03:00`;
+  if(d2) path+=`&feito_em=lte.${d2}T23:59:59-03:00`;
   const data=await sbApi(path);
   const el=document.getElementById('checkins-lista');
   if(!data||!data.length){ el.innerHTML='<div class="empty">Nenhum check-in encontrado.</div>'; return; }
@@ -7737,11 +7765,10 @@ function gerarRelResumo(el){const dados=filtrarDadosRel();if(!dados.length){el.i
 
 function gerarRelHoras(el){const dados=filtrarDadosRel();if(!dados.length){el.innerHTML='<div class="card"><div class="empty">Nenhum dado.</div></div>';return;}const porMed={};dados.forEach(l=>{const k=l.medico_id;if(!porMed[k])porMed[k]={nome:l.medico,crm:l.crm||'',h12:0,h24:0,hCustom:0,hTotal:0,plantoes:0,total:0};const h=l.horas||0,tipo=l.tipo||'';if(tipo.includes('24'))porMed[k].h24+=h;else if(tipo==='Personalizado')porMed[k].hCustom+=h;else porMed[k].h12+=h;porMed[k].hTotal+=h;porMed[k].plantoes++;porMed[k].total+=l.honorario||0;});const tTotal=Object.values(porMed).reduce((s,m)=>s+m.hTotal,0),tHon=Object.values(porMed).reduce((s,m)=>s+m.total,0);let html=`<div class="metrics"><div class="metric"><div class="metric-label">Profissionais</div><div class="metric-val">${Object.keys(porMed).length}</div></div><div class="metric"><div class="metric-label">Total horas</div><div class="metric-val">${Math.round(tTotal*10)/10}h</div></div><div class="metric"><div class="metric-label">Total honorários</div><div class="metric-val">${fBRL(tHon)}</div></div></div><div class="card"><table><thead><tr><th>Profissional</th><th>CRM</th><th style="text-align:center;">Plantões</th><th style="text-align:center;">Horas 12h</th><th style="text-align:center;">Horas 24h</th><th style="text-align:center;">Outros</th><th style="text-align:center;font-weight:700;">Total</th><th>Honorários</th></tr></thead><tbody>`;Object.values(porMed).sort((a,b)=>b.hTotal-a.hTotal).forEach(m=>{html+=`<tr><td><strong>${esc(m.nome)}</strong></td><td class="mono">${esc(m.crm)}</td><td style="text-align:center;">${m.plantoes}</td><td style="text-align:center;color:var(--green);">${Math.round(m.h12*10)/10}h</td><td style="text-align:center;color:var(--amber);">${Math.round(m.h24*10)/10}h</td><td style="text-align:center;color:var(--text3);">${Math.round(m.hCustom*10)/10}h</td><td style="text-align:center;font-weight:700;font-size:14px;">${Math.round(m.hTotal*10)/10}h</td><td class="mono" style="color:var(--green);font-weight:600;">${fBRL(m.total)}</td></tr>`;});html+='</tbody></table></div>';el.innerHTML=html;}
 
-async function gerarRelFaltas(el){el.innerHTML='<div class="card"><div class="empty">Carregando...</div></div>';const d1=document.getElementById('rd1').value,d2=document.getElementById('rd2').value;let pathCI='/checkins?aprovado=eq.true&select=medico_id,projeto_id,feito_em';if(d1)pathCI+=`&feito_em=gte.${d1}T00:00:00`;if(d2)pathCI+=`&feito_em=lte.${d2}T23:59:59`;const checkins=await sbApi(pathCI)||[];const ciKeys=new Set(checkins.map(c=>`${c.medico_id}_${c.projeto_id}_${c.feito_em?.slice(0,10)}`));let dados=filtrarDadosRel().filter(l=>{const ini=new Date(`${l.data}T${l.hora_ini||'00:00'}`);return ini<new Date();});const faltas=dados.filter(l=>!ciKeys.has(`${l.medico_id}_${l.projeto_id}_${l.data}`));if(!faltas.length){el.innerHTML='<div class="card"><div style="text-align:center;padding:24px;"><div style="font-size:40px;"></div><div style="font-size:14px;color:var(--green);font-weight:600;margin-top:8px;">Nenhuma falta!</div></div></div>';return;}let html=`<div class="card"><div style="margin-bottom:10px;font-size:13px;color:var(--red);font-weight:600;">${faltas.length} falta(s)</div><table><thead><tr><th>Médico</th><th>CRM</th><th>Projeto</th><th>Data</th><th>Horário</th><th>Tipo</th><th>Honorários perdidos</th></tr></thead><tbody>`;faltas.sort((a,b)=>b.data.localeCompare(a.data)).forEach(l=>{html+=`<tr><td><strong>${esc(l.medico||'—')}</strong></td><td class="mono">${esc(l.crm||'')}</td><td>${esc(l.projeto||'—')}</td><td class="mono">${fDate(l.data)}</td><td class="mono">${(l.hora_ini||'').slice(0,5)}–${(l.hora_fim||'').slice(0,5)}</td><td>${esc(l.tipo||'')}</td><td class="mono" style="color:var(--red);">${fBRL(l.honorario_bruto||l.honorario||0)}</td></tr>`;});const totFalta=faltas.reduce((s,l)=>s+(l.honorario_bruto||l.honorario||0),0);html+=`</tbody><tfoot><tr><td colspan="6" style="font-weight:600;padding:8px;">Total</td><td class="mono" style="color:var(--red);font-weight:600;">${fBRL(totFalta)}</td></tr></tfoot></table></div>`;el.innerHTML=html;}
 
-async function gerarRelAtrasos(el){el.innerHTML='<div class="card"><div class="empty">Carregando...</div></div>';const d1=document.getElementById('rd1').value,d2=document.getElementById('rd2').value;let pathCI='/checkins?aprovado=eq.true&select=*,medicos(nome,crm),projetos(nome)';if(d1)pathCI+=`&feito_em=gte.${d1}T00:00:00`;if(d2)pathCI+=`&feito_em=lte.${d2}T23:59:59`;const checkins=await sbApi(pathCI)||[];const atrasos=[];checkins.forEach(ci=>{const lanc=lancamentos.find(l=>l.medico_id===ci.medico_id&&l.projeto_id===ci.projeto_id&&l.data===ci.feito_em?.slice(0,10));if(!lanc)return;const diffMin=Math.round((new Date(ci.feito_em)-new Date(`${lanc.data}T${lanc.hora_ini||'00:00'}`))/60000);if(diffMin>15)atrasos.push({...ci,diffMin,lanc});});if(!atrasos.length){el.innerHTML='<div class="card"><div style="text-align:center;padding:24px;"><div style="font-size:40px;"></div><div style="font-size:14px;color:var(--green);font-weight:600;margin-top:8px;">Nenhum atraso acima de 15 minutos!</div></div></div>';return;}let html=`<div class="card"><table><thead><tr><th>Médico</th><th>Projeto</th><th>Data</th><th>Previsto</th><th>Check-in</th><th>Atraso</th></tr></thead><tbody>`;atrasos.sort((a,b)=>b.diffMin-a.diffMin).forEach(a=>{const horaReal=new Date(a.feito_em).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});html+=`<tr><td><strong>${esc(a.medicos?.nome||'—')}</strong></td><td>${esc(a.projetos?.nome||'—')}</td><td class="mono">${fDate(a.lanc?.data||'')}</td><td class="mono">${(a.lanc?.hora_ini||'').slice(0,5)}</td><td class="mono">${horaReal}</td><td style="color:var(--amber);font-weight:700;">+${a.diffMin}min</td></tr>`;});html+='</tbody></table></div>';el.innerHTML=html;}
+async function gerarRelAtrasos(el){el.innerHTML='<div class="card"><div class="empty">Carregando...</div></div>';const d1=document.getElementById('rd1').value,d2=document.getElementById('rd2').value;let pathCI='/checkins?aprovado=eq.true&select=*,medicos(nome,crm),projetos(nome)';if(d1)pathCI+=`&feito_em=gte.${d1}T00:00:00-03:00`;if(d2)pathCI+=`&feito_em=lte.${d2}T23:59:59-03:00`;const checkins=await sbApi(pathCI)||[];const atrasos=[];checkins.forEach(ci=>{if(ci.tipo==='saida')return;const lanc=(ci.lancamento_id&&lancamentos.find(l=>l.id===ci.lancamento_id))||lancamentos.find(l=>l.medico_id===ci.medico_id&&l.projeto_id===ci.projeto_id&&l.data===dataSP(ci.feito_em));if(!lanc)return;const diffMin=Math.round((new Date(ci.feito_em)-new Date(`${lanc.data}T${lanc.hora_ini||'00:00'}`))/60000);if(diffMin>15)atrasos.push({...ci,diffMin,lanc});});if(!atrasos.length){el.innerHTML='<div class="card"><div style="text-align:center;padding:24px;"><div style="font-size:40px;"></div><div style="font-size:14px;color:var(--green);font-weight:600;margin-top:8px;">Nenhum atraso acima de 15 minutos!</div></div></div>';return;}let html=`<div class="card"><table><thead><tr><th>Médico</th><th>Projeto</th><th>Data</th><th>Previsto</th><th>Check-in</th><th>Atraso</th></tr></thead><tbody>`;atrasos.sort((a,b)=>b.diffMin-a.diffMin).forEach(a=>{const horaReal=new Date(a.feito_em).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});html+=`<tr><td><strong>${esc(a.medicos?.nome||'—')}</strong></td><td>${esc(a.projetos?.nome||'—')}</td><td class="mono">${fDate(a.lanc?.data||'')}</td><td class="mono">${(a.lanc?.hora_ini||'').slice(0,5)}</td><td class="mono">${horaReal}</td><td style="color:var(--amber);font-weight:700;">+${a.diffMin}min</td></tr>`;});html+='</tbody></table></div>';el.innerHTML=html;}
 
-async function gerarRelCheckinsForaTol(el){el.innerHTML='<div class="card"><div class="empty">Carregando...</div></div>';const d1=document.getElementById('rd1').value,d2=document.getElementById('rd2').value;let pathCI='/checkins?select=*,medicos(nome,crm),projetos(nome)';if(d1)pathCI+=`&feito_em=gte.${d1}T00:00:00`;if(d2)pathCI+=`&feito_em=lte.${d2}T23:59:59`;const checkins=await sbApi(pathCI)||[];const fora=[];checkins.forEach(ci=>{const lanc=lancamentos.find(l=>l.medico_id===ci.medico_id&&l.projeto_id===ci.projeto_id&&l.data===ci.feito_em?.slice(0,10));if(!lanc)return;const diffMin=Math.round((new Date(ci.feito_em)-new Date(`${lanc.data}T${lanc.hora_ini||'00:00'}`))/60000);if(diffMin>15||!ci.aprovado)fora.push({...ci,diffMin,foraRaio:!ci.aprovado,lanc});});if(!fora.length){el.innerHTML='<div class="card"><div style="text-align:center;padding:24px;"><div style="font-size:40px;"></div><div style="font-size:14px;color:var(--green);font-weight:600;margin-top:8px;">Todos dentro da tolerância!</div></div></div>';return;}let html=`<div class="card"><table><thead><tr><th>Médico</th><th>Projeto</th><th>Data</th><th>Previsto</th><th>Check-in</th><th>Atraso</th><th>GPS</th></tr></thead><tbody>`;fora.forEach(c=>{const horaReal=new Date(c.feito_em).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});html+=`<tr><td><strong>${esc(c.medicos?.nome||'—')}</strong></td><td>${esc(c.projetos?.nome||'—')}</td><td class="mono">${fDate(c.lanc?.data||'')}</td><td class="mono">${(c.lanc?.hora_ini||'').slice(0,5)}</td><td class="mono">${horaReal}</td><td style="color:${c.diffMin>15?'var(--amber)':'var(--green)'};font-weight:600;">${c.diffMin>0?'+'+c.diffMin+'min':'no prazo'}</td><td>${c.foraRaio?'Fora':'Ok'}</td></tr>`;});html+='</tbody></table></div>';el.innerHTML=html;}
+async function gerarRelCheckinsForaTol(el){el.innerHTML='<div class="card"><div class="empty">Carregando...</div></div>';const d1=document.getElementById('rd1').value,d2=document.getElementById('rd2').value;let pathCI='/checkins?select=*,medicos(nome,crm),projetos(nome)';if(d1)pathCI+=`&feito_em=gte.${d1}T00:00:00-03:00`;if(d2)pathCI+=`&feito_em=lte.${d2}T23:59:59-03:00`;const checkins=await sbApi(pathCI)||[];const fora=[];checkins.forEach(ci=>{if(ci.tipo==='saida')return;const lanc=(ci.lancamento_id&&lancamentos.find(l=>l.id===ci.lancamento_id))||lancamentos.find(l=>l.medico_id===ci.medico_id&&l.projeto_id===ci.projeto_id&&l.data===dataSP(ci.feito_em));if(!lanc)return;const diffMin=Math.round((new Date(ci.feito_em)-new Date(`${lanc.data}T${lanc.hora_ini||'00:00'}`))/60000);if(diffMin>15||!ci.aprovado)fora.push({...ci,diffMin,foraRaio:!ci.aprovado,lanc});});if(!fora.length){el.innerHTML='<div class="card"><div style="text-align:center;padding:24px;"><div style="font-size:40px;"></div><div style="font-size:14px;color:var(--green);font-weight:600;margin-top:8px;">Todos dentro da tolerância!</div></div></div>';return;}let html=`<div class="card"><table><thead><tr><th>Médico</th><th>Projeto</th><th>Data</th><th>Previsto</th><th>Check-in</th><th>Atraso</th><th>GPS</th></tr></thead><tbody>`;fora.forEach(c=>{const horaReal=new Date(c.feito_em).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});html+=`<tr><td><strong>${esc(c.medicos?.nome||'—')}</strong></td><td>${esc(c.projetos?.nome||'—')}</td><td class="mono">${fDate(c.lanc?.data||'')}</td><td class="mono">${(c.lanc?.hora_ini||'').slice(0,5)}</td><td class="mono">${horaReal}</td><td style="color:${c.diffMin>15?'var(--amber)':'var(--green)'};font-weight:600;">${c.diffMin>0?'+'+c.diffMin+'min':'no prazo'}</td><td>${c.foraRaio?'Fora':'Ok'}</td></tr>`;});html+='</tbody></table></div>';el.innerHTML=html;}
 
 function gerarRelMedicos(el){let lista=[...medicos];const mid=document.getElementById('rm').value;if(mid)lista=lista.filter(m=>m.id===mid);if(!lista.length){el.innerHTML='<div class="card"><div class="empty">Nenhum médico.</div></div>';return;}let html=`<div class="card"><table><thead><tr><th>Nome</th><th>CRM</th><th>Especialidade</th><th>Tipo</th><th>Telefone</th><th>E-mail</th><th>PIX</th><th>Dispositivo</th></tr></thead><tbody>`;lista.sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR')).forEach(m=>{const pix=m.pix_tipo&&m.pix_chave?`${esc(m.pix_tipo)}: ${esc(m.pix_chave)}`:'—';html+=`<tr><td><strong>${esc(m.nome)}</strong></td><td class="mono">${esc(m.crm||'—')}</td><td>${esc(m.especialidade||'—')}</td><td><span class="badge badge-blue">${esc(m.tipo||'')}</span></td><td>${esc(m.telefone||'—')}</td><td>${esc(m.email||'—')}</td><td style="font-size:11px;">${pix}</td><td>${m.device_id?'<span class="badge badge-green">✓ Vinculado</span>':'<span class="badge badge-amber">Sem vínculo</span>'}</td></tr>`;});html+='</tbody></table></div>';el.innerHTML=html;}
 
@@ -7777,11 +7804,9 @@ async function gerarRelRisco(el) {
   if (mid) pathLanc += `&medico_id=eq.${mid}`;
   const todosLanc = await sbApi(pathLanc) || [];
 
-  let pathCI = '/checkins?aprovado=eq.true&select=medico_id,projeto_id,feito_em';
-  if (d1) pathCI += `&feito_em=gte.${d1}T00:00:00`;
-  if (d2) pathCI += `&feito_em=lte.${d2}T23:59:59`;
+  let pathCI = '/checkins?aprovado=eq.true&select=lancamento_id,medico_id,projeto_id,feito_em' + filtroCkPeriodo(d1, d2);
   const checkins = await sbApi(pathCI) || [];
-  const ciKeys = new Set(checkins.map(c => `${c.medico_id}_${c.projeto_id}_${c.feito_em?.slice(0,10)}`));
+  const _idxCk = indexarCheckins(checkins);
 
   // Plantões passados (já deveriam ter ocorrido)
   const agora = new Date();
@@ -7789,7 +7814,7 @@ async function gerarRelRisco(el) {
     if (!l.data || !l.hora_ini) return false;
     return new Date(`${l.data}T${l.hora_ini}`) < agora;
   });
-  const faltas = lancPassados.filter(l => !ciKeys.has(`${l.medico_id}_${l.projeto_id}_${l.data}`)
+  const faltas = lancPassados.filter(l => !checkinsDoLanc(_idxCk, l).length
   );
 
   // 4. Consolidar por médico
@@ -8846,9 +8871,7 @@ async function renderGrafHoras(d1, d2) {
 // ── Gráfico 3: Pontualidade (doughnut) ────────────────────
 async function renderGrafPontual(d1, d2) {
   // Buscar checkins do período
-  let path = '/checkins?aprovado=eq.true&select=medico_id,projeto_id,feito_em,aprovado';
-  if (d1) path += `&feito_em=gte.${d1}T00:00:00`;
-  if (d2) path += `&feito_em=lte.${d2}T23:59:59`;
+  let path = '/checkins?aprovado=eq.true&select=lancamento_id,medico_id,projeto_id,feito_em,aprovado' + filtroCkPeriodo(d1, d2);
   const checkins = await sbApi(path) || [];
 
   // Plantões passados no período
@@ -8860,14 +8883,13 @@ async function renderGrafPontual(d1, d2) {
     return ini < agora && dentroFiltro;
   });
 
-  // Mapear checkins por chave
-  const ciKeys = new Set(checkins.map(c => `${c.medico_id}_${c.projeto_id}_${c.feito_em?.slice(0,10)}`));
+  // Mapear checkins por plantão (lancamento_id) ou por médico+projeto+data em SP
+  const _idxCk = indexarCheckins(checkins);
 
   let noHorario = 0, atrasados = 0, faltas = 0;
   plantsPassados.forEach(l => {
-    const key = `${l.medico_id}_${l.projeto_id}_${l.data}`;
-    const ci = checkins.find(c => c.medico_id===l.medico_id && c.projeto_id===l.projeto_id && c.feito_em?.slice(0,10)===l.data);
-    if (!ciKeys.has(key)) { faltas++; return; }
+    const ci = checkinsDoLanc(_idxCk, l)[0];
+    if (!ci) { faltas++; return; }
     if (!ci) return;
     const iniPlan = new Date(l.data+'T'+l.hora_ini);
     const iniReal = new Date(ci.feito_em);
@@ -10851,36 +10873,6 @@ function gerarRelHoras(el){
   el.innerHTML=html;
 }
 
-// FALTAS — com justificada / não justificada
-async function gerarRelFaltas(el){
-  el.innerHTML='<div class="card"><div class="empty">Carregando...</div></div>';
-  const d1=document.getElementById('rd1').value,d2=document.getElementById('rd2').value;
-  let pathCI='/checkins?aprovado=eq.true&select=medico_id,projeto_id,feito_em';
-  if(d1)pathCI+=`&feito_em=gte.${d1}T00:00:00`;
-  if(d2)pathCI+=`&feito_em=lte.${d2}T23:59:59`;
-  const checkins=await sbApi(pathCI)||[];
-  const ciKeys=new Set(checkins.map(c=>`${c.medico_id}_${c.projeto_id}_${(c.feito_em||'').slice(0,10)}`));
-  const ausencias=await sbApi('/ausencias?select=lancamento_id,status,motivo')||[];
-  const ausByLanc={}; ausencias.forEach(a=>{ if(a.lancamento_id) ausByLanc[a.lancamento_id]=a; });
-  const agora=new Date();
-  const dados=filtrarDadosRel().filter(l=>l.medico_id && new Date(`${l.data}T${l.hora_ini||'00:00'}`)<agora);
-  const faltas=dados.filter(l=>!ciKeys.has(`${l.medico_id}_${l.projeto_id}_${l.data}`));
-  if(!faltas.length){el.innerHTML='<div class="card"><div style="text-align:center;padding:24px;color:var(--green);font-weight:600;">Nenhuma falta no período.</div></div>';return;}
-  const classifica=l=>{
-    const a=ausByLanc[l.id];
-    if(!a) return {txt:'Não justificada (sem aviso)',cor:'var(--red)'};
-    const st=(a.status||'').toLowerCase();
-    const justif = a.motivo || st.includes('justif') || st.includes('aprov');
-    return justif?{txt:'Justificada'+(a.motivo?' — '+a.motivo:''),cor:'var(--amber)'}:{txt:'Não justificada',cor:'var(--red)'};
-  };
-  let html='';
-  _porHospital(faltas).forEach(([proj,lst])=>{
-    const linhas=lst.slice().sort((a,b)=>b.data.localeCompare(a.data)).map(l=>{const c=classifica(l);return `<tr><td><strong>${esc(l.medico||'—')}</strong></td><td class="mono">${esc(l.crm||'')}</td><td>${esc(l.setor||'—')}</td><td class="mono">${fDate(l.data)}</td><td class="mono">${(l.hora_ini||'').slice(0,5)}–${(l.hora_fim||'').slice(0,5)}</td><td style="color:${c.cor};font-weight:600;">${esc(c.txt)}</td><td class="mono">${fBRL(l.honorario||0)}</td></tr>`;}).join('');
-    const sub=lst.reduce((s,l)=>s+(l.honorario||0),0);
-    html+=`<div class="card" style="margin-bottom:12px;"><div style="display:flex;justify-content:space-between;margin-bottom:8px;"><div class="card-title" style="margin-bottom:0;">${esc(proj)}</div><div style="font-size:12px;color:var(--red);font-weight:600;">${lst.length} falta(s)</div></div><table><thead><tr><th>Médico</th><th>CRM</th><th>Setor</th><th>Data</th><th>Horário</th><th>Situação</th><th>Valor</th></tr></thead><tbody>${linhas}</tbody><tfoot><tr style="border-top:1.5px solid var(--border2);"><td colspan="6" style="font-weight:600;padding:8px;">Total ${esc(proj)}</td><td class="mono" style="color:var(--red);font-weight:700;">${fBRL(sub)}</td></tr></tfoot></table></div>`;
-  });
-  el.innerHTML=html;
-}
 
 // FINANCEIRO ANALÍTICO — por hospital
 function gerarRelFinAnalitico(el){
@@ -11005,31 +10997,6 @@ function gerarRelEscala(el){
   el.innerHTML=aviso+html;
 }
 
-// ENTRADA E SAÍDA — check-ins
-async function gerarRelEntradaSaida(el){
-  el.innerHTML='<div class="card"><div class="empty">Carregando...</div></div>';
-  const d1=document.getElementById('rd1').value,d2=document.getElementById('rd2').value;
-  const dados=filtrarDadosRel();
-  if(!dados.length){el.innerHTML='<div class="card"><div class="empty">Nenhum plantão no período.</div></div>';return;}
-  let pathCI='/checkins?select=medico_id,projeto_id,feito_em,distancia_metros,aprovado&order=feito_em';
-  if(d1)pathCI+=`&feito_em=gte.${d1}T00:00:00`;
-  if(d2)pathCI+=`&feito_em=lte.${d2}T23:59:59`;
-  const checkins=await sbApi(pathCI)||[];
-  const byKey={}; checkins.forEach(c=>{const k=`${c.medico_id}_${c.projeto_id}_${(c.feito_em||'').slice(0,10)}`;(byKey[k]=byKey[k]||[]).push(c);});
-  const fmtH=v=>v?new Date(v.feito_em).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'';
-  const dist=v=>(v&&v.distancia_metros!=null)?`<span style="color:${v.distancia_metros>100?'var(--red)':'var(--green)'};">${v.distancia_metros}m</span>`:'';
-  let html='';
-  _porHospital(dados).forEach(([proj,lst])=>{
-    const linhas=lst.slice().sort((a,b)=>a.data.localeCompare(b.data)||(a.hora_ini||'').localeCompare(b.hora_ini||'')).map(l=>{
-      const cs=(byKey[`${l.medico_id}_${l.projeto_id}_${l.data}`]||[]).slice().sort((a,b)=>a.feito_em.localeCompare(b.feito_em));
-      const ent=cs[0],sai=cs.length>1?cs[cs.length-1]:null;
-      const situ=ent?'Presente':'Sem check-in';
-      return `<tr><td class="mono">${fDate(l.data)} ${(l.hora_ini||'').slice(0,5)}</td><td class="mono">${l.horas}h</td><td class="mono">${fmtH(ent)}</td><td class="mono">${dist(ent)}</td><td class="mono">${fmtH(sai)}</td><td class="mono">${dist(sai)}</td><td>${esc(l.setor||'—')}</td><td>${esc(l.medico||'—')}</td><td>${situ}</td><td>${esc(l.tipo||'—')}</td></tr>`;
-    }).join('');
-    html+=`<div class="card" style="margin-bottom:12px;"><div class="card-title">${esc(proj)}</div><table><thead><tr><th>Data</th><th>Duração</th><th>Entrada</th><th>Dist.</th><th>Saída</th><th>Dist.</th><th>Setor</th><th>Responsável</th><th>Situação</th><th>Tipo</th></tr></thead><tbody>${linhas}</tbody></table></div>`;
-  });
-  el.innerHTML=html;
-}
 
 // TROCAS E PASSAGENS
 async function gerarRelTrocas(el){
@@ -11175,11 +11142,9 @@ function gerarRelFinTipo(el){
 async function gerarRelFaltas(el){
   el.innerHTML='<div class="card"><div class="empty">Carregando...</div></div>';
   const d1=document.getElementById('rd1').value,d2=document.getElementById('rd2').value;
-  let pathCI='/checkins?aprovado=eq.true&select=medico_id,projeto_id,feito_em';
-  if(d1)pathCI+=`&feito_em=gte.${d1}T00:00:00`;
-  if(d2)pathCI+=`&feito_em=lte.${d2}T23:59:59`;
+  let pathCI='/checkins?aprovado=eq.true&select=lancamento_id,medico_id,projeto_id,feito_em'+filtroCkPeriodo(d1,d2);
   const checkins=await sbApi(pathCI)||[];
-  const ciKeys=new Set(checkins.map(c=>`${c.medico_id}_${c.projeto_id}_${(c.feito_em||'').slice(0,10)}`));
+  const _idxCk=indexarCheckins(checkins);
   const ausencias=await sbApi('/ausencias?select=lancamento_id,status,motivo')||[];
   const ausByLanc={}; ausencias.forEach(a=>{ if(a.lancamento_id) ausByLanc[a.lancamento_id]=a; });
   const agora=new Date();
@@ -11187,7 +11152,7 @@ async function gerarRelFaltas(el){
   const faltas=dados.filter(l=>{
     if(l.status_presenca==='presente')return false;
     if(l.status_presenca==='falta')return true;
-    return !ciKeys.has(`${l.medico_id}_${l.projeto_id}_${l.data}`);
+    return !checkinsDoLanc(_idxCk,l).length;
   });
   if(!faltas.length){el.innerHTML='<div class="card"><div style="text-align:center;padding:24px;color:var(--green);font-weight:600;">Nenhuma falta no período.</div></div>';return;}
   const classifica=l=>{const a=ausByLanc[l.id];if(!a)return{txt:'Não justificada (sem aviso)',cor:'var(--red)'};const st=(a.status||'').toLowerCase();const justif=a.motivo||st.includes('justif')||st.includes('aprov');return justif?{txt:'Justificada'+(a.motivo?' — '+a.motivo:''),cor:'var(--amber)'}:{txt:'Não justificada',cor:'var(--red)'};};
@@ -11200,36 +11165,6 @@ async function gerarRelFaltas(el){
 }
 
 // ----- TELA: AUSÊNCIA DE CHECK-IN -----
-async function carregarAusenciasCI(){
-  const el=document.getElementById('aci-lista'); if(!el)return;
-  const selP=document.getElementById('aci-proj');
-  if(selP&&selP.options.length<=1){selP.innerHTML='<option value="">Todos</option>'+sortedProjetos().map(p=>`<option value="${p.id}">${esc(p.nome)}</option>`).join('');}
-  const eD1=document.getElementById('aci-d1'),eD2=document.getElementById('aci-d2');
-  if(eD1&&!eD1.value)eD1.value=new Date(Date.now()-30*86400000).toISOString().slice(0,10);
-  if(eD2&&!eD2.value)eD2.value=new Date().toISOString().slice(0,10);
-  el.innerHTML='<div class="empty">Carregando...</div>';
-  const pid=selP?.value||'',d1=eD1?.value||'',d2=eD2?.value||'';
-  let pathCI='/checkins?aprovado=eq.true&select=medico_id,projeto_id,feito_em';
-  if(d1)pathCI+=`&feito_em=gte.${d1}T00:00:00`;
-  if(d2)pathCI+=`&feito_em=lte.${d2}T23:59:59`;
-  const checkins=await sbApi(pathCI)||[];
-  const ciKeys=new Set(checkins.map(c=>`${c.medico_id}_${c.projeto_id}_${(c.feito_em||'').slice(0,10)}`));
-  let path='/lancamentos?select=*,medicos(nome,crm),projetos(nome)&order=data.desc&limit=500';
-  if(pid)path+=`&projeto_id=eq.${pid}`;
-  if(d1)path+=`&data=gte.${d1}`;
-  if(d2)path+=`&data=lte.${d2}`;
-  const lancs=await sbApi(path)||[];
-  const agora=new Date();
-  const pend=lancs.filter(l=>{
-    if(!l.medico_id||l.aberto)return false;
-    if(l.status_presenca==='presente'||l.status_presenca==='falta')return false;
-    if(new Date(`${l.data}T${l.hora_ini||'00:00'}`)>=agora)return false;
-    return !ciKeys.has(`${l.medico_id}_${l.projeto_id}_${l.data}`);
-  });
-  if(!pend.length){el.innerHTML='<div class="card"><div style="text-align:center;padding:24px;color:var(--green);font-weight:600;">Nenhuma ausência de check-in pendente.</div></div>';return;}
-  el.innerHTML=`<div class="card"><div style="margin-bottom:10px;font-size:13px;color:var(--amber);font-weight:600;">${pend.length} plantão(ões) sem check-in aguardando análise</div><table><thead><tr><th>Data</th><th>Médico</th><th>Projeto / Setor</th><th>Horário</th><th>Valor</th><th>Ação</th></tr></thead><tbody>`+
-  pend.map(l=>`<tr id="aci-row-${l.id}"><td class="mono">${fDate(l.data)}</td><td><strong>${esc(l.medicos?.nome||'—')}</strong><br><span class="mono" style="font-size:11px;color:var(--text3);">${esc(l.medicos?.crm||'')}</span></td><td>${esc(l.projetos?.nome||'—')}${l.setor?' — '+esc(l.setor):''}</td><td class="mono">${(l.hora_ini||'').slice(0,5)}–${(l.hora_fim||'').slice(0,5)}</td><td class="mono">${fBRL(l.honorario||0)}</td><td style="white-space:nowrap;"><button class="btn btn-success btn-sm" onclick="aciResolver('${l.id}','presente')">Compareceu</button> <button class="btn btn-danger btn-sm" onclick="aciResolver('${l.id}','falta')">Falta</button> <button class="btn btn-ghost btn-sm" title="Aceitar justificativa e manter o pagamento" onclick="aciJustificar('${l.id}')">Justificar</button> <button class="btn btn-ghost btn-sm" onclick="aciSubstituir('${l.id}')">Substituir</button></td></tr>`).join('')+'</tbody></table></div>';
-}
 async function aciResolver(id,status){
   const res=await sbApi('/lancamentos?id=eq.'+id,{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify({status_presenca:status})});
   if(res!==null){toast(status==='falta'?'Marcado como falta':'Presença confirmada');const row=document.getElementById('aci-row-'+id);if(row)row.remove();const l=lancamentos.find(x=>x.id===id||x.id==id);if(l)l.status_presenca=status;}
@@ -11278,7 +11213,7 @@ async function gerarResumoCI(){
   });
   const porMedDia = {};
   cks.forEach(function(c){
-    const k = c.medico_id + '_' + c.projeto_id + '_' + String(c.feito_em||'').slice(0,10);
+    const k = c.medico_id + '_' + c.projeto_id + '_' + dataSP(c.feito_em);
     (porMedDia[k] = porMedDia[k] || []).push(c);
   });
   function checksDo(l){
@@ -11498,18 +11433,18 @@ async function gerarRelEntradaSaida(el){
   const d1=document.getElementById('rd1').value,d2=document.getElementById('rd2').value;
   const dados=filtrarDadosRel();
   if(!dados.length){el.innerHTML='<div class="card"><div class="empty">Nenhum plantão no período.</div></div>';return;}
-  let pathCI='/checkins?select=medico_id,projeto_id,feito_em,distancia_metros,aprovado&order=feito_em';
-  if(d1)pathCI+=`&feito_em=gte.${d1}T00:00:00`;
-  if(d2)pathCI+=`&feito_em=lte.${d2}T23:59:59`;
+  let pathCI='/checkins?select=lancamento_id,medico_id,projeto_id,feito_em,distancia_metros,aprovado,tipo&order=feito_em'+filtroCkPeriodo(d1,d2);
   const checkins=await sbApi(pathCI)||[];
-  const byKey={}; checkins.forEach(c=>{const k=`${c.medico_id}_${c.projeto_id}_${(c.feito_em||'').slice(0,10)}`;(byKey[k]=byKey[k]||[]).push(c);});
+  const _idxCk=indexarCheckins(checkins);
   const fmtH=v=>v?new Date(v.feito_em).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'';
   const dist=v=>(v&&v.distancia_metros!=null)?`<span style="color:${v.distancia_metros>100?'var(--red)':'var(--green)'};">${v.distancia_metros}m</span>`:'';
   let html='';
   _porHospital(dados).forEach(([proj,lst])=>{
     const linhas=lst.slice().sort((a,b)=>a.data.localeCompare(b.data)||(a.hora_ini||'').localeCompare(b.hora_ini||'')).map(l=>{
-      const cs=(byKey[`${l.medico_id}_${l.projeto_id}_${l.data}`]||[]).slice().sort((a,b)=>a.feito_em.localeCompare(b.feito_em));
-      const ent=cs[0],sai=cs.length>1?cs[cs.length-1]:null;
+      const cs=checkinsDoLanc(_idxCk,l);
+      const ent=cs.find(c=>c.tipo!=='saida')||null;
+      const _sais=cs.filter(c=>c.tipo==='saida');
+      const sai=_sais.length?_sais[_sais.length-1]:(cs.length>1?cs[cs.length-1]:null);
       let situ;
       if(ent) situ='<span style="color:var(--green);">Presente (check-in)</span>';
       else if(l.status_presenca==='presente') situ='<span style="color:var(--blue);font-weight:600;">Confirmado pelo gestor</span>';
@@ -11551,17 +11486,15 @@ async function carregarAusenciasCI(view){
     el.innerHTML=toggle+`<div class="card"><div style="margin-bottom:10px;font-size:13px;color:var(--text2);font-weight:600;">${hist.length} plantão(ões) resolvido(s)</div><table><thead><tr><th>Data</th><th>Médico</th><th>Projeto / Setor</th><th>Decisão</th><th>Obs.</th><th>Quando</th><th>Ação</th></tr></thead><tbody>${rows}</tbody></table></div>`;
     return;
   }
-  let pathCI='/checkins?aprovado=eq.true&select=medico_id,projeto_id,feito_em';
-  if(d1)pathCI+=`&feito_em=gte.${d1}T00:00:00`;
-  if(d2)pathCI+=`&feito_em=lte.${d2}T23:59:59`;
+  let pathCI='/checkins?aprovado=eq.true&select=lancamento_id,medico_id,projeto_id,feito_em'+filtroCkPeriodo(d1,d2);
   const checkins=await sbApi(pathCI)||[];
-  const ciKeys=new Set(checkins.map(c=>`${c.medico_id}_${c.projeto_id}_${(c.feito_em||'').slice(0,10)}`));
+  const _idxCk=indexarCheckins(checkins);
   const agora=new Date();
   const pend=lancs.filter(l=>{
     if(!l.medico_id||l.aberto)return false;
     if(l.status_presenca==='presente'||l.status_presenca==='falta')return false;
     if(new Date(`${l.data}T${l.hora_ini||'00:00'}`)>=agora)return false;
-    return !ciKeys.has(`${l.medico_id}_${l.projeto_id}_${l.data}`);
+    return !checkinsDoLanc(_idxCk,l).length;
   });
   if(!pend.length){el.innerHTML=toggle+'<div class="card"><div style="text-align:center;padding:24px;color:var(--green);font-weight:600;">Nenhuma ausência de check-in pendente.</div></div>';return;}
   const rows=pend.map(l=>`<tr id="aci-row-${l.id}"><td class="mono">${fDate(l.data)}</td><td><strong>${esc(l.medicos?.nome||'—')}</strong><br><span class="mono" style="font-size:11px;color:var(--text3);">${esc(l.medicos?.crm||'')}</span></td><td>${esc(l.projetos?.nome||'—')}${l.setor?' — '+esc(l.setor):''}</td><td class="mono">${(l.hora_ini||'').slice(0,5)}–${(l.hora_fim||'').slice(0,5)}</td><td class="mono">${fBRL(l.honorario||0)}</td><td style="white-space:nowrap;"><button class="btn btn-success btn-sm" onclick="aciAbrirObs('${l.id}','presente')">Compareceu</button> <button class="btn btn-danger btn-sm" onclick="aciAbrirObs('${l.id}','falta')">Falta</button> <button class="btn btn-ghost btn-sm" title="Faltou, mas a empresa aceitou a justificativa — mantém o pagamento" onclick="aciAbrirObs('${l.id}','justificado')">Justificar</button> <button class="btn btn-ghost btn-sm" onclick="aciSubstituir('${l.id}')">Substituir</button></td></tr>`).join('');
