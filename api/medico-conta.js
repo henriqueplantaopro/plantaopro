@@ -10,6 +10,10 @@ if (VAPID_PRIVATE) {
   try { webpush.setVapidDetails('mailto:suporte@plantaopro.com', VAPID_PUBLIC, VAPID_PRIVATE); } catch (_) {}
 }
 
+// Datas no fuso de São Paulo (toISOString() dá a data em UTC)
+function hojeSP(){ return new Date().toLocaleDateString('en-CA',{timeZone:'America/Sao_Paulo'}); }
+function dataSP(v){ return v ? new Date(v).toLocaleDateString('en-CA',{timeZone:'America/Sao_Paulo'}) : ''; }
+
 async function enviarPushMedico(medico_id, titulo, corpo, url, prefKey) {
   if (!VAPID_PRIVATE || !medico_id || !corpo) return { ok: true, enviados: 0 };
   // Respeitar preferência do médico
@@ -133,7 +137,7 @@ export default async function handler(req, res) {
       const medico = await medicoPorToken(token_acesso);
       if (!medico) return json(res, 401, { erro: 'Sessão inválida. Faça login novamente.' });
 
-      const hoje = new Date().toISOString().slice(0, 10);
+      const hoje = hojeSP();
 
       // Meus plantões (sempre escopado ao médico autenticado)
       if (req.query.action === 'lanc-meus') {
@@ -365,9 +369,9 @@ export default async function handler(req, res) {
 
       // Meus check-ins de hoje
       if (req.query.action === 'ck-meus') {
-        const hoje = dados?.dia || new Date().toISOString().slice(0, 10);
+        const hoje = dados?.dia || hojeSP();
         const r = await sbAdmin(
-          `/rest/v1/checkins?medico_id=eq.${medico.id}&feito_em=gte.${hoje}T00:00:00` +
+          `/rest/v1/checkins?medico_id=eq.${medico.id}&feito_em=gte.${hoje}T00:00:00-03:00` +
           `&select=*,projetos(nome)&order=feito_em.desc&limit=100`
         );
         return json(res, 200, { ok: true, checkins: r || [] });
