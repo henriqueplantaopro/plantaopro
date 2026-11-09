@@ -25,6 +25,7 @@ const ALLOW = new Set([
   'candidaturas',
   'transferencias',
   'vinculos',
+  'tipos_documento',
 ]);
 
 // Tabelas que NÃO têm admin_id e se escopam pela própria chave.
