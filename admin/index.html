@@ -737,8 +737,16 @@ tr:hover td{background:var(--bg3);}
         <div class="form-group"><label>Status do contrato</label><select id="mn-contrato"><option value="sem_contrato">Sem contrato</option><option value="enviado">Enviado</option><option value="assinado">Assinado</option></select></div>
       </div>
       <div class="form-group" style="margin-top:4px;">
-        <label>RQE <span style="font-weight:400;font-size:11px;color:var(--text3);">(um por linha ou separados por vírgula — para médicos com mais de uma especialidade)</span></label>
-        <textarea id="mrqe" rows="2" placeholder="RQE 12345&#10;RQE 67890" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:var(--radius);font-size:13px;resize:vertical;"></textarea>
+        <label>RQE <span style="font-weight:400;font-size:11px;color:var(--text3);">(selecione a especialidade e informe o número; pode adicionar vários)</span></label>
+        <div id="qualif-novo-rqe"></div>
+      </div>
+      <div class="form-group" style="margin-top:4px;">
+        <label>Pós-graduação <span style="font-weight:400;font-size:11px;color:var(--text3);">(selecione a especialidade; pode adicionar várias)</span></label>
+        <div id="qualif-novo-pos"></div>
+      </div>
+      <div class="form-group" style="margin-top:4px;">
+        <label>Outras especializações <span style="font-weight:400;font-size:11px;color:var(--text3);">(selecione a especialidade; pode adicionar várias)</span></label>
+        <div id="qualif-novo-esz"></div>
       </div>
       <div class="form-group" style="margin-top:4px;">
         <label>Especialidades <span style="font-weight:400;font-size:11px;color:var(--text3);">(vazio = Clínico Geral / Plantonista generalista)</span></label>
@@ -890,9 +898,13 @@ tr:hover td{background:var(--bg3);}
 
   <!-- BANCO DE DADOS MÉDICOS -->
   <div id="tab-banco_medicos" class="section">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;flex-wrap:wrap;gap:8px;">
       <div class="page-title" style="margin-bottom:0;">Banco de dados médicos</div>
-      <button class="btn btn-ghost btn-sm" onclick="showTab('tipos_documento',this)">Classificações de documento</button>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button class="btn btn-ghost btn-sm" onclick="exportarBancoPDF()">Exportar PDF</button>
+        <button class="btn btn-ghost btn-sm" onclick="exportarBancoXLSX()">Exportar Excel</button>
+        <button class="btn btn-ghost btn-sm" onclick="showTab('tipos_documento',this)">Classificações de documento</button>
+      </div>
     </div>
     <div class="page-sub">Consulta de médicos, documentos e pendências</div>
     <div class="card">
@@ -958,6 +970,8 @@ tr:hover td{background:var(--bg3);}
             <option value="sempre">Sempre obrigatório</option>
             <option value="opcional" selected>Opcional</option>
             <option value="condicional_rqe">Obrigatório só se o médico tem RQE</option>
+            <option value="se_pos">Um por pós-graduação do médico</option>
+            <option value="se_especializacao">Um por especialização do médico</option>
           </select>
         </div>
         <button class="btn btn-primary btn-sm" style="margin-bottom:1px;" onclick="salvarTipoDoc()">Adicionar</button>
@@ -2246,8 +2260,16 @@ tr:hover td{background:var(--bg3);}
       <div class="form-group"><label>Status do contrato</label><select id="em-contrato"><option value="sem_contrato">Sem contrato</option><option value="enviado">Enviado</option><option value="assinado">Assinado</option></select></div>
     </div>
     <div class="form-group">
-      <label>RQE <span style="font-weight:400;font-size:11px;color:var(--text3);">(um por linha ou separados por vírgula)</span></label>
-      <textarea id="em-rqe" rows="2" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:var(--radius);font-size:13px;resize:vertical;"></textarea>
+      <label>RQE <span style="font-weight:400;font-size:11px;color:var(--text3);">(especialidade + número; pode adicionar vários)</span></label>
+      <div id="qualif-edit-rqe"></div>
+    </div>
+    <div class="form-group">
+      <label>Pós-graduação <span style="font-weight:400;font-size:11px;color:var(--text3);">(especialidade; pode adicionar várias)</span></label>
+      <div id="qualif-edit-pos"></div>
+    </div>
+    <div class="form-group">
+      <label>Outras especializações <span style="font-weight:400;font-size:11px;color:var(--text3);">(especialidade; pode adicionar várias)</span></label>
+      <div id="qualif-edit-esz"></div>
     </div>
     <div class="form-row">
       <div class="form-group"><label>Especialidade(s)</label>
@@ -3156,6 +3178,109 @@ function renderMedicos(filtro='') {
 
 
 
+// ─── QUALIFICAÇÕES DO MÉDICO (RQE / Pós / Especialização) ──────────────
+// Construtor de listas estruturadas: cada item tem uma especialidade (lista
+// fixa) e, no caso do RQE, um número. Guarda o estado em memória por "slot"
+// (ex.: 'novo-rqe', 'edit-pos') e renderiza chips. Sem dependência externa.
+
+const ESPECIALIDADES_FIXAS = [
+  'Clínica Geral / Emergência','Anestesiologia','Cardiologia','Cirurgia Geral',
+  'Cirurgia Vascular','Dermatologia','Endocrinologia','Gastroenterologia','Geriatria',
+  'Ginecologia e Obstetrícia','Hematologia','Infectologia','Medicina Intensiva (UTI)',
+  'Medicina do Trabalho','Nefrologia','Neurologia','Neurocirurgia','Oftalmologia',
+  'Oncologia','Ortopedia e Traumatologia','Otorrinolaringologia','Pediatria',
+  'Pneumologia','Psiquiatria','Radiologia','Reumatologia','Urologia'
+];
+
+// estado: _qualif[slot] = array de itens ({especialidade[, numero]})
+let _qualif = {};
+
+function _qualifOpcoesEsp() {
+  return '<option value="">Especialidade...</option>' +
+    ESPECIALIDADES_FIXAS.map(e => `<option value="${esc(e)}">${esc(e)}</option>`).join('');
+}
+
+// Monta o HTML do construtor dentro do container indicado.
+// tipo: 'rqe' (com número) | 'simples' (só especialidade)
+function montarQualif(slot, tipo) {
+  const cont = document.getElementById('qualif-' + slot);
+  if (!cont) return;
+  const inputNum = tipo === 'rqe'
+    ? `<input type="text" id="qualif-${slot}-num" placeholder="Nº RQE" style="width:110px;padding:7px 9px;border:1px solid var(--border);border-radius:var(--radius);font-size:13px;">`
+    : '';
+  cont.innerHTML = `
+    <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
+      <select id="qualif-${slot}-esp" style="flex:1;min-width:160px;padding:7px 9px;border:1px solid var(--border);border-radius:var(--radius);font-size:13px;">${_qualifOpcoesEsp()}</select>
+      ${inputNum}
+      <button type="button" class="btn btn-ghost btn-sm" onclick="addQualif('${slot}','${tipo}')">+ Adicionar</button>
+    </div>
+    <div id="qualif-${slot}-chips" style="margin-top:8px;display:flex;flex-wrap:wrap;gap:6px;"></div>`;
+  renderQualifChips(slot, tipo);
+}
+
+function setQualif(slot, arr) { _qualif[slot] = Array.isArray(arr) ? arr.slice() : []; }
+function getQualif(slot)     { return (_qualif[slot] || []).slice(); }
+
+function addQualif(slot, tipo) {
+  const esp = document.getElementById(`qualif-${slot}-esp`)?.value || '';
+  if (!esp) { toast('Selecione a especialidade', true); return; }
+  const item = { especialidade: esp };
+  if (tipo === 'rqe') {
+    const num = (document.getElementById(`qualif-${slot}-num`)?.value || '').trim();
+    item.numero = num; // número pode ficar em branco, mas a especialidade é obrigatória
+  }
+  (_qualif[slot] = _qualif[slot] || []).push(item);
+  // limpa os campos para o próximo
+  const selE = document.getElementById(`qualif-${slot}-esp`); if (selE) selE.value = '';
+  const selN = document.getElementById(`qualif-${slot}-num`); if (selN) selN.value = '';
+  renderQualifChips(slot, tipo);
+}
+
+function removeQualif(slot, tipo, idx) {
+  if (_qualif[slot]) { _qualif[slot].splice(idx, 1); renderQualifChips(slot, tipo); }
+}
+
+function renderQualifChips(slot, tipo) {
+  const box = document.getElementById(`qualif-${slot}-chips`);
+  if (!box) return;
+  const arr = _qualif[slot] || [];
+  if (!arr.length) { box.innerHTML = '<span style="font-size:11px;color:var(--text3);">Nenhum item adicionado.</span>'; return; }
+  box.innerHTML = arr.map((it, i) => {
+    const txt = tipo === 'rqe'
+      ? esc(it.especialidade) + (it.numero ? ' — ' + esc(it.numero) : '')
+      : esc(it.especialidade);
+    return `<span class="badge badge-blue" style="display:inline-flex;align-items:center;gap:6px;">
+      ${txt}
+      <span onclick="removeQualif('${slot}','${tipo}',${i})" style="cursor:pointer;font-weight:700;" title="Remover">&times;</span>
+    </span>`;
+  }).join('');
+}
+
+// Converte o textarea de RQE antigo (texto) em array estruturado, para
+// migração suave na edição de quem ainda não tem rqes estruturado.
+function rqeTextoParaEstruturado(m) {
+  if (Array.isArray(m.rqes) && m.rqes.length && typeof m.rqes[0] === 'object') return m.rqes.slice();
+  // rqes pode ser array de strings (versão anterior) ou rqe texto
+  const nums = Array.isArray(m.rqes) ? m.rqes
+    : (m.rqe ? String(m.rqe).split(/[\n,;]+/) : []);
+  return nums.map(n => String(n||'').trim()).filter(Boolean).map(n => ({ especialidade: '', numero: n }));
+}
+
+// Inicializa os três construtores do formulário NOVO (zerados).
+function initQualifNovo() {
+  setQualif('novo-rqe', []); montarQualif('novo-rqe', 'rqe');
+  setQualif('novo-pos', []); montarQualif('novo-pos', 'simples');
+  setQualif('novo-esz', []); montarQualif('novo-esz', 'simples');
+}
+
+// Inicializa os três construtores do formulário de EDIÇÃO a partir do médico.
+function initQualifEdit(m) {
+  setQualif('edit-rqe', rqeTextoParaEstruturado(m)); montarQualif('edit-rqe', 'rqe');
+  setQualif('edit-pos', Array.isArray(m.pos_graduacoes) ? m.pos_graduacoes : []); montarQualif('edit-pos', 'simples');
+  setQualif('edit-esz', Array.isArray(m.especializacoes) ? m.especializacoes : []); montarQualif('edit-esz', 'simples');
+}
+
+
 // ─── BANCO DE DADOS MÉDICOS (consulta) ───────────────
 // Lista de médicos com filtros, documentos e pendências.
 // Reusa o cache global `medicos`. Documentos e classificações têm cache próprio.
@@ -3192,22 +3317,42 @@ function espDoMedico(m) {
 
 // Classificações obrigatórias PARA ESTE médico:
 // 'sempre' vale para todos; 'condicional_rqe' só se o médico tem RQE preenchido.
-function tiposObrigatoriosDoMedico(m) {
-  return _bdmTipos.filter(t => {
-    if (!t.ativo) return false;
-    if (t.obrigatoriedade === 'sempre') return true;
-    if (t.obrigatoriedade === 'condicional_rqe') return temRQE(m);
-    return false;
-  });
+function qtdPos(m) { return Array.isArray(m.pos_graduacoes) ? m.pos_graduacoes.length : 0; }
+function qtdEspz(m) { return Array.isArray(m.especializacoes) ? m.especializacoes.length : 0; }
+
+// Quantos documentos cada classificação exige PARA ESTE médico.
+// 'sempre'/'condicional_rqe' = 1 (se aplicável); 'se_pos' = nº de pós;
+// 'se_especializacao' = nº de especializações; 'opcional' = 0.
+function qtdExigidaDoTipo(t, m) {
+  if (!t.ativo) return 0;
+  switch (t.obrigatoriedade) {
+    case 'sempre': return 1;
+    case 'condicional_rqe': return temRQE(m) ? 1 : 0;
+    case 'se_pos': return qtdPos(m);
+    case 'se_especializacao': return qtdEspz(m);
+    default: return 0;
+  }
 }
 
-// Pendência: {enviados, exigidos, faltam:[nomes]}
+// Pendência por CONTAGEM: compara, por classificação, o exigido x o enviado.
+// faltam = lista de "Nome (faltam N)" das classificações incompletas.
 function pendenciaDoMedico(m) {
-  const obrig = tiposObrigatoriosDoMedico(m);
   const docs = _bdmDocsPorMedico[m.id] || [];
-  const tiposComDoc = new Set(docs.map(d => d.tipo_id).filter(Boolean));
-  const faltam = obrig.filter(t => !tiposComDoc.has(t.id)).map(t => t.nome);
-  return { enviados: obrig.length - faltam.length, exigidos: obrig.length, faltam, totalDocs: docs.length };
+  const contagemPorTipo = {};
+  docs.forEach(d => { if (d.tipo_id) contagemPorTipo[d.tipo_id] = (contagemPorTipo[d.tipo_id]||0) + 1; });
+
+  let exigidos = 0, enviadosNosObrig = 0;
+  const faltam = [];
+  _bdmTipos.forEach(t => {
+    const exige = qtdExigidaDoTipo(t, m);
+    if (exige <= 0) return;
+    const tem = contagemPorTipo[t.id] || 0;
+    exigidos += exige;
+    enviadosNosObrig += Math.min(tem, exige);
+    const faltando = exige - tem;
+    if (faltando > 0) faltam.push(faltando > 1 ? `${t.nome} (faltam ${faltando})` : t.nome);
+  });
+  return { enviados: enviadosNosObrig, exigidos, faltam, totalDocs: docs.length };
 }
 
 async function initBancoMedicos() {
@@ -3262,23 +3407,16 @@ function limparFiltrosBancoMedicos() {
   renderBancoMedicos();
 }
 
-function renderBancoMedicos() {
-  const el = document.getElementById('bdm-lista');
-  const count = document.getElementById('bdm-count');
-  if (!el) return;
-  if (!medicos || !medicos.length) {
-    el.innerHTML = '<div class="empty">Nenhum médico cadastrado.</div>';
-    if (count) count.textContent = ''; return;
-  }
-
+// Aplica os filtros atuais da aba e devolve a lista ordenada (usada pelo
+// render e pelas exportações, para o PDF/XLS sair igual à tela).
+function bancoMedicosFiltrados() {
   const fNome = (document.getElementById('bdm-f-nome')?.value || '').trim().toLowerCase();
   const fEsp  = (document.getElementById('bdm-f-esp')?.value  || '').trim().toLowerCase();
   const fUF   = document.getElementById('bdm-f-uf')?.value  || '';
   const fRQE  = document.getElementById('bdm-f-rqe')?.value || '';
   const fProj = document.getElementById('bdm-f-proj')?.value || '';
   const fPend = document.getElementById('bdm-f-pend')?.value || '';
-
-  const lista = (medicos||[]).filter(m => {
+  return (medicos||[]).filter(m => {
     const uf = ufDoCRM(m.crm);
     if (fNome && !String(m.nome||'').toLowerCase().includes(fNome)) return false;
     if (fEsp  && !espDoMedico(m).toLowerCase().includes(fEsp)) return false;
@@ -3294,6 +3432,39 @@ function renderBancoMedicos() {
     }
     return true;
   }).sort((a,b) => String(a.nome||'').localeCompare(String(b.nome||''), 'pt-BR'));
+}
+
+// Monta uma linha de dados (texto) de um médico — compartilhada por PDF e XLS.
+function bancoLinhaMedico(m) {
+  const uf = ufDoCRM(m.crm);
+  const esp = espDoMedico(m);
+  const rqeTxt = temRQE(m)
+    ? (Array.isArray(m.rqes) && m.rqes.length && typeof m.rqes[0]==='object'
+        ? m.rqes.map(r => r.especialidade ? `${r.especialidade}${r.numero?' ('+r.numero+')':''}` : r.numero).filter(Boolean).join('; ')
+        : (Array.isArray(m.rqe)? m.rqe.join('; ') : String(m.rqe||'')))
+    : '';
+  const projNomes = (m.projetos_vinculados||[]).map(pid => { const p = projetos.find(x=>x.id===pid); return p?p.nome:null; }).filter(Boolean);
+  const pend = pendenciaDoMedico(m);
+  let docTxt;
+  if (pend.exigidos === 0) docTxt = `${pend.totalDocs} arquivo(s)`;
+  else if (pend.faltam.length === 0) docTxt = `${pend.enviados}/${pend.exigidos} (completo)`;
+  else docTxt = `${pend.enviados}/${pend.exigidos} — falta: ${pend.faltam.join(', ')}`;
+  return {
+    nome: m.nome||'', crm: m.crm||'', esp: esp||'', rqe: rqeTxt,
+    uf: uf||'', projetos: projNomes.join('; '), documentos: docTxt
+  };
+}
+
+function renderBancoMedicos() {
+  const el = document.getElementById('bdm-lista');
+  const count = document.getElementById('bdm-count');
+  if (!el) return;
+  if (!medicos || !medicos.length) {
+    el.innerHTML = '<div class="empty">Nenhum médico cadastrado.</div>';
+    if (count) count.textContent = ''; return;
+  }
+
+  const lista = bancoMedicosFiltrados();
 
   if (count) count.textContent = `${lista.length} de ${medicos.length} médico(s)`;
   if (!lista.length) { el.innerHTML = '<div class="empty">Nenhum médico encontrado com esses filtros.</div>'; return; }
@@ -3485,6 +3656,8 @@ function renderTiposDoc() {
   if (!_bdmTipos.length) { el.innerHTML = '<div class="empty">Nenhuma classificação cadastrada.</div>'; return; }
   const rotulo = o => o==='sempre' ? '<span class="badge badge-amber">Sempre obrigatório</span>'
     : o==='condicional_rqe' ? '<span class="badge badge-blue">Obrig. se tem RQE</span>'
+    : o==='se_pos' ? '<span class="badge badge-blue">1 por pós-graduação</span>'
+    : o==='se_especializacao' ? '<span class="badge badge-blue">1 por especialização</span>'
     : '<span class="badge badge-green">Opcional</span>';
   el.innerHTML = '<table><thead><tr><th>Nome</th><th>Obrigatoriedade</th><th></th></tr></thead><tbody>'
     + _bdmTipos.sort((a,b)=>(a.ordem||0)-(b.ordem||0)).map(t => `<tr>
@@ -3514,6 +3687,60 @@ async function excluirTipoDoc(id) {
   await sbApi(`/tipos_documento?id=eq.${id}`, { method:'DELETE' });
   toast('Classificação excluída');
   await recarregarDocsBanco(); renderTiposDoc();
+}
+
+// ─── EXPORTAÇÃO DO BANCO (respeita os filtros aplicados) ──
+function _bdmResumoFiltros() {
+  const partes = [];
+  const n = document.getElementById('bdm-f-nome')?.value?.trim(); if (n) partes.push('Nome: '+n);
+  const e = document.getElementById('bdm-f-esp')?.value?.trim();  if (e) partes.push('Especialidade: '+e);
+  const u = document.getElementById('bdm-f-uf')?.value; if (u) partes.push('Estado: '+(u==='__sem__'?'Sem UF':u));
+  const r = document.getElementById('bdm-f-rqe')?.value; if (r) partes.push('RQE: '+(r==='sim'?'Com':'Sem'));
+  const pSel = document.getElementById('bdm-f-proj'); const p = pSel?.value;
+  if (p) partes.push('Projeto: '+(pSel.options[pSel.selectedIndex]?.text||''));
+  const pend = document.getElementById('bdm-f-pend')?.value;
+  if (pend) partes.push('Documentos: '+(pend==='pendente'?'Com pendência':'Completos'));
+  return partes.length ? partes.join('  ·  ') : 'Todos os médicos';
+}
+
+function exportarBancoXLSX() {
+  const lista = bancoMedicosFiltrados();
+  if (!lista.length) { toast('Nada para exportar com esses filtros', true); return; }
+  if (typeof XLSX === 'undefined') { toast('Biblioteca de Excel não carregada', true); return; }
+  const wb = XLSX.utils.book_new();
+  const head = ['Nome','CRM','Especialidade','RQE','Estado','Projetos','Documentos'];
+  const rows = [head];
+  lista.forEach(m => { const l = bancoLinhaMedico(m); rows.push([l.nome,l.crm,l.esp,l.rqe,l.uf,l.projetos,l.documentos]); });
+  const ws = XLSX.utils.aoa_to_sheet(rows);
+  ws['!cols'] = [{wch:30},{wch:16},{wch:26},{wch:28},{wch:8},{wch:34},{wch:34}];
+  XLSX.utils.book_append_sheet(wb, ws, 'Banco de médicos');
+  XLSX.writeFile(wb, 'banco_medicos_'+new Date().toISOString().slice(0,10)+'.xlsx');
+  toast('Excel exportado!');
+}
+
+function exportarBancoPDF() {
+  const lista = bancoMedicosFiltrados();
+  if (!lista.length) { toast('Nada para exportar com esses filtros', true); return; }
+  const linhas = lista.map(m => {
+    const l = bancoLinhaMedico(m);
+    return `<tr><td>${esc(l.nome)}</td><td>${esc(l.crm)}</td><td>${esc(l.esp)}</td><td>${esc(l.rqe)}</td><td>${esc(l.uf)}</td><td>${esc(l.projetos)}</td><td>${esc(l.documentos)}</td></tr>`;
+  }).join('');
+  const win = window.open('', '_blank');
+  win.document.write(
+    '<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>Banco de dados médicos</title>'
+    + '<style>@page{size:A4 landscape;margin:1cm;}body{font-family:Arial,sans-serif;font-size:10px;padding:10px;}'
+    + 'h1{font-size:15px;margin:0 0 2px;}.sub{font-size:10px;color:#555;margin-bottom:10px;}'
+    + 'table{width:100%;border-collapse:collapse;}th{background:#0e5a63;color:#fff;padding:5px 7px;text-align:left;font-size:9px;}'
+    + 'td{padding:4px 7px;border-bottom:0.5px solid #d8e0e2;font-size:9px;vertical-align:top;}'
+    + 'tr:nth-child(even) td{background:#fbfcfc;}.foot{margin-top:12px;font-size:8px;color:#8aa0a6;}</style></head><body>'
+    + '<h1>Banco de dados médicos</h1>'
+    + '<div class="sub">Filtros: ' + esc(_bdmResumoFiltros()) + '  —  ' + lista.length + ' médico(s)</div>'
+    + '<table><thead><tr><th>Nome</th><th>CRM</th><th>Especialidade</th><th>RQE</th><th>Estado</th><th>Projetos</th><th>Documentos</th></tr></thead>'
+    + '<tbody>' + linhas + '</tbody></table>'
+    + '<div class="foot">PlantãoPro · ' + new Date().toLocaleString('pt-BR') + '</div></body></html>'
+  );
+  win.document.close();
+  setTimeout(() => { win.focus(); win.print(); }, 400);
 }
 
 
@@ -3756,7 +3983,7 @@ function abrirEditarMedico(id) {
   document.getElementById('em-cpf').value   = m.cpf || '';
   document.getElementById('em-tipo').value  = m.tipo || 'Plantonista';
   document.getElementById('em-crm').value   = m.crm || '';
-  document.getElementById('em-rqe').value   = (m.rqes && m.rqes.length) ? m.rqes.join('\n') : (m.rqe || '');
+  initQualifEdit(m);
   var _ea=document.getElementById('em-admissao'); if(_ea) _ea.value = m.data_admissao || '';
   var _ev=document.getElementById('em-vinculo'); if(_ev) _ev.value = m.tipo_vinculo || '';
   var _ec=document.getElementById('em-contrato'); if(_ec) _ec.value = m.status_contrato || 'sem_contrato';
@@ -3828,8 +4055,10 @@ async function salvarEdicaoMedico() {
     cpf:            document.getElementById('em-cpf').value.trim(),
     tipo:           document.getElementById('em-tipo').value,
     crm:            document.getElementById('em-crm').value.trim(),
-    rqe:            (document.getElementById('em-rqe').value||'').split(/[\n,;]+/).map(s=>s.trim()).filter(Boolean).join(', '),
-    rqes:           (document.getElementById('em-rqe').value||'').split(/[\n,;]+/).map(s=>s.trim()).filter(Boolean),
+    rqe:            getQualif('edit-rqe').map(r=>r.numero||r.especialidade).filter(Boolean).join(', '),
+    rqes:           getQualif('edit-rqe'),
+    pos_graduacoes: getQualif('edit-pos'),
+    especializacoes: getQualif('edit-esz'),
     data_admissao:  document.getElementById('em-admissao')?.value || null,
     tipo_vinculo:   document.getElementById('em-vinculo')?.value || null,
     status_contrato:document.getElementById('em-contrato')?.value || 'sem_contrato',
@@ -4435,7 +4664,7 @@ function showTab(id,el){
   if(id==='lotemed'){ initAgenda(); }
   if(id==='candidaturas'){ initCandidaturas(); }
   if(id==='financeiro'){ initFinanceiro(); }
-  if(id==='medicos'){ renderMedProjetosCheck(); }
+  if(id==='medicos'){ renderMedProjetosCheck(); initQualifNovo(); }
   if(id==='banco_medicos'){ initBancoMedicos(); }
   if(id==='tipos_documento'){ initTiposDoc(); }
   if(id==='dashboard') { carregarDashboard(); iniciarGraficos(); }
@@ -7214,9 +7443,11 @@ async function addMedico() {
 
   const g = id => (document.getElementById(id)?.value||'').trim();
 
-  // RQE: aceita várias linhas / vírgulas -> array; mantém rqe (texto) p/ compatibilidade
-  const _rqesArr = (document.getElementById('mrqe')?.value||'')
-    .split(/[\n,;]+/).map(s=>s.trim()).filter(Boolean);
+  // RQE / Pós / Especializações: estruturados (especialidade + nº no RQE)
+  const _rqes = getQualif('novo-rqe');            // [{especialidade, numero}]
+  const _pos  = getQualif('novo-pos');            // [{especialidade}]
+  const _esz  = getQualif('novo-esz');            // [{especialidade}]
+  const _rqeTexto = _rqes.map(r => r.numero || r.especialidade).filter(Boolean).join(', ');
 
   const payload = {
     nome, crm,
@@ -7228,8 +7459,10 @@ async function addMedico() {
     status_contrato: g('mn-contrato')||'sem_contrato',
     email: g('memail'),
     tipo: g('mt') || 'Plantonista',
-    rqe:  _rqesArr.join(', '),
-    rqes: _rqesArr,
+    rqe:  _rqeTexto,
+    rqes: _rqes,
+    pos_graduacoes: _pos,
+    especializacoes: _esz,
     especialidade: espsVinc.join(', ') || '',
     especialidades: espsVinc,
     setores_por_projeto: coletarSetoresPorProjeto('med'),
@@ -7263,7 +7496,8 @@ async function addMedico() {
   if (res) {
     toast('Médico cadastrado!');
     // Limpar formulário
-    ['mn','mc','mcpf','mrqe','memail','mtel','mnascimento','mn-admissao',
+    initQualifNovo();
+    ['mn','mc','mcpf','memail','mtel','mnascimento','mn-admissao',
      'mn-rua','mn-numero','mn-comp','mn-bairro','mn-cidade','mn-cep',
      'mn-razao','mn-cnpj','mn-pix-chave','mn-banco','mn-ag','mn-cc']
       .forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
