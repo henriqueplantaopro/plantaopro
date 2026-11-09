@@ -97,6 +97,62 @@ function gerarSenhaProvisoria() {
   return s;
 }
 
+// ─── STORAGE (documentos dos médicos) ────────────────────────────────
+// Bucket privado 'medico-docs'. Todo acesso passa por aqui, no servidor,
+// com a service role — o navegador nunca recebe a chave nem o arquivo
+// direto do bucket. Upload e download usam LINKS ASSINADOS temporários.
+const DOCS_BUCKET = 'medico-docs';
+
+function stHeaders() {
+  return {
+    apikey: process.env.SUPABASE_SERVICE_KEY,
+    Authorization: 'Bearer ' + process.env.SUPABASE_SERVICE_KEY,
+  };
+}
+
+// Gera URL assinada de UPLOAD: o navegador sobe o arquivo direto no Storage
+// (sem passar pela função, então sem o limite de ~4,5 MB do corpo da Vercel).
+async function storageSignedUpload(path) {
+  const r = await fetch(
+    `${process.env.SUPABASE_URL}/storage/v1/object/upload/sign/${DOCS_BUCKET}/${path}`,
+    { method: 'POST', headers: { ...stHeaders(), 'Content-Type': 'application/json' } }
+  );
+  if (!r.ok) throw new Error('signed-upload ' + r.status + ': ' + (await r.text()).slice(0, 200));
+  const j = await r.json();            // { url: '/object/upload/sign/...?token=...' }
+  // devolve URL absoluta pronta para o PUT do navegador
+  return process.env.SUPABASE_URL + '/storage/v1' + (j.url.startsWith('/') ? j.url : '/' + j.url);
+}
+
+// Gera URL assinada de DOWNLOAD válida por alguns minutos.
+async function storageSignedDownload(path, segundos = 120) {
+  const r = await fetch(
+    `${process.env.SUPABASE_URL}/storage/v1/object/sign/${DOCS_BUCKET}/${path}`,
+    { method: 'POST', headers: { ...stHeaders(), 'Content-Type': 'application/json' },
+      body: JSON.stringify({ expiresIn: segundos }) }
+  );
+  if (!r.ok) throw new Error('signed-download ' + r.status + ': ' + (await r.text()).slice(0, 200));
+  const j = await r.json();            // { signedURL: '/object/sign/...?token=...' }
+  return process.env.SUPABASE_URL + '/storage/v1' + (j.signedURL.startsWith('/') ? j.signedURL : '/' + j.signedURL);
+}
+
+// Remove o arquivo do bucket.
+async function storageRemover(path) {
+  const r = await fetch(
+    `${process.env.SUPABASE_URL}/storage/v1/object/${DOCS_BUCKET}/${path}`,
+    { method: 'DELETE', headers: stHeaders() }
+  );
+  if (!r.ok && r.status !== 404) throw new Error('storage-del ' + r.status);
+  return true;
+}
+
+// Confere que o médico pertence a este admin (mesmo isolamento do PATCH).
+async function medicoDoAdmin(medicoId, adminId) {
+  const v = await sbAdmin(
+    `/rest/v1/vinculos?medico_id=eq.${medicoId}&admin_id=eq.${adminId}&select=medico_id`
+  );
+  return !!(v && v.length);
+}
+
 export default async function handler(req, res) {
   setCors(res);
   if (req.method === 'OPTIONS') return res.status(204).end();
@@ -106,6 +162,77 @@ export default async function handler(req, res) {
   const adminId = sessao.adminId;
 
   try {
+    // ── DOCUMENTOS: pedir URL de upload assinada ────────────────────────
+    // Body: { medico_id, nome_arquivo }. Devolve { upload_url, storage_path }.
+    if (req.method === 'POST' && req.query.action === 'doc-upload-url') {
+      const { medico_id, nome_arquivo } = req.body || {};
+      if (!medico_id || !nome_arquivo) return json(res, 400, { erro: 'medico_id e nome_arquivo obrigatórios' });
+      if (!(await medicoDoAdmin(medico_id, adminId))) return json(res, 403, { erro: 'Médico não pertence à sua empresa' });
+      const ext = String(nome_arquivo).includes('.') ? String(nome_arquivo).split('.').pop().toLowerCase().replace(/[^a-z0-9]/g, '') : 'bin';
+      const path = `${adminId}/${medico_id}/${randomUUID()}.${ext}`;
+      const upload_url = await storageSignedUpload(path);
+      return json(res, 200, { upload_url, storage_path: path });
+    }
+
+    // ── DOCUMENTOS: registrar metadados depois do upload ────────────────
+    // Body: { medico_id, tipo_id, nome_arquivo, storage_path, tamanho, content_type }
+    if (req.method === 'POST' && req.query.action === 'doc-registrar') {
+      const b = req.body || {};
+      if (!b.medico_id || !b.storage_path || !b.nome_arquivo) return json(res, 400, { erro: 'dados incompletos' });
+      if (!(await medicoDoAdmin(b.medico_id, adminId))) return json(res, 403, { erro: 'Médico não pertence à sua empresa' });
+      const reg = await sbAdmin('/rest/v1/documentos_medico', {
+        method: 'POST', headers: { Prefer: 'return=representation' },
+        body: JSON.stringify({
+          admin_id: adminId, medico_id: b.medico_id, tipo_id: b.tipo_id || null,
+          nome_arquivo: b.nome_arquivo, storage_path: b.storage_path,
+          tamanho: b.tamanho || null, content_type: b.content_type || null,
+        }),
+      });
+      return json(res, 201, reg?.[0] || {});
+    }
+
+    // ── DOCUMENTOS: todos os do admin (para calcular pendências na lista) ─
+    if (req.method === 'GET' && req.query.action === 'doc-todos') {
+      const docs = await sbAdmin(
+        `/rest/v1/documentos_medico?admin_id=eq.${adminId}&select=id,medico_id,tipo_id,nome_arquivo`
+      );
+      return json(res, 200, docs || []);
+    }
+
+    // ── DOCUMENTOS: listar os de um médico ──────────────────────────────
+    if (req.method === 'GET' && req.query.action === 'doc-listar') {
+      const medico_id = req.query.medico_id;
+      if (!medico_id) return json(res, 400, { erro: 'medico_id obrigatório' });
+      if (!(await medicoDoAdmin(medico_id, adminId))) return json(res, 403, { erro: 'Médico não pertence à sua empresa' });
+      const docs = await sbAdmin(
+        `/rest/v1/documentos_medico?medico_id=eq.${medico_id}&admin_id=eq.${adminId}&select=*&order=criado_em.asc`
+      );
+      return json(res, 200, docs || []);
+    }
+
+    // ── DOCUMENTOS: link de download assinado de um documento ───────────
+    if (req.method === 'GET' && req.query.action === 'doc-url') {
+      const id = req.query.id;
+      if (!id) return json(res, 400, { erro: 'id obrigatório' });
+      const d = await sbAdmin(`/rest/v1/documentos_medico?id=eq.${id}&admin_id=eq.${adminId}&select=storage_path,nome_arquivo`);
+      if (!d || !d.length) return json(res, 404, { erro: 'documento não encontrado' });
+      const url = await storageSignedDownload(d[0].storage_path, 120);
+      return json(res, 200, { url, nome_arquivo: d[0].nome_arquivo });
+    }
+
+    // ── DOCUMENTOS: excluir ─────────────────────────────────────────────
+    if (req.method === 'DELETE' && req.query.action === 'doc-del') {
+      const id = req.query.id;
+      if (!id) return json(res, 400, { erro: 'id obrigatório' });
+      const d = await sbAdmin(`/rest/v1/documentos_medico?id=eq.${id}&admin_id=eq.${adminId}&select=storage_path`);
+      if (!d || !d.length) return json(res, 404, { erro: 'documento não encontrado' });
+      try { await storageRemover(d[0].storage_path); } catch (_) {}
+      await sbAdmin(`/rest/v1/documentos_medico?id=eq.${id}&admin_id=eq.${adminId}`, {
+        method: 'DELETE', headers: { Prefer: 'return=minimal' },
+      });
+      return json(res, 200, { ok: true });
+    }
+
     // ── IMPORTAR EM LOTE (casar por CRM: cria novos, atualiza existentes) ─
     if (req.method === 'POST' && req.query.action === 'importar') {
       const lista = Array.isArray(req.body) ? req.body : [];
