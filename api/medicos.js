@@ -79,6 +79,7 @@ const CAMPOS_PERMITIDOS = [
   'pessoa_juridica','razao_social','cnpj','pix_tipo','pix_chave','banco','agencia',
   'conta_corrente','tipo_conta','ufs_interesse','projetos_vinculados',
   'data_admissao','tipo_vinculo','status_contrato','rqes','setores_por_projeto',
+  'pos_graduacoes','especializacoes',
   'device_id','device_registrado_em', // reset de dispositivo
 ];
 
