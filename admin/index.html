@@ -457,6 +457,7 @@ tr:hover td{background:var(--bg3);}
       <span class="dd-label" onclick="ddToggle(this)">Cadastros <span class="dd-caret">&#9662;</span></span>
       <div class="dd-menu">
         <div class="nav-item" onclick="showTab('medicos',this)">Médicos</div>
+        <div class="nav-item" onclick="showTab('banco_medicos',this)">Banco de dados médicos</div>
         <div class="nav-item" onclick="showTab('convites',this);carregarConvites();">Convidar médico</div>
         <div class="nav-item" onclick="showTab('projetos',this)">Projetos</div>
         <div class="nav-item" onclick="showTab('tipos',this)">Tipos de plantão</div>
@@ -884,6 +885,39 @@ tr:hover td{background:var(--bg3);}
         </div>
       </div>
       <div id="medicos-lista"><div class="empty">Carregando...</div></div>
+    </div>
+  </div>
+
+  <!-- BANCO DE DADOS MÉDICOS -->
+  <div id="tab-banco_medicos" class="section">
+    <div class="page-title">Banco de dados médicos</div>
+    <div class="page-sub">Consulta rápida de todos os médicos cadastrados</div>
+    <div class="card">
+      <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:flex-end;margin-bottom:12px;">
+        <div class="form-group" style="flex:2;min-width:180px;margin:0;">
+          <label>Nome</label>
+          <input id="bdm-f-nome" type="text" placeholder="Buscar por nome..." oninput="renderBancoMedicos()">
+        </div>
+        <div class="form-group" style="flex:2;min-width:160px;margin:0;">
+          <label>Especialidade</label>
+          <input id="bdm-f-esp" type="text" placeholder="Buscar especialidade..." oninput="renderBancoMedicos()">
+        </div>
+        <div class="form-group" style="flex:1;min-width:110px;margin:0;">
+          <label>Estado</label>
+          <select id="bdm-f-uf" onchange="renderBancoMedicos()"><option value="">Todos</option></select>
+        </div>
+        <div class="form-group" style="flex:1;min-width:110px;margin:0;">
+          <label>RQE</label>
+          <select id="bdm-f-rqe" onchange="renderBancoMedicos()">
+            <option value="">Todos</option>
+            <option value="sim">Com RQE</option>
+            <option value="nao">Sem RQE</option>
+          </select>
+        </div>
+        <button class="btn btn-ghost btn-sm" style="margin-bottom:1px;" onclick="limparFiltrosBancoMedicos()">Limpar</button>
+      </div>
+      <div id="bdm-count" style="font-size:12px;color:var(--text3);margin-bottom:8px;"></div>
+      <div id="bdm-lista"><div class="empty">Carregando...</div></div>
     </div>
   </div>
 
@@ -3051,6 +3085,112 @@ function renderMedicos(filtro='') {
 
 
 
+// ─── BANCO DE DADOS MÉDICOS (consulta) ───────────────
+// Lista só-leitura de todos os médicos, com filtros que reagem ao digitar.
+// Reusa o cache global `medicos` (carregado por carregarMedicos()).
+
+// 27 UFs válidas. A UF só é extraída quando o CRM tem EXATAMENTE 2 letras
+// no campo todo e essas 2 letras formam uma UF; caso contrário, fica "—".
+const BDM_UFS = ['AC','AL','AP','AM','BA','CE','DF','ES','GO','MA','MT','MS','MG','PA','PB','PR','PE','PI','RJ','RN','RS','RO','RR','SC','SP','SE','TO'];
+
+function ufDoCRM(crm) {
+  const letras = String(crm||'').toUpperCase().match(/[A-Z]/g) || [];
+  if (letras.length !== 2) return '';          // 0, 1 ou 3+ letras → sem resultado
+  const sigla = letras.join('');
+  return BDM_UFS.includes(sigla) ? sigla : ''; // 2 letras que não são UF → sem resultado
+}
+
+// RQE preenchido? (string não vazia, ou array com algum item)
+function temRQE(m) {
+  const v = m.rqe;
+  if (Array.isArray(v)) return v.filter(x => String(x||'').trim()).length > 0;
+  return String(v||'').trim().length > 0;
+}
+
+// Especialidade exibível: usa o campo texto; se vazio, junta o array.
+function espDoMedico(m) {
+  if (m.especialidade && String(m.especialidade).trim()) return String(m.especialidade).trim();
+  if (Array.isArray(m.especialidades)) {
+    const j = m.especialidades.filter(x => String(x||'').trim()).join(', ');
+    if (j) return j;
+  }
+  return '';
+}
+
+function initBancoMedicos() {
+  // Popular o select de Estado com as UFs que existem de fato nos cadastros.
+  const selUF = document.getElementById('bdm-f-uf');
+  if (selUF) {
+    const presentes = new Set();
+    let temSemUF = false;
+    (medicos||[]).forEach(m => { const u = ufDoCRM(m.crm); if (u) presentes.add(u); else temSemUF = true; });
+    const ordenadas = BDM_UFS.filter(u => presentes.has(u));
+    selUF.innerHTML = '<option value="">Todos</option>'
+      + ordenadas.map(u => `<option value="${u}">${u}</option>`).join('')
+      + (temSemUF ? '<option value="__sem__">Sem UF</option>' : '');
+  }
+  renderBancoMedicos();
+}
+
+function limparFiltrosBancoMedicos() {
+  const n = document.getElementById('bdm-f-nome'); if (n) n.value = '';
+  const e = document.getElementById('bdm-f-esp');  if (e) e.value = '';
+  const u = document.getElementById('bdm-f-uf');   if (u) u.value = '';
+  const r = document.getElementById('bdm-f-rqe');  if (r) r.value = '';
+  renderBancoMedicos();
+}
+
+function renderBancoMedicos() {
+  const el = document.getElementById('bdm-lista');
+  const count = document.getElementById('bdm-count');
+  if (!el) return;
+  if (!medicos || !medicos.length) {
+    el.innerHTML = '<div class="empty">Nenhum médico cadastrado.</div>';
+    if (count) count.textContent = '';
+    return;
+  }
+
+  const fNome = (document.getElementById('bdm-f-nome')?.value || '').trim().toLowerCase();
+  const fEsp  = (document.getElementById('bdm-f-esp')?.value  || '').trim().toLowerCase();
+  const fUF   = document.getElementById('bdm-f-uf')?.value  || '';
+  const fRQE  = document.getElementById('bdm-f-rqe')?.value || '';
+
+  const lista = (medicos||[]).filter(m => {
+    const uf = ufDoCRM(m.crm);
+    if (fNome && !String(m.nome||'').toLowerCase().includes(fNome)) return false;
+    if (fEsp  && !espDoMedico(m).toLowerCase().includes(fEsp)) return false;
+    if (fUF === '__sem__') { if (uf) return false; }
+    else if (fUF && uf !== fUF) return false;
+    if (fRQE === 'sim' && !temRQE(m)) return false;
+    if (fRQE === 'nao' &&  temRQE(m)) return false;
+    return true;
+  }).sort((a,b) => String(a.nome||'').localeCompare(String(b.nome||''), 'pt-BR'));
+
+  if (count) count.textContent = `${lista.length} de ${medicos.length} médico(s)`;
+
+  if (!lista.length) {
+    el.innerHTML = '<div class="empty">Nenhum médico encontrado com esses filtros.</div>';
+    return;
+  }
+
+  el.innerHTML = '<table><thead><tr><th>Nome</th><th>CRM</th><th>Especialidade</th><th>RQE</th><th>Estado</th></tr></thead><tbody>'
+    + lista.map(m => {
+        const uf  = ufDoCRM(m.crm);
+        const esp = espDoMedico(m);
+        const rqeTxt = temRQE(m)
+          ? (Array.isArray(m.rqe) ? m.rqe.filter(x=>String(x||'').trim()).join(', ') : String(m.rqe).trim())
+          : '';
+        return `<tr>
+          <td><strong>${esc(m.nome)}</strong></td>
+          <td style="font-family:monospace;font-size:12px;">${esc(m.crm||'—')}</td>
+          <td style="font-size:12px;">${esc(esp||'—')}</td>
+          <td style="font-size:12px;">${rqeTxt ? esc(rqeTxt) : '<span style="color:var(--text3);">—</span>'}</td>
+          <td style="font-family:monospace;">${uf || '<span style="color:var(--text3);">—</span>'}</td>
+        </tr>`;
+      }).join('')
+    + '</tbody></table>';
+}
+
 // ─── EXPORTAR / IMPORTAR MÉDICOS ─────────────────────
 // Cabeçalho da planilha de médicos.
 // As 29 primeiras colunas são editáveis e reimportáveis (mesma ordem no parser de importação).
@@ -3970,6 +4110,7 @@ function showTab(id,el){
   if(id==='candidaturas'){ initCandidaturas(); }
   if(id==='financeiro'){ initFinanceiro(); }
   if(id==='medicos'){ renderMedProjetosCheck(); }
+  if(id==='banco_medicos'){ initBancoMedicos(); }
   if(id==='dashboard') { carregarDashboard(); iniciarGraficos(); }
   if (id==='usuarios') { carregarUsuarios(); }
   if (id==='log') { carregarLog(); }
