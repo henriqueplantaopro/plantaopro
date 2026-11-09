@@ -890,23 +890,26 @@ tr:hover td{background:var(--bg3);}
 
   <!-- BANCO DE DADOS MÉDICOS -->
   <div id="tab-banco_medicos" class="section">
-    <div class="page-title">Banco de dados médicos</div>
-    <div class="page-sub">Consulta rápida de todos os médicos cadastrados</div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+      <div class="page-title" style="margin-bottom:0;">Banco de dados médicos</div>
+      <button class="btn btn-ghost btn-sm" onclick="showTab('tipos_documento',this)">Classificações de documento</button>
+    </div>
+    <div class="page-sub">Consulta de médicos, documentos e pendências</div>
     <div class="card">
-      <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:flex-end;margin-bottom:12px;">
-        <div class="form-group" style="flex:2;min-width:180px;margin:0;">
+      <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:flex-end;margin-bottom:10px;">
+        <div class="form-group" style="flex:2;min-width:170px;margin:0;">
           <label>Nome</label>
           <input id="bdm-f-nome" type="text" placeholder="Buscar por nome..." oninput="renderBancoMedicos()">
         </div>
-        <div class="form-group" style="flex:2;min-width:160px;margin:0;">
+        <div class="form-group" style="flex:2;min-width:150px;margin:0;">
           <label>Especialidade</label>
           <input id="bdm-f-esp" type="text" placeholder="Buscar especialidade..." oninput="renderBancoMedicos()">
         </div>
-        <div class="form-group" style="flex:1;min-width:110px;margin:0;">
+        <div class="form-group" style="flex:1;min-width:100px;margin:0;">
           <label>Estado</label>
           <select id="bdm-f-uf" onchange="renderBancoMedicos()"><option value="">Todos</option></select>
         </div>
-        <div class="form-group" style="flex:1;min-width:110px;margin:0;">
+        <div class="form-group" style="flex:1;min-width:100px;margin:0;">
           <label>RQE</label>
           <select id="bdm-f-rqe" onchange="renderBancoMedicos()">
             <option value="">Todos</option>
@@ -914,10 +917,78 @@ tr:hover td{background:var(--bg3);}
             <option value="nao">Sem RQE</option>
           </select>
         </div>
-        <button class="btn btn-ghost btn-sm" style="margin-bottom:1px;" onclick="limparFiltrosBancoMedicos()">Limpar</button>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:flex-end;margin-bottom:12px;">
+        <div class="form-group" style="flex:2;min-width:180px;margin:0;">
+          <label>Projeto</label>
+          <select id="bdm-f-proj" onchange="renderBancoMedicos()"><option value="">Todos os projetos</option></select>
+        </div>
+        <div class="form-group" style="flex:1;min-width:150px;margin:0;">
+          <label>Documentos</label>
+          <select id="bdm-f-pend" onchange="renderBancoMedicos()">
+            <option value="">Todos</option>
+            <option value="pendente">Só com pendência</option>
+            <option value="completo">Só completos</option>
+          </select>
+        </div>
+        <button class="btn btn-ghost btn-sm" style="margin-bottom:1px;" onclick="limparFiltrosBancoMedicos()">Limpar filtros</button>
       </div>
       <div id="bdm-count" style="font-size:12px;color:var(--text3);margin-bottom:8px;"></div>
       <div id="bdm-lista"><div class="empty">Carregando...</div></div>
+    </div>
+  </div>
+
+  <!-- CLASSIFICAÇÕES DE DOCUMENTO -->
+  <div id="tab-tipos_documento" class="section">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+      <div class="page-title" style="margin-bottom:0;">Classificações de documento</div>
+      <button class="btn btn-ghost btn-sm" onclick="showTab('banco_medicos',this)">&#8592; Voltar ao banco</button>
+    </div>
+    <div class="page-sub">Tipos de documento que os médicos precisam enviar</div>
+    <div class="card">
+      <div class="card-title">Nova classificação</div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:flex-end;">
+        <div class="form-group" style="flex:2;min-width:180px;margin:0;">
+          <label>Nome <span style="color:var(--red)">*</span></label>
+          <input id="td-nome" type="text" placeholder="Ex.: Comprovante de endereço">
+        </div>
+        <div class="form-group" style="flex:1;min-width:200px;margin:0;">
+          <label>Obrigatoriedade</label>
+          <select id="td-obrig">
+            <option value="sempre">Sempre obrigatório</option>
+            <option value="opcional" selected>Opcional</option>
+            <option value="condicional_rqe">Obrigatório só se o médico tem RQE</option>
+          </select>
+        </div>
+        <button class="btn btn-primary btn-sm" style="margin-bottom:1px;" onclick="salvarTipoDoc()">Adicionar</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Classificações cadastradas</div>
+      <div id="td-lista"><div class="empty">Carregando...</div></div>
+    </div>
+  </div>
+
+  <!-- MODAL: DOCUMENTOS DO MÉDICO -->
+  <div class="modal-overlay" id="modal-docs-med" onclick="if(event.target===this)fecharDocsMedico()">
+    <div class="modal" style="max-width:640px;">
+      <div class="modal-header">
+        <div class="modal-title" id="docs-med-titulo">Documentos</div>
+        <button class="modal-close" onclick="fecharDocsMedico()">&#10005;</button>
+      </div>
+      <div style="padding:0 4px;">
+        <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:flex-end;margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--border);">
+          <div class="form-group" style="flex:1;min-width:160px;margin:0;">
+            <label>Classificação</label>
+            <select id="docs-med-tipo"></select>
+          </div>
+          <label class="btn btn-primary btn-sm" style="cursor:pointer;margin-bottom:1px;" id="docs-med-btn-up">
+            <span id="docs-med-up-label">Enviar documento</span>
+            <input type="file" id="docs-med-file" style="display:none;" onchange="enviarDocMedico(event)">
+          </label>
+        </div>
+        <div id="docs-med-lista"><div class="empty">Carregando...</div></div>
+      </div>
     </div>
   </div>
 
@@ -3086,28 +3157,30 @@ function renderMedicos(filtro='') {
 
 
 // ─── BANCO DE DADOS MÉDICOS (consulta) ───────────────
-// Lista só-leitura de todos os médicos, com filtros que reagem ao digitar.
-// Reusa o cache global `medicos` (carregado por carregarMedicos()).
+// Lista de médicos com filtros, documentos e pendências.
+// Reusa o cache global `medicos`. Documentos e classificações têm cache próprio.
 
 // 27 UFs válidas. A UF só é extraída quando o CRM tem EXATAMENTE 2 letras
 // no campo todo e essas 2 letras formam uma UF; caso contrário, fica "—".
 const BDM_UFS = ['AC','AL','AP','AM','BA','CE','DF','ES','GO','MA','MT','MS','MG','PA','PB','PR','PE','PI','RJ','RN','RS','RO','RR','SC','SP','SE','TO'];
 
+let _bdmTipos = [];        // classificações (tipos_documento)
+let _bdmDocsPorMedico = {}; // medico_id -> [documentos]
+let _bdmCarregado = false;
+
 function ufDoCRM(crm) {
   const letras = String(crm||'').toUpperCase().match(/[A-Z]/g) || [];
-  if (letras.length !== 2) return '';          // 0, 1 ou 3+ letras → sem resultado
+  if (letras.length !== 2) return '';
   const sigla = letras.join('');
-  return BDM_UFS.includes(sigla) ? sigla : ''; // 2 letras que não são UF → sem resultado
+  return BDM_UFS.includes(sigla) ? sigla : '';
 }
 
-// RQE preenchido? (string não vazia, ou array com algum item)
 function temRQE(m) {
   const v = m.rqe;
   if (Array.isArray(v)) return v.filter(x => String(x||'').trim()).length > 0;
   return String(v||'').trim().length > 0;
 }
 
-// Especialidade exibível: usa o campo texto; se vazio, junta o array.
 function espDoMedico(m) {
   if (m.especialidade && String(m.especialidade).trim()) return String(m.especialidade).trim();
   if (Array.isArray(m.especialidades)) {
@@ -3117,26 +3190,75 @@ function espDoMedico(m) {
   return '';
 }
 
-function initBancoMedicos() {
-  // Popular o select de Estado com as UFs que existem de fato nos cadastros.
+// Classificações obrigatórias PARA ESTE médico:
+// 'sempre' vale para todos; 'condicional_rqe' só se o médico tem RQE preenchido.
+function tiposObrigatoriosDoMedico(m) {
+  return _bdmTipos.filter(t => {
+    if (!t.ativo) return false;
+    if (t.obrigatoriedade === 'sempre') return true;
+    if (t.obrigatoriedade === 'condicional_rqe') return temRQE(m);
+    return false;
+  });
+}
+
+// Pendência: {enviados, exigidos, faltam:[nomes]}
+function pendenciaDoMedico(m) {
+  const obrig = tiposObrigatoriosDoMedico(m);
+  const docs = _bdmDocsPorMedico[m.id] || [];
+  const tiposComDoc = new Set(docs.map(d => d.tipo_id).filter(Boolean));
+  const faltam = obrig.filter(t => !tiposComDoc.has(t.id)).map(t => t.nome);
+  return { enviados: obrig.length - faltam.length, exigidos: obrig.length, faltam, totalDocs: docs.length };
+}
+
+async function initBancoMedicos() {
+  // Carrega classificações e documentos uma vez (ou quando reabrir após mudança)
+  if (!_bdmCarregado) await recarregarDocsBanco();
+  // Popular select de Estado com as UFs presentes
   const selUF = document.getElementById('bdm-f-uf');
   if (selUF) {
-    const presentes = new Set();
-    let temSemUF = false;
+    const presentes = new Set(); let temSemUF = false;
     (medicos||[]).forEach(m => { const u = ufDoCRM(m.crm); if (u) presentes.add(u); else temSemUF = true; });
-    const ordenadas = BDM_UFS.filter(u => presentes.has(u));
+    const atual = selUF.value;
     selUF.innerHTML = '<option value="">Todos</option>'
-      + ordenadas.map(u => `<option value="${u}">${u}</option>`).join('')
+      + BDM_UFS.filter(u => presentes.has(u)).map(u => `<option value="${u}">${u}</option>`).join('')
       + (temSemUF ? '<option value="__sem__">Sem UF</option>' : '');
+    selUF.value = atual;
+  }
+  // Popular select de Projeto
+  const selP = document.getElementById('bdm-f-proj');
+  if (selP) {
+    const atual = selP.value;
+    selP.innerHTML = '<option value="">Todos os projetos</option>'
+      + [...projetos].sort((a,b)=>String(a.nome||'').localeCompare(String(b.nome||''),'pt-BR'))
+          .map(p => `<option value="${p.id}">${esc(p.nome)}</option>`).join('');
+    selP.value = atual;
   }
   renderBancoMedicos();
 }
 
+async function recarregarDocsBanco() {
+  try {
+    _bdmTipos = (await sbApi('/tipos_documento?select=*&order=ordem')) || [];
+  } catch (_) { _bdmTipos = []; }
+  // Carrega TODOS os documentos do admin de uma vez (via tabela liberada seria ideal,
+  // mas documentos_medico só sai pelo medicos.js por médico; então buscamos por médico
+  // apenas os que têm algo não é possível — carregamos sob demanda).
+  // Estratégia: uma única leitura por GET action doc-todos (ver nota). Como o backend
+  // expõe por médico, montamos o mapa com uma chamada agregada:
+  try {
+    const todos = await fetch('/api/medicos?action=doc-todos', { headers:{'Content-Type':'application/json'} })
+      .then(r => r.ok ? r.json() : []);
+    _bdmDocsPorMedico = {};
+    (todos||[]).forEach(d => {
+      (_bdmDocsPorMedico[d.medico_id] = _bdmDocsPorMedico[d.medico_id] || []).push(d);
+    });
+  } catch (_) { _bdmDocsPorMedico = {}; }
+  _bdmCarregado = true;
+}
+
 function limparFiltrosBancoMedicos() {
-  const n = document.getElementById('bdm-f-nome'); if (n) n.value = '';
-  const e = document.getElementById('bdm-f-esp');  if (e) e.value = '';
-  const u = document.getElementById('bdm-f-uf');   if (u) u.value = '';
-  const r = document.getElementById('bdm-f-rqe');  if (r) r.value = '';
+  ['bdm-f-nome','bdm-f-esp'].forEach(id=>{const e=document.getElementById(id); if(e)e.value='';});
+  ['bdm-f-uf','bdm-f-rqe','bdm-f-proj','bdm-f-pend'].forEach(id=>{const e=document.getElementById(id); if(e)e.value='';});
   renderBancoMedicos();
 }
 
@@ -3146,14 +3268,15 @@ function renderBancoMedicos() {
   if (!el) return;
   if (!medicos || !medicos.length) {
     el.innerHTML = '<div class="empty">Nenhum médico cadastrado.</div>';
-    if (count) count.textContent = '';
-    return;
+    if (count) count.textContent = ''; return;
   }
 
   const fNome = (document.getElementById('bdm-f-nome')?.value || '').trim().toLowerCase();
   const fEsp  = (document.getElementById('bdm-f-esp')?.value  || '').trim().toLowerCase();
   const fUF   = document.getElementById('bdm-f-uf')?.value  || '';
   const fRQE  = document.getElementById('bdm-f-rqe')?.value || '';
+  const fProj = document.getElementById('bdm-f-proj')?.value || '';
+  const fPend = document.getElementById('bdm-f-pend')?.value || '';
 
   const lista = (medicos||[]).filter(m => {
     const uf = ufDoCRM(m.crm);
@@ -3163,33 +3286,236 @@ function renderBancoMedicos() {
     else if (fUF && uf !== fUF) return false;
     if (fRQE === 'sim' && !temRQE(m)) return false;
     if (fRQE === 'nao' &&  temRQE(m)) return false;
+    if (fProj && !((m.projetos_vinculados||[]).includes(fProj))) return false;
+    if (fPend) {
+      const p = pendenciaDoMedico(m);
+      if (fPend === 'pendente' && p.faltam.length === 0) return false;
+      if (fPend === 'completo' && p.faltam.length > 0) return false;
+    }
     return true;
   }).sort((a,b) => String(a.nome||'').localeCompare(String(b.nome||''), 'pt-BR'));
 
   if (count) count.textContent = `${lista.length} de ${medicos.length} médico(s)`;
+  if (!lista.length) { el.innerHTML = '<div class="empty">Nenhum médico encontrado com esses filtros.</div>'; return; }
 
-  if (!lista.length) {
-    el.innerHTML = '<div class="empty">Nenhum médico encontrado com esses filtros.</div>';
-    return;
-  }
-
-  el.innerHTML = '<table><thead><tr><th>Nome</th><th>CRM</th><th>Especialidade</th><th>RQE</th><th>Estado</th></tr></thead><tbody>'
+  el.innerHTML = '<table><thead><tr><th>Nome</th><th>CRM</th><th>Especialidade</th><th>RQE</th><th>Estado</th><th>Projetos</th><th>Documentos</th><th></th></tr></thead><tbody>'
     + lista.map(m => {
         const uf  = ufDoCRM(m.crm);
         const esp = espDoMedico(m);
         const rqeTxt = temRQE(m)
           ? (Array.isArray(m.rqe) ? m.rqe.filter(x=>String(x||'').trim()).join(', ') : String(m.rqe).trim())
           : '';
+        const projNomes = (m.projetos_vinculados||[]).map(pid => {
+          const p = projetos.find(x=>x.id===pid); return p ? p.nome : null;
+        }).filter(Boolean);
+        const projTxt = projNomes.length ? esc(projNomes.join(', ')) : '<span style="color:var(--text3);">—</span>';
+        const pend = pendenciaDoMedico(m);
+        let docCell;
+        if (pend.exigidos === 0) {
+          docCell = `<span class="badge badge-blue">${pend.totalDocs} arquivo(s)</span>`;
+        } else if (pend.faltam.length === 0) {
+          docCell = `<span class="badge badge-green">${pend.enviados}/${pend.exigidos} ✓</span>`;
+        } else {
+          docCell = `<span class="badge badge-amber">${pend.enviados}/${pend.exigidos}</span>`
+            + `<br><span style="font-size:10px;color:var(--text3);">Falta: ${esc(pend.faltam.join(', '))}</span>`;
+        }
+        const temDocs = pend.totalDocs > 0;
+        const zipBtn = temDocs
+          ? `<button class="btn btn-ghost btn-sm" onclick="baixarZipMedico('${m.id}')">Baixar ZIP</button>`
+          : `<button class="btn btn-ghost btn-sm" disabled title="Sem documentos" style="opacity:.5;cursor:not-allowed;">Baixar ZIP</button>`;
         return `<tr>
           <td><strong>${esc(m.nome)}</strong></td>
           <td style="font-family:monospace;font-size:12px;">${esc(m.crm||'—')}</td>
           <td style="font-size:12px;">${esc(esp||'—')}</td>
           <td style="font-size:12px;">${rqeTxt ? esc(rqeTxt) : '<span style="color:var(--text3);">—</span>'}</td>
           <td style="font-family:monospace;">${uf || '<span style="color:var(--text3);">—</span>'}</td>
+          <td style="font-size:11px;">${projTxt}</td>
+          <td style="font-size:12px;">${docCell}</td>
+          <td style="white-space:nowrap;">
+            <button class="btn btn-ghost btn-sm" onclick="abrirDocsMedico('${m.id}')">Documentos</button>
+            ${zipBtn}
+          </td>
         </tr>`;
       }).join('')
     + '</tbody></table>';
 }
+
+// ─── MODAL: DOCUMENTOS DO MÉDICO ─────────────────────
+let _docsMedAtual = null;
+
+function abrirDocsMedico(medId) {
+  const m = medicos.find(x => x.id === medId);
+  if (!m) return;
+  _docsMedAtual = m;
+  document.getElementById('docs-med-titulo').textContent = 'Documentos — ' + m.nome;
+  // popular classificações no select de upload
+  const sel = document.getElementById('docs-med-tipo');
+  sel.innerHTML = _bdmTipos.filter(t=>t.ativo).map(t => `<option value="${t.id}">${esc(t.nome)}</option>`).join('')
+    || '<option value="">(cadastre classificações primeiro)</option>';
+  document.getElementById('modal-docs-med').classList.add('open');
+  carregarDocsDoMedico(medId);
+}
+
+function fecharDocsMedico() {
+  document.getElementById('modal-docs-med').classList.remove('open');
+  _docsMedAtual = null;
+}
+
+async function carregarDocsDoMedico(medId) {
+  const el = document.getElementById('docs-med-lista');
+  el.innerHTML = '<div class="empty">Carregando...</div>';
+  const docs = await fetch(`/api/medicos?action=doc-listar&medico_id=${medId}`, {headers:{'Content-Type':'application/json'}})
+    .then(r => r.ok ? r.json() : []).catch(()=>[]);
+  _bdmDocsPorMedico[medId] = docs;  // mantém o mapa em dia
+  const nomeTipo = id => { const t = _bdmTipos.find(x=>x.id===id); return t ? t.nome : 'Sem classificação'; };
+  if (!docs.length) { el.innerHTML = '<div class="empty">Nenhum documento enviado.</div>'; }
+  else {
+    el.innerHTML = '<table><thead><tr><th>Classificação</th><th>Arquivo</th><th></th></tr></thead><tbody>'
+      + docs.map(d => `<tr>
+          <td style="font-size:12px;">${esc(nomeTipo(d.tipo_id))}</td>
+          <td style="font-size:12px;">${esc(d.nome_arquivo)}</td>
+          <td style="white-space:nowrap;">
+            <button class="btn btn-link" onclick="baixarDoc('${d.id}')">Baixar</button>
+            <button class="btn btn-danger btn-sm" onclick="excluirDoc('${d.id}')">Excluir</button>
+          </td>
+        </tr>`).join('') + '</tbody></table>';
+  }
+}
+
+async function enviarDocMedico(ev) {
+  const inp = ev.target;
+  const file = inp.files && inp.files[0];
+  if (!file || !_docsMedAtual) return;
+  const tipoId = document.getElementById('docs-med-tipo').value || null;
+  const lbl = document.getElementById('docs-med-up-label');
+  const txtOrig = lbl.textContent;
+  lbl.textContent = 'Enviando...';
+  document.getElementById('docs-med-btn-up').style.pointerEvents = 'none';
+  try {
+    // 1) pedir URL de upload assinada
+    const sig = await fetch('/api/medicos?action=doc-upload-url', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ medico_id: _docsMedAtual.id, nome_arquivo: file.name })
+    }).then(r=>r.json());
+    if (!sig.upload_url) throw new Error('sem URL de upload');
+    // 2) subir o arquivo direto ao Storage (sem passar pela função — sem limite de tamanho)
+    const up = await fetch(sig.upload_url, { method:'PUT', headers:{'Content-Type': file.type || 'application/octet-stream'}, body: file });
+    if (!up.ok) throw new Error('falha no upload ('+up.status+')');
+    // 3) registrar metadados
+    await fetch('/api/medicos?action=doc-registrar', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ medico_id:_docsMedAtual.id, tipo_id:tipoId, nome_arquivo:file.name,
+        storage_path:sig.storage_path, tamanho:file.size, content_type:file.type })
+    });
+    toast('Documento enviado!');
+    carregarDocsDoMedico(_docsMedAtual.id);
+    renderBancoMedicos();
+  } catch(e) {
+    console.error(e); toast('Erro ao enviar documento', true);
+  } finally {
+    lbl.textContent = txtOrig;
+    document.getElementById('docs-med-btn-up').style.pointerEvents = '';
+    inp.value = '';
+  }
+}
+
+async function baixarDoc(docId) {
+  try {
+    const r = await fetch(`/api/medicos?action=doc-url&id=${docId}`, {headers:{'Content-Type':'application/json'}}).then(r=>r.json());
+    if (!r.url) throw new Error('sem url');
+    const a = document.createElement('a');
+    a.href = r.url; a.download = r.nome_arquivo || 'documento';
+    document.body.appendChild(a); a.click(); a.remove();
+  } catch(e){ console.error(e); toast('Erro ao baixar', true); }
+}
+
+async function excluirDoc(docId) {
+  if (!confirm('Excluir este documento? Esta ação não pode ser desfeita.')) return;
+  try {
+    await fetch(`/api/medicos?action=doc-del&id=${docId}`, {method:'DELETE', headers:{'Content-Type':'application/json'}});
+    toast('Documento excluído');
+    if (_docsMedAtual) carregarDocsDoMedico(_docsMedAtual.id);
+    renderBancoMedicos();
+  } catch(e){ console.error(e); toast('Erro ao excluir', true); }
+}
+
+// ZIP direto da tabela (monta no navegador com JSZip)
+async function baixarZipMedico(medId) {
+  const m = medicos.find(x=>x.id===medId);
+  if (!m) return;
+  const docs = _bdmDocsPorMedico[medId] || await fetch(`/api/medicos?action=doc-listar&medico_id=${medId}`,{headers:{'Content-Type':'application/json'}}).then(r=>r.ok?r.json():[]).catch(()=>[]);
+  if (!docs.length) { toast('Sem documentos para baixar', true); return; }
+  toast('Preparando ZIP...');
+  try {
+    if (typeof JSZip === 'undefined') await carregarJSZip();
+    const zip = new JSZip();
+    const usados = {};
+    for (const d of docs) {
+      const info = await fetch(`/api/medicos?action=doc-url&id=${d.id}`,{headers:{'Content-Type':'application/json'}}).then(r=>r.json());
+      if (!info.url) continue;
+      const blob = await fetch(info.url).then(r=>r.blob());
+      let nome = d.nome_arquivo || ('documento_'+d.id);
+      if (usados[nome]) { const p=nome.lastIndexOf('.'); nome = p>0 ? nome.slice(0,p)+'_'+(usados[nome]+1)+nome.slice(p) : nome+'_'+(usados[nome]+1); }
+      usados[d.nome_arquivo] = (usados[d.nome_arquivo]||0)+1;
+      zip.file(nome, blob);
+    }
+    const out = await zip.generateAsync({type:'blob'});
+    const nomePasta = `${(m.nome||'medico').replace(/[\\/:*?"<>|]/g,' ').trim()} - ${(m.crm||'').replace(/[\\/:*?"<>|]/g,' ').trim()}`.trim();
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(out); a.download = nomePasta + '.zip';
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(()=>URL.revokeObjectURL(a.href), 4000);
+  } catch(e){ console.error(e); toast('Erro ao gerar ZIP', true); }
+}
+
+function carregarJSZip() {
+  return new Promise((ok, err) => {
+    const s = document.createElement('script');
+    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js';
+    s.onload = ok; s.onerror = err; document.head.appendChild(s);
+  });
+}
+
+// ─── CLASSIFICAÇÕES DE DOCUMENTO (cadastro pela tela) ─
+async function initTiposDoc() { await recarregarDocsBanco(); renderTiposDoc(); }
+
+function renderTiposDoc() {
+  const el = document.getElementById('td-lista');
+  if (!el) return;
+  if (!_bdmTipos.length) { el.innerHTML = '<div class="empty">Nenhuma classificação cadastrada.</div>'; return; }
+  const rotulo = o => o==='sempre' ? '<span class="badge badge-amber">Sempre obrigatório</span>'
+    : o==='condicional_rqe' ? '<span class="badge badge-blue">Obrig. se tem RQE</span>'
+    : '<span class="badge badge-green">Opcional</span>';
+  el.innerHTML = '<table><thead><tr><th>Nome</th><th>Obrigatoriedade</th><th></th></tr></thead><tbody>'
+    + _bdmTipos.sort((a,b)=>(a.ordem||0)-(b.ordem||0)).map(t => `<tr>
+        <td>${esc(t.nome)}${t.ativo===false?' <span style="color:var(--text3);font-size:11px;">(inativo)</span>':''}</td>
+        <td>${rotulo(t.obrigatoriedade)}</td>
+        <td style="white-space:nowrap;">
+          <button class="btn btn-danger btn-sm" onclick="excluirTipoDoc('${t.id}')">Excluir</button>
+        </td>
+      </tr>`).join('') + '</tbody></table>';
+}
+
+async function salvarTipoDoc() {
+  const nome = (document.getElementById('td-nome')?.value||'').trim();
+  const obrig = document.getElementById('td-obrig')?.value || 'opcional';
+  if (!nome) { toast('Informe o nome da classificação', true); return; }
+  const ordem = (_bdmTipos.reduce((mx,t)=>Math.max(mx, t.ordem||0), 0)) + 1;
+  const r = await sbApi('/tipos_documento', { method:'POST', body: JSON.stringify({ nome, obrigatoriedade:obrig, ordem, ativo:true }) });
+  if (r) {
+    document.getElementById('td-nome').value = '';
+    toast('Classificação adicionada');
+    await recarregarDocsBanco(); renderTiposDoc();
+  } else { toast('Erro ao salvar', true); }
+}
+
+async function excluirTipoDoc(id) {
+  if (!confirm('Excluir esta classificação? Os documentos já enviados continuam, mas sem classificação.')) return;
+  await sbApi(`/tipos_documento?id=eq.${id}`, { method:'DELETE' });
+  toast('Classificação excluída');
+  await recarregarDocsBanco(); renderTiposDoc();
+}
+
 
 // ─── EXPORTAR / IMPORTAR MÉDICOS ─────────────────────
 // Cabeçalho da planilha de médicos.
@@ -4111,6 +4437,7 @@ function showTab(id,el){
   if(id==='financeiro'){ initFinanceiro(); }
   if(id==='medicos'){ renderMedProjetosCheck(); }
   if(id==='banco_medicos'){ initBancoMedicos(); }
+  if(id==='tipos_documento'){ initTiposDoc(); }
   if(id==='dashboard') { carregarDashboard(); iniciarGraficos(); }
   if (id==='usuarios') { carregarUsuarios(); }
   if (id==='log') { carregarLog(); }
